@@ -1,4 +1,6 @@
 import time
+
+import torch.nn.functional
 from torch import optim
 from dist_gpt_utils import *
 from dist_gpt_module import *
@@ -109,7 +111,8 @@ class GpipeAsync:
             output_micro_batches.append(current_micro_output)
         return output_micro_batches
 
-    def backward_stage(self, cached_output_micro_batches: List[torch.Tensor], target=None):
+    def backward_stage(self, cached_output_micro_batches: List[torch.Tensor],
+                       loss_func=torch.nn.functional.cross_entropy, target=None):
         # print("Backward stage start! rank-", self.rank)
         if self.rank == self.world_size - 1:
             assert(target is not None)
@@ -122,7 +125,7 @@ class GpipeAsync:
             comp_ready_event = self.backward_comp_ready_events[i]
             if self.rank == self.world_size - 1:  # only send grad back to last node, do not receive
                 with torch.cuda.stream(self.torch_comp_stream):
-                    loss = torch.nn.functional.cross_entropy(
+                    loss = loss_func(
                         input=cached_output_micro_batches[i],
                         target=target_as_micro_batches[i].to(self.device))
                     loss.backward()

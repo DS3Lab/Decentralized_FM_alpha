@@ -56,9 +56,9 @@ class TwoLayerMLP(nn.Module):
         return input + a2
 
 
-class GPT3TransformerLayer(nn.Module):
+class GPTTransformerLayer(nn.Module):
     def __init__(self, model_dim, head_num, feedforward_dim=2048, layer_norm_eps=1e-5, use_checkpoint=True) -> None:
-        super(GPT3TransformerLayer, self).__init__()
+        super(GPTTransformerLayer, self).__init__()
         self.use_checkpoint = use_checkpoint
         self.attn = MultiHeadAttention(model_dim, head_num)
         # Implementation of Feedforward model
@@ -86,8 +86,64 @@ class GPT3TransformerLayer(nn.Module):
         return x
 
 
+class GPTEmbedding(torch.nn.Module):
+    """Embedding parallelized in the vocabulary dimension.
+
+    This is mainly adapted from torch.nn.Embedding and all the default
+    values are kept.
+    Arguments:
+        num_embeddings: vocabulary size.
+        embedding_dim: size of hidden state.
+        init_method: method to initialize weights.
+    """
+
+    def __init__(self, vocab_size, embedding_dim, seq_length, num_token_types=0):
+        super(GPTEmbedding, self).__init__()
+        # Keep the input dimensions.
+        self.embedding_dim = embedding_dim
+        self.vocab_size = vocab_size
+        self.seq_length = seq_length
+        self.num_token_types = num_token_types
+
+        self.vocab_embedding = torch.nn.Embedding(vocab_size, embedding_dim, padding_idx=None,
+                                                  max_norm=None,  norm_type=2, scale_grad_by_freq=False, sparse=False)
+        torch.nn.init.xavier_normal_(self.vocab_embedding.weight)
+        self.position_embedding = torch.nn.Embedding(seq_length, embedding_dim)
+        if num_token_types > 0:
+            self.token_type_embedding = torch.nn.Embedding(num_token_types, embedding_dim)
+        else:
+            self.token_type_embedding = None
+
+    def forward(self, input_ids, position_ids, tokentype_ids=None):
+        word_embeddings = self.vocab_embedding(input_ids)
+        pos_embeddings = self.position_embedding(position_ids)
+        embeddings = word_embeddings + pos_embeddings
+        if tokentype_ids:
+            assert self.token_type_embedding is not None
+            embeddings = embeddings + self.token_type_embedding(tokentype_ids)
+        return embeddings
 
 
+class GlueClassification(torch.nn.Module):
+    def __init__(self, model_dim, num_classes):
+        super(GlueClassification, self).__init__()
+        self.model_dim = model_dim
+        self.num_classes = num_classes
+        self.pooler_layer = torch.nn.Linear(model_dim, model_dim)
+        self.fc_layer = torch.nn.Linear(model_dim, num_classes)
+
+    def forward(self, hidden_states, pooler_index=0):
+        pooled = hidden_states[:, pooler_index, :]
+        pooled = self.pooler_layer(pooled)
+        pooled = torch.tanh(pooled)
+        return self.fc_layer(pooled)
+
+
+def get_position_id(seq_length, size_input):
+    return torch.arange(seq_length).unsqueeze(0).expand(size_input, seq_length)
+
+
+''' Remove this to keep consistent with Megatron. 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, dropout=0.1, max_len=5000):
         super(PositionalEncoding, self).__init__()
@@ -140,35 +196,38 @@ class Decoder(nn.Module):
     def forward(self, inp):
         # Need batch dimension first for output of pipeline.
         return self.decoder(inp).view(-1, self.ntoken)
+'''
 
 
 class GPTShardBase(nn.Module):
-    def __init__(self, args, ntokens):
+    def __init__(self, args, vocab_size):
         super(GPTShardBase, self).__init__()
         self._to_cpu = (args.dist_backend == "gloo")
-        self._num_tokens = ntokens
-        self._embedding_size = args.embedding_size  # embedding dimension
+        self._vocab_size = vocab_size
+        self._embedding_dim = args.embedding_dim  # embedding dimension
+        self._seq_length = args.seq_length
+        self._num_classes = args.num_classes
         # the dimension of the feedforward aws_network model in nn.TransformerEncoder
-        self._feedforward_dim = args.embedding_size * 4
+        self._feedforward_dim = args.embedding_dim * 4
         self._num_heads = args.num_heads  # the number of heads in the multi-head attention models
         self._num_layers = args.num_layers
 
-    def _create_encoder_layer(self):
-        return Encoder(self._num_tokens, self._embedding_size)
+    def _create_first_layer(self):
+        return GPTEmbedding(self._vocab_size, self._embedding_dim, self._seq_length)
 
-    def _create_decoder_layer(self):
-        return Decoder(self._num_tokens, self._embedding_size)
+    def _create_last_layer(self):
+        return GlueClassification(self._embedding_dim, self._num_classes)
 
     def _create_transformer_layer(self):
-        return GPT3TransformerLayer(self._embedding_size, self._num_heads, self._feedforward_dim,
-                                    use_checkpoint=True)
+        return GPTTransformerLayer(self._embedding_dim, self._num_heads, self._feedforward_dim,
+                                   use_checkpoint=True)
 
 
 class GPTShardFirst(GPTShardBase):
     def __init__(self, args, ntokens, device):
         super(GPTShardFirst, self).__init__(args, ntokens)
         self.device = device
-        module_list = [self._create_encoder_layer()]
+        module_list = [self._create_first_layer()]
         for _ in range(self._num_layers):
             module_list.append(self._create_transformer_layer())
         self.model = nn.Sequential(*module_list).to(device)
@@ -199,7 +258,7 @@ class GPTShardLast(GPTShardBase):
         module_list = []
         for _ in range(self._num_layers):
             module_list.append(self._create_transformer_layer())
-        module_list.append(self._create_decoder_layer())
+        module_list.append(self._create_last_layer())
         self.model = nn.Sequential(*module_list).to(device)
 
     def forward(self, x):

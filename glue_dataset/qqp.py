@@ -1,7 +1,7 @@
 """QQP dataset."""
 
-from data_utils import clean_text
-from abstract_dataset import GLUEAbstractDataset
+from .data_utils import clean_text
+from .abstract_dataset import GLUEAbstractDataset
 
 
 LABELS = [0, 1]

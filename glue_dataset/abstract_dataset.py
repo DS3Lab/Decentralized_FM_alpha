@@ -3,8 +3,8 @@
 from abc import ABC
 from abc import abstractmethod
 from torch.utils.data import Dataset
-from data_utils import build_sample
-from data_utils import build_tokens_types_paddings_from_text
+from .data_utils import build_sample
+from .data_utils import build_tokens_types_paddings_from_text
 
 
 class GLUEAbstractDataset(ABC, Dataset):
