@@ -86,6 +86,10 @@ class GPTTransformerLayer(nn.Module):
         return x
 
 
+def get_position_id(seq_length, size_input, device):
+    return torch.arange(seq_length, device=device).unsqueeze(0).expand(size_input, seq_length)
+
+
 class GPTEmbedding(torch.nn.Module):
     """Embedding parallelized in the vocabulary dimension.
 
@@ -114,8 +118,10 @@ class GPTEmbedding(torch.nn.Module):
         else:
             self.token_type_embedding = None
 
-    def forward(self, input_ids, position_ids, tokentype_ids=None):
+    def forward(self, input_ids, position_ids=None, tokentype_ids=None):
         word_embeddings = self.vocab_embedding(input_ids)
+        if position_ids is None:
+            position_ids = get_position_id(self.seq_length, word_embeddings.shape[0], word_embeddings.device)
         pos_embeddings = self.position_embedding(position_ids)
         embeddings = word_embeddings + pos_embeddings
         if tokentype_ids:
@@ -139,8 +145,7 @@ class GlueClassification(torch.nn.Module):
         return self.fc_layer(pooled)
 
 
-def get_position_id(seq_length, size_input):
-    return torch.arange(seq_length).unsqueeze(0).expand(size_input, seq_length)
+
 
 
 ''' Remove this to keep consistent with Megatron. 
@@ -200,13 +205,13 @@ class Decoder(nn.Module):
 
 
 class GPTShardBase(nn.Module):
-    def __init__(self, args, vocab_size):
+    def __init__(self, args, vocab_size, num_classes):
         super(GPTShardBase, self).__init__()
         self._to_cpu = (args.dist_backend == "gloo")
         self._vocab_size = vocab_size
         self._embedding_dim = args.embedding_dim  # embedding dimension
         self._seq_length = args.seq_length
-        self._num_classes = args.num_classes
+        self._num_classes = num_classes
         # the dimension of the feedforward aws_network model in nn.TransformerEncoder
         self._feedforward_dim = args.embedding_dim * 4
         self._num_heads = args.num_heads  # the number of heads in the multi-head attention models
@@ -224,8 +229,8 @@ class GPTShardBase(nn.Module):
 
 
 class GPTShardFirst(GPTShardBase):
-    def __init__(self, args, ntokens, device):
-        super(GPTShardFirst, self).__init__(args, ntokens)
+    def __init__(self, args, vocab_size, num_classes, device):
+        super(GPTShardFirst, self).__init__(args, vocab_size, num_classes)
         self.device = device
         module_list = [self._create_first_layer()]
         for _ in range(self._num_layers):
@@ -237,9 +242,9 @@ class GPTShardFirst(GPTShardBase):
         return out.cpu() if self._to_cpu else out
 
 
-class GPTShardMiddel(GPTShardBase):
-    def __init__(self, args, ntokens, device):
-        super(GPTShardMiddel, self).__init__(args, ntokens)
+class GPTShardMiddle(GPTShardBase):
+    def __init__(self, args, vocab_size, num_classes, device):
+        super(GPTShardMiddle, self).__init__(args, vocab_size, num_classes)
         self.device = device
         module_list = []
         for _ in range(self._num_layers):
@@ -252,8 +257,8 @@ class GPTShardMiddel(GPTShardBase):
 
 
 class GPTShardLast(GPTShardBase):
-    def __init__(self, args, ntokens, device):
-        super(GPTShardLast, self).__init__(args, ntokens)
+    def __init__(self, args, vocab_size, num_classes, device):
+        super(GPTShardLast, self).__init__(args, vocab_size, num_classes)
         self.device = device
         module_list = []
         for _ in range(self._num_layers):

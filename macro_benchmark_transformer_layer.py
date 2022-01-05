@@ -9,13 +9,13 @@ from dist_gpt_module import GPTTransformerLayer
 def benchmark_transformer_layer(args, device):
     module_list = []
     for _ in range(args.num_layers):
-        module_list.append(GPTTransformerLayer(args.embedding_size, args.num_heads,
-                                               4 * args.embedding_size, use_checkpoint=args.use_checkpoint))
+        module_list.append(GPTTransformerLayer(args.embedding_dim, args.num_heads,
+                                               4 * args.embedding_dim, use_checkpoint=args.use_checkpoint))
     layers = nn.Sequential(*module_list).to(device)
     print(layers)
     # summary(one_layer, (args.seq_length, args.embedding_size), batch_dim=0)
 
-    batch_shape = (args.batch_size, args.seq_length, args.embedding_size)
+    batch_shape = (args.batch_size, args.seq_length, args.embedding_dim)
     forward_time = 0
     backward_time = 0
     with profiler.profile(profile_memory=True, use_cuda=args.use_cuda) as prof:

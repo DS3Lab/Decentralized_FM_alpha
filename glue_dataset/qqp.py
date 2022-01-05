@@ -1,5 +1,5 @@
 """QQP dataset."""
-
+import torch
 from .data_utils import clean_text
 from .abstract_dataset import GLUEAbstractDataset
 
@@ -80,3 +80,17 @@ class QQPDataset(GLUEAbstractDataset):
 
         print(' >> processed {} samples.'.format(len(samples)))
         return samples
+
+
+def get_glue_qqp_train_data_loader(args, tokenizer):
+    train_dataset = QQPDataset('training', args.train_data, tokenizer, args.seq_length)
+    train_sampler = torch.utils.data.RandomSampler(train_dataset)
+    train_data_loader = torch.utils.data.DataLoader(train_dataset,
+                                                    batch_size=args.batch_size,
+                                                    sampler=train_sampler,
+                                                    shuffle=False,
+                                                    num_workers=4,
+                                                    drop_last=True,
+                                                    pin_memory=True,
+                                                    collate_fn=None)
+    return train_data_loader

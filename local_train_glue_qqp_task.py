@@ -1,6 +1,6 @@
 import torch
 import argparse
-from glue_dataset.qqp import QQPDataset
+from glue_dataset.qqp import get_glue_qqp_train_data_loader
 from glue_dataset.tokenizer import build_tokenizer
 
 from dist_gpt_module import GPTEmbedding, GPTTransformerLayer, GlueClassification, get_position_id
@@ -23,20 +23,6 @@ class GPTLocaModel(torch.nn.Module):
         return self.classifier(output_emb)
 
 
-def train_data_loader(args, tokenizer):
-    train_dataset = QQPDataset('training', args.train_data, tokenizer, args.seq_length)
-    train_sampler = torch.utils.data.RandomSampler(train_dataset)
-    train_data_loader = torch.utils.data.DataLoader(train_dataset,
-                                                    batch_size=args.macro_batch_size,
-                                                    sampler=train_sampler,
-                                                    shuffle=False,
-                                                    num_workers=4,
-                                                    drop_last=True,
-                                                    pin_memory=True,
-                                                    collate_fn=None)
-    return train_data_loader
-
-
 def main():
     parser = argparse.ArgumentParser(description='Test Glue-qqp dataset')
     parser.add_argument('--train-data', nargs='+', default=['./glue_dataset/data/QQP/train.tsv'], metavar='S',
@@ -55,9 +41,7 @@ def main():
                         help='if this is set to True, will use cuda to train')
     parser.add_argument('--cuda-id', type=int, default=0, metavar='N',
                         help='cuda index, if the instance has multiple GPUs.')
-    parser.add_argument('--batch-size', type=int, default=16, metavar='N',
-                        help='input batch size for training (default: 100)')
-    parser.add_argument('--macro-batch-size', type=int, default=8, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=8, metavar='N',
                         help='input batch size for training (default: 100)')
     parser.add_argument('--seq-length', type=int, default=2048, metavar='N',
                         help='-')
@@ -77,14 +61,19 @@ def main():
         device = torch.device('cpu')
     tokenizer = build_tokenizer(args)
     print("token vocab size:", tokenizer.vocab_size)
-    data_loader = train_data_loader(args, tokenizer)
+    data_loader = get_glue_qqp_train_data_loader(args, tokenizer)
     num_classes = 2
     model = GPTLocaModel(args, tokenizer.vocab_size, num_classes).to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 
-    for data in data_loader:
+    # for i in range(len(data_loader)):
+    #    data = data_loader[i]
+    # train_data_loader_iter = iter(data_loader)
+    # print(next(train_data_loader_iter))
+    for i, data in enumerate(data_loader):
+
         input_ids = data['text'].to(device)
-        position_ids = get_position_id(args.seq_length, args.macro_batch_size).to(device)
+        position_ids = get_position_id(args.seq_length, args.batch_size, device)
         labels = data['label'].to(device)
 
         optimizer.zero_grad()
@@ -94,9 +83,8 @@ def main():
         loss = torch.nn.functional.cross_entropy(output, labels)
         loss.backward()
         optimizer.step()
-        print("===== Loss: ", loss.item(), "======")
+        print("Iter ", i, "===== Loss: ", loss.item(), "======")
         # print(data)
-
 
 
 if __name__ == '__main__':

@@ -1,7 +1,56 @@
-from torchtext.datasets import WikiText2
-from torchtext.data.utils import get_tokenizer
-from torchtext.vocab import build_vocab_from_iterator
 from nccl_backend import *
+
+
+def add_distributed_arguments(parser):
+    parser.add_argument('--dist-backend', type=str, default='cupy_nccl', metavar='S',
+                        help='backend type for distributed PyTorch (default: cupy_nccl)')
+    parser.add_argument('--dist-url', type=str, default='tcp://127.0.0.1:9000', metavar='S',
+                        help='master ip for distributed PyTorch')
+    parser.add_argument('--world-size', type=int, default=4, metavar='D',
+                        help='world-size (default: 2)')
+    parser.add_argument('--rank', type=int, default=0, metavar='N',
+                        help='rank of the node')
+    parser.add_argument('--use-cuda', default=True, type=lambda x: (str(x).lower() == 'true'),
+                        help='if this is set to True, will use cuda to train')
+    parser.add_argument('--cuda-id', type=int, default=0, metavar='N',
+                        help='cuda index, if the instance has multiple GPUs.')
+
+
+def add_task_arguments(parser):
+    parser.add_argument('--train-data', nargs='+', default=['./glue_dataset/data/QQP/train.tsv'], metavar='S',
+                        help='path to the training data')
+    parser.add_argument('--valid-data', nargs='+', default=['./glue_dataset/data/QQP/test.tsv'], metavar='S',
+                        help='path to the training data')
+    parser.add_argument('--tokenizer-type', type=str, default='BertWordPieceLowerCase', metavar='S',
+                        help='which tokenizer to use.')
+    parser.add_argument('--vocab-file', type=str, default='./glue_dataset/data/bert-large-cased-vocab.txt', metavar='S',
+                        help='which tokenizer to use.')
+    parser.add_argument('--vocab-extra-ids', type=int, default=0, metavar='N',
+                        help='-')
+    parser.add_argument('--make-vocab-size-divisible-by', type=int, default=128, metavar='N',
+                        help='-')
+
+
+def add_model_arguments(parser):
+    parser.add_argument('--seq-length', type=int, default=2048, metavar='N',
+                        help='-')
+    parser.add_argument('--embedding-dim', type=int, default=768, metavar='N',
+                        help='-')
+    parser.add_argument('--num-layers', type=int, default=2, metavar='N',
+                        help='-')
+    parser.add_argument('--num-heads', type=int, default=16, metavar='N',
+                        help='-')
+
+
+def add_training_hyper_parameter_arguments(parser):
+    parser.add_argument('--batch-size', type=int, default=16, metavar='N',
+                        help='input batch size for training (default: 100)')
+    parser.add_argument('--micro-batch-num', type=int, default=4, metavar='N',
+                        help='input batch size for training (default: 100)')
+    parser.add_argument('--lr', type=float, default=0.01, metavar='N',
+                        help='-')
+    parser.add_argument('--num_iters', type=int, default=5, metavar='N',
+                        help='-')
 
 
 def init_comm(args):
@@ -16,30 +65,23 @@ def init_comm(args):
     return comm
 
 
-def get_batch(args, i, data=None):
+def distributed_train_foo_iter(args, gpipe, device, train_data_loader):
     if args.rank == 0:
-        seq_len = min(args.seq_length, len(data) - 1 - i)
-        return data[i:i+seq_len].t(), None
+        for i, data in enumerate(train_data_loader):
+            input_ids = data['text'].to(device)
+            gpipe.sgd_iter(input_ids, None)
+            if i >= args.num_iter:
+                break
     elif args.rank == args.world_size - 1:
-        seq_len = min(args.seq_length, len(data) - 1 - i)
-        return None, data[i+1:i+1+seq_len].view(-1)
+        for i, data in enumerate(train_data_loader):
+            labels = data['label'].to(device)
+            gpipe.sgd_iter(None, labels)
+            if i >= args.num_iter:
+                break
     else:
-        return None, None
-
-
-def create_dataset(args):
-    train_iter = WikiText2(split='train')
-    tokenizer = get_tokenizer('basic_english')
-    vocab = build_vocab_from_iterator(map(tokenizer, train_iter), specials=["<unk>"])
-    vocab.set_default_index(vocab["<unk>"])
-    train_iter, _, _ = WikiText2()
-    data = [torch.tensor(vocab(tokenizer(item)), dtype=torch.long) for item in train_iter]
-    data = torch.cat(tuple(filter(lambda t: t.numel() > 0, data)))
-    ntokens = len(vocab)
-    # Divide the dataset into bsz parts.
-    num_batch = data.size(0) // args.batch_size
-    # Trim off any extra elements that wouldn't cleanly fit (remainders).
-    data = data.narrow(0, 0, num_batch * args.batch_size)
-    # Evenly divide the data across the bsz batches.
-    data = data.view(args.batch_size, -1).t().contiguous()
-    return data, ntokens
+        i = 0
+        while True:
+            gpipe.sgd_iter(None, None)
+            i+= 1
+            if i >= args.num_iter:
+                break

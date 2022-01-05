@@ -16,7 +16,7 @@ class GpipeSync:
         assert (args.batch_size % args.micro_batch_num == 0)
         self.micro_batch_size = args.batch_size // args.micro_batch_num
         self.seq_length = args.seq_length
-        self.embedding_size = args.embedding_size
+        self.embedding_size = args.embedding_dim
         self.ntokens = ntokens
 
         self.device = device
@@ -25,7 +25,7 @@ class GpipeSync:
         elif self.rank == self.world_size - 1:
             self.model = GPTShardLast(args, ntokens, device)
         else:
-            self.model = GPTShardMiddel(args, ntokens, device)
+            self.model = GPTShardMiddle(args, ntokens, device)
         self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
 
     def forward_stage(self, input_data=None):

@@ -17,19 +17,20 @@ class GpipeAsync:
         a group of events to check if computation finishes in the backward propagation.
     """
 
-    def __init__(self, args, ntokens, device):
+    def __init__(self, args, vocab_size, num_classes, device):
         self.world_size = args.world_size
         self.rank = args.rank
         self.pre_node_rank = args.rank - 1
         self.post_node_rank = args.rank + 1 if args.rank != args.world_size - 1 else -1
         self.comm = init_comm(args)
 
-        self.micro_batch_num = args.micro_batch_num
+        self.micro_batch_num = args.batch_size // args.micro_batch_num
         assert (args.batch_size % args.micro_batch_num == 0)
-        self.micro_batch_size = args.batch_size // args.micro_batch_num
+        self.micro_batch_size = args.micro_batch_num
         self.seq_length = args.seq_length
-        self.embedding_size = args.embedding_size
-        self.ntokens = ntokens
+        self.embedding_dim = args.embedding_dim
+        self.vocab_size = vocab_size
+        self.num_classes = num_classes
 
         self.device = device
         self.torch_comp_stream = torch.cuda.default_stream(device=device)
@@ -45,22 +46,22 @@ class GpipeAsync:
         if args.rank == 0:
             self.input_micro_batches = None
         else:
-            self.input_micro_batches = [torch.zeros((self.seq_length, self.micro_batch_size, self.embedding_size),
+            self.input_micro_batches = [torch.zeros((self.seq_length, self.micro_batch_size, self.embedding_dim),
                                                     requires_grad=True, device=self.device)
                                         for _ in range(args.micro_batch_num)]
         if args.rank == args.world_size - 1:
             self.output_micro_batches_grad = None
         else:
-            self.output_micro_batches_grad = [torch.zeros((self.seq_length, self.micro_batch_size, self.embedding_size),
+            self.output_micro_batches_grad = [torch.zeros((self.seq_length, self.micro_batch_size, self.embedding_dim),
                                                           requires_grad=False, device=self.device)
                                               for _ in range(args.micro_batch_num)]
 
         if self.rank == 0:
-            self.model = GPTShardFirst(args, ntokens, device)
+            self.model = GPTShardFirst(args, vocab_size, num_classes, device)
         elif self.rank == self.world_size - 1:
-            self.model = GPTShardLast(args, ntokens, device)
+            self.model = GPTShardLast(args, vocab_size, num_classes, device)
         else:
-            self.model = GPTShardMiddel(args, ntokens, device)
+            self.model = GPTShardMiddle(args, vocab_size, num_classes, device)
         self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
 
     def zero_input_grad(self):
