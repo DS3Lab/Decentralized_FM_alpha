@@ -39,7 +39,7 @@ def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
     parser.add_argument('--world-size', type=int, default=3, metavar='D',
                         help='world-size (default: 2)')
-    parser.add_argument('--batch-size', type=int, default=16, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 100)')
     parser.add_argument('--embedding-dim', type=int, default=768, metavar='N',
                         help='-')

@@ -171,5 +171,8 @@ class GpipeAsync:
         backward_time = time.time()
         print("Rank {} node backward pass takes {:3.2f}s".format(self.rank,  backward_time-forward_time))
         self.optimizer.step()
+        torch.cuda.synchronize()
         end_time = time.time()
-        print("Rank {} node whole iteration takes {:3.2f}s".format(self.rank, end_time - start_time))
+        iter_time = end_time - start_time
+        print("Rank {} node whole iteration takes {:3.2f}s".format(self.rank, iter_time))
+        return iter_time
