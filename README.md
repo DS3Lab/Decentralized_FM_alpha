@@ -16,9 +16,22 @@
         
       https://github.com/BinhangYuan/GPT-home-private.git
 
-- set the github cache (Optional) 
+- set the github cache (Optional):
 
       git config credential.helper 'cache --timeout=30000'
+
+- Download a tiny dataset:
+
+      wget https://binhang-language-datasets.s3.us-west-2.amazonaws.com/glue_qqp_dataset/data.tar.xz -P ./glue_dataset/
+      
+      tar -xvf ./glue_dataset/data.tar.xz -C ./glue_dataset/
+
+- Setup network configuration:
+
+      export GLOO_SOCKET_IFNAME=ens3 export NCCL_SOCKET_IFNAME=ens3
+
+- Use TC scripts to control network delay and bandwidth:
+  
 
 ## Run Distributed Gpipe:
 
