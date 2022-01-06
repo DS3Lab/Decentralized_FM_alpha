@@ -49,7 +49,7 @@ def main():
     distributed_train_foo_iter(args, gpipe, device, train_data_loader)
     print(prof.key_averages().table())
     trace_file = "../trace_json/gpt3_gpipe_b" + str(args.batch_size) + "_l" + str(args.seq_length) + '_m' + \
-                 str(args.embedding_size) + "_w" + str(args.world_size) + "_" + str(args.rank) + ".json"
+                 str(args.embedding_dim) + "_w" + str(args.world_size) + "_" + str(args.rank) + ".json"
     prof.export_chrome_trace(trace_file)
 
 
