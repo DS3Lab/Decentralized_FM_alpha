@@ -70,18 +70,18 @@ def distributed_train_foo_iter(args, gpipe, device, train_data_loader):
         for i, data in enumerate(train_data_loader):
             input_ids = data['text'].to(device)
             gpipe.sgd_iter(input_ids, None)
-            if i >= args.num_iter:
+            if i >= args.num_iters:
                 break
     elif args.rank == args.world_size - 1:
         for i, data in enumerate(train_data_loader):
             labels = data['label'].to(device)
             gpipe.sgd_iter(None, labels)
-            if i >= args.num_iter:
+            if i >= args.num_iters:
                 break
     else:
         i = 0
         while True:
             gpipe.sgd_iter(None, None)
             i += 1
-            if i >= args.num_iter:
+            if i >= args.num_iters:
                 break
