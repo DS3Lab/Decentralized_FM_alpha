@@ -4,9 +4,9 @@ import argparse
 
 # TODO: change this hard coded version later.
 node_ip_lists = [
-    "34.212.121.230",
-    "34.221.72.170",
-    "54.187.136.136",
+    "34.213.42.6",
+    "54.187.170.181",
+    "18.237.219.251",
 ]
 
 
@@ -37,9 +37,9 @@ def merge_logs(args, prefix):
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
-    parser.add_argument('--world-size', type=int, default=4, metavar='D',
+    parser.add_argument('--world-size', type=int, default=3, metavar='D',
                         help='world-size (default: 2)')
-    parser.add_argument('--batch-size', type=int, default=12, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=16, metavar='N',
                         help='input batch size for training (default: 100)')
     parser.add_argument('--embedding-dim', type=int, default=768, metavar='N',
                         help='-')

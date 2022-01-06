@@ -45,8 +45,8 @@ def add_model_arguments(parser):
 def add_training_hyper_parameter_arguments(parser):
     parser.add_argument('--batch-size', type=int, default=16, metavar='N',
                         help='input batch size for training (default: 100)')
-    parser.add_argument('--micro-batch-num', type=int, default=4, metavar='N',
-                        help='input batch size for training (default: 100)')
+    parser.add_argument('--micro-batch-size', type=int, default=4, metavar='N',
+                        help='input micro batch size for training (default: 100)')
     parser.add_argument('--lr', type=float, default=0.01, metavar='N',
                         help='-')
     parser.add_argument('--num_iters', type=int, default=5, metavar='N',

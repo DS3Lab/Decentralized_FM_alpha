@@ -24,9 +24,9 @@ class GpipeAsync:
         self.post_node_rank = args.rank + 1 if args.rank != args.world_size - 1 else -1
         self.comm = init_comm(args)
 
-        self.micro_batch_num = args.batch_size // args.micro_batch_num
-        assert (args.batch_size % args.micro_batch_num == 0)
-        self.micro_batch_size = args.micro_batch_num
+        assert (args.batch_size % args.micro_batch_size == 0)
+        self.micro_batch_num = args.batch_size // args.micro_batch_size
+        self.micro_batch_size = args.micro_batch_size
         self.seq_length = args.seq_length
         self.embedding_dim = args.embedding_dim
         self.vocab_size = vocab_size
