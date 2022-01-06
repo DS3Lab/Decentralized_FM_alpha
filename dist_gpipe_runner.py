@@ -43,12 +43,12 @@ def main():
         gpipe = GpipeAsync(args, vocab_size, num_classes, device)
     else:
         gpipe = GpipeSync(args, vocab_size, num_classes, device) # TODO: this part is not refactored yet.
-    with profiler.profile(profile_memory=True, use_cuda=args.use_cuda) as prof:
-        i = 0
 
-    distributed_train_foo_iter(args, gpipe, device, train_data_loader)
+    with profiler.profile(profile_memory=True, use_cuda=args.use_cuda) as prof:
+        distributed_train_foo_iter(args, gpipe, device, train_data_loader)
+
     print(prof.key_averages().table())
-    trace_file = "../trace_json/gpt3_gpipe_b" + str(args.batch_size) + "_l" + str(args.seq_length) + '_m' + \
+    trace_file = "./trace_json/gpt3_gpipe_b" + str(args.batch_size) + "_l" + str(args.seq_length) + '_m' + \
                  str(args.embedding_dim) + "_w" + str(args.world_size) + "_" + str(args.rank) + ".json"
     prof.export_chrome_trace(trace_file)
 
