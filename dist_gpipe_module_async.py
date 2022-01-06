@@ -36,25 +36,25 @@ class GpipeAsync:
         self.torch_comp_stream = torch.cuda.default_stream(device=device)
         self.torch_comm_stream = torch.cuda.Stream(device=device, priority=-1)
         self.forward_comm_ready_events = [torch.cuda.Event(enable_timing=args.timing, blocking=False)
-                                          for _ in range(args.micro_batch_num)]
+                                          for _ in range(self.micro_batch_num)]
         self.backward_comm_ready_events = [torch.cuda.Event(enable_timing=args.timing, blocking=False)
-                                           for _ in range(args.micro_batch_num)]
+                                           for _ in range(self.micro_batch_num)]
         self.forward_comp_ready_events = [torch.cuda.Event(enable_timing=args.timing, blocking=False)
-                                          for _ in range(args.micro_batch_num)]
+                                          for _ in range(self.micro_batch_num)]
         self.backward_comp_ready_events = [torch.cuda.Event(enable_timing=args.timing, blocking=False)
-                                           for _ in range(args.micro_batch_num)]
+                                           for _ in range(self.micro_batch_num)]
         if args.rank == 0:
             self.input_micro_batches = None
         else:
             self.input_micro_batches = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
                                                     requires_grad=True, device=self.device)
-                                        for _ in range(args.micro_batch_num)]
+                                        for _ in range(self.micro_batch_num)]
         if args.rank == args.world_size - 1:
             self.output_micro_batches_grad = None
         else:
             self.output_micro_batches_grad = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
                                                           requires_grad=False, device=self.device)
-                                              for _ in range(args.micro_batch_num)]
+                                              for _ in range(self.micro_batch_num)]
 
         if self.rank == 0:
             self.model = GPTShardFirst(args, vocab_size, num_classes, device)
