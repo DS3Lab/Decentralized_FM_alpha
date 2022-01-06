@@ -82,6 +82,6 @@ def distributed_train_foo_iter(args, gpipe, device, train_data_loader):
         i = 0
         while True:
             gpipe.sgd_iter(None, None)
-            i+= 1
+            i += 1
             if i >= args.num_iter:
                 break

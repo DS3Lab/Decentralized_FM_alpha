@@ -112,8 +112,8 @@ class GpipeAsync:
             output_micro_batches.append(current_micro_output)
         return output_micro_batches
 
-    def backward_stage(self, cached_output_micro_batches: List[torch.Tensor],
-                       loss_func=torch.nn.functional.cross_entropy, target=None):
+    def backward_stage(self, cached_output_micro_batches: List[torch.Tensor], target=None,
+                       loss_func=torch.nn.functional.cross_entropy):
         # print("Backward stage start! rank-", self.rank)
         if self.rank == self.world_size - 1:
             assert(target is not None)
@@ -159,12 +159,12 @@ class GpipeAsync:
                     self.torch_comm_stream.wait_event(comp_ready_event)
                     self.comm.send(self.input_micro_batches[i].grad, dst=self.pre_node_rank, stream=cupy_comm_stream)
 
-    def sgd_iter(self, input=None, target=None):
+    def sgd_iter(self, input_=None, target=None):
         self.comm.barrier()
         start_time = time.time()
         self.zero_input_grad()
         self.optimizer.zero_grad()
-        outputs = self.forward_stage(input)
+        outputs = self.forward_stage(input_)
         forward_time = time.time()
         print("Rank {} node forward pass takes {:3.2f}s".format(self.rank,  forward_time-start_time))
         self.backward_stage(outputs, target)

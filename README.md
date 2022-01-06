@@ -14,7 +14,7 @@
 
 - Clone this repo:
         
-      https://github.com/BinhangYuan/GPT-home-private.git
+      git clone https://github.com/BinhangYuan/GPT-home-private.git
 
 - set the github cache (Optional):
 
@@ -28,7 +28,10 @@
 
 - Setup network configuration:
 
-      export GLOO_SOCKET_IFNAME=ens3 export NCCL_SOCKET_IFNAME=ens3
+      export GLOO_SOCKET_IFNAME=ens3
+
+      export NCCL_SOCKET_IFNAME=ens3
+
 
 - Use TC scripts to control network delay and bandwidth:
   
