@@ -46,13 +46,13 @@ class GpipeAsync:
         if args.rank == 0:
             self.input_micro_batches = None
         else:
-            self.input_micro_batches = [torch.zeros((self.seq_length, self.micro_batch_size, self.embedding_dim),
+            self.input_micro_batches = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
                                                     requires_grad=True, device=self.device)
                                         for _ in range(args.micro_batch_num)]
         if args.rank == args.world_size - 1:
             self.output_micro_batches_grad = None
         else:
-            self.output_micro_batches_grad = [torch.zeros((self.seq_length, self.micro_batch_size, self.embedding_dim),
+            self.output_micro_batches_grad = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
                                                           requires_grad=False, device=self.device)
                                               for _ in range(args.micro_batch_num)]
 
