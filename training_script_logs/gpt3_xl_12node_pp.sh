@@ -1,0 +1,1 @@
+python3 dist_gpipe_runner.py --dist-url tcp://172.31.2.152:9000 --world-size 12 --embedding-dim 2048 --num-heads 16 --num-layers 2 --rank 0 --batch-size 48 --micro-batch-size 1/2/4
