@@ -18,17 +18,25 @@ def benchmark_transformer_layer(args, device):
     batch_shape = (args.batch_size, args.seq_length, args.embedding_dim)
     forward_time = 0
     backward_time = 0
+
+    start_event = torch.cuda.Event(enable_timing=True)
+    end_event = torch.cuda.Event(enable_timing=True)
+
     with profiler.profile(profile_memory=True, use_cuda=args.use_cuda) as prof:
         for i in range(11):
             if i != 0:
                 start_time = time.time()
+                start_event.record()
             fake_batch = torch.zeros(batch_shape, requires_grad=True).to(device)
             output = layers(fake_batch)
+            if i != 0 :
+                end_event.record()
             if args.use_cuda:
                 torch.cuda.current_stream().synchronize()
             if i != 0:
                 forward_end_time = time.time()
-                print("Iter ", i, "Current iter forward takes:", forward_end_time-start_time)
+                print("Iter ", i, "Current iter forward takes:", forward_end_time-start_time, " (by event timer:",
+                      start_event.elapsed_time(end_event))
                 forward_time += (forward_end_time-start_time)
             external_gradient1 = torch.full(batch_shape, 1.0).to(device)
             output.backward(gradient=external_gradient1)
@@ -57,7 +65,7 @@ def main():
                         help='-')
     parser.add_argument('--seq-length', type=int, default=2048, metavar='N',
                         help='-')
-    parser.add_argument('--embedding-size', type=int, default=768, metavar='N',
+    parser.add_argument('--embedding-dim', type=int, default=768, metavar='N',
                         help='-')
     parser.add_argument('--num-heads', type=int, default=16, metavar='N',
                         help='-')

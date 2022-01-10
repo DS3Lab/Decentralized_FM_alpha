@@ -1,5 +1,4 @@
 import argparse
-import torch
 import torch.autograd.profiler as profiler
 from glue_dataset.qqp import get_glue_qqp_train_data_loader
 from glue_dataset.tokenizer import build_tokenizer
@@ -16,11 +15,9 @@ def main():
     add_training_hyper_parameter_arguments(parser)
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
-    parser.add_argument('--timing', default=True, type=lambda x: (str(x).lower() == 'true'),
-                        help='event enables timing or not')
+    parser.add_argument('--profiling', type=str, default='tidy_profiling', metavar='S',
+                        help='enable which profiling? default: tidy mode')
     parser.add_argument('--async-mode', default=True, type=lambda x: (str(x).lower() == 'true'),
-                        help='use async mode or not')
-    parser.add_argument('--profiling', default=False, type=lambda x: (str(x).lower() == 'true'),
                         help='use async mode or not')
     args = parser.parse_args()
     torch.manual_seed(args.seed)
@@ -46,15 +43,23 @@ def main():
     else:
         gpipe = GpipeSync(args, vocab_size, num_classes, device) # TODO: this part is not refactored yet.
 
-    if args.profiling:
-        with profiler.profile(profile_memory=True, use_cuda=args.use_cuda) as prof:
-            distributed_train_foo_iter(args, gpipe, device, train_data_loader)
-        print(prof.key_averages().table())
-        trace_file = "./trace_json/gpt3_gpipe_b" + str(args.batch_size) + "_l" + str(args.seq_length) + '_m' + \
-                     str(args.embedding_dim) + "_w" + str(args.world_size) + "_" + str(args.rank) + ".json"
-        prof.export_chrome_trace(trace_file)
-    else:
+    if args.profiling == 'no-profiling':
         distributed_train_foo_iter(args, gpipe, device, train_data_loader)
+    else:
+        trace_file = './trace_json/gpt3_gpipe_b' + str(args.batch_size) + '_' + str(args.micro_batch_size) + \
+                     '_l' + str(args.seq_length) + '_m' + str(args.embedding_dim) + '_w' + str(args.world_size) + \
+                     '_' + str(args.rank) + args.profiling + '.json'
+        if args.profiling == 'tidy_profiling':
+            distributed_train_foo_iter(args, gpipe, device, train_data_loader)
+            gpipe.export_profiling_result()
+        elif args.profiling == 'pytorch_profiling':
+            with profiler.profile(profile_memory=True, use_cuda=args.use_cuda) as prof:
+                distributed_train_foo_iter(args, gpipe, device, train_data_loader)
+            print(prof.key_averages().table())
+            prof.export_chrome_trace(trace_file)
+        else:
+            print("No recognized profiler?")
+            assert False
 
 
 if __name__ == '__main__':
