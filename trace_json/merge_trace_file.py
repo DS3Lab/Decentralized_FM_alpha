@@ -22,13 +22,18 @@ def download_trace_logs(args, prefix, postfix, ips=node_ip_lists):
 
 def merge_logs(args, prefix, postfix):
     result = []
+    current_min_stamp = float('inf')
     for i in range(args.world_size):
         print(i)
         with open("./" + prefix + '/' + prefix + '_' + str(i) + postfix) as inputJson:
             current_trace = json.load(inputJson)
             inputJson.close()
+            if i == 0:
+                for log in current_trace:
+                    current_min_stamp = min(log['ts'], current_min_stamp)
             for log in current_trace:
                 log['pid'] = 'Node ' + str(i)
+                log['ts'] = log['ts'] - current_min_stamp
             result.extend(current_trace)
     print(len(result))
     with open("./" + prefix + postfix, 'w') as outputJson:
