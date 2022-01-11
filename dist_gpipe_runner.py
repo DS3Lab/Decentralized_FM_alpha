@@ -48,7 +48,7 @@ def main():
     else:
         trace_file = './trace_json/gpt3_gpipe_b' + str(args.batch_size) + '_' + str(args.micro_batch_size) + \
                      '_l' + str(args.seq_length) + '_m' + str(args.embedding_dim) + '_w' + str(args.world_size) + \
-                     '_' + str(args.rank) + args.profiling + '.json'
+                     '_' + str(args.rank) + '_' + args.profiling + '.json'
         if args.profiling == 'tidy_profiling':
             distributed_train_foo_iter(args, gpipe, device, train_data_loader)
             gpipe.export_profiling_result(filename=trace_file)
