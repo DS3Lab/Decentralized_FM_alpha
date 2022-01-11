@@ -235,7 +235,7 @@ class GpipeAsync:
         if self.enable_tidy_profiling:
             self.profiling_backward_stage()
 
-    def profile_back_stage(self):
+    def profiling_backward_stage(self):
         torch.cuda.synchronize()
         assert len(self.profiling_backward_time_stamps) == self.micro_batch_num
         for i in range(self.micro_batch_num):
