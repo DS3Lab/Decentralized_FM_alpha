@@ -283,7 +283,7 @@ class GpipeAsync:
                 self.profiling_log.append(recv_log)
 
             comp_slot = self.backward_comp_start_events[i].elapsed_time(self.backward_comp_ready_events[i]) * 1e+3
-            comp_log = {"name": "backward-compute", "ph": "X", "pid": self.rank, "tid": 1,
+            comp_log = {"name": "backward-compute", "ph": "X", "pid": self.rank, "tid": 4,
                         "ts": self.get_backward_ts(self.backward_comp_start_events[i]), "dur": comp_slot,
                         "args": {"micro-batch": i}}
             print(comp_log)

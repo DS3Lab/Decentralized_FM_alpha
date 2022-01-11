@@ -58,7 +58,7 @@ def main():
     prefix = 'gpt3_gpipe_b' + str(args.batch_size) + '_' + str(args.micro_batch_size) + '_l' + str(args.seq_length) + \
              '_m' + str(args.embedding_dim) + '_w' + str(args.world_size)
     postfix = '_' + args.profiling + '.json'
-    # download_trace_logs(args, prefix, postfix)
+    download_trace_logs(args, prefix, postfix)
     merge_logs(args, prefix, postfix)
 
 
