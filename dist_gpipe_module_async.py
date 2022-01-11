@@ -125,7 +125,7 @@ class GpipeAsync:
 
     def profile_mark_backward_send_end(self, i):
         if self.enable_tidy_profiling:
-            self.torch_comm_stream.record_event(self.back_send_end_events[i])
+            self.torch_comm_stream.record_event(self.backward_send_end_events[i])
 
     def get_forward_ts(self, event):
         return self.forward_init_time_stamp + self.forward_init_event.elapsed_time(event) * 1e+3
