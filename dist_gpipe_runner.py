@@ -51,7 +51,7 @@ def main():
                      '_' + str(args.rank) + args.profiling + '.json'
         if args.profiling == 'tidy_profiling':
             distributed_train_foo_iter(args, gpipe, device, train_data_loader)
-            gpipe.export_profiling_result()
+            gpipe.export_profiling_result(filename=trace_file)
         elif args.profiling == 'pytorch_profiling':
             with profiler.profile(profile_memory=True, use_cuda=args.use_cuda) as prof:
                 distributed_train_foo_iter(args, gpipe, device, train_data_loader)
