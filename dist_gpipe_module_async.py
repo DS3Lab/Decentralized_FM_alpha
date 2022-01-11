@@ -185,9 +185,6 @@ class GpipeAsync:
                     self.comm.send(current_micro_output.data, dst=self.post_node_rank, stream=cupy_comm_stream)
                     self.profile_mark_forward_send_end(i)
             output_micro_batches.append(current_micro_output)
-            if self.enable_tidy_profiling:
-                forward_end_event = self.forward_end_events[i]
-                forward_end_event.record()
         if self.enable_tidy_profiling:
             self.profiling_forward_stage()
         return output_micro_batches
