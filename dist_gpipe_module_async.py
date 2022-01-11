@@ -143,35 +143,42 @@ class GpipeAsync:
             if self.rank == 0:
                 comp_slot = self.forward_start_events[i].elapsed_time(self.forward_comp_ready_events[i])
                 comp_log = {"name": "forward-compute", "ph": "X", "pid": self.rank, "tid": 1,
-                            "ts": self.profiling_forward_time_stamps[i],  "dur": comp_slot}
+                            "ts": self.profiling_forward_time_stamps[i],  "dur": comp_slot,
+                            "args": {"micro-batch": i}}
                 send_slot = self.forward_comp_ready_events[i].elapsed_time(self.forward_end_events[i])
-                send_log = {"name": "forward-send", "ph": "X", "pid": self.rank, "tid": 1,
-                            "ts": self.profiling_forward_time_stamps[i] + comp_slot, "dur": send_slot}
+                send_log = {"name": "forward-send", "ph": "X", "pid": self.rank, "tid": 2,
+                            "ts": self.profiling_forward_time_stamps[i] + comp_slot, "dur": send_slot,
+                            "args": {"micro-batch": i}}
                 print(comp_log)
                 print(send_log)
                 self.profiling_log.append(comp_log)
                 self.profiling_log.append(send_log)
             elif self.rank == self.world_size - 1:
                 recv_slot = self.forward_start_events[i].elapsed_time(self.forward_comm_ready_events[i])
-                recv_log = {"name": "forward-recv", "ph": "X", "pid": self.rank, "tid": 1,
-                            "ts": self.profiling_forward_time_stamps[i], "dur": recv_slot}
+                recv_log = {"name": "forward-recv", "ph": "X", "pid": self.rank, "tid": 2,
+                            "ts": self.profiling_forward_time_stamps[i], "dur": recv_slot,
+                            "args": {"micro-batch": i}}
                 comp_slot = self.forward_comm_ready_events[i].elapsed_time(self.forward_end_events[i])
                 comp_log = {"name": "forward-compute", "ph": "X", "pid": self.rank, "tid": 1,
-                            "ts": self.profiling_forward_time_stamps[i] + recv_slot, "dur": comp_slot}
+                            "ts": self.profiling_forward_time_stamps[i] + recv_slot, "dur": comp_slot,
+                            "args": {"micro-batch": i}}
                 print(recv_log)
                 print(comp_log)
                 self.profiling_log.append(recv_log)
                 self.profiling_log.append(comp_log)
             else:
                 recv_slot = self.forward_start_events[i].elapsed_time(self.forward_comm_ready_events[i])
-                recv_log = {"name": "forward-recv", "ph": "X", "pid": self.rank, "tid": 1,
-                            "ts": self.profiling_forward_time_stamps[i], "dur": recv_slot}
+                recv_log = {"name": "forward-recv", "ph": "X", "pid": self.rank, "tid": 2,
+                            "ts": self.profiling_forward_time_stamps[i], "dur": recv_slot,
+                            "args": {"micro-batch": i}}
                 comp_slot = self.forward_comm_ready_events[i].elapsed_time(self.forward_comp_ready_events[i])
                 comp_log = {"name": "forward-compute", "ph": "X", "pid": self.rank, "tid": 1,
-                            "ts": self.profiling_forward_time_stamps[i] + recv_slot, "dur": comp_slot}
+                            "ts": self.profiling_forward_time_stamps[i] + recv_slot, "dur": comp_slot,
+                            "args": {"micro-batch": i}}
                 send_slot = self.forward_comp_ready_events[i].elapsed_time(self.forward_end_events[i])
-                send_log = {"name": "forward-send", "ph": "X", "pid": self.rank, "tid": 1,
-                            "ts": self.profiling_forward_time_stamps[i] + recv_slot + comp_slot, "dur": send_slot}
+                send_log = {"name": "forward-send", "ph": "X", "pid": self.rank, "tid": 2,
+                            "ts": self.profiling_forward_time_stamps[i] + recv_slot + comp_slot, "dur": send_slot,
+                            "args": {"micro-batch": i}}
                 print(recv_log)
                 print(comp_log)
                 print(send_log)
@@ -241,36 +248,43 @@ class GpipeAsync:
         for i in range(self.micro_batch_num):
             if self.rank == self.world_size - 1:
                 comp_slot = self.backward_start_events[i].elapsed_time(self.backward_comp_ready_events[i])
-                comp_log = {"name": "backward-compute", "ph": "X", "pid": self.rank, "tid": 2,
-                            "ts": self.profiling_backward_time_stamps[i],  "dur": comp_slot}
+                comp_log = {"name": "backward-compute", "ph": "X", "pid": self.rank, "tid": 3,
+                            "ts": self.profiling_backward_time_stamps[i],  "dur": comp_slot,
+                            "args": {"micro-batch": i}}
                 send_slot = self.backward_comp_ready_events[i].elapsed_time(self.backward_end_events[i])
-                send_log = {"name": "backward-send", "ph": "X", "pid": self.rank, "tid": 2,
-                            "ts": self.profiling_backward_time_stamps[i] + comp_slot, "dur": send_slot}
+                send_log = {"name": "backward-send", "ph": "X", "pid": self.rank, "tid": 4,
+                            "ts": self.profiling_backward_time_stamps[i] + comp_slot, "dur": send_slot,
+                            "args": {"micro-batch": i}}
                 print(comp_log)
                 print(send_log)
                 self.profiling_log.append(comp_log)
                 self.profiling_log.append(send_log)
             elif self.rank == 0:
                 recv_slot = self.backward_start_events[i].elapsed_time(self.backward_comm_ready_events[i])
-                recv_log = {"name": "backward-recv", "ph": "X", "pid": self.rank, "tid": 2,
-                            "ts": self.profiling_backward_time_stamps[i], "dur": recv_slot}
+                recv_log = {"name": "backward-recv", "ph": "X", "pid": self.rank, "tid": 4,
+                            "ts": self.profiling_backward_time_stamps[i], "dur": recv_slot,
+                            "args": {"micro-batch": i}}
                 comp_slot = self.backward_comm_ready_events[i].elapsed_time(self.backward_end_events[i])
-                comp_log = {"name": "backward-compute", "ph": "X", "pid": self.rank, "tid": 2,
-                            "ts": self.profiling_backward_time_stamps[i] + recv_slot, "dur": comp_slot}
+                comp_log = {"name": "backward-compute", "ph": "X", "pid": self.rank, "tid": 3,
+                            "ts": self.profiling_backward_time_stamps[i] + recv_slot, "dur": comp_slot,
+                            "args": {"micro-batch": i}}
                 print(recv_log)
                 print(comp_log)
                 self.profiling_log.append(recv_log)
                 self.profiling_log.append(comp_log)
             else:
                 recv_slot = self.backward_start_events[i].elapsed_time(self.backward_comm_ready_events[i])
-                recv_log = {"name": "backward-recv", "ph": "X", "pid": self.rank, "tid": 2,
-                            "ts": self.profiling_backward_time_stamps[i], "dur": recv_slot}
+                recv_log = {"name": "backward-recv", "ph": "X", "pid": self.rank, "tid": 4,
+                            "ts": self.profiling_backward_time_stamps[i], "dur": recv_slot,
+                            "args": {"micro-batch": i}}
                 comp_slot = self.backward_comm_ready_events[i].elapsed_time(self.backward_comp_ready_events[i])
-                comp_log = {"name": "backward-compute", "ph": "X", "pid": self.rank, "tid": 2,
-                            "ts": self.profiling_backward_time_stamps[i] + recv_slot, "dur": comp_slot}
+                comp_log = {"name": "backward-compute", "ph": "X", "pid": self.rank, "tid": 3,
+                            "ts": self.profiling_backward_time_stamps[i] + recv_slot, "dur": comp_slot,
+                            "args": {"micro-batch": i}}
                 send_slot = self.backward_comp_ready_events[i].elapsed_time(self.backward_end_events[i])
-                send_log = {"name": "backward-send", "ph": "X", "pid": self.rank, "tid": 2,
-                            "ts": self.profiling_backward_time_stamps[i] + recv_slot + comp_slot, "dur": send_slot}
+                send_log = {"name": "backward-send", "ph": "X", "pid": self.rank, "tid": 4,
+                            "ts": self.profiling_backward_time_stamps[i] + recv_slot + comp_slot, "dur": send_slot,
+                            "args": {"micro-batch": i}}
                 print(recv_log)
                 print(comp_log)
                 print(send_log)
