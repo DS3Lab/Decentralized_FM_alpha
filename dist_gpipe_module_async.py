@@ -193,14 +193,14 @@ class GpipeAsync:
         torch.cuda.synchronize()
         for i in range(self.micro_batch_num):
             if self.rank != 0:
-                recv_slot = self.forward_recv_start_events[i].elapsed_time(self.forward_comm_ready_events[i])
+                recv_slot = self.forward_recv_start_events[i].elapsed_time(self.forward_comm_ready_events[i]) * 1e+3
                 recv_log = {"name": "forward-recv", "ph": "X", "pid": self.rank, "tid": 2,
                             "ts": self.get_forward_ts(self.forward_recv_start_events[i]), "dur": recv_slot,
                             "args": {"micro-batch": i}}
                 print(recv_log)
                 self.profiling_log.append(recv_log)
 
-            comp_slot = self.forward_comp_start_events[i].elapsed_time(self.forward_comp_ready_events[i])
+            comp_slot = self.forward_comp_start_events[i].elapsed_time(self.forward_comp_ready_events[i]) * 1e+3
             comp_log = {"name": "forward-compute", "ph": "X", "pid": self.rank, "tid": 1,
                         "ts": self.get_forward_ts(self.forward_comp_start_events[i]), "dur": comp_slot,
                         "args": {"micro-batch": i}}
@@ -208,7 +208,7 @@ class GpipeAsync:
             self.profiling_log.append(comp_log)
 
             if self.rank != self.world_size - 1:
-                send_slot = self.forward_send_start_events[i].elapsed_time(self.forward_send_end_events[i])
+                send_slot = self.forward_send_start_events[i].elapsed_time(self.forward_send_end_events[i]) * 1e+3
                 send_log = {"name": "forward-send", "ph": "X", "pid": self.rank, "tid": 3,
                             "ts": self.get_forward_ts(self.forward_send_start_events[i]), "dur": send_slot,
                             "args": {"micro-batch": i}}
@@ -228,10 +228,6 @@ class GpipeAsync:
             self.backward_init_time_stamp = time.time() * 1e+6
             self.backward_init_event.record()
         for i in range(self.micro_batch_num):
-            if self.enable_tidy_profiling:
-                backward_start_event = self.backward_start_events[i]
-                self.profiling_backward_time_stamps.append(time.time()*1000)
-                backward_start_event.record()
             if self.rank == self.world_size - 1:  # only send grad back to last node, do not receive
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.profile_mark_backward_comp_start(i)
@@ -279,21 +275,21 @@ class GpipeAsync:
         torch.cuda.synchronize()
         for i in range(self.micro_batch_num):
             if self.rank != self.world_size - 1:
-                recv_slot = self.backward_recv_start_events[i].elapsed_time(self.backward_comm_ready_events[i])
+                recv_slot = self.backward_recv_start_events[i].elapsed_time(self.backward_comm_ready_events[i]) * 1e+3
                 recv_log = {"name": "backward-recv", "ph": "X", "pid": self.rank, "tid": 5,
                             "ts": self.get_backward_ts(self.backward_recv_start_events[i]), "dur": recv_slot,
                             "args": {"micro-batch": i}}
                 print(recv_log)
                 self.profiling_log.append(recv_log)
 
-            comp_slot = self.backward_comp_start_events[i].elapsed_time(self.backward_comp_ready_events[i])
+            comp_slot = self.backward_comp_start_events[i].elapsed_time(self.backward_comp_ready_events[i]) * 1e+3
             comp_log = {"name": "backward-compute", "ph": "X", "pid": self.rank, "tid": 1,
                         "ts": self.get_backward_ts(self.backward_comp_start_events[i]), "dur": comp_slot,
                         "args": {"micro-batch": i}}
             print(comp_log)
             self.profiling_log.append(comp_log)
             if self.rank != 0:
-                send_slot = self.backward_send_start_events[i].elapsed_time(self.backward_send_end_events[i])
+                send_slot = self.backward_send_start_events[i].elapsed_time(self.backward_send_end_events[i]) * 1e+3
                 send_log = {"name": "backward-send", "ph": "X", "pid": self.rank, "tid": 6,
                             "ts": self.get_backward_ts(self.backward_send_start_events[i]), "dur": send_slot,
                             "args": {"micro-batch": i}}
