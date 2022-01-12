@@ -194,24 +194,24 @@ class GpipeAsync:
         for i in range(self.micro_batch_num):
             if self.rank != 0:
                 recv_slot = self.forward_recv_start_events[i].elapsed_time(self.forward_comm_ready_events[i]) * 1e+3
-                recv_log = {"name": "forward-recv", "ph": "X", "pid": self.rank, "tid": 2,
+                recv_log = {"name": "recv", "ph": "X", "pid": self.rank, "tid": "1. forward-recv",
                             "ts": self.get_forward_ts(self.forward_recv_start_events[i]), "dur": recv_slot,
-                            "args": {"micro-batch": i}}
+                            "args": {"micro-batch": i}, "cname": "startup"}
                 print(recv_log)
                 self.profiling_log.append(recv_log)
 
             comp_slot = self.forward_comp_start_events[i].elapsed_time(self.forward_comp_ready_events[i]) * 1e+3
-            comp_log = {"name": "forward-compute", "ph": "X", "pid": self.rank, "tid": 1,
+            comp_log = {"name": "comp", "ph": "X", "pid": self.rank, "tid": "2. forward-compute",
                         "ts": self.get_forward_ts(self.forward_comp_start_events[i]), "dur": comp_slot,
-                        "args": {"micro-batch": i}}
+                        "args": {"micro-batch": i}, "cname": "good"}
             print(comp_log)
             self.profiling_log.append(comp_log)
 
             if self.rank != self.world_size - 1:
                 send_slot = self.forward_send_start_events[i].elapsed_time(self.forward_send_end_events[i]) * 1e+3
-                send_log = {"name": "forward-send", "ph": "X", "pid": self.rank, "tid": 3,
+                send_log = {"name": "send", "ph": "X", "pid": self.rank, "tid": "3. forward-send",
                             "ts": self.get_forward_ts(self.forward_send_start_events[i]), "dur": send_slot,
-                            "args": {"micro-batch": i}}
+                            "args": {"micro-batch": i}, "cname": "yellow"}
                 print(send_log)
                 self.profiling_log.append(send_log)
 
@@ -276,23 +276,23 @@ class GpipeAsync:
         for i in range(self.micro_batch_num):
             if self.rank != self.world_size - 1:
                 recv_slot = self.backward_recv_start_events[i].elapsed_time(self.backward_comm_ready_events[i]) * 1e+3
-                recv_log = {"name": "backward-recv", "ph": "X", "pid": self.rank, "tid": 5,
+                recv_log = {"name": "recv", "ph": "X", "pid": self.rank, "tid": "4. backward-recv",
                             "ts": self.get_backward_ts(self.backward_recv_start_events[i]), "dur": recv_slot,
-                            "args": {"micro-batch": i}}
+                            "args": {"micro-batch": i}, "cname": "startup"}  # cname is for color, a little silly.
                 print(recv_log)
                 self.profiling_log.append(recv_log)
 
             comp_slot = self.backward_comp_start_events[i].elapsed_time(self.backward_comp_ready_events[i]) * 1e+3
-            comp_log = {"name": "backward-compute", "ph": "X", "pid": self.rank, "tid": 4,
+            comp_log = {"name": "comp", "ph": "X", "pid": self.rank, "tid": "5. backward-compute",
                         "ts": self.get_backward_ts(self.backward_comp_start_events[i]), "dur": comp_slot,
-                        "args": {"micro-batch": i}}
+                        "args": {"micro-batch": i}, "cname": "good"}
             print(comp_log)
             self.profiling_log.append(comp_log)
             if self.rank != 0:
                 send_slot = self.backward_send_start_events[i].elapsed_time(self.backward_send_end_events[i]) * 1e+3
-                send_log = {"name": "backward-send", "ph": "X", "pid": self.rank, "tid": 6,
+                send_log = {"name": "send", "ph": "X", "pid": self.rank, "tid": "6. backward-send",
                             "ts": self.get_backward_ts(self.backward_send_start_events[i]), "dur": send_slot,
-                            "args": {"micro-batch": i}}
+                            "args": {"micro-batch": i}, "cname": "yellow"}
                 print(send_log)
                 self.profiling_log.append(send_log)
 
@@ -308,6 +308,9 @@ class GpipeAsync:
         outputs = self.forward_stage(input_)
         forward_time = time.time()
         print("Rank {} node forward pass takes {:3.2f}s".format(self.rank,  forward_time-start_time))
+
+        self.comm.barrier()  # This is an educated guess that such barrier would make it fair TC (required)
+
         self.backward_stage(outputs, target)
         backward_time = time.time()
         print("Rank {} node backward pass takes {:3.2f}s".format(self.rank,  backward_time-forward_time))
