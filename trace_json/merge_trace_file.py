@@ -1,6 +1,7 @@
 import os
 import json
 import argparse
+import shutil
 
 # TODO: change this hard coded version later.
 node_ip_lists = [
@@ -12,9 +13,9 @@ node_ip_lists = [
 
 def download_trace_logs(args, prefix, postfix, ips=node_ip_lists):
     if os.path.isdir('./'+prefix):
-        os.rmdir('./'+prefix)
-    else:
-        os.mkdir('./'+prefix)
+        # os.rmdir('./'+prefix)
+        shutil.rmtree('./'+prefix)
+    os.mkdir('./'+prefix)
     for i in range(args.world_size):
         os.system("scp -i ../binhang_ds3_aws_oregon.pem ubuntu@" + ips[i] +
                   ":~/GPT-home-private/trace_json/"+prefix+'_'+str(i) + postfix + ' ./' + prefix)
