@@ -5,9 +5,9 @@ import shutil
 
 # TODO: change this hard coded version later.
 node_ip_lists = [
-    "54.212.70.233",
-    "54.188.166.154",
-    "54.213.200.84",
+    "18.236.249.26",
+    "34.223.247.136",
+    "34.217.0.177",
 ]
 
 
