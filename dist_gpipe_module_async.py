@@ -319,9 +319,10 @@ class GpipeAsync:
     def profiling_optimizer_step(self):
         torch.cuda.synchronize()
         optimizer_slot = self.optimizer_start_event.elapsed_time(self.optimizer_end_event) * 1e+3
-        comp_log = {"name": "opt", "ph": "X", "pid": self.rank, "tid": "7. optimizer step",
-                    "ts": self.optimizer_start_event, "dur": optimizer_slot, "cname": "memory_dump"}
-        self.profiling_log.append(comp_log)
+        optimizer_log = {"name": "opt", "ph": "X", "pid": self.rank, "tid": "7. optimizer step",
+                         "ts": self.optimizer_start_time_stamp, "dur": optimizer_slot, "cname": "memory_dump"}
+        print(optimizer_log)
+        self.profiling_log.append(optimizer_log)
 
     def export_profiling_result(self, filename):
         with open(filename, 'w') as outfile:
