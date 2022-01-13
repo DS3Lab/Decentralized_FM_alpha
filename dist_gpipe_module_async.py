@@ -158,16 +158,16 @@ class GpipeAsync:
                     current_micro_output = self.model(current_micro_input)
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
-                    cupy_comm_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
+                    cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
                     self.torch_send_stream.wait_event(self.forward_comp_ready_events[i])
                     self.profile_mark_forward_send_start(i)
-                    self.comm.send(current_micro_output.data, dst=self.post_node_rank, stream=cupy_comm_stream)
+                    self.comm.send(current_micro_output.data, dst=self.post_node_rank, stream=cupy_send_stream)
                     self.profile_mark_forward_send_end(i)
             elif self.rank == self.world_size - 1:  # Only receive input from last node, do not send
                 with torch.cuda.stream(self.torch_recv_stream):
-                    cupy_comm_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
+                    cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                     self.profile_mark_forward_recv_start(i)
-                    self.comm.recv(current_micro_input, src=self.pre_node_rank, stream=cupy_comm_stream)
+                    self.comm.recv(current_micro_input, src=self.pre_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.forward_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
@@ -176,9 +176,9 @@ class GpipeAsync:
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
             else:  # receive, compute, and send
                 with torch.cuda.stream(self.torch_recv_stream):
-                    cupy_comm_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
+                    cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                     self.profile_mark_forward_recv_start(i)
-                    self.comm.recv(current_micro_input, src=self.pre_node_rank, stream=cupy_comm_stream)
+                    self.comm.recv(current_micro_input, src=self.pre_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.forward_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
@@ -186,10 +186,10 @@ class GpipeAsync:
                     current_micro_output = self.model(current_micro_input)
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
-                    cupy_comm_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
+                    cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
                     self.torch_send_stream.wait_event(self.forward_comp_ready_events[i])
                     self.profile_mark_forward_send_start(i)
-                    self.comm.send(current_micro_output.data, dst=self.post_node_rank, stream=cupy_comm_stream)
+                    self.comm.send(current_micro_output.data, dst=self.post_node_rank, stream=cupy_send_stream)
                     self.profile_mark_forward_send_end(i)
             output_micro_batches.append(current_micro_output)
         if self.enable_tidy_profiling:
@@ -242,16 +242,16 @@ class GpipeAsync:
                     loss.backward()
                     self.torch_comp_stream.record_event(self.backward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
-                    cupy_comm_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
+                    cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
                     self.torch_send_stream.wait_event(self.backward_comp_ready_events[i])
                     self.profile_mark_backward_send_start(i)
-                    self.comm.send(self.input_micro_batches[i].grad, dst=self.pre_node_rank, stream=cupy_comm_stream)
+                    self.comm.send(self.input_micro_batches[i].grad, dst=self.pre_node_rank, stream=cupy_send_stream)
                     self.profile_mark_backward_send_end(i)
             elif self.rank == 0:  # only receive grad from previous node, do not send
                 with torch.cuda.stream(self.torch_recv_stream):
-                    cupy_comm_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
+                    cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                     self.profile_mark_backward_recv_start(i)
-                    self.comm.recv(self.output_micro_batches_grad[i], src=self.post_node_rank, stream=cupy_comm_stream)
+                    self.comm.recv(self.output_micro_batches_grad[i], src=self.post_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.backward_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.backward_recv_ready_events[i])
@@ -260,9 +260,9 @@ class GpipeAsync:
                     self.torch_comp_stream.record_event(self.backward_comp_ready_events[i])
             else:  # receive, compute and send
                 with torch.cuda.stream(self.torch_recv_stream):
-                    cupy_comm_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
+                    cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                     self.profile_mark_backward_recv_start(i)
-                    self.comm.recv(self.output_micro_batches_grad[i], src=self.post_node_rank, stream=cupy_comm_stream)
+                    self.comm.recv(self.output_micro_batches_grad[i], src=self.post_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.backward_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.backward_recv_ready_events[i])
@@ -270,10 +270,10 @@ class GpipeAsync:
                     cached_output_micro_batches[i].backward(gradient=self.output_micro_batches_grad[i])
                     self.torch_comp_stream.record_event(self.backward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
-                    cupy_comm_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
+                    cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
                     self.torch_send_stream.wait_event(self.backward_comp_ready_events[i])
                     self.profile_mark_backward_send_start(i)
-                    self.comm.send(self.input_micro_batches[i].grad, dst=self.pre_node_rank, stream=cupy_comm_stream)
+                    self.comm.send(self.input_micro_batches[i].grad, dst=self.pre_node_rank, stream=cupy_send_stream)
                     self.profile_mark_backward_send_end(i)
         if self.enable_tidy_profiling:
             self.profiling_backward_stage()
@@ -319,8 +319,8 @@ class GpipeAsync:
     def profiling_optimizer_step(self):
         torch.cuda.synchronize()
         optimizer_slot = self.optimizer_start_event.elapsed_time(self.optimizer_end_event) * 1e+3
-        optimizer_log = {"name": "opt", "ph": "X", "pid": self.rank, "tid": "7. optimizer step",
-                         "ts": self.optimizer_start_time_stamp, "dur": optimizer_slot, "cname": "memory_dump"}
+        optimizer_log = {"name": "opt", "ph": "X", "pid": self.rank, "tid": "7. optimizer-step",
+                         "ts": self.optimizer_start_time_stamp, "dur": optimizer_slot, "cname": "bad"}
         print(optimizer_log)
         self.profiling_log.append(optimizer_log)
 
