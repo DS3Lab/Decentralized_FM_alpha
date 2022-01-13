@@ -113,6 +113,7 @@ class GPTEmbedding(torch.nn.Module):
                                                   max_norm=None,  norm_type=2, scale_grad_by_freq=False, sparse=False)
         torch.nn.init.xavier_normal_(self.vocab_embedding.weight)
         self.position_embedding = torch.nn.Embedding(seq_length, embedding_dim)
+        torch.nn.init.xavier_normal_(self.position_embedding.weight)
         if num_token_types > 0:
             self.token_type_embedding = torch.nn.Embedding(num_token_types, embedding_dim)
         else:
@@ -143,9 +144,6 @@ class GlueClassification(torch.nn.Module):
         pooled = self.pooler_layer(pooled)
         pooled = torch.tanh(pooled)
         return self.fc_layer(pooled)
-
-
-
 
 
 ''' Remove this to keep consistent with Megatron. 

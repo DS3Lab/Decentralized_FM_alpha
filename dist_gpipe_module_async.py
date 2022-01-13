@@ -151,11 +151,10 @@ class GpipeAsync:
             self.forward_init_time_stamp = time.time() * 1e+6
             self.forward_init_event.record()
         for i in range(self.micro_batch_num):
-            current_micro_input = self.input_micro_batches[i]
             if self.rank == 0:  # Only send output to next node, do not receive
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.profile_mark_forward_comp_start(i)
-                    current_micro_output = self.model(current_micro_input)
+                    current_micro_output = self.model(self.input_micro_batches[i])
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
@@ -167,23 +166,23 @@ class GpipeAsync:
                 with torch.cuda.stream(self.torch_recv_stream):
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                     self.profile_mark_forward_recv_start(i)
-                    self.comm.recv(current_micro_input, src=self.pre_node_rank, stream=cupy_recv_stream)
+                    self.comm.recv(self.input_micro_batches[i], src=self.pre_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.forward_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
                     self.profile_mark_forward_comp_start(i)
-                    current_micro_output = self.model(current_micro_input)
+                    current_micro_output = self.model(self.input_micro_batches[i])
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
             else:  # receive, compute, and send
                 with torch.cuda.stream(self.torch_recv_stream):
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                     self.profile_mark_forward_recv_start(i)
-                    self.comm.recv(current_micro_input, src=self.pre_node_rank, stream=cupy_recv_stream)
+                    self.comm.recv(self.input_micro_batches[i], src=self.pre_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.forward_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
                     self.profile_mark_forward_comp_start(i)
-                    current_micro_output = self.model(current_micro_input)
+                    current_micro_output = self.model(self.input_micro_batches[i])
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
