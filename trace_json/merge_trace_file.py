@@ -4,9 +4,9 @@ import argparse
 
 # TODO: change this hard coded version later.
 node_ip_lists = [
-    "54.185.188.229",
-    "18.236.125.144",
-    "35.87.105.165",
+    "54.200.66.80",
+    "35.88.190.215",
+    "54.213.203.15",
 ]
 
 
