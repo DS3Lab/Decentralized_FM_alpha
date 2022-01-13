@@ -54,6 +54,7 @@ class NCCLCommunicator:
              tensor: torch.Tensor,
              dst: int,
              stream=cupy.cuda.Stream.null):
+        print("Send tensor of size:", torch.numel(tensor))
         self.comm.send(
             tensor.data_ptr(),
             torch.numel(tensor),
@@ -66,6 +67,7 @@ class NCCLCommunicator:
              tensor: torch.Tensor,
              src: int,
              stream=cupy.cuda.Stream.null):
+        print("Recv tensor of size:", torch.numel(tensor))
         self.comm.recv(
             tensor.data_ptr(),
             torch.numel(tensor),
