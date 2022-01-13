@@ -54,7 +54,8 @@ def test_sync_send_recv_bandwidth(args, device, communicator, estimated_delay=0)
     print("<==== Test bandwidth ====>")
     if args.rank == 0:
         # send_tensor = torch.arange(args.dim, dtype=torch.float32, device=device)
-        send_tensor = torch.ones(args.dim, dtype=torch.float32, device=device)
+        send_tensor = torch.zeros(args.dim, dtype=torch.float32, device=device)
+        torch.nn.init.uniform_(send_tensor)
         if args.dist_backend == 'nccl':
             dist.barrier(device_ids=[args.cuda_id])
         else:
