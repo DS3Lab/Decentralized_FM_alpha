@@ -155,7 +155,6 @@ class GpipeAsync:
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.profile_mark_forward_comp_start(i)
                     current_micro_output = self.model(self.input_micro_batches[i])
-                    torch.nn.init.uniform_(current_micro_output.data)  # TODO remove this after tuning to converge.
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
@@ -184,7 +183,6 @@ class GpipeAsync:
                     self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
                     self.profile_mark_forward_comp_start(i)
                     current_micro_output = self.model(self.input_micro_batches[i])
-                    torch.nn.init.uniform_(current_micro_output.data)  # TODO remove this after tuning to converge.
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
@@ -241,7 +239,6 @@ class GpipeAsync:
                     self.profile_mark_backward_comp_start(i)
                     loss = loss_func(input=cached_output_micro_batches[i], target=target_as_micro_batches[i])
                     loss.backward()
-                    torch.nn.init.uniform_(self.input_micro_batches[i].grad)  # TODO remove this after tuning to converge.
                     self.torch_comp_stream.record_event(self.backward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
@@ -270,7 +267,6 @@ class GpipeAsync:
                     self.torch_comp_stream.wait_event(self.backward_recv_ready_events[i])
                     self.profile_mark_backward_comp_start(i)
                     cached_output_micro_batches[i].backward(gradient=self.output_micro_batches_grad[i])
-                    torch.nn.init.uniform_(self.input_micro_batches[i].grad)  # TODO remove this after tuning to converge.
                     self.torch_comp_stream.record_event(self.backward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
