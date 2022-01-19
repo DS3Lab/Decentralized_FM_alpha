@@ -3,6 +3,7 @@ import math
 from torch import nn
 from torch.nn import functional
 from torch.utils.checkpoint import checkpoint
+from .task_modules import GlueClassification
 
 
 class MultiHeadAttention(nn.Module):
@@ -131,139 +132,18 @@ class GPTEmbedding(torch.nn.Module):
         return embeddings
 
 
-class GlueClassification(torch.nn.Module):
-    def __init__(self, model_dim, num_classes):
-        super(GlueClassification, self).__init__()
-        self.model_dim = model_dim
-        self.num_classes = num_classes
-        self.pooler_layer = torch.nn.Linear(model_dim, model_dim)
-        self.fc_layer = torch.nn.Linear(model_dim, num_classes)
-
-    def forward(self, hidden_states, pooler_index=0):
-        pooled = hidden_states[:, pooler_index, :]
-        pooled = self.pooler_layer(pooled)
-        pooled = torch.tanh(pooled)
-        return self.fc_layer(pooled)
-
-
-''' Remove this to keep consistent with Megatron. 
-class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, dropout=0.1, max_len=5000):
-        super(PositionalEncoding, self).__init__()
-        self.dropout = nn.Dropout(p=dropout)
-
-        pe = torch.zeros(max_len, d_model)
-        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
-        pe[:, 0::2] = torch.sin(position * div_term)
-        pe[:, 1::2] = torch.cos(position * div_term)
-        pe = pe.unsqueeze(0).transpose(0, 1)
-        self.register_buffer('pe', pe)
-
-    def forward(self, x):
-        x = x + self.pe[:x.size(0), :]
-        return self.dropout(x)
-
-
-class Encoder(nn.Module):
-    def __init__(self, ntoken, ninp, dropout=0.1):
-        super(Encoder, self).__init__()
-        self.pos_encoder = PositionalEncoding(ninp, dropout)
-        self.encoder = nn.Embedding(ntoken, ninp)
-        self.ninp = ninp
-        self.init_weights()
-
-    def init_weights(self):
-        initrange = 0.1
-        self.encoder.weight.data.uniform_(-initrange, initrange)
-
-    def forward(self, src):
-        # Need (S, N) format for encoder.
-        src = src.t()
-        src = self.encoder(src) * math.sqrt(self.ninp)
-        return self.pos_encoder(src)
-
-
-class Decoder(nn.Module):
-    def __init__(self, ntoken, ninp):
-        super(Decoder, self).__init__()
-        self.ntoken = ntoken
-        self.decoder = nn.Linear(ninp, ntoken)
-        self.init_weights()
-
-    def init_weights(self):
-        initrange = 0.1
-        self.decoder.bias.data.zero_()
-        self.decoder.weight.data.uniform_(-initrange, initrange)
-
-    def forward(self, inp):
-        # Need batch dimension first for output of pipeline.
-        return self.decoder(inp).view(-1, self.ntoken)
-'''
-
-
-class GPTShardBase(nn.Module):
+class GPTGlueModel(torch.nn.Module):
     def __init__(self, args, vocab_size, num_classes):
-        super(GPTShardBase, self).__init__()
-        self._to_cpu = (args.dist_backend == "gloo")
-        self._vocab_size = vocab_size
-        self._embedding_dim = args.embedding_dim  # embedding dimension
-        self._seq_length = args.seq_length
-        self._num_classes = num_classes
-        # the dimension of the feedforward aws_network model in nn.TransformerEncoder
-        self._feedforward_dim = args.embedding_dim * 4
-        self._num_heads = args.num_heads  # the number of heads in the multi-head attention models
-        self._num_layers = args.num_layers
+        super(GPTGlueModel, self).__init__()
+        self.embedding = GPTEmbedding(vocab_size, args.embedding_dim, args.seq_length)
 
-    def _create_first_layer(self):
-        return GPTEmbedding(self._vocab_size, self._embedding_dim, self._seq_length)
-
-    def _create_last_layer(self):
-        return GlueClassification(self._embedding_dim, self._num_classes)
-
-    def _create_transformer_layer(self):
-        return GPTTransformerLayer(self._embedding_dim, self._num_heads, self._feedforward_dim,
-                                   use_checkpoint=True)
-
-
-class GPTShardFirst(GPTShardBase):
-    def __init__(self, args, vocab_size, num_classes, device):
-        super(GPTShardFirst, self).__init__(args, vocab_size, num_classes)
-        self.device = device
-        module_list = [self._create_first_layer()]
-        for _ in range(self._num_layers):
-            module_list.append(self._create_transformer_layer())
-        self.model = nn.Sequential(*module_list).to(device)
-
-    def forward(self, x):
-        out = self.model(x.to(self.device))
-        return out.cpu() if self._to_cpu else out
-
-
-class GPTShardMiddle(GPTShardBase):
-    def __init__(self, args, vocab_size, num_classes, device):
-        super(GPTShardMiddle, self).__init__(args, vocab_size, num_classes)
-        self.device = device
         module_list = []
-        for _ in range(self._num_layers):
-            module_list.append(self._create_transformer_layer())
-        self.model = nn.Sequential(*module_list).to(device)
+        for _ in range(args.num_layers):
+            module_list.append(GPTTransformerLayer(args.embedding_dim, args.num_heads, args.embedding_dim*4))
+        self.transformers = torch.nn.Sequential(*module_list)
+        self.classifier = GlueClassification(args.embedding_dim, num_classes)
 
-    def forward(self, x):
-        out = self.model(x.to(self.device)) if self._to_cpu else self.model(x)
-        return out.cpu() if self._to_cpu else out
-
-
-class GPTShardLast(GPTShardBase):
-    def __init__(self, args, vocab_size, num_classes, device):
-        super(GPTShardLast, self).__init__(args, vocab_size, num_classes)
-        self.device = device
-        module_list = []
-        for _ in range(self._num_layers):
-            module_list.append(self._create_transformer_layer())
-        module_list.append(self._create_last_layer())
-        self.model = nn.Sequential(*module_list).to(device)
-
-    def forward(self, x):
-        out = self.model(x.to(self.device)) if self._to_cpu else self.model(x)
-        return out.cpu() if self._to_cpu else out
+    def forward(self, input_ids, position_ids):
+        input_emb = self.embedding(input_ids, position_ids)
+        output_emb = self.transformers(input_emb)
+        return self.classifier(output_emb)

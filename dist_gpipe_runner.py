@@ -2,14 +2,15 @@ import argparse
 import torch.autograd.profiler as profiler
 from glue_dataset.qqp import get_glue_qqp_train_data_loader
 from glue_dataset.tokenizer import build_tokenizer
-from dist_gpipe_module_sync import GpipeSync
-from dist_gpipe_module_async import GpipeAsync
-from dist_gpt_utils import *
+from async_pipeline.dist_gpipe_pipeline_sync_deprecated import GpipeSync
+from async_pipeline.dist_gpipe_pipeline_async import GpipeAsync
+from utils.dist_gpt_utils import *
 
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
-    add_distributed_arguments(parser)
+    add_device_arguments(parser)
+    add_torch_distributed_arguments(parser)
     add_model_arguments(parser)
     add_task_arguments(parser)
     add_training_hyper_parameter_arguments(parser)

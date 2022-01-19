@@ -1,0 +1,8 @@
+{
+  "train_batch_size": 24,
+  "train_micro_batch_size_per_gpu": 3,
+  "zero_optimization":{
+    "stage": 3,
+    "overlap_comm": true
+  }
+}

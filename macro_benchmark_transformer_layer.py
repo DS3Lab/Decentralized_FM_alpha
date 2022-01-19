@@ -3,7 +3,7 @@ import time
 import torch
 from torch import nn
 import torch.autograd.profiler as profiler
-from dist_gpt_module import GPTTransformerLayer
+from modules.gpt_modules import GPTTransformerLayer
 
 
 def benchmark_transformer_layer(args, device):

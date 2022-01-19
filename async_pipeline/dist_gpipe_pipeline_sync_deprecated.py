@@ -1,7 +1,7 @@
 import time
 from torch import optim
-from dist_gpt_utils import *
-from dist_gpt_module import *
+from utils.dist_gpt_utils import *
+from modules.gpt_modules import *
 
 
 class GpipeSync:

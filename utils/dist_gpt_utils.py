@@ -1,7 +1,14 @@
 from nccl_backend import *
 
 
-def add_distributed_arguments(parser):
+def add_device_arguments(parser):
+    parser.add_argument('--use-cuda', default=True, type=lambda x: (str(x).lower() == 'true'),
+                        help='if this is set to True, will use cuda to train')
+    parser.add_argument('--cuda-id', type=int, default=0, metavar='N',
+                        help='cuda index, if the instance has multiple GPUs.')
+
+
+def add_torch_distributed_arguments(parser):
     parser.add_argument('--dist-backend', type=str, default='cupy_nccl', metavar='S',
                         help='backend type for distributed PyTorch (default: cupy_nccl)')
     parser.add_argument('--dist-url', type=str, default='tcp://127.0.0.1:9000', metavar='S',
@@ -10,10 +17,6 @@ def add_distributed_arguments(parser):
                         help='world-size (default: 2)')
     parser.add_argument('--rank', type=int, default=0, metavar='N',
                         help='rank of the node')
-    parser.add_argument('--use-cuda', default=True, type=lambda x: (str(x).lower() == 'true'),
-                        help='if this is set to True, will use cuda to train')
-    parser.add_argument('--cuda-id', type=int, default=0, metavar='N',
-                        help='cuda index, if the instance has multiple GPUs.')
 
 
 def add_task_arguments(parser):

@@ -2,25 +2,7 @@ import torch
 import argparse
 from glue_dataset.qqp import get_glue_qqp_train_data_loader
 from glue_dataset.tokenizer import build_tokenizer
-
-from dist_gpt_module import GPTEmbedding, GPTTransformerLayer, GlueClassification, get_position_id
-
-
-class GPTLocaModel(torch.nn.Module):
-    def __init__(self, args, vocab_size, num_classes):
-        super(GPTLocaModel, self).__init__()
-        self.embedding = GPTEmbedding(vocab_size, args.embedding_dim, args.seq_length)
-
-        module_list = []
-        for _ in range(args.num_layers):
-            module_list.append(GPTTransformerLayer(args.embedding_dim, args.num_heads, args.embedding_dim*4))
-        self.transformers = torch.nn.Sequential(*module_list)
-        self.classifier = GlueClassification(args.embedding_dim, num_classes)
-
-    def forward(self, input_ids, position_ids):
-        input_emb = self.embedding(input_ids, position_ids)
-        output_emb = self.transformers(input_emb)
-        return self.classifier(output_emb)
+from modules.gpt_modules import GPTGlueModel, get_position_id
 
 
 def main():
@@ -63,7 +45,7 @@ def main():
     print("token vocab size:", tokenizer.vocab_size)
     data_loader = get_glue_qqp_train_data_loader(args, tokenizer)
     num_classes = 2
-    model = GPTLocaModel(args, tokenizer.vocab_size, num_classes).to(device)
+    model = GPTGlueModel(args, tokenizer.vocab_size, num_classes).to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 
     # for i in range(len(data_loader)):
