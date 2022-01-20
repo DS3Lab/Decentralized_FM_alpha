@@ -21,7 +21,7 @@
 
 - Install Deepspeed:
 
-       pip3 install deepspeed
+       DS_BUILD_OPS=1 pip install deepspeed
 
 ### Config deepspeed.
 - Setup ssh access:

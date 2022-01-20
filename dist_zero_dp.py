@@ -18,22 +18,24 @@ def main():
     parser = deepspeed.add_config_arguments(parser)
     args = parser.parse_args()
 
+    device = torch.device('cuda', args.local_rank)
+
     tokenizer = build_tokenizer(args)
     print("token vocab size:", tokenizer.vocab_size)
     train_dataset = QQPDataset('training', args.train_data, tokenizer, args.seq_length)
 
     num_classes = 2
     model = GPTGlueModel(args, tokenizer.vocab_size, num_classes)
-    # optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 
-    model_engine, optimizer, train_dataloader, _ = deepspeed.initialize(args=args, model=model,  # optimizer=optimizer,
+    model_engine, optimizer, train_dataloader, _ = deepspeed.initialize(args=args, model=model,  optimizer=optimizer,
                                                                         model_parameters=model.parameters(),
                                                                         training_data=train_dataset)
     for i, data in enumerate(train_dataloader):
         start_time = time.time()
-        input_ids = data['text']
-        position_ids = get_position_id(args.seq_length, args.batch_size, None)
-        labels = data['label']
+        input_ids = data['text'].to(device)
+        position_ids = get_position_id(args.seq_length, input_ids.size(0), device)
+        labels = data['label'].to(device)
         output = model_engine(input_ids, position_ids)
         loss = torch.nn.functional.cross_entropy(output, labels)
         forward_time = time.time()

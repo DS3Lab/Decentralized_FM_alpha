@@ -1,20 +1,9 @@
 {
-  "train_batch_size": 32,
-  "train_micro_batch_size_per_gpu": 16,
+  "train_batch_size": 4,
+  "train_micro_batch_size_per_gpu": 4,
   "zero_optimization":{
     "stage": 3,
     "overlap_comm": true
   },
-  "optimizer": {
-    "type": "Adam",
-    "params": {
-      "lr": 0.001,
-      "betas": [
-        0.8,
-        0.999
-      ],
-      "eps": 1e-8,
-      "weight_decay": 3e-7
-    }
-  }
+  "zero_allow_untested_optimizer": true
 }
