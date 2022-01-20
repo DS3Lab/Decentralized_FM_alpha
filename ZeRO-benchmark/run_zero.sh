@@ -1,1 +1,0 @@
-deepspeed --hostfile='./hostfile' --master_port=8000 dist_zero_dp.py --num-layers 12 --deepspeed --deepspeed_config zero_dp_s3_config.json

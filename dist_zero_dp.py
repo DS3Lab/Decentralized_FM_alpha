@@ -1,5 +1,6 @@
 import deepspeed
 import argparse
+import time
 from glue_dataset.qqp import QQPDataset
 from glue_dataset.tokenizer import build_tokenizer
 from utils.dist_gpt_utils import *
@@ -26,16 +27,23 @@ def main():
                                                                         model_parameters=model.parameters(),
                                                                         training_data=train_dataset)
     for i, data in enumerate(train_dataloader):
+        start_time = time.time()
         input_ids = data['text']
         position_ids = get_position_id(args.seq_length, args.batch_size, None)
         labels = data['label']
         output = model_engine(input_ids, position_ids)
-        print(output.shape)
         loss = torch.nn.functional.cross_entropy(output, labels)
+        forward_time = time.time()
+        print("Forward pass takes {:3.2f}s".format(forward_time - start_time))
         model_engine.backward(loss)
+        backward_time = time.time()
+        print("Backward pass takes {:3.2f}s".format(backward_time - forward_time))
         model_engine.step()
-        print("Iter ", i, "===== Loss: ", loss.item(), "======")
+        end_time = time.time()
+        print("Whole iteration takes {:3.2f}s".format(end_time - start_time))
         # print(data)
+        if i >= args.num_iters - 1:
+            break
 
 
 if __name__ == '__main__':
