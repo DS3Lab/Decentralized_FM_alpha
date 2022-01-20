@@ -1,6 +1,7 @@
 import deepspeed
 import argparse
 import time
+import torch
 from glue_dataset.qqp import QQPDataset
 from glue_dataset.tokenizer import build_tokenizer
 from utils.dist_args_utils import *
@@ -12,6 +13,8 @@ def main():
     add_model_arguments(parser)
     add_task_arguments(parser)
     add_training_hyper_parameter_arguments(parser)
+    parser.add_argument('--local_rank', type=int, default=0, metavar='N',
+                        help='rank of the node')
     parser = deepspeed.add_config_arguments(parser)
     args = parser.parse_args()
 

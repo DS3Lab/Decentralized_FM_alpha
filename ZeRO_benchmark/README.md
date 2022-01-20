@@ -30,7 +30,7 @@
       
       eval `ssh-agent`
  
-      ssh-add  binhang_ds3_aws_oregon.pem
+      ssh-add binhang_ds3_aws_oregon.pem
 
 
 - Config the hostfile:
