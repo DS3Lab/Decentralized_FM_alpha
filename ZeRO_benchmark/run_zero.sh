@@ -1,1 +1,2 @@
 deepspeed --hostfile='./ZeRO_benchmark/hostfile' --master_addr 172.31.33.164 --master_port=8000 dist_zero_dp.py --num-layers 12 --embedding-dim 768 --deepspeed --deepspeed_config './ZeRO_benchmark/zero_dp_s3_config.json'
+deepspeed --hostfile='./ZeRO_benchmark/hostfile' --num_nodes=2 --master_port=80000 dist_zero_dp.py --num-layers 12 --embedding-dim 768 --deepspeed --deepspeed_config './ZeRO_benchmark/zero_dp_s3_config.json'

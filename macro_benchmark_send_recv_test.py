@@ -3,7 +3,7 @@ import torch
 import argparse
 import time
 import torch.distributed as dist
-from nccl_backend import NCCLCommunicator
+from comm.nccl_backend import NCCLCommunicator
 
 
 def test_sync_send_recv_delay(args, device, communicator):
