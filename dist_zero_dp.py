@@ -24,9 +24,9 @@ def main():
 
     num_classes = 2
     model = GPTGlueModel(args, tokenizer.vocab_size, num_classes)
-    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+    # optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 
-    model_engine, optimizer, train_dataloader, _ = deepspeed.initialize(args=args, model=model, optimizer=optimizer,
+    model_engine, optimizer, train_dataloader, _ = deepspeed.initialize(args=args, model=model,  # optimizer=optimizer,
                                                                         model_parameters=model.parameters(),
                                                                         training_data=train_dataset)
     for i, data in enumerate(train_dataloader):
