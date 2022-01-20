@@ -4,7 +4,7 @@ from glue_dataset.qqp import get_glue_qqp_train_data_loader
 from glue_dataset.tokenizer import build_tokenizer
 from async_pipeline.dist_gpipe_pipeline_sync_deprecated import GpipeSync
 from async_pipeline.dist_gpipe_pipeline_async import GpipeAsync
-from utils.dist_gpt_utils import *
+from utils.dist_args_utils import *
 
 
 def main():

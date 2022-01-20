@@ -141,3 +141,15 @@ class NCCLCommunicator:
             stream
         )
         cupy.cuda.nccl.groupEnd()
+
+
+def init_comm(args):
+    if args.dist_backend == 'cupy_nccl':
+        comm = NCCLCommunicator(rank=args.rank, intra_gpu_rank=args.cuda_id,
+                                world_size=args.world_size, master_ip=args.dist_url)
+    else:
+        dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
+                                rank=args.rank, world_size=args.world_size)
+        comm = dist
+    dist.barrier()
+    return comm

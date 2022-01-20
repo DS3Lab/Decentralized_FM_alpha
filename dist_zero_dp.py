@@ -3,7 +3,7 @@ import argparse
 import time
 from glue_dataset.qqp import QQPDataset
 from glue_dataset.tokenizer import build_tokenizer
-from utils.dist_gpt_utils import *
+from utils.dist_args_utils import *
 from modules.gpt_modules import GPTGlueModel, get_position_id
 
 

@@ -1,6 +1,6 @@
 import time
 from torch import optim
-from utils.dist_gpt_utils import *
+from utils.dist_args_utils import *
 from modules.gpt_modules import *
 
 

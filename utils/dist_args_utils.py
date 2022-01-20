@@ -1,6 +1,3 @@
-from nccl_backend import *
-
-
 def add_device_arguments(parser):
     parser.add_argument('--use-cuda', default=True, type=lambda x: (str(x).lower() == 'true'),
                         help='if this is set to True, will use cuda to train')
@@ -56,39 +53,4 @@ def add_training_hyper_parameter_arguments(parser):
                         help='-')
 
 
-def init_comm(args):
-    if args.dist_backend == 'cupy_nccl':
-        comm = NCCLCommunicator(rank=args.rank, intra_gpu_rank=args.cuda_id,
-                                world_size=args.world_size, master_ip=args.dist_url)
-    else:
-        dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
-                                rank=args.rank, world_size=args.world_size)
-        comm = dist
-    dist.barrier()
-    return comm
 
-
-def distributed_train_foo_iter(args, gpipe, device, train_data_loader):
-    if args.rank == 0:
-        total_time = 0
-        for i, data in enumerate(train_data_loader):
-            input_ids = data['text'].to(device)
-            current_iter_time = gpipe.sgd_iter(input_ids, None)
-            total_time += current_iter_time
-            if i >= args.num_iters-1:
-                break
-        averaged_time = total_time / args.num_iters
-        print("Finished running ", args.num_iters, " iterations, averaged run time:", averaged_time)
-    elif args.rank == args.world_size - 1:
-        for i, data in enumerate(train_data_loader):
-            labels = data['label'].to(device)
-            gpipe.sgd_iter(None, labels)
-            if i >= args.num_iters-1:
-                break
-    else:
-        i = 0
-        while True:
-            gpipe.sgd_iter(None, None)
-            i += 1
-            if i >= args.num_iters:
-                break
