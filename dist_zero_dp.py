@@ -30,7 +30,7 @@ def main():
     os.environ['RANK'] = str(args.rank)
     print(os.environ)
     # deepspeed.init_distributed(init_method=args.dist_url, auto_mpi_discovery=False)
-    # dist.init_process_group(backend='nccl', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
+    dist.init_process_group(backend='nccl', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
 
     tokenizer = build_tokenizer(args)
     print("token vocab size:", tokenizer.vocab_size)
