@@ -25,9 +25,9 @@ def main():
     device = torch.device('cuda', args.local_rank)
 
     print(os.environ)
+    os.environ['RANK'] = args.rank
     # deepspeed.init_distributed(init_method=args.init_method, auto_mpi_discovery=False)
     dist.init_process_group(backend='nccl', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
-
 
     tokenizer = build_tokenizer(args)
     print("token vocab size:", tokenizer.vocab_size)
