@@ -27,7 +27,7 @@ def main():
     # print(args.master_addr)
     # print(args.master_port)
 
-    os.environ['RANK'] = str(args.rank)
+    # os.environ['RANK'] = str(args.rank)
     print(os.environ)
     # deepspeed.init_distributed(init_method=args.dist_url, auto_mpi_discovery=False)
     # dist.init_process_group(backend='nccl', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
