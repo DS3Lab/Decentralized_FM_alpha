@@ -15,6 +15,8 @@ def main():
     add_training_hyper_parameter_arguments(parser)
     parser.add_argument('--local_rank', type=int, default=0, metavar='N',
                         help='rank of the node')
+    parser.add_argument('--init-method', type=str, default='tcp://127.0.0.1:9000',  metavar='S',
+                        help='Currently Deepspeed init does not work for me....')
     parser = deepspeed.add_config_arguments(parser)
     args = parser.parse_args()
 
@@ -28,9 +30,14 @@ def main():
     model = GPTGlueModel(args, tokenizer.vocab_size, num_classes)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 
+    deepspeed.init_distributed(init_method=args.init_method, auto_mpi_discovery=False)
     model_engine, optimizer, train_dataloader, _ = deepspeed.initialize(args=args, model=model,  optimizer=optimizer,
                                                                         model_parameters=model.parameters(),
-                                                                        training_data=train_dataset)
+                                                                        training_data=train_dataset,
+                                                                        dist_init_required=False)
+
+    print(args.master_addr)
+    print(args.master_port)
     for i, data in enumerate(train_dataloader):
         start_time = time.time()
         input_ids = data['text'].to(device)
