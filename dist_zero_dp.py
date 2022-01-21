@@ -1,3 +1,5 @@
+import os
+
 import deepspeed
 import argparse
 import time
@@ -22,6 +24,11 @@ def main():
 
     device = torch.device('cuda', args.local_rank)
 
+    print(os.environ)
+    # deepspeed.init_distributed(init_method=args.init_method, auto_mpi_discovery=False)
+    dist.init_process_group(backend='nccl', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
+
+
     tokenizer = build_tokenizer(args)
     print("token vocab size:", tokenizer.vocab_size)
     train_dataset = QQPDataset('training', args.train_data, tokenizer, args.seq_length)
@@ -30,8 +37,6 @@ def main():
     model = GPTGlueModel(args, tokenizer.vocab_size, num_classes)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 
-    # deepspeed.init_distributed(init_method=args.init_method, auto_mpi_discovery=False)
-    dist.init_process_group(backend='nccl', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
     model_engine, optimizer, train_dataloader, _ = deepspeed.initialize(args=args, model=model,  optimizer=optimizer,
                                                                         model_parameters=model.parameters(),
                                                                         training_data=train_dataset,
