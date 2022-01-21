@@ -24,10 +24,13 @@ def main():
 
     device = torch.device('cuda', args.local_rank)
 
-    print(os.environ)
+    print(args.master_addr)
+    print(args.master_port)
+
     os.environ['RANK'] = str(args.rank)
-    # deepspeed.init_distributed(init_method=args.init_method, auto_mpi_discovery=False)
-    dist.init_process_group(backend='nccl', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
+    print(os.environ)
+    deepspeed.init_distributed(init_method=args.init_method, auto_mpi_discovery=False)
+    # dist.init_process_group(backend='nccl', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
 
     tokenizer = build_tokenizer(args)
     print("token vocab size:", tokenizer.vocab_size)
@@ -42,8 +45,7 @@ def main():
                                                                         training_data=train_dataset,
                                                                         dist_init_required=False)
 
-    print(args.master_addr)
-    print(args.master_port)
+
     for i, data in enumerate(train_dataloader):
         start_time = time.time()
         input_ids = data['text'].to(device)
