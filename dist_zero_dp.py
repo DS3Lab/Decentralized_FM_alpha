@@ -2,6 +2,7 @@ import deepspeed
 import argparse
 import time
 import torch
+import torch.distributed as dist
 from glue_dataset.qqp import QQPDataset
 from glue_dataset.tokenizer import build_tokenizer
 from utils.dist_args_utils import *
@@ -12,11 +13,10 @@ def main():
     parser = argparse.ArgumentParser(description='ZeRO-GPT3')
     add_model_arguments(parser)
     add_task_arguments(parser)
+    add_torch_distributed_arguments(parser)
     add_training_hyper_parameter_arguments(parser)
     parser.add_argument('--local_rank', type=int, default=0, metavar='N',
                         help='rank of the node')
-    parser.add_argument('--init-method', type=str, default='tcp://127.0.0.1:9000',  metavar='S',
-                        help='Currently Deepspeed init does not work for me....')
     parser = deepspeed.add_config_arguments(parser)
     args = parser.parse_args()
 
@@ -30,7 +30,8 @@ def main():
     model = GPTGlueModel(args, tokenizer.vocab_size, num_classes)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 
-    deepspeed.init_distributed(init_method=args.init_method, auto_mpi_discovery=False)
+    # deepspeed.init_distributed(init_method=args.init_method, auto_mpi_discovery=False)
+    dist.init_process_group(backend='nccl', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
     model_engine, optimizer, train_dataloader, _ = deepspeed.initialize(args=args, model=model,  optimizer=optimizer,
                                                                         model_parameters=model.parameters(),
                                                                         training_data=train_dataset,
