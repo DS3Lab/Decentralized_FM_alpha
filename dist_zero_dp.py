@@ -29,7 +29,7 @@ def main():
 
     os.environ['RANK'] = str(args.rank)
     print(os.environ)
-    deepspeed.init_distributed(init_method=args.dist_url, auto_mpi_discovery=False)
+    # deepspeed.init_distributed(init_method=args.dist_url, auto_mpi_discovery=False)
     # dist.init_process_group(backend='nccl', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
 
     tokenizer = build_tokenizer(args)
@@ -43,7 +43,7 @@ def main():
     model_engine, optimizer, train_dataloader, _ = deepspeed.initialize(args=args, model=model,  optimizer=optimizer,
                                                                         model_parameters=model.parameters(),
                                                                         training_data=train_dataset,
-                                                                        dist_init_required=False)
+                                                                        dist_init_required=True)
 
 
     for i, data in enumerate(train_dataloader):
