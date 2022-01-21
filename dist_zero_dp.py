@@ -29,8 +29,8 @@ def main():
 
     # os.environ['RANK'] = str(args.rank)
     print(os.environ)
-    deepspeed.init_distributed(init_method='tcp://'+os.environ['MASTER_ADDR']+':'+os.environ['MASTER_PORT'])
-    # deepspeed.init_distributed(init_method=args.dist_url, auto_mpi_discovery=False)
+    # deepspeed.init_distributed(init_method='tcp://'+os.environ['MASTER_ADDR']+':'+os.environ['MASTER_PORT'])
+    deepspeed.init_distributed(init_method="env://")
     # dist.init_process_group(backend='nccl', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
 
     tokenizer = build_tokenizer(args)
