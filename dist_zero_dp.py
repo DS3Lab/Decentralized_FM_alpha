@@ -17,7 +17,7 @@ def main():
     add_task_arguments(parser)
     # add_torch_distributed_arguments(parser)
     add_training_hyper_parameter_arguments(parser)
-    #parser.add_argument('--local_rank', type=int, default=0, metavar='N', help='rank of the node')
+    parser.add_argument('--local_rank', type=int, default=0, metavar='N', help='rank of the node')
     parser = deepspeed.add_config_arguments(parser)
     args = parser.parse_args()
 
