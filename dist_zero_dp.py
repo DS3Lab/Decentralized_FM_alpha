@@ -24,8 +24,8 @@ def main():
 
     device = torch.device('cuda', args.local_rank)
 
-    print(args.master_addr)
-    print(args.master_port)
+    # print(args.master_addr)
+    # print(args.master_port)
 
     os.environ['RANK'] = str(args.rank)
     print(os.environ)
