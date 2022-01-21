@@ -15,13 +15,13 @@
       
       (re-connect to the node to activate conda)
     
-- Install PyTorch:
+- Install PyTorch (if not installed ):
 
        conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
 
 - Install Deepspeed:
 
-       DS_BUILD_OPS=1 pip install deepspeed
+       DS_BUILD_OPS=1 DS_BUILD_AIO=0 pip install deepspeed --global-option="build_ext" --global-option="-j8"
 
 ### Config deepspeed.
 - Setup ssh access:
