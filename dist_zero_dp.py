@@ -43,7 +43,7 @@ def main():
     model_engine, optimizer, train_dataloader, _ = deepspeed.initialize(args=args, model=model,  optimizer=optimizer,
                                                                         model_parameters=model.parameters(),
                                                                         training_data=train_dataset,
-                                                                        dist_init_required=None)
+                                                                        dist_init_required=False)
 
 
     for i, data in enumerate(train_dataloader):
