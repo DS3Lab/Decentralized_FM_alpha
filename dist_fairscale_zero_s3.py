@@ -51,7 +51,7 @@ def main():
         output = dist_model(input_ids, position_ids)
         loss = torch.nn.functional.cross_entropy(output, labels)
         forward_time = time.time()
-        print("Forward pass takes {:3.2f}s".format(forward_time - start_time))
+        print("Forward pass takes {:3.2f}s, loss: ".format(forward_time - start_time), loss.item())
         loss.backward()
         backward_time = time.time()
         print("Backward pass takes {:3.2f}s".format(backward_time - forward_time))
