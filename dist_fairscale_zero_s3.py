@@ -44,7 +44,7 @@ def main():
     for i, data in enumerate(train_dataloader):
         start_time = time.time()
         input_ids = data['text'].to(device)
-        position_ids = get_position_id(args.seq_length, input_ids.size(0), device)
+        position_ids = get_position_id(args.seq_length, args.batch_size, device)
         labels = data['label'].to(device)
         dist_model.zero_grad()
 
