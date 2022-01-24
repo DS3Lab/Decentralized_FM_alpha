@@ -36,8 +36,8 @@ def main():
     model = GPTGlueModel(args, vocab_size, num_classes).to(device)
 
     torch.cuda.set_device(args.cuda_id)
-    dist_model = torch.nn.parallel.DistributedDataParallel(model)
-    # dist_model = FullyShardedDataParallel(model)
+    # dist_model = torch.nn.parallel.DistributedDataParallel(model)
+    dist_model = FullyShardedDataParallel(model)
     optimizer = torch.optim.SGD(dist_model.parameters(), lr=args.lr)
     dist_model.train()
 
