@@ -33,7 +33,7 @@ def main():
     train_dataloader = get_glue_qqp_train_data_loader(args, tokenizer)
     vocab_size = tokenizer.vocab_size
     num_classes = 2
-    model = GPTGlueModel(args, vocab_size, num_classes)
+    model = GPTGlueModel(args, vocab_size, num_classes).to(device)
 
     torch.cuda.set_device(args.cuda_id)
     # dist_model = torch.nn.parallel.DistributedDataParallel(model)

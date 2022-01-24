@@ -1,5 +1,11 @@
 # Run ZeRO Comparison
 
+### Install fairscale
+
+- install fairscale:
+
+      pip install fairscale
+
 ### Install deepspeed
 
 - Install some toolkit:
@@ -9,7 +15,7 @@
 
 - Install conda:
        
-      wget https://repo.anaconda.com/archive/Anaconda3-2021.11-Linux-x86_64.sh
+      wget https://repo.anaconda.com/archive/Anaconda3-2021.11-Linuwx-x86_64.sh
       
       bash Anaconda-latest-Linux-x86_64.sh
       
