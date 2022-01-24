@@ -133,13 +133,14 @@ class GPTEmbedding(torch.nn.Module):
 
 
 class GPTGlueModel(torch.nn.Module):
-    def __init__(self, args, vocab_size, num_classes):
+    def __init__(self, args, vocab_size, num_classes, use_checkpoint=True):
         super(GPTGlueModel, self).__init__()
         self.embedding = GPTEmbedding(vocab_size, args.embedding_dim, args.seq_length)
 
         module_list = []
         for _ in range(args.num_layers):
-            module_list.append(GPTTransformerLayer(args.embedding_dim, args.num_heads, args.embedding_dim*4))
+            module_list.append(GPTTransformerLayer(args.embedding_dim, args.num_heads, args.embedding_dim*4,
+                                                   use_checkpoint=use_checkpoint))
         self.transformers = torch.nn.Sequential(*module_list)
         self.classifier = GlueClassification(args.embedding_dim, num_classes)
 
