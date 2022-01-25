@@ -3,6 +3,7 @@ import time
 import torch
 import torch.distributed as dist
 from fairscale.nn.data_parallel import FullyShardedDataParallel
+from fairscale.nn.checkpoint import checkpoint_wrapper
 from glue_dataset.qqp import get_glue_qqp_train_data_loader
 from glue_dataset.tokenizer import build_tokenizer
 from utils.dist_args_utils import *
@@ -34,6 +35,8 @@ def main():
     vocab_size = tokenizer.vocab_size
     num_classes = 2
     model = GPTGlueModel(args, vocab_size, num_classes, use_checkpoint=False).to(device)
+    # This is not tested yet.
+    model = checkpoint_wrapper(model, offload_to_cpu=False)
 
     torch.cuda.set_device(args.cuda_id)
     # dist_model = torch.nn.parallel.DistributedDataParallel(model)
