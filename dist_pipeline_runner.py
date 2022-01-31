@@ -3,7 +3,7 @@ import torch
 import torch.autograd.profiler as profiler
 from glue_dataset.qqp import get_glue_qqp_train_data_loader
 from glue_dataset.tokenizer import build_tokenizer
-from pipeline.dist_gpipe_pipeline_sync_deprecated import GpipeSync
+from pipeline.dist_1f1b_pipeline_async import Pipe1F1BAsync
 from pipeline.dist_gpipe_pipeline_async import GpipeAsync
 from utils.dist_args_utils import *
 from utils.dist_pp_train_utils import *
@@ -20,8 +20,8 @@ def main():
                         help='random seed (default: 1)')
     parser.add_argument('--profiling', type=str, default='tidy_profiling', metavar='S',
                         help='enable which profiling? default: tidy mode')
-    parser.add_argument('--async-mode', default=True, type=lambda x: (str(x).lower() == 'true'),
-                        help='use async mode or not')
+    parser.add_argument('--mode', type=str, default='tidy_profiling', metavar='S',
+                        help='use which mode: gpipe or 1f1b.')
     args = parser.parse_args()
     torch.manual_seed(args.seed)
     if args.use_cuda:
@@ -41,23 +41,26 @@ def main():
         num_classes = 2
         vocab_size = -1
 
-    if args.async_mode:
-        gpipe = GpipeAsync(args, vocab_size, num_classes, device)
+    if args.mode == 'gpipe':
+        pipe = GpipeAsync(args, vocab_size, num_classes, device)
+    elif args.mode == '1f1b':
+        pipe = Pipe1F1BAsync(args, vocab_size, num_classes, device)
     else:
-        gpipe = GpipeSync(args, vocab_size, num_classes, device) # TODO: this part is not refactored yet.
+        print("Not recognize this mode.")
+        assert False
 
     if args.profiling == 'no-profiling':
-        distributed_train_foo_iter(args, gpipe, device, train_data_loader)
+        distributed_train_foo_iter(args, pipe, device, train_data_loader)
     else:
-        trace_file = './trace_json/gpt3_gpipe_b' + str(args.batch_size) + '_' + str(args.micro_batch_size) + \
-                     '_l' + str(args.seq_length) + '_m' + str(args.embedding_dim) + '_w' + str(args.world_size) + \
-                     '_' + str(args.rank) + '_' + args.profiling + '.json'
+        trace_file = './trace_json/gpt3_' + args.mode + '_b' + str(args.batch_size) + '_' + str(args.micro_batch_size) \
+                     + '_l' + str(args.seq_length) + '_m' + str(args.embedding_dim) + '_w' + str(args.world_size) \
+                     + '_' + str(args.rank) + '_' + args.profiling + '.json'
         if args.profiling == 'tidy_profiling':
-            distributed_train_foo_iter(args, gpipe, device, train_data_loader)
-            gpipe.export_profiling_result(filename=trace_file)
+            distributed_train_foo_iter(args, pipe, device, train_data_loader)
+            pipe.export_profiling_result(filename=trace_file)
         elif args.profiling == 'pytorch_profiling':
             with profiler.profile(profile_memory=True, use_cuda=args.use_cuda) as prof:
-                distributed_train_foo_iter(args, gpipe, device, train_data_loader)
+                distributed_train_foo_iter(args, pipe, device, train_data_loader)
             print(prof.key_averages().table())
             prof.export_chrome_trace(trace_file)
         else:
