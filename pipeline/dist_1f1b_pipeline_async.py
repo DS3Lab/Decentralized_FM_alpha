@@ -81,15 +81,13 @@ class Pipe1F1BAsync:
             self.input_micro_batches = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
                                                     requires_grad=True, device=self.device)
                                         for _ in range(self.micro_batch_num)]
-        if args.rank == args.world_size - 1:
-            self.output_micro_batches = None
-        else:
-            self.output_micro_batches = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
-                                                     requires_grad=True, device=self.device)
-                                         for _ in range(self.micro_batch_num)]
-            self.output_micro_batches_grad = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
-                                                          requires_grad=False, device=self.device)
-                                              for _ in range(self.micro_batch_num)]
+
+        self.output_micro_batches = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
+                                                 requires_grad=True, device=self.device)
+                                     for _ in range(self.micro_batch_num)]
+        self.output_micro_batches_grad = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
+                                                      requires_grad=False, device=self.device)
+                                          for _ in range(self.micro_batch_num)]
 
         if self.rank == 0:
             self.model = GPTShardFirst(args, vocab_size, num_classes, device)
