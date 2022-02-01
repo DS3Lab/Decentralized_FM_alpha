@@ -5,9 +5,9 @@ import shutil
 
 # TODO: change this hard coded version later.
 node_ip_lists = [
-    "18.236.249.26",
-    "34.223.247.136",
-    "34.217.0.177",
+    "34.214.105.129",
+    "18.236.247.203",
+    "35.88.179.203",
 ]
 
 
@@ -45,7 +45,7 @@ def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
     parser.add_argument('--world-size', type=int, default=3, metavar='D',
                         help='world-size (default: 2)')
-    parser.add_argument('--batch-size', type=int, default=64, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=16, metavar='N',
                         help='input batch size for training (default: 100)')
     parser.add_argument('--micro-batch-size', type=int, default=4, metavar='N',
                         help='input batch size for training (default: 100)')
@@ -55,9 +55,11 @@ def main():
                         help='-')
     parser.add_argument('--profiling', type=str, default='tidy_profiling', metavar='S',
                         help='enable which profiling? default: tidy mode')
+    parser.add_argument('--mode', type=str, default='1f1b', metavar='S',
+                        help='use which mode: gpipe or 1f1b.')
     args = parser.parse_args()
-    prefix = 'gpt3_gpipe_b' + str(args.batch_size) + '_' + str(args.micro_batch_size) + '_l' + str(args.seq_length) + \
-             '_m' + str(args.embedding_dim) + '_w' + str(args.world_size)
+    prefix = 'gpt3_' + args.mode + '_b' + str(args.batch_size) + '_' + str(args.micro_batch_size) + '_l' + \
+             str(args.seq_length) + '_m' + str(args.embedding_dim) + '_w' + str(args.world_size)
     postfix = '_' + args.profiling + '.json'
     download_trace_logs(args, prefix, postfix)
     merge_logs(args, prefix, postfix)
