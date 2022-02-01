@@ -238,11 +238,13 @@ class Pipe1F1BAsync:
         if self.rank == 0:
             assert(input_data is not None)
             self.input_micro_batches = torch.chunk(input_data, self.micro_batch_num, dim=0)
+            target_as_micro_batches = [None for _ in range(self.micro_batch_num)]
         elif self.rank == self.world_size - 1:
             assert (target is not None)
             target_as_micro_batches = torch.chunk(target, self.micro_batch_num, dim=0)
         else:
             assert (input_data is None and target is None)
+            target_as_micro_batches = [None for _ in range(self.micro_batch_num)]
         if self.enable_tidy_profiling:
             torch.cuda.synchronize()
             self.init_time_stamp = time.time() * 1e+6

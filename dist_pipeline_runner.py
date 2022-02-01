@@ -20,7 +20,7 @@ def main():
                         help='random seed (default: 1)')
     parser.add_argument('--profiling', type=str, default='tidy_profiling', metavar='S',
                         help='enable which profiling? default: tidy mode')
-    parser.add_argument('--mode', type=str, default='tidy_profiling', metavar='S',
+    parser.add_argument('--mode', type=str, default='1f1b', metavar='S',
                         help='use which mode: gpipe or 1f1b.')
     args = parser.parse_args()
     torch.manual_seed(args.seed)
