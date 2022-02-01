@@ -42,6 +42,7 @@ def main():
     optimizer = torch.optim.SGD(dist_model.parameters(), lr=args.lr)
     dist_model.train()
 
+    total_time = 0
     for i, data in enumerate(train_dataloader):
         start_time = time.time()
         input_ids = data['text'].to(device)
@@ -58,10 +59,14 @@ def main():
         print("Backward pass takes {:3.2f}s".format(backward_time - forward_time))
         optimizer.step()
         end_time = time.time()
-        print("Whole iteration takes {:3.2f}s".format(end_time - start_time))
+        iter_time = end_time - start_time
+        print("Whole iteration takes {:3.2f}s".format(iter_time))
         # print(data)
+        total_time += iter_time
         if i >= args.num_iters - 1:
             break
+    averaged_time = total_time / args.num_iters
+    print("Finished running ", args.num_iters, " iterations, averaged run time:", averaged_time)
 
 
 if __name__ == '__main__':
