@@ -15,29 +15,42 @@
   - max batch size (due to DRAM limits): 64
   - based on the batch size of 64, micro-batch size of 8 will break the DRAM limit. 
 
-### Gpipe based pipeline
+### Gpipe based pipeline parallel
 | Network setting                     | Micro batch size: 1 | Micro batch size: 2 | Micro batch size: 4 |
 |-------------------------------------|---------------------|---------------------|---------------------|
-| default (about 0.1ms; up to 10Gbps) | s | s | s                   |
-| delay 1ms                           | s | s | s                   |
-| delay 5ms                           | s | s | s                   |
-| delay 10ms                          | s | s | s                   |
-| bandwidth 5Gbps                     | s | s | s                   |
-| bandwidth 2Gbps                     | s | s | s                   |
-| bandwidth 1Gbps                     | s | s | s                   |
-| delay 1ms  bandwidth 5Gbps          | s | s | s                   |
-| delay 5ms  bandwidth 2Gbps          | s | s | s                   |
-| delay 10ms  bandwidth 1Gbps         | s | s | 8.97 s              |
-### 1F1B based pipeline
+| default (about 0.1ms; up to 10Gbps) | s                   | s                   | s                   |
+| delay 1ms                           | -                   | -                   | -                   |
+| delay 5ms                           | -                   | -                   | -                   |
+| delay 10ms                          | -                   | -                   | -                   |
+| bandwidth 5Gbps                     | -                   | -                   | -                   |
+| bandwidth 2Gbps                     | -                   | -                   | -                   |
+| bandwidth 1Gbps                     | -                   | -                   | -                   |
+| delay 1ms  bandwidth 5Gbps          | s                   | s                   | s                   |
+| delay 5ms  bandwidth 2Gbps          | s                   | s                   | s                   |
+| delay 10ms  bandwidth 1Gbps         | 8.44 s              | 8.75 s              | 9.37 s              |
+### 1F1B based pipeline parallel
 | Network setting                     | Micro batch size: 1 | Micro batch size: 2 | Micro batch size: 4 |
-|-------------------------------------|---|---|---------------------|
-| default (about 0.1ms; up to 10Gbps) | s | s | s                   |
-| delay 1ms                           | s | s | s                   |
-| delay 5ms                           | s | s | s                   |
-| delay 10ms                          | s | s | s                   |
-| bandwidth 5Gbps                     | s | s | s                   |
-| bandwidth 2Gbps                     | s | s | s                   |
-| bandwidth 1Gbps                     | s | s | s                   |
-| delay 1ms  bandwidth 5Gbps          | s | s | s                   |
-| delay 5ms  bandwidth 2Gbps          | s | s | s                   |
-| delay 10ms  bandwidth 1Gbps         | s | s | 11.s                |
+|-------------------------------------|---------------------|---------------------|---------------------|
+| default (about 0.1ms; up to 10Gbps) | s                   | s                   | s                   |
+| delay 1ms                           | -                   | -                   | -                   |
+| delay 5ms                           | -                   | -                   | -                   |
+| delay 10ms                          | -                   | -                   | -                   |
+| bandwidth 5Gbps                     | -                   | -                   | -                   |
+| bandwidth 2Gbps                     | -                   | -                   | -                   |
+| bandwidth 1Gbps                     | -                   | -                   | -                   |
+| delay 1ms  bandwidth 5Gbps          | s                   | s                   | s                   |
+| delay 5ms  bandwidth 2Gbps          | s                   | s                   | s                   |
+| delay 10ms  bandwidth 1Gbps         | 11.40 s             | 11.34 s             | 11.63 s             |
+### ZeRO-S3 data parallel
+| Network setting                     | Micro batch size: 1 | Micro batch size: 2 | Micro batch size: 4 |
+|-------------------------------------|---------------|---------------|---------------|
+| default (about 0.1ms; up to 10Gbps) | s             | s             | s             |
+| delay 1ms                           | -             | -             | -             |
+| delay 5ms                           | -             | -             | -             |
+| delay 10ms                          | -             | -             | -             |
+| bandwidth 5Gbps                     | -             | -             | -             |
+| bandwidth 2Gbps                     | -             | -             | -             |
+| bandwidth 1Gbps                     | -             | -             | -             |
+| delay 1ms  bandwidth 5Gbps          | s             | s             | s             |
+| delay 5ms  bandwidth 2Gbps          | s             | s             | s             |
+| delay 10ms  bandwidth 1Gbps         | s             | s             | s             |
