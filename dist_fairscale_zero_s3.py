@@ -34,12 +34,11 @@ def main():
     train_dataloader = get_glue_qqp_train_data_loader(args, tokenizer)
     vocab_size = tokenizer.vocab_size
     num_classes = 2
-    model = GPTGlueModel(args, vocab_size, num_classes, use_checkpoint=False).to(device) # disable my own checkpoint
-    model = checkpoint_wrapper(model, offload_to_cpu=True)
-
+    model = GPTGlueModel(args, vocab_size, num_classes, use_checkpoint=False).to(device)  # disable my own checkpoint
+    # model = checkpoint_wrapper(model, offload_to_cpu=True)
     torch.cuda.set_device(args.cuda_id)
-    # dist_model = torch.nn.parallel.DistributedDataParallel(model)
     dist_model = FullyShardedDataParallel(model)
+    dist_model = checkpoint_wrapper(dist_model, offload_to_cpu=True)
     optimizer = torch.optim.SGD(dist_model.parameters(), lr=args.lr)
     dist_model.train()
 
