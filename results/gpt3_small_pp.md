@@ -15,7 +15,7 @@
   - max batch size (due to DRAM limits): 64
   - based on the batch size of 64, micro-batch size of 8 will break the DRAM limit. 
 
-
+### Gpipe based pipeline
 | Network setting                     | Micro batch size: 1 | Micro batch size: 2 | Micro batch size: 4 |
 |-------------------------------------|---------------------|---------------------|---------------------|
 | default (about 0.1ms; up to 10Gbps) | 7.17 s              | 7.04 s              | 7.08 s              |
@@ -28,3 +28,17 @@
 | delay 1ms  bandwidth 5Gbps          | 7.39 s              | 7.27 s              | 7.49 s              |
 | delay 5ms  bandwidth 2Gbps          | 7.85 s              | 8.03 s              | 8.47 s              |
 | delay 10ms  bandwidth 1Gbps         | 10.07 s             | 10.10 s             | 11.37 s             |
+
+### 1F1B based pipeline
+| Network setting                     | Micro batch size: 1 | Micro batch size: 2 | Micro batch size: 4 |
+|-------------------------------------|---|---|----------------|
+| default (about 0.1ms; up to 10Gbps) | s | s | s              |
+| delay 1ms                           | s | s | s              |
+| delay 5ms                           | s | s | s              |
+| delay 10ms                          | s | s | s              |
+| bandwidth 5Gbps                     | s | s | s              |
+| bandwidth 2Gbps                     | s | s | s              |
+| bandwidth 1Gbps                     | s | s | s              |
+| delay 1ms  bandwidth 5Gbps          | s | s | s              |
+| delay 5ms  bandwidth 2Gbps          | s | s | s              |
+| delay 10ms  bandwidth 1Gbps         | s | s | s              |

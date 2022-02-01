@@ -5,9 +5,9 @@ import shutil
 
 # TODO: change this hard coded version later.
 node_ip_lists = [
-    "34.214.105.129",
-    "18.236.247.203",
-    "35.88.179.203",
+    "52.32.58.106",
+    "34.217.19.5",
+    "54.213.193.189",
 ]
 
 
@@ -45,7 +45,7 @@ def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
     parser.add_argument('--world-size', type=int, default=3, metavar='D',
                         help='world-size (default: 2)')
-    parser.add_argument('--batch-size', type=int, default=16, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 100)')
     parser.add_argument('--micro-batch-size', type=int, default=4, metavar='N',
                         help='input batch size for training (default: 100)')
