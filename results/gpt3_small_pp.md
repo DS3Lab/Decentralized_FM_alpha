@@ -18,39 +18,32 @@
 ### Gpipe based pipeline parallel
 | Network setting                     | Micro batch size: 1 | Micro batch size: 2 | Micro batch size: 4 |
 |-------------------------------------|---------------------|---------------------|---------------------|
-| default (about 0.1ms; up to 10Gbps) | s                   | s                   | s                   |
+| default (about 0.1ms; up to 10Gbps) | 6.71 s              | 6.85 s              | 7.04 s              |
 | delay 1ms                           | -                   | -                   | -                   |
 | delay 5ms                           | -                   | -                   | -                   |
 | delay 10ms                          | -                   | -                   | -                   |
 | bandwidth 5Gbps                     | -                   | -                   | -                   |
 | bandwidth 2Gbps                     | -                   | -                   | -                   |
 | bandwidth 1Gbps                     | -                   | -                   | -                   |
-| delay 1ms  bandwidth 5Gbps          | s                   | s                   | s                   |
-| delay 5ms  bandwidth 2Gbps          | s                   | s                   | s                   |
-| delay 10ms  bandwidth 1Gbps         | 8.44 s              | 8.75 s              | 9.37 s              |
+| delay 1ms  bandwidth 5Gbps          | -                   | -                   | -                   |
+| delay 5ms  bandwidth 2Gbps          | -                   | -                   | -                   |
+| delay 10ms  bandwidth 1Gbps         | 8.52 s              | 8.75 s              | 9.37 s              |
+
 ### 1F1B based pipeline parallel
 | Network setting                     | Micro batch size: 1 | Micro batch size: 2 | Micro batch size: 4 |
 |-------------------------------------|---------------------|---------------------|---------------------|
-| default (about 0.1ms; up to 10Gbps) | s                   | s                   | s                   |
+| default (about 0.1ms; up to 10Gbps) | 6.68 s              | 6.82 s              | 7.11 s              |
 | delay 1ms                           | -                   | -                   | -                   |
 | delay 5ms                           | -                   | -                   | -                   |
 | delay 10ms                          | -                   | -                   | -                   |
 | bandwidth 5Gbps                     | -                   | -                   | -                   |
 | bandwidth 2Gbps                     | -                   | -                   | -                   |
 | bandwidth 1Gbps                     | -                   | -                   | -                   |
-| delay 1ms  bandwidth 5Gbps          | s                   | s                   | s                   |
-| delay 5ms  bandwidth 2Gbps          | s                   | s                   | s                   |
-| delay 10ms  bandwidth 1Gbps         | 11.40 s             | 11.34 s             | 11.63 s             |
-### ZeRO-S3 data parallel
-| Network setting                     | Micro batch size: 1 | Micro batch size: 2 | Micro batch size: 4 |
-|-------------------------------------|---------------|---------------|---------------|
-| default (about 0.1ms; up to 10Gbps) | s             | s             | s             |
-| delay 1ms                           | -             | -             | -             |
-| delay 5ms                           | -             | -             | -             |
-| delay 10ms                          | -             | -             | -             |
-| bandwidth 5Gbps                     | -             | -             | -             |
-| bandwidth 2Gbps                     | -             | -             | -             |
-| bandwidth 1Gbps                     | -             | -             | -             |
-| delay 1ms  bandwidth 5Gbps          | s             | s             | s             |
-| delay 5ms  bandwidth 2Gbps          | s             | s             | s             |
-| delay 10ms  bandwidth 1Gbps         | s             | s             | s             |
+| delay 1ms  bandwidth 5Gbps          | -                   | -                   | -                   |
+| delay 5ms  bandwidth 2Gbps          | -                   | -                   | -                   |
+| delay 10ms  bandwidth 1Gbps         | 11.40 s             | 11.54 s             | 11.63 s             |
+
+###ZeRO-S3 data parallel
+
+- Fail due to running out of DRAM: 
+  - for this model each data parallel node can only run a batch size of 1.

@@ -4,11 +4,13 @@ def distributed_train_foo_iter(args, pipeline, device, train_data_loader):
         for i, data in enumerate(train_data_loader):
             input_ids = data['text'].to(device)
             current_iter_time = pipeline.sgd_iter(input_ids, None)
-            total_time += current_iter_time
+            if i > 0:
+                total_time += current_iter_time
             if i >= args.num_iters-1:
                 break
-        averaged_time = total_time / args.num_iters
-        print("Finished running ", args.num_iters, " iterations, averaged run time:", averaged_time)
+        averaged_time = total_time / (args.num_iters - 1)
+        print("Finished running ", args.num_iters,
+              " iterations, averaged (exclude the first iter) run time:", averaged_time)
     elif args.rank == args.world_size - 1:
         for i, data in enumerate(train_data_loader):
             labels = data['label'].to(device)
