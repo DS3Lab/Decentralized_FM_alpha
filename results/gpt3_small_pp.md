@@ -47,7 +47,7 @@
 | delay 5ms  bandwidth 2Gbps          | 8.42 s              | 8.40 s              | 8.57 s              |
 | delay 10ms  bandwidth 1Gbps         | 11.21 s             | 11.03 s             | 11.35 s             |
 
-###ZeRO-S3 data parallel
+### ZeRO-S3 data parallel
 
 - Fail due to running out of DRAM: 
   - for this model each data parallel node can only run a batch size of 1.
