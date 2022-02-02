@@ -5,18 +5,9 @@ import shutil
 
 # TODO: change this hard coded version later.
 node_ip_lists = [
-    "35.87.250.221",
-    "34.216.92.87",
-    "35.165.24.29",
-    "34.220.85.36",
-    "52.25.84.125",
-    "34.219.206.153",
-    "54.70.93.23",
-    "52.12.115.70",
-    "54.71.124.157",
-    "35.87.7.144",
-    "54.190.128.59",
-    "54.202.25.101"
+    "54.244.109.62",
+    "34.211.34.22",
+    "54.200.209.37"
 ]
 
 
@@ -42,7 +33,7 @@ def merge_logs(args, prefix, postfix):
                 for log in current_trace:
                     current_min_stamp = min(log['ts'], current_min_stamp)
             for log in current_trace:
-                log['pid'] = 'Node ' + str(i)
+                log['pid'] = args.mode + ' node ' + str(i)
                 log['ts'] = log['ts'] - current_min_stamp
             result.extend(current_trace)
     print(len(result))
@@ -64,7 +55,7 @@ def main():
                         help='-')
     parser.add_argument('--profiling', type=str, default='tidy_profiling', metavar='S',
                         help='enable which profiling? default: tidy mode')
-    parser.add_argument('--mode', type=str, default='1f1b', metavar='S',
+    parser.add_argument('--mode', type=str, default='gpipe', metavar='S',
                         help='use which mode: gpipe or 1f1b.')
     args = parser.parse_args()
     prefix = 'gpt3_' + args.mode + '_b' + str(args.batch_size) + '_' + str(args.micro_batch_size) + '_l' + \

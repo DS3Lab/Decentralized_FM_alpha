@@ -35,8 +35,10 @@ class Pipe1F1BAsync:
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
         self.device = device
         self.torch_comp_stream = torch.cuda.default_stream(device=device)
-        self.torch_recv_stream = torch.cuda.Stream(device=device, priority=-1)
-        self.torch_send_stream = torch.cuda.Stream(device=device, priority=-1)
+        self.torch_forward_recv_stream = torch.cuda.Stream(device=device, priority=-1)
+        self.torch_backward_recv_stream = torch.cuda.Stream(device=device, priority=-1)
+        self.torch_forward_send_stream = torch.cuda.Stream(device=device, priority=-1)
+        self.torch_backward_send_stream = torch.cuda.Stream(device=device, priority=-1)
 
         self.forward_recv_ready_events = [torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
                                           for _ in range(self.micro_batch_num)]
@@ -111,27 +113,27 @@ class Pipe1F1BAsync:
 
     def profile_mark_forward_recv_start(self, i):
         if self.enable_tidy_profiling:
-            self.torch_recv_stream.record_event(self.forward_recv_start_events[i])
+            self.torch_forward_recv_stream.record_event(self.forward_recv_start_events[i])
 
     def profile_mark_forward_send_start(self, i):
         if self.enable_tidy_profiling:
-            self.torch_send_stream.record_event(self.forward_send_start_events[i])
+            self.torch_forward_send_stream.record_event(self.forward_send_start_events[i])
 
     def profile_mark_forward_send_end(self, i):
         if self.enable_tidy_profiling:
-            self.torch_send_stream.record_event(self.forward_send_end_events[i])
+            self.torch_forward_send_stream.record_event(self.forward_send_end_events[i])
 
     def profile_mark_backward_recv_start(self, i):
         if self.enable_tidy_profiling:
-            self.torch_recv_stream.record_event(self.backward_recv_start_events[i])
+            self.torch_backward_recv_stream.record_event(self.backward_recv_start_events[i])
 
     def profile_mark_backward_send_start(self, i):
         if self.enable_tidy_profiling:
-            self.torch_send_stream.record_event(self.backward_send_start_events[i])
+            self.torch_backward_send_stream.record_event(self.backward_send_start_events[i])
 
     def profile_mark_backward_send_end(self, i):
         if self.enable_tidy_profiling:
-            self.torch_send_stream.record_event(self.backward_send_end_events[i])
+            self.torch_backward_send_stream.record_event(self.backward_send_end_events[i])
 
     def get_ts(self, event):
         return self.init_time_stamp + self.init_event.elapsed_time(event) * 1e+3
@@ -142,40 +144,40 @@ class Pipe1F1BAsync:
                 self.profile_mark_forward_comp_start(forward_index)
                 self.output_micro_batches[forward_index] = self.model(self.input_micro_batches[forward_index])
                 self.torch_comp_stream.record_event(self.forward_comp_ready_events[forward_index])
-            with torch.cuda.stream(self.torch_send_stream):
-                cupy_forward_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
-                self.torch_send_stream.wait_event(self.forward_comp_ready_events[forward_index])
+            with torch.cuda.stream(self.torch_forward_send_stream):
+                cupy_forward_send_stream = cupy.cuda.ExternalStream(self.torch_forward_send_stream.cuda_stream)
+                self.torch_forward_send_stream.wait_event(self.forward_comp_ready_events[forward_index])
                 self.profile_mark_forward_send_start(forward_index)
                 self.comm.send(self.output_micro_batches[forward_index].data, dst=self.post_node_rank,
                                stream=cupy_forward_send_stream)
                 self.profile_mark_forward_send_end(forward_index)
         elif self.rank == self.world_size - 1:
-            with torch.cuda.stream(self.torch_recv_stream):
-                cupy_forward_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
+            with torch.cuda.stream(self.torch_forward_recv_stream):
+                cupy_forward_recv_stream = cupy.cuda.ExternalStream(self.torch_forward_recv_stream.cuda_stream)
                 self.profile_mark_forward_recv_start(forward_index)
                 self.comm.recv(self.input_micro_batches[forward_index], src=self.pre_node_rank,
                                stream=cupy_forward_recv_stream)
-                self.torch_recv_stream.record_event(self.forward_recv_ready_events[forward_index])
+                self.torch_forward_recv_stream.record_event(self.forward_recv_ready_events[forward_index])
             with torch.cuda.stream(self.torch_comp_stream):
                 self.torch_comp_stream.wait_event(self.forward_recv_ready_events[forward_index])
                 self.profile_mark_forward_comp_start(forward_index)
                 self.output_micro_batches[forward_index] = self.model(self.input_micro_batches[forward_index])
                 self.torch_comp_stream.record_event(self.forward_comp_ready_events[forward_index])
-        else:  # receive, compute, and send
-            with torch.cuda.stream(self.torch_recv_stream):
-                cupy_forward_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
+        else: # receive, compute, and send
+            with torch.cuda.stream(self.torch_forward_recv_stream):
+                cupy_forward_recv_stream = cupy.cuda.ExternalStream(self.torch_forward_recv_stream.cuda_stream)
                 self.profile_mark_forward_recv_start(forward_index)
                 self.comm.recv(self.input_micro_batches[forward_index], src=self.pre_node_rank,
                                stream=cupy_forward_recv_stream)
-                self.torch_recv_stream.record_event(self.forward_recv_ready_events[forward_index])
+                self.torch_forward_recv_stream.record_event(self.forward_recv_ready_events[forward_index])
             with torch.cuda.stream(self.torch_comp_stream):
                 self.torch_comp_stream.wait_event(self.forward_recv_ready_events[forward_index])
                 self.profile_mark_forward_comp_start(forward_index)
                 self.output_micro_batches[forward_index] = self.model(self.input_micro_batches[forward_index])
                 self.torch_comp_stream.record_event(self.forward_comp_ready_events[forward_index])
-            with torch.cuda.stream(self.torch_send_stream):
-                cupy_forward_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
-                self.torch_send_stream.wait_event(self.forward_comp_ready_events[forward_index])
+            with torch.cuda.stream(self.torch_forward_send_stream):
+                cupy_forward_send_stream = cupy.cuda.ExternalStream(self.torch_forward_send_stream.cuda_stream)
+                self.torch_forward_send_stream.wait_event(self.forward_comp_ready_events[forward_index])
                 self.profile_mark_forward_send_start(forward_index)
                 self.comm.send(self.output_micro_batches[forward_index].data, dst=self.post_node_rank,
                                stream=cupy_forward_send_stream)
@@ -188,20 +190,20 @@ class Pipe1F1BAsync:
                 loss = loss_func(input= self.output_micro_batches[backward_index], target=target_as_micro_batch)
                 loss.backward()
                 self.torch_comp_stream.record_event(self.backward_comp_ready_events[backward_index])
-            with torch.cuda.stream(self.torch_send_stream):
-                cupy_backward_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
-                self.torch_send_stream.wait_event(self.backward_comp_ready_events[backward_index])
+            with torch.cuda.stream(self.torch_backward_send_stream):
+                cupy_backward_send_stream = cupy.cuda.ExternalStream(self.torch_backward_send_stream.cuda_stream)
+                self.torch_backward_send_stream.wait_event(self.backward_comp_ready_events[backward_index])
                 self.profile_mark_backward_send_start(backward_index)
                 self.comm.send(self.input_micro_batches[backward_index].grad, dst=self.pre_node_rank,
                                stream=cupy_backward_send_stream)
                 self.profile_mark_backward_send_end(backward_index)
         elif self.rank == 0:  # only receive grad from previous node, do not send
-            with torch.cuda.stream(self.torch_recv_stream):
-                cupy_backward_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
+            with torch.cuda.stream(self.torch_backward_recv_stream):
+                cupy_backward_recv_stream = cupy.cuda.ExternalStream(self.torch_backward_recv_stream.cuda_stream)
                 self.profile_mark_backward_recv_start(backward_index)
                 self.comm.recv(self.output_micro_batches_grad[backward_index], src=self.post_node_rank,
                                stream=cupy_backward_recv_stream)
-                self.torch_recv_stream.record_event(self.backward_recv_ready_events[backward_index])
+                self.torch_backward_recv_stream.record_event(self.backward_recv_ready_events[backward_index])
             with torch.cuda.stream(self.torch_comp_stream):
                 self.torch_comp_stream.wait_event(self.backward_recv_ready_events[backward_index])
                 self.profile_mark_backward_comp_start(backward_index)
@@ -209,21 +211,21 @@ class Pipe1F1BAsync:
                     gradient=self.output_micro_batches_grad[backward_index])
                 self.torch_comp_stream.record_event(self.backward_comp_ready_events[backward_index])
         else:  # receive, compute and send
-            with torch.cuda.stream(self.torch_recv_stream):
-                cupy_backward_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
+            with torch.cuda.stream(self.torch_backward_recv_stream):
+                cupy_backward_recv_stream = cupy.cuda.ExternalStream(self.torch_backward_recv_stream.cuda_stream)
                 self.profile_mark_backward_recv_start(backward_index)
                 self.comm.recv(self.output_micro_batches_grad[backward_index], src=self.post_node_rank,
                                stream=cupy_backward_recv_stream)
-                self.torch_recv_stream.record_event(self.backward_recv_ready_events[backward_index])
+                self.torch_backward_recv_stream.record_event(self.backward_recv_ready_events[backward_index])
             with torch.cuda.stream(self.torch_comp_stream):
                 self.torch_comp_stream.wait_event(self.backward_recv_ready_events[backward_index])
                 self.profile_mark_backward_comp_start(backward_index)
                 self.output_micro_batches[backward_index].backward(
                     gradient=self.output_micro_batches_grad[backward_index])
                 self.torch_comp_stream.record_event(self.backward_comp_ready_events[backward_index])
-            with torch.cuda.stream(self.torch_send_stream):
-                cupy_backward_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
-                self.torch_send_stream.wait_event(self.backward_comp_ready_events[backward_index])
+            with torch.cuda.stream(self.torch_backward_send_stream):
+                cupy_backward_send_stream = cupy.cuda.ExternalStream(self.torch_backward_send_stream.cuda_stream)
+                self.torch_backward_send_stream.wait_event(self.backward_comp_ready_events[backward_index])
                 self.profile_mark_backward_send_start(backward_index)
                 self.comm.send(self.input_micro_batches[backward_index].grad, dst=self.pre_node_rank,
                                stream=cupy_backward_send_stream)
