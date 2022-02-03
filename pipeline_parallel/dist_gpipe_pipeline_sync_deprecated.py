@@ -6,10 +6,10 @@ from modules.gpt_modules import *
 
 class GpipeSync:
     def __init__(self, args, ntokens, device):
-        self.world_size = args.world_size
+        self.world_size = args.pipeline_group_size
         self.rank = args.rank
         self.pre_node_rank = args.rank - 1
-        self.post_node_rank = args.rank + 1 if args.rank != args.world_size - 1 else -1
+        self.post_node_rank = args.rank + 1 if args.rank != args.pipeline_group_size - 1 else -1
         self.comm = init_comm(args)
 
         self.micro_batch_num = args.micro_batch_num

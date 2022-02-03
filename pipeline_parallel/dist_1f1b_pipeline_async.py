@@ -2,7 +2,7 @@ import time
 import json
 import torch.nn.functional
 from torch import optim
-from comm.nccl_backend import *
+from comm.init_comm import *
 from modules.dist_gpt_pp_module import *
 
 
@@ -17,12 +17,15 @@ class Pipe1F1BAsync:
         a group of events to check if computation finishes in the backward propagation.
     """
 
-    def __init__(self, args, vocab_size, num_classes, device):
-        self.world_size = args.world_size
-        self.rank = args.rank
-        self.pre_node_rank = args.rank - 1
-        self.post_node_rank = args.rank + 1 if args.rank != args.world_size - 1 else -1
-        self.comm = init_comm(args)
+    def __init__(self, args, vocab_size, num_classes, device, use_dp=False):
+        self.pipeline_group_size = args.pipeline_group_size
+        self.rank = get_pipeline_parallel_rank()   # Rank is the pipeline rank by default.
+        self.pre_node_rank = self.rank - 1
+        self.post_node_rank = self.rank + 1 if self.rank != self.pipeline_group_size - 1 else -1
+        self.comm = get_pipeline_parallel_comm()
+        if use_dp:
+            self.dp_comm = get_data_parallel_comm()
+            self.dp_rank = get_data_parallel_rank()
 
         assert (args.batch_size % args.micro_batch_size == 0)
         self.micro_batch_num = args.batch_size // args.micro_batch_size
@@ -89,7 +92,7 @@ class Pipe1F1BAsync:
 
         if self.rank == 0:
             self.model = GPTShardFirst(args, vocab_size, num_classes, device)
-        elif self.rank == self.world_size - 1:
+        elif self.rank == self.pipeline_group_size - 1:
             self.model = GPTShardLast(args, vocab_size, num_classes, device)
         else:
             self.model = GPTShardMiddle(args, vocab_size, num_classes, device)
@@ -149,7 +152,7 @@ class Pipe1F1BAsync:
                 self.comm.send(self.output_micro_batches[forward_index].data, dst=self.post_node_rank,
                                stream=cupy_forward_send_stream)
                 self.profile_mark_forward_send_end(forward_index)
-        elif self.rank == self.world_size - 1:
+        elif self.rank == self.pipeline_group_size - 1:
             with torch.cuda.stream(self.torch_recv_stream):
                 cupy_forward_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                 self.profile_mark_forward_recv_start(forward_index)
@@ -182,7 +185,7 @@ class Pipe1F1BAsync:
                 self.profile_mark_forward_send_end(forward_index)
 
     def backward_micro_batch(self, backward_index, target_as_micro_batch=None, loss_func=None):
-        if self.rank == self.world_size - 1:  # only send grad back to last node, do not receive
+        if self.rank == self.pipeline_group_size - 1:  # only send grad back to last node, do not receive
             with torch.cuda.stream(self.torch_comp_stream):
                 self.profile_mark_backward_comp_start(backward_index)
                 loss = loss_func(input= self.output_micro_batches[backward_index], target=target_as_micro_batch)
@@ -235,7 +238,7 @@ class Pipe1F1BAsync:
             assert(input_data is not None)
             self.input_micro_batches = torch.chunk(input_data, self.micro_batch_num, dim=0)
             target_as_micro_batches = [None for _ in range(self.micro_batch_num)]
-        elif self.rank == self.world_size - 1:
+        elif self.rank == self.pipeline_group_size - 1:
             assert (target is not None)
             target_as_micro_batches = torch.chunk(target, self.micro_batch_num, dim=0)
         else:
@@ -248,8 +251,8 @@ class Pipe1F1BAsync:
 
         forward_i = 0
         backward_i = 0
-        # Starting phase: to fill the pipeline.
-        while forward_i < self.world_size - 1 - self.rank:
+        # Starting phase: to fill the pipeline_parallel.
+        while forward_i < self.pipeline_group_size - 1 - self.rank:
             self.forward_micro_batch(forward_index=forward_i)
             forward_i += 1
 
@@ -261,7 +264,7 @@ class Pipe1F1BAsync:
             forward_i += 1
             backward_i += 1
 
-        # Ending phase: to finish the rest stages in the pipeline.
+        # Ending phase: to finish the rest stages in the pipeline_parallel.
         while backward_i < self.micro_batch_num:
             self.backward_micro_batch(backward_index=backward_i,
                                       target_as_micro_batch=target_as_micro_batches[backward_i], loss_func=loss_func)
@@ -289,7 +292,7 @@ class Pipe1F1BAsync:
             print(forward_comp_log)
             self.profiling_log.append(forward_comp_log)
 
-            if self.rank != self.world_size - 1:
+            if self.rank != self.pipeline_group_size - 1:
                 forward_send_slot = \
                     self.forward_send_start_events[i].elapsed_time(self.forward_send_end_events[i]) * 1e+3
                 forward_send_log = {"name": "send", "ph": "X", "pid": self.rank, "tid": "3. forward-send",
@@ -299,7 +302,7 @@ class Pipe1F1BAsync:
                 self.profiling_log.append(forward_send_log)
 
         for i in range(self.micro_batch_num):
-            if self.rank != self.world_size - 1:
+            if self.rank != self.pipeline_group_size - 1:
                 backward_recv_slot = \
                     self.backward_recv_start_events[i].elapsed_time(self.backward_recv_ready_events[i]) * 1e+3
                 backward_recv_log = {"name": "recv", "ph": "X", "pid": self.rank, "tid": "4. backward-recv",

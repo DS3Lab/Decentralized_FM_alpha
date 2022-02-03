@@ -2,7 +2,7 @@ import time
 import json
 import torch.nn.functional
 from torch import optim
-from comm.nccl_backend import *
+from comm.init_comm import *
 from modules.dist_gpt_pp_module import *
 
 
@@ -18,11 +18,11 @@ class Pipe1F1BAsync:
     """
 
     def __init__(self, args, vocab_size, num_classes, device):
-        self.world_size = args.world_size
-        self.rank = args.rank
-        self.pre_node_rank = args.rank - 1
-        self.post_node_rank = args.rank + 1 if args.rank != args.world_size - 1 else -1
-        self.comm = init_comm(args)
+        self.world_size = args.pipeline_group_size
+        self.rank = get_pipeline_parallel_rank()
+        self.pre_node_rank = self.rank - 1
+        self.post_node_rank = self.rank + 1 if self.rank != self.pipeline_group_size - 1 else -1
+        self.comm = get_pipeline_parallel_comm()
 
         assert (args.batch_size % args.micro_batch_size == 0)
         self.micro_batch_num = args.batch_size // args.micro_batch_size
@@ -250,7 +250,7 @@ class Pipe1F1BAsync:
 
         forward_i = 0
         backward_i = 0
-        # Starting phase: to fill the pipeline.
+        # Starting phase: to fill the pipeline_parallel.
         while forward_i < self.world_size - 1 - self.rank:
             self.forward_micro_batch(forward_index=forward_i)
             forward_i += 1
@@ -263,7 +263,7 @@ class Pipe1F1BAsync:
             forward_i += 1
             backward_i += 1
 
-        # Ending phase: to finish the rest stages in the pipeline.
+        # Ending phase: to finish the rest stages in the pipeline_parallel.
         while backward_i < self.micro_batch_num:
             self.backward_micro_batch(backward_index=backward_i,
                                       target_as_micro_batch=target_as_micro_batches[backward_i], loss_func=loss_func)

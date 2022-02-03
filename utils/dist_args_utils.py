@@ -10,8 +10,10 @@ def add_torch_distributed_arguments(parser):
                         help='backend type for distributed PyTorch (default: cupy_nccl)')
     parser.add_argument('--dist-url', type=str, default='tcp://127.0.0.1:9000', metavar='S',
                         help='master ip for distributed PyTorch')
-    parser.add_argument('--world-size', type=int, default=4, metavar='D',
-                        help='world-size (default: 2)')
+    parser.add_argument('--pipeline-group-size', type=int, default=4, metavar='D',
+                        help='world-size (default: 4)')
+    parser.add_argument('--data-group-size', type=int, default=4, metavar='D',
+                        help='world-size (default: 4)')
     parser.add_argument('--rank', type=int, default=0, metavar='N',
                         help='rank of the node')
 

@@ -28,7 +28,7 @@ class TrainSimulate:
         prev_micro_batch_id = -1
         total_steps = 2 * (self.micro_batches + self.stages - 1)
         for step_id in range(total_steps):
-            # Map the step of the pipeline to the micro-batch id and also whether it is a
+            # Map the step of the pipeline_parallel to the micro-batch id and also whether it is a
             # forward or backward pass step.
             micro_batch_id, is_forward = self._step_to_micro_batch(step_id)
 
@@ -133,7 +133,7 @@ def main():
     parser.add_argument('--micro_batches', type=int, default=16, metavar='S',
                         help='num of micro batches (default: 16)')
     parser.add_argument('--stages', type=int, default=4, metavar='S',
-                        help='lengths of pipeline stages (default: 4)')
+                        help='lengths of pipeline_parallel stages (default: 4)')
     args = parser.parse_args()
     for i in range(args.stages):
         worker = TrainSimulate(args.micro_batches, args.stages, i)

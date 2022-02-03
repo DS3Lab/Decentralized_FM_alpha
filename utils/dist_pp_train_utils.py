@@ -11,7 +11,7 @@ def distributed_train_foo_iter(args, pipeline, device, train_data_loader):
         averaged_time = total_time / (args.num_iters - 1)
         print("Finished running ", args.num_iters,
               " iterations, averaged (exclude the first iter) run time:", averaged_time)
-    elif args.rank == args.world_size - 1:
+    elif args.rank == args.pipeline_group_size - 1:
         for i, data in enumerate(train_data_loader):
             labels = data['label'].to(device)
             pipeline.sgd_iter(None, labels)

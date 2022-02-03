@@ -2,7 +2,7 @@ import time
 import json
 import torch.nn.functional
 from torch import optim
-from comm.nccl_backend import *
+from comm.init_comm import *
 from modules.dist_gpt_pp_module import *
 
 
@@ -17,12 +17,15 @@ class GpipeAsync:
         a group of events to check if computation finishes in the backward propagation.
     """
 
-    def __init__(self, args, vocab_size, num_classes, device):
-        self.world_size = args.world_size
-        self.rank = args.rank
-        self.pre_node_rank = args.rank - 1
-        self.post_node_rank = args.rank + 1 if args.rank != args.world_size - 1 else -1
-        self.comm = init_comm(args)
+    def __init__(self, args, vocab_size, num_classes, device, use_dp=False):
+        self.pipeline_group_size = args.pipeline_group_size
+        self.rank = get_pipeline_parallel_rank()  # Rank is the pipeline rank by default.
+        self.pre_node_rank = self.rank - 1
+        self.post_node_rank = self.rank + 1 if self.rank != self.pipeline_group_size - 1 else -1
+        self.comm = get_pipeline_parallel_comm()
+        if use_dp:
+            self.dp_comm = get_data_parallel_comm()
+            self.dp_rank = get_data_parallel_rank()
 
         assert (args.batch_size % args.micro_batch_size == 0)
         self.micro_batch_num = args.batch_size // args.micro_batch_size
@@ -81,7 +84,7 @@ class GpipeAsync:
             self.input_micro_batches = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
                                                     requires_grad=True, device=self.device)
                                         for _ in range(self.micro_batch_num)]
-        if args.rank == args.world_size - 1:
+        if args.rank == args.pipeline_group_size - 1:
             self.output_micro_batches_grad = None
         else:
             self.output_micro_batches_grad = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
@@ -90,7 +93,7 @@ class GpipeAsync:
 
         if self.rank == 0:
             self.model = GPTShardFirst(args, vocab_size, num_classes, device)
-        elif self.rank == self.world_size - 1:
+        elif self.rank == self.pipeline_group_size - 1:
             self.model = GPTShardLast(args, vocab_size, num_classes, device)
         else:
             self.model = GPTShardMiddle(args, vocab_size, num_classes, device)
@@ -162,7 +165,7 @@ class GpipeAsync:
                     self.profile_mark_forward_send_start(i)
                     self.comm.send(current_micro_output.data, dst=self.post_node_rank, stream=cupy_send_stream)
                     self.profile_mark_forward_send_end(i)
-            elif self.rank == self.world_size - 1:  # Only receive input from last node, do not send
+            elif self.rank == self.pipeline_group_size - 1:  # Only receive input from last node, do not send
                 with torch.cuda.stream(self.torch_recv_stream):
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                     self.profile_mark_forward_recv_start(i)
@@ -213,7 +216,7 @@ class GpipeAsync:
             print(comp_log)
             self.profiling_log.append(comp_log)
 
-            if self.rank != self.world_size - 1:
+            if self.rank != self.pipeline_group_size - 1:
                 send_slot = self.forward_send_start_events[i].elapsed_time(self.forward_send_end_events[i]) * 1e+3
                 send_log = {"name": "send", "ph": "X", "pid": self.rank, "tid": "3. forward-send",
                             "ts": self.get_forward_ts(self.forward_send_start_events[i]), "dur": send_slot,
@@ -224,7 +227,7 @@ class GpipeAsync:
     def backward_stage(self, cached_output_micro_batches: List[torch.Tensor], target=None,
                        loss_func=torch.nn.functional.cross_entropy):
         # print("Backward stage start! rank-", self.rank)
-        if self.rank == self.world_size - 1:
+        if self.rank == self.pipeline_group_size - 1:
             assert(target is not None)
             target_as_micro_batches = torch.chunk(target, self.micro_batch_num, dim=0)
         else:
@@ -234,7 +237,7 @@ class GpipeAsync:
             self.backward_init_time_stamp = time.time() * 1e+6
             self.backward_init_event.record()
         for i in range(self.micro_batch_num):
-            if self.rank == self.world_size - 1:  # only send grad back to last node, do not receive
+            if self.rank == self.pipeline_group_size - 1:  # only send grad back to last node, do not receive
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.profile_mark_backward_comp_start(i)
                     loss = loss_func(input=cached_output_micro_batches[i], target=target_as_micro_batches[i])
@@ -280,7 +283,7 @@ class GpipeAsync:
     def profiling_backward_stage(self):
         torch.cuda.synchronize()
         for i in range(self.micro_batch_num):
-            if self.rank != self.world_size - 1:
+            if self.rank != self.pipeline_group_size - 1:
                 recv_slot = self.backward_recv_start_events[i].elapsed_time(self.backward_recv_ready_events[i]) * 1e+3
                 recv_log = {"name": "recv", "ph": "X", "pid": self.rank, "tid": "4. backward-recv",
                             "ts": self.get_backward_ts(self.backward_recv_start_events[i]), "dur": recv_slot,

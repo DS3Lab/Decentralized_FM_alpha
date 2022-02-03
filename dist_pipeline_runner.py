@@ -3,11 +3,11 @@ import torch
 import torch.autograd.profiler as profiler
 from glue_dataset.qqp import get_glue_qqp_train_data_loader
 from glue_dataset.tokenizer import build_tokenizer
-from pipeline.dist_1f1b_pipeline_async import Pipe1F1BAsync
-from pipeline.dist_gpipe_pipeline_async import GpipeAsync
+from pipeline_parallel.dist_1f1b_pipeline_async import Pipe1F1BAsync
+from pipeline_parallel.dist_gpipe_pipeline_async import GpipeAsync
 from utils.dist_args_utils import *
 from utils.dist_pp_train_utils import *
-
+from comm.init_comm import *
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
@@ -30,7 +30,9 @@ def main():
     else:
         device = torch.device('cpu')
 
-    if args.rank == 0 or args.rank == args.world_size-1:
+    init_communicators(args)
+
+    if get_pipeline_parallel_rank() == 0 or get_pipeline_parallel_rank() == args.world_size-1:
         tokenizer = build_tokenizer(args)
         print("token vocab size:", tokenizer.vocab_size)
         train_data_loader = get_glue_qqp_train_data_loader(args, tokenizer)

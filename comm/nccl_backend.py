@@ -21,30 +21,29 @@ def _type_torch_to_cupy(torch_type: torch.dtype):
 
 class NCCLCommunicator:
     def __init__(self,
-                 rank: int,
-                 intra_gpu_rank: int,
-                 world_size: int,
-                 master_ip: str):
-        self.rank = rank
-        self.intra_gpu_rank = intra_gpu_rank
-        cupy.cuda.Device(self.intra_gpu_rank).use()
-        self.world_size = world_size
-        dist.init_process_group(backend='gloo', init_method=master_ip, world_size=world_size, rank=rank)
-        self.store = dist.distributed_c10d._get_default_store()
+                 comm_rank: int,
+                 cuda_id: int,
+                 comm_group_size: int,
+                 comm_name: str):
+        self.comm_rank = comm_rank
+        cupy.cuda.Device(cuda_id).use()
+        self.comm_group_size = comm_group_size
+        print("Initialize NCCLCommunicator: <", comm_name, ">; rank:", comm_rank)
+        dist_store = dist.distributed_c10d._get_default_store()
 
-        if self.rank == 0:
+        if self.comm_rank == 0:
             cuda_id = cupy.cuda.nccl.get_unique_id()
             # print(cuda_id)
             cuda_id_str = np.array(cuda_id).tobytes()
-            self.store.set('master-unique-id', cuda_id_str)
-            # print("Master put key ", cuda_id_str)
+            dist_store.set('group-'+comm_name+'-unique-id', cuda_id_str)
+            # print("Master put <group-"+comm_name+"-unique-id: ", cuda_id_str, ">.")
         else:
-            cuda_id_str = self.store.get('master-unique-id')
-            # print("Slave get key", cuda_id_str)
+            cuda_id_str = dist_store.get('group-'+comm_name+'-unique-id')
+
         comm_id = tuple(np.frombuffer(cuda_id_str, dtype=int))
         # comm_id = cupy.cuda.nccl.get_unique_id()
         # print(comm_id)
-        self.comm = cupy.cuda.nccl.NcclCommunicator(self.world_size, comm_id, self.rank)
+        self.comm = cupy.cuda.nccl.NcclCommunicator(comm_group_size, comm_id, comm_rank)
 
     @staticmethod
     def barrier():
@@ -143,6 +142,10 @@ class NCCLCommunicator:
         cupy.cuda.nccl.groupEnd()
 
 
+def default_init(args):
+    dist.init_process_group(backend='gloo', init_method=args.master_ip, world_size=args.pipeline_group_size, rank=args.rank)
+
+"""
 def init_comm(args):
     if args.dist_backend == 'cupy_nccl':
         comm = NCCLCommunicator(rank=args.rank, intra_gpu_rank=args.cuda_id,
@@ -153,3 +156,4 @@ def init_comm(args):
         comm = dist
     dist.barrier()
     return comm
+"""
