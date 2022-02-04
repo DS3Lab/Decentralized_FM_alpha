@@ -23,9 +23,7 @@ class GpipeAsync:
         self.pre_node_rank = self.rank - 1
         self.post_node_rank = self.rank + 1 if self.rank != self.pipeline_group_size - 1 else -1
         self.comm = get_pipeline_parallel_comm()
-        if use_dp:
-            self.dp_comm = get_data_parallel_comm()
-            self.dp_rank = get_data_parallel_rank()
+
 
         assert (args.batch_size % args.micro_batch_size == 0)
         self.micro_batch_num = args.batch_size // args.micro_batch_size
@@ -98,6 +96,9 @@ class GpipeAsync:
         else:
             self.model = GPTShardMiddle(args, vocab_size, num_classes, device)
         self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
+        if use_dp:
+
+
 
     def zero_input_grad(self):
         if self.input_micro_batches:

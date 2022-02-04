@@ -88,6 +88,21 @@ class NCCLCommunicator:
             stream.ptr
         )
 
+    def reduce(self,
+               tensor: torch.Tensor,
+               dst: int,
+               stream=cupy.cuda.Stream.null,
+               op=cupy.cuda.nccl.NCCL_SUM):
+        self.comm.reduce(
+            tensor.data_ptr(),  # force it to be in-place.
+            tensor.data_ptr(),
+            torch.numel(tensor),
+            _type_torch_to_cupy(tensor.dtype),
+            op,
+            dst,
+            stream.ptr
+        )
+
     def all_reduce(self,
                   tensor: torch.Tensor,
                   stream=cupy.cuda.Stream.null,

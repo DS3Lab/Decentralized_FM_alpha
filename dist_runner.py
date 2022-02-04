@@ -9,6 +9,7 @@ from utils.dist_args_utils import *
 from utils.dist_pp_train_utils import *
 from comm.init_comm import *
 
+
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
     add_device_arguments(parser)
@@ -43,10 +44,16 @@ def main():
         num_classes = 2
         vocab_size = -1
 
+    use_dp = (args.world_size != args.pipeline_group_size)
+    if use_dp:
+        print("Running ", args.mode, " with data parallel.")
+    else:
+        print("Running ", args.mode, " without data parallel.")
+
     if args.mode == 'gpipe':
-        pipe = GpipeAsync(args, vocab_size, num_classes, device)
+        pipe = GpipeAsync(args, vocab_size, num_classes, device, use_dp)
     elif args.mode == '1f1b':
-        pipe = Pipe1F1BAsync(args, vocab_size, num_classes, device)
+        pipe = Pipe1F1BAsync(args, vocab_size, num_classes, device, use_dp)
     else:
         print("Not recognize this mode.")
         assert False
@@ -54,9 +61,8 @@ def main():
     if args.profiling == 'no-profiling':
         distributed_train_foo_iter(args, pipe, device, train_data_loader)
     else:
-        trace_file = './trace_json/gpt3_' + args.mode + '_b' + str(args.batch_size) + '_' + str(args.micro_batch_size) \
-                     + '_l' + str(args.seq_length) + '_m' + str(args.embedding_dim) + '_w' + str(args.world_size) \
-                     + '_' + str(args.rank) + '_' + args.profiling + '.json'
+        trace_file = './trace_json/gpt3_' + args.mode + get_learning_arguments_str(args) \
+                     + get_model_arguments_str(args) + get_dist_arguments_str(args) + '_' + args.profiling + '.json'
         if args.profiling == 'tidy_profiling':
             distributed_train_foo_iter(args, pipe, device, train_data_loader)
             pipe.export_profiling_result(filename=trace_file)

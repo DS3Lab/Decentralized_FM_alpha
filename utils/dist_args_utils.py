@@ -10,10 +10,12 @@ def add_torch_distributed_arguments(parser):
                         help='backend type for distributed PyTorch (default: cupy_nccl)')
     parser.add_argument('--dist-url', type=str, default='tcp://127.0.0.1:9000', metavar='S',
                         help='master ip for distributed PyTorch')
+    parser.add_argument('--world-size', type=int, default=4, metavar='D',
+                        help='world-size (default: 4)')
     parser.add_argument('--pipeline-group-size', type=int, default=4, metavar='D',
-                        help='world-size (default: 4)')
-    parser.add_argument('--data-group-size', type=int, default=4, metavar='D',
-                        help='world-size (default: 4)')
+                        help='world-size (default: 2)')
+    parser.add_argument('--data-group-size', type=int, default=1, metavar='D',
+                        help='world-size (default: 1)')
     parser.add_argument('--rank', type=int, default=0, metavar='N',
                         help='rank of the node')
 
@@ -55,4 +57,14 @@ def add_training_hyper_parameter_arguments(parser):
                         help='-')
 
 
+def get_model_arguments_str(args):
+    return '_l' + str(args.seq_length) + '_m' + str(args.embedding_dim)
 
+
+def get_dist_arguments_str(args):
+    return '_w' + str(args.world_size) + '_' + str(args.rank) +'_p' + str(args.pipeline_group_size) + \
+           '_d' + str(args.data_group_size)
+
+
+def get_learning_arguments_str(args):
+    return '_b' + str(args.batch_size) + '_' + str(args.micro_batch_size)
