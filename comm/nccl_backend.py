@@ -158,7 +158,7 @@ class NCCLCommunicator:
 
 
 def default_init(args):
-    dist.init_process_group(backend='gloo', init_method=args.master_ip, world_size=args.pipeline_group_size, rank=args.rank)
+    dist.init_process_group(backend='gloo', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
 
 """
 def init_comm(args):
