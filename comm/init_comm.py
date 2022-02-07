@@ -46,5 +46,5 @@ def init_communicators(args):
     _PIPELINE_PARALLEL_COMM = NCCLCommunicator(_PIPELINE_PARALLEL_RANK, args.cuda_id, args.pipeline_group_size,
                                                "pipeline_group_"+str(args.rank // args.pipeline_group_size))
     if args.data_group_size != 1:
-        _DATA_PARALLEL_RANK = NCCLCommunicator(_DATA_PARALLEL_RANK, args.cuda_id, args.data_group_size,
+        _PIPELINE_PARALLEL_COMM = NCCLCommunicator(_DATA_PARALLEL_RANK, args.cuda_id, args.data_group_size,
                                                "data_group_"+str(args.rank % args.pipeline_group_size))
