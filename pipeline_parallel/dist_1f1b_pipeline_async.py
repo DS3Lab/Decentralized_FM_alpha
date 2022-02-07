@@ -4,6 +4,7 @@ import torch.nn.functional
 from torch import optim
 from comm.init_comm import *
 from modules.dist_gpt_pp_module import *
+from data_parallel.dist_central_ps import CentralPS
 
 
 class Pipe1F1BAsync:
@@ -18,10 +19,11 @@ class Pipe1F1BAsync:
     """
 
     def __init__(self, args, vocab_size, num_classes, device, use_dp=False):
+        self.global_rank = args.rank
         self.pipeline_group_size = args.pipeline_group_size
-        self.rank = get_pipeline_parallel_rank()   # Rank is the pipeline rank by default.
-        self.pre_node_rank = self.rank - 1
-        self.post_node_rank = self.rank + 1 if self.rank != self.pipeline_group_size - 1 else -1
+        self.pp_rank = get_pipeline_parallel_rank()   # Rank is the pipeline rank by default.
+        self.pre_node_rank = self.pp_rank - 1
+        self.post_node_rank = self.pp_rank + 1 if self.pp_rank != self.pipeline_group_size - 1 else -1
         self.comm = get_pipeline_parallel_comm()
         if use_dp:
             self.dp_comm = get_data_parallel_comm()
@@ -74,9 +76,8 @@ class Pipe1F1BAsync:
             self.init_time_stamp = None
             self.optimizer_start_event = torch.cuda.Event(enable_timing=True, blocking=False)
             self.optimizer_end_event = torch.cuda.Event(enable_timing=True, blocking=False)
-            self.optimizer_start_time_stamp = None
 
-        if args.rank == 0:
+        if self.pp_rank == 0:
             self.input_micro_batches = None
         else:
             self.input_micro_batches = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
@@ -90,13 +91,22 @@ class Pipe1F1BAsync:
                                                       requires_grad=False, device=self.device)
                                           for _ in range(self.micro_batch_num)]
 
-        if self.rank == 0:
+        if self.pp_rank == 0:
             self.model = GPTShardFirst(args, vocab_size, num_classes, device)
-        elif self.rank == self.pipeline_group_size - 1:
+        elif self.pp_rank == self.pipeline_group_size - 1:
             self.model = GPTShardLast(args, vocab_size, num_classes, device)
         else:
             self.model = GPTShardMiddle(args, vocab_size, num_classes, device)
-        self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
+
+        self.use_dp = use_dp
+        if use_dp:
+            if get_data_parallel_rank() == 0:
+                self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
+                self.dp_optim = CentralPS(args, device, self.model, self.optimizer)
+            else:
+                self.dp_optim = CentralPS(args, device, self.model)
+        else:
+            self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
 
     def zero_input_grad(self):
         if self.input_micro_batches:
@@ -140,7 +150,7 @@ class Pipe1F1BAsync:
         return self.init_time_stamp + self.init_event.elapsed_time(event) * 1e+3
 
     def forward_micro_batch(self, forward_index):
-        if self.rank == 0:  # Only send output to next node, do not receive
+        if self.pp_rank == 0:  # Only send output to next node, do not receive
             with torch.cuda.stream(self.torch_comp_stream):
                 self.profile_mark_forward_comp_start(forward_index)
                 self.output_micro_batches[forward_index] = self.model(self.input_micro_batches[forward_index])
@@ -152,7 +162,7 @@ class Pipe1F1BAsync:
                 self.comm.send(self.output_micro_batches[forward_index].data, dst=self.post_node_rank,
                                stream=cupy_forward_send_stream)
                 self.profile_mark_forward_send_end(forward_index)
-        elif self.rank == self.pipeline_group_size - 1:
+        elif self.pp_rank == self.pipeline_group_size - 1:
             with torch.cuda.stream(self.torch_recv_stream):
                 cupy_forward_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                 self.profile_mark_forward_recv_start(forward_index)
@@ -185,7 +195,7 @@ class Pipe1F1BAsync:
                 self.profile_mark_forward_send_end(forward_index)
 
     def backward_micro_batch(self, backward_index, target_as_micro_batch=None, loss_func=None):
-        if self.rank == self.pipeline_group_size - 1:  # only send grad back to last node, do not receive
+        if self.pp_rank == self.pipeline_group_size - 1:  # only send grad back to last node, do not receive
             with torch.cuda.stream(self.torch_comp_stream):
                 self.profile_mark_backward_comp_start(backward_index)
                 loss = loss_func(input= self.output_micro_batches[backward_index], target=target_as_micro_batch)
@@ -198,7 +208,7 @@ class Pipe1F1BAsync:
                 self.comm.send(self.input_micro_batches[backward_index].grad, dst=self.pre_node_rank,
                                stream=cupy_backward_send_stream)
                 self.profile_mark_backward_send_end(backward_index)
-        elif self.rank == 0:  # only receive grad from previous node, do not send
+        elif self.pp_rank == 0:  # only receive grad from previous node, do not send
             with torch.cuda.stream(self.torch_recv_stream):
                 cupy_backward_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                 self.profile_mark_backward_recv_start(backward_index)
@@ -234,25 +244,21 @@ class Pipe1F1BAsync:
 
     def forward_backward_stages(self, input_data=None, target=None, loss_func=torch.nn.functional.cross_entropy):
         # TODO this loading part should be updated later
-        if self.rank == 0:
+        if self.pp_rank == 0:
             assert(input_data is not None)
             self.input_micro_batches = torch.chunk(input_data, self.micro_batch_num, dim=0)
             target_as_micro_batches = [None for _ in range(self.micro_batch_num)]
-        elif self.rank == self.pipeline_group_size - 1:
+        elif self.pp_rank == self.pipeline_group_size - 1:
             assert (target is not None)
             target_as_micro_batches = torch.chunk(target, self.micro_batch_num, dim=0)
         else:
             assert (input_data is None and target is None)
             target_as_micro_batches = [None for _ in range(self.micro_batch_num)]
-        if self.enable_tidy_profiling:
-            torch.cuda.synchronize()
-            self.init_time_stamp = time.time() * 1e+6
-            self.init_event.record()
 
         forward_i = 0
         backward_i = 0
         # Starting phase: to fill the pipeline_parallel.
-        while forward_i < self.pipeline_group_size - 1 - self.rank:
+        while forward_i < self.pipeline_group_size - 1 - self.pp_rank:
             self.forward_micro_batch(forward_index=forward_i)
             forward_i += 1
 
@@ -275,10 +281,10 @@ class Pipe1F1BAsync:
     def profile_forward_backward_stages(self):
         torch.cuda.synchronize()
         for i in range(self.micro_batch_num):
-            if self.rank != 0:
+            if self.pp_rank != 0:
                 forward_recv_slot = \
                     self.forward_recv_start_events[i].elapsed_time(self.forward_recv_ready_events[i]) * 1e+3
-                forward_recv_log = {"name": "recv", "ph": "X", "pid": self.rank, "tid": "1. forward-recv",
+                forward_recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. forward-recv",
                                     "ts": self.get_ts(self.forward_recv_start_events[i]), "dur": forward_recv_slot,
                                     "args": {"micro-batch": i}, "cname": "startup"}
                 print(forward_recv_log)
@@ -286,26 +292,26 @@ class Pipe1F1BAsync:
 
             forward_comp_slot = \
                 self.forward_comp_start_events[i].elapsed_time(self.forward_comp_ready_events[i]) * 1e+3
-            forward_comp_log = {"name": "comp", "ph": "X", "pid": self.rank, "tid": "2. forward-compute",
+            forward_comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. forward-compute",
                                 "ts": self.get_ts(self.forward_comp_start_events[i]), "dur": forward_comp_slot,
                                 "args": {"micro-batch": i}, "cname": "good"}
             print(forward_comp_log)
             self.profiling_log.append(forward_comp_log)
 
-            if self.rank != self.pipeline_group_size - 1:
+            if self.pp_rank != self.pipeline_group_size - 1:
                 forward_send_slot = \
                     self.forward_send_start_events[i].elapsed_time(self.forward_send_end_events[i]) * 1e+3
-                forward_send_log = {"name": "send", "ph": "X", "pid": self.rank, "tid": "3. forward-send",
+                forward_send_log = {"name": "send", "ph": "X", "pid": self.global_rank, "tid": "3. forward-send",
                                     "ts": self.get_ts(self.forward_send_start_events[i]), "dur": forward_send_slot,
                                     "args": {"micro-batch": i}, "cname": "thread_state_iowait"}
                 print(forward_send_log)
                 self.profiling_log.append(forward_send_log)
 
         for i in range(self.micro_batch_num):
-            if self.rank != self.pipeline_group_size - 1:
+            if self.pp_rank != self.pipeline_group_size - 1:
                 backward_recv_slot = \
                     self.backward_recv_start_events[i].elapsed_time(self.backward_recv_ready_events[i]) * 1e+3
-                backward_recv_log = {"name": "recv", "ph": "X", "pid": self.rank, "tid": "4. backward-recv",
+                backward_recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "4. backward-recv",
                                      "ts": self.get_ts(self.backward_recv_start_events[i]), "dur": backward_recv_slot,
                                      "args": {"micro-batch": i}, "cname": "startup"}
                 print(backward_recv_log)
@@ -313,41 +319,48 @@ class Pipe1F1BAsync:
 
             backward_comp_slot = \
                 self.backward_comp_start_events[i].elapsed_time(self.backward_comp_ready_events[i]) * 1e+3
-            backward_comp_log = {"name": "comp", "ph": "X", "pid": self.rank, "tid": "5. backward-compute",
+            backward_comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "5. backward-compute",
                                  "ts": self.get_ts(self.backward_comp_start_events[i]),
                                  "dur": backward_comp_slot, "args": {"micro-batch": i}, "cname": "good"}
             print(backward_comp_log)
             self.profiling_log.append(backward_comp_log)
 
-            if self.rank != 0:
+            if self.pp_rank != 0:
                 backward_send_slot = \
                     self.backward_send_start_events[i].elapsed_time(self.backward_send_end_events[i]) * 1e+3
-                backward_send_log = {"name": "send", "ph": "X", "pid": self.rank, "tid": "6. backward-send",
+                backward_send_log = {"name": "send", "ph": "X", "pid": self.global_rank, "tid": "6. backward-send",
                                      "ts": self.get_ts(self.backward_send_start_events[i]), "dur": backward_send_slot,
                                      "args": {"micro-batch": i}, "cname": "thread_state_iowait"}
                 print(backward_send_log)
                 self.profiling_log.append(backward_send_log)
 
     def optimizer_step(self):
-        if self.enable_tidy_profiling:
-            torch.cuda.synchronize()
-            self.optimizer_start_time_stamp = time.time() * 1e+6
-        with torch.cuda.stream(self.torch_comp_stream):
-            if self.enable_tidy_profiling:
-                self.optimizer_start_event.record()
-            self.optimizer.step()
-            if self.enable_tidy_profiling:
-                self.optimizer_end_event.record()
+        if self.use_dp:
+            with torch.cuda.stream(self.torch_comp_stream):
+                self.torch_comp_stream.record_event(self.dp_optim.backward_ready_event)
+            self.dp_optim.reduce_gradients()
+            self.dp_optim.optimizer_step()
+            self.dp_optim.broadcast_parameters()
+        else:
+            with torch.cuda.stream(self.torch_comp_stream):
+                if self.enable_tidy_profiling:
+                    self.optimizer_start_event.record()
+                self.optimizer.step()
+                if self.enable_tidy_profiling:
+                    self.optimizer_end_event.record()
         if self.enable_tidy_profiling:
             self.profiling_optimizer_step()
 
     def profiling_optimizer_step(self):
         torch.cuda.synchronize()
-        optimizer_slot = self.optimizer_start_event.elapsed_time(self.optimizer_end_event) * 1e+3
-        optimizer_log = {"name": "opt", "ph": "X", "pid": self.rank, "tid": "7. optimizer-step",
-                         "ts": self.optimizer_start_time_stamp, "dur": optimizer_slot, "cname": "bad"}
-        print(optimizer_log)
-        self.profiling_log.append(optimizer_log)
+        if self.use_dp:
+            optimizer_slot = self.optimizer_start_event.elapsed_time(self.optimizer_end_event) * 1e+3
+            optimizer_log = {"name": "opt", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-step",
+                             "ts": self.get_ts(self.optimizer_start_event), "dur": optimizer_slot, "cname": "bad"}
+            print(optimizer_log)
+            self.profiling_log.append(optimizer_log)
+        else:
+            self.profiling_log.extend(self.dp_optim.profiling_data_parallel(self.init_time_stamp, self.init_event))
 
     def export_profiling_result(self, filename):
         with open(filename, 'w') as outfile:
@@ -356,6 +369,10 @@ class Pipe1F1BAsync:
     def sgd_iter(self, input_=None, target=None):
         self.comm.barrier()
         start_time = time.time()
+        if self.enable_tidy_profiling:
+            torch.cuda.synchronize()
+            self.init_time_stamp = time.time() * 1e+6
+            self.init_event.record()
         self.zero_input_grad()
         self.optimizer.zero_grad()
         self.forward_backward_stages(input_data=input_, target=target)
@@ -363,5 +380,5 @@ class Pipe1F1BAsync:
         torch.cuda.synchronize()
         end_time = time.time()
         iter_time = end_time - start_time
-        print("Rank {} node 1f1b iteration takes {:3.2f}s".format(self.rank, iter_time))
+        print("Rank {} node 1f1b iteration takes {:3.2f}s".format(self.global_rank, iter_time))
         return iter_time
