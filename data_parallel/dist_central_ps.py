@@ -6,7 +6,7 @@ class CentralPS:
     def __init__(self, args, device, module: torch.nn.Module, optimizer: torch.optim.Optimizer = None):
         self.global_rank = args.rank
         self.dp_group_size = args.data_group_size
-        self.enable_tidy_profiling = args.enable_tidy_profiling
+        self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
         self.dp_comm = get_data_parallel_comm()
         self.dp_rank = get_data_parallel_rank()
         self.dp_comm_stream = torch.cuda.Stream(device=device, priority=-1)
