@@ -358,7 +358,7 @@ class Pipe1F1BAsync:
 
     def profiling_optimizer_step(self):
         torch.cuda.synchronize()
-        if self.use_dp:
+        if not self.use_dp:
             optimizer_slot = self.optimizer_start_event.elapsed_time(self.optimizer_end_event) * 1e+3
             optimizer_log = {"name": "opt", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-step",
                              "ts": self.get_ts(self.optimizer_start_event), "dur": optimizer_slot, "cname": "bad"}
