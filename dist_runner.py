@@ -33,7 +33,7 @@ def main():
 
     init_communicators(args)
 
-    if get_pipeline_parallel_rank() == 0 or get_pipeline_parallel_rank() == args.world_size-1:
+    if get_pipeline_parallel_rank() == 0 or get_pipeline_parallel_rank() == args.pipeline_group_size-1:
         tokenizer = build_tokenizer(args)
         print("token vocab size:", tokenizer.vocab_size)
         train_data_loader = get_glue_qqp_train_data_loader(args, tokenizer)
