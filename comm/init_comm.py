@@ -40,11 +40,11 @@ def init_communicators(args):
     global _PIPELINE_PARALLEL_COMM
     global _DATA_PARALLEL_RANK
     global _PIPELINE_PARALLEL_RANK
-    _PIPELINE_PARALLEL_RANK = args.rank % args.pipeline_group_size
-    _DATA_PARALLEL_RANK = args.rank // args.pipeline_group_size
     # We use pipeline parallel by default.
+    _PIPELINE_PARALLEL_RANK = args.rank % args.pipeline_group_size
     _PIPELINE_PARALLEL_COMM = NCCLCommunicator(_PIPELINE_PARALLEL_RANK, args.cuda_id, args.pipeline_group_size,
                                                "pipeline_group_"+str(args.rank // args.pipeline_group_size))
     if args.data_group_size != 1:
-        _PIPELINE_PARALLEL_COMM = NCCLCommunicator(_DATA_PARALLEL_RANK, args.cuda_id, args.data_group_size,
+        _DATA_PARALLEL_RANK = args.rank // args.pipeline_group_size
+        _DATA_PARALLEL_COMM = NCCLCommunicator(_DATA_PARALLEL_RANK, args.cuda_id, args.data_group_size,
                                                "data_group_"+str(args.rank % args.pipeline_group_size))
