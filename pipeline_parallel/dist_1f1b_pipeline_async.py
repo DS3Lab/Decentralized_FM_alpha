@@ -106,6 +106,7 @@ class Pipe1F1BAsync:
                 self.dp_optim = CentralPS(args, device, self.model, self.optimizer)
             else:
                 self.dp_optim = CentralPS(args, device, self.model)
+                self.optimizer = None
         else:
             self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
 
@@ -379,7 +380,8 @@ class Pipe1F1BAsync:
             self.init_time_stamp = time.time() * 1e+6
             self.init_event.record()
         self.zero_input_grad()
-        self.optimizer.zero_grad()
+        if self.optimizer is not None:
+            self.optimizer.zero_grad()
         self.forward_backward_stages(input_data=input_, target=target)
         self.optimizer_step()
         torch.cuda.synchronize()

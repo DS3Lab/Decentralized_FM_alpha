@@ -102,6 +102,7 @@ class GpipeAsync:
                 self.dp_optim = CentralPS(args, device, self.model, self.optimizer)
             else:
                 self.dp_optim = CentralPS(args, device, self.model)
+                self.optimizer = None
         else:
             self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
 
@@ -345,7 +346,8 @@ class GpipeAsync:
             self.init_time_stamp = time.time() * 1e+6
             self.init_event.record()
         self.zero_input_grad()
-        self.optimizer.zero_grad()
+        if self.optimizer is not None:
+            self.optimizer.zero_grad()
         outputs = self.forward_stage(input_)
         forward_time = time.time()
         print("Rank {} node forward pass takes {:3.2f}s".format(self.global_rank,  forward_time-start_time))
