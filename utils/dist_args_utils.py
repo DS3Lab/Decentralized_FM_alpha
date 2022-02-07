@@ -61,9 +61,11 @@ def get_model_arguments_str(args):
     return '_l' + str(args.seq_length) + '_m' + str(args.embedding_dim)
 
 
-def get_dist_arguments_str(args):
-    return '_w' + str(args.world_size) + '_' + str(args.rank) +'_p' + str(args.pipeline_group_size) + \
-           '_d' + str(args.data_group_size)
+def get_dist_arguments_str(args, add_rank=True):
+    dist_str = '_w' + str(args.world_size)  + '_p' + str(args.pipeline_group_size) + '_d' + str(args.data_group_size)
+    if add_rank:
+        dist_str = dist_str + '_' + str(args.rank)
+    return dist_str
 
 
 def get_learning_arguments_str(args):

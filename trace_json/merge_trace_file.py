@@ -2,12 +2,13 @@ import os
 import json
 import argparse
 import shutil
+from utils.dist_args_utils import *
 
 # TODO: change this hard coded version later.
 node_ip_lists = [
-    "54.244.109.62",
-    "34.211.34.22",
-    "54.200.209.37"
+    "34.221.42.222",
+    "35.88.23.214",
+    "54.201.194.227"
 ]
 
 
@@ -58,8 +59,8 @@ def main():
     parser.add_argument('--mode', type=str, default='gpipe', metavar='S',
                         help='use which mode: gpipe or 1f1b.')
     args = parser.parse_args()
-    prefix = 'gpt3_' + args.mode + '_b' + str(args.batch_size) + '_' + str(args.micro_batch_size) + '_l' + \
-             str(args.seq_length) + '_m' + str(args.embedding_dim) + '_w' + str(args.world_size)
+    prefix = 'gpt3_' + args.mode + get_learning_arguments_str(args) + get_model_arguments_str(args) + \
+             get_dist_arguments_str(args, add_rank=False)
     postfix = '_' + args.profiling + '.json'
     download_trace_logs(args, prefix, postfix)
     merge_logs(args, prefix, postfix)
