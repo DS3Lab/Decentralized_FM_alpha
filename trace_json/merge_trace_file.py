@@ -8,7 +8,8 @@ from utils.dist_args_utils import *
 node_ip_lists = [
     "34.221.42.222",
     "35.88.23.214",
-    "54.201.194.227"
+    "54.201.194.227",
+    "54.202.139.249"
 ]
 
 
@@ -44,8 +45,7 @@ def merge_logs(args, prefix, postfix):
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
-    parser.add_argument('--world-size', type=int, default=3, metavar='D',
-                        help='world-size (default: 2)')
+    add_torch_distributed_arguments(parser)
     parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 100)')
     parser.add_argument('--micro-batch-size', type=int, default=4, metavar='N',

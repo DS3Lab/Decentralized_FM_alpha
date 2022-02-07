@@ -34,7 +34,7 @@ def init_communicators(args):
     pipeline parallel: <group 0: [0,1,2,3]>, <group 1: [4,5,6,7]>
     data parallel: <group 0: [0,4]>, <group 1: [1,5]>, <group 2: [2,6]>, <group 3: [3,7]>
     """
-    assert args.pipeline_group_size == args.data_group_size * args.pipeline_group_size
+    assert args.world_size_size == args.data_group_size * args.pipeline_group_size
     default_init(args)
     global _DATA_PARALLEL_COMM
     global _PIPELINE_PARALLEL_COMM
