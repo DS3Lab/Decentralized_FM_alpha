@@ -18,7 +18,7 @@ def download_trace_logs(args, prefix, postfix, ips=node_ip_lists):
         # os.rmdir('./'+prefix)
         shutil.rmtree('./'+prefix)
     os.mkdir('./'+prefix)
-    for i in range(args.pipeline_group_size):
+    for i in range(args.world_size):
         os.system("scp -i ../binhang_ds3_aws_oregon.pem ubuntu@" + ips[i] +
                   ":~/GPT-home-private/trace_json/"+prefix+'_'+str(i) + postfix + ' ./' + prefix)
 
@@ -26,7 +26,7 @@ def download_trace_logs(args, prefix, postfix, ips=node_ip_lists):
 def merge_logs(args, prefix, postfix):
     result = []
     current_min_stamp = float('inf')
-    for i in range(args.pipeline_group_size):
+    for i in range(args.world_size):
         print(i)
         with open("./" + prefix + '/' + prefix + '_' + str(i) + postfix) as inputJson:
             current_trace = json.load(inputJson)

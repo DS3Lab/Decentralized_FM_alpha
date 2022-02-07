@@ -97,21 +97,21 @@ class CentralPS:
         self.set_time_stamp(init_time_stamp, init_event)
         profiling_log = []
         reduce_slot = self.reduce_gradients_start_event.elapsed_time(self.reduce_gradients_ready_event) * 1e+3
-        reduce_log = {"name": "opt", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-step",
+        reduce_log = {"name": "opt_reduce", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-comm",
                       "ts": self.get_ts(self.reduce_gradients_start_event), "dur": reduce_slot, 
-                      "cname": "cq_build_running"}
+                      "cname": "cq_build_passed"}
         print(reduce_log)
         profiling_log.append(reduce_log)
         if self.dp_rank == 0:
             optimizer_slot = self.optimizer_step_start_event.elapsed_time(self.optimizer_step_ready_event) * 1e+3
-            optimizer_log = {"name": "opt", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-step",
+            optimizer_log = {"name": "opt_comp", "ph": "X", "pid": self.global_rank, "tid": "8. optimizer-comp",
                              "ts": self.get_ts(self.optimizer_step_start_event), "dur": optimizer_slot, "cname": "bad"}
             print(optimizer_log)
             profiling_log.append(optimizer_log)
         broadcast_slot = self.broadcast_parameters_start_event.elapsed_time(self.broadcast_parameters_end_event) * 1e+3
-        broadcast_log = {"name": "opt", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-step",
-                         "ts": self.get_ts(self.reduce_gradients_start_event), "dur": broadcast_slot,
-                         "cname": "cq_build_running"}
+        broadcast_log = {"name": "opt_broadcast", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-comm",
+                         "ts": self.get_ts(self.broadcast_parameters_start_event), "dur": broadcast_slot,
+                         "cname": "cq_build_passed"}
         print(broadcast_log)
         profiling_log.append(broadcast_log)
         return profiling_log
