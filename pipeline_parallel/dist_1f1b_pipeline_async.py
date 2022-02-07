@@ -91,6 +91,7 @@ class Pipe1F1BAsync:
                                                       requires_grad=False, device=self.device)
                                           for _ in range(self.micro_batch_num)]
 
+        self._compute_micro_batch_size()
         if self.pp_rank == 0:
             self.model = GPTShardFirst(args, vocab_size, num_classes, device)
         elif self.pp_rank == self.pipeline_group_size - 1:
@@ -107,6 +108,10 @@ class Pipe1F1BAsync:
                 self.dp_optim = CentralPS(args, device, self.model)
         else:
             self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
+
+    def _compute_micro_batch_size(self):
+        micro_batch_float_num = self.micro_batch_size * self.seq_length * self.embedding_dim
+        print("Current micro-batch send/recv size: {} MB".format(micro_batch_float_num*4//1024//1024))
 
     def zero_input_grad(self):
         if self.input_micro_batches:

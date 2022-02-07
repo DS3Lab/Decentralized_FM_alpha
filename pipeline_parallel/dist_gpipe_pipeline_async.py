@@ -74,6 +74,7 @@ class GpipeAsync:
             self.optimizer_start_event = torch.cuda.Event(enable_timing=True, blocking=False)
             self.optimizer_end_event = torch.cuda.Event(enable_timing=True, blocking=False)
 
+        self._compute_micro_batch_size()
         if self.pp_rank == 0:
             self.input_micro_batches = None
         else:
@@ -103,6 +104,10 @@ class GpipeAsync:
                 self.dp_optim = CentralPS(args, device, self.model)
         else:
             self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
+
+    def _compute_micro_batch_size(self):
+        micro_batch_float_num = self.micro_batch_size * self.seq_length * self.embedding_dim
+        print("Current micro-batch send/recv size: {} MB".format(micro_batch_float_num*4//1024//1024))
 
     def zero_input_grad(self):
         if self.input_micro_batches:

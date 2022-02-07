@@ -1,4 +1,4 @@
-from nccl_backend import *
+from .nccl_backend import *
 
 _DATA_PARALLEL_COMM = None
 _PIPELINE_PARALLEL_COMM = None
