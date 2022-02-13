@@ -293,7 +293,7 @@ class Pipe1F1BAsync:
                 forward_recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. forward-recv",
                                     "ts": self.get_ts(self.forward_recv_start_events[i]), "dur": forward_recv_slot,
                                     "args": {"micro-batch": i}, "cname": "startup"}
-                print(forward_recv_log)
+                # print(forward_recv_log)
                 self.profiling_log.append(forward_recv_log)
 
             forward_comp_slot = \
@@ -301,7 +301,7 @@ class Pipe1F1BAsync:
             forward_comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. forward-compute",
                                 "ts": self.get_ts(self.forward_comp_start_events[i]), "dur": forward_comp_slot,
                                 "args": {"micro-batch": i}, "cname": "good"}
-            print(forward_comp_log)
+            # print(forward_comp_log)
             self.profiling_log.append(forward_comp_log)
 
             if self.pp_rank != self.pipeline_group_size - 1:
@@ -310,7 +310,7 @@ class Pipe1F1BAsync:
                 forward_send_log = {"name": "send", "ph": "X", "pid": self.global_rank, "tid": "3. forward-send",
                                     "ts": self.get_ts(self.forward_send_start_events[i]), "dur": forward_send_slot,
                                     "args": {"micro-batch": i}, "cname": "thread_state_iowait"}
-                print(forward_send_log)
+                # print(forward_send_log)
                 self.profiling_log.append(forward_send_log)
 
         for i in range(self.micro_batch_num):
@@ -320,7 +320,7 @@ class Pipe1F1BAsync:
                 backward_recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "4. backward-recv",
                                      "ts": self.get_ts(self.backward_recv_start_events[i]), "dur": backward_recv_slot,
                                      "args": {"micro-batch": i}, "cname": "startup"}
-                print(backward_recv_log)
+                # print(backward_recv_log)
                 self.profiling_log.append(backward_recv_log)
 
             backward_comp_slot = \
@@ -328,7 +328,7 @@ class Pipe1F1BAsync:
             backward_comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "5. backward-compute",
                                  "ts": self.get_ts(self.backward_comp_start_events[i]),
                                  "dur": backward_comp_slot, "args": {"micro-batch": i}, "cname": "good"}
-            print(backward_comp_log)
+            # print(backward_comp_log)
             self.profiling_log.append(backward_comp_log)
 
             if self.pp_rank != 0:
@@ -337,7 +337,7 @@ class Pipe1F1BAsync:
                 backward_send_log = {"name": "send", "ph": "X", "pid": self.global_rank, "tid": "6. backward-send",
                                      "ts": self.get_ts(self.backward_send_start_events[i]), "dur": backward_send_slot,
                                      "args": {"micro-batch": i}, "cname": "thread_state_iowait"}
-                print(backward_send_log)
+                # print(backward_send_log)
                 self.profiling_log.append(backward_send_log)
 
     def optimizer_step(self):
@@ -363,7 +363,7 @@ class Pipe1F1BAsync:
             optimizer_slot = self.optimizer_start_event.elapsed_time(self.optimizer_end_event) * 1e+3
             optimizer_log = {"name": "opt", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-step",
                              "ts": self.get_ts(self.optimizer_start_event), "dur": optimizer_slot, "cname": "bad"}
-            print(optimizer_log)
+            # print(optimizer_log)
             self.profiling_log.append(optimizer_log)
         else:
             self.profiling_log.extend(self.dp_optim.profiling_data_parallel(self.init_time_stamp, self.init_event))

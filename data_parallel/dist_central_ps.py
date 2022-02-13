@@ -39,7 +39,7 @@ class CentralPS:
     def _compute_total_para_num(self):
         total_count = 0
         for para in self.module.parameters():
-            print("Parameter: ", para.data.shape)
+            # print("Parameter: ", para.data.shape)
             total_count += torch.numel(para.data)
         return total_count
     
@@ -100,19 +100,19 @@ class CentralPS:
         reduce_log = {"name": "opt_reduce", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-comm",
                       "ts": self.get_ts(self.reduce_gradients_start_event), "dur": reduce_slot, 
                       "cname": "cq_build_passed"}
-        print(reduce_log)
+        # print(reduce_log)
         profiling_log.append(reduce_log)
         if self.dp_rank == 0:
             optimizer_slot = self.optimizer_step_start_event.elapsed_time(self.optimizer_step_ready_event) * 1e+3
             optimizer_log = {"name": "opt_comp", "ph": "X", "pid": self.global_rank, "tid": "8. optimizer-comp",
                              "ts": self.get_ts(self.optimizer_step_start_event), "dur": optimizer_slot, "cname": "bad"}
-            print(optimizer_log)
+            # print(optimizer_log)
             profiling_log.append(optimizer_log)
         broadcast_slot = self.broadcast_parameters_start_event.elapsed_time(self.broadcast_parameters_end_event) * 1e+3
         broadcast_log = {"name": "opt_broadcast", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-comm",
                          "ts": self.get_ts(self.broadcast_parameters_start_event), "dur": broadcast_slot,
                          "cname": "cq_build_passed"}
-        print(broadcast_log)
+        # print(broadcast_log)
         profiling_log.append(broadcast_log)
         return profiling_log
             

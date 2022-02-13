@@ -23,6 +23,8 @@ def main():
                         help='enable which profiling? default: tidy mode')
     parser.add_argument('--mode', type=str, default='1f1b', metavar='S',
                         help='use which mode: gpipe or 1f1b.')
+    parser.add_argument('--trace-postfix', type=str, default='default', metavar='S',
+                        help='postfix of the tracing file name.')
     args = parser.parse_args()
     torch.manual_seed(args.seed)
     if args.use_cuda:
@@ -62,7 +64,8 @@ def main():
         distributed_train_foo_iter(args, pipe, device, train_data_loader)
     else:
         trace_file = './trace_json/gpt3_' + args.mode + get_learning_arguments_str(args) \
-                     + get_model_arguments_str(args) + get_dist_arguments_str(args) + '_' + args.profiling + '.json'
+                     + get_model_arguments_str(args) + get_dist_arguments_str(args) + '_' \
+                     + args.profiling + '_' + args.trace_postfix + '.json'
         if args.profiling == 'tidy_profiling':
             distributed_train_foo_iter(args, pipe, device, train_data_loader)
             pipe.export_profiling_result(filename=trace_file)
