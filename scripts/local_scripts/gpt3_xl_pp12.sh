@@ -22,9 +22,9 @@ then
   RATE_GBIT=$5
   export NCCL_SOCKET_IFNAME=ens3
   export GLOO_SOCKET_IFNAME=ens3
-  sh ./scripts/tc_scripts/tc_netem_delay_bandwdith.sh $DELAY_MS $RATE_GBIT
+  sh ./scripts/tc_scripts/both_delay_bandwidth.sh $DELAY_MS $RATE_GBIT
   python dist_runner.py --dist-url tcp://"$ip":9000 --mode gpipe --world-size "$world_size" --pipeline-group-size "$world_size" --data-group-size 1 --rank "$rank" --embedding-dim 2048 --num-heads 16 --num-layers 2 --batch-size 48 --micro-batch-size 1 --trace-postfix "d${DELAY_MS}b${RATE_GBIT}" >> "./logs/${timestamp}_gpt3_xl_pp12_d${DELAY_MS}b${RATE_GBIT}.log"
-  sh ./scripts/tc_scripts/tc_clear.sh
+  sh ./scripts/tc_scripts/clear.sh
 else
   echo "Invalid argument number!"
 fi
