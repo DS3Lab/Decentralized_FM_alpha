@@ -2,7 +2,6 @@ import os
 import json
 import argparse
 import shutil
-from utils.dist_args_utils import *
 
 # deprecated
 node_ip_lists = []
@@ -24,7 +23,8 @@ def merge_logs(args):
     current_min_stamp = float('inf')
     for i in range(args.world_size):
         print(i)
-        with open("../trace_json/" + args.profix + '/' + args.profix + '_' + str(i) + '_' + args.postfix) as inputJson:
+        with open("../trace_json/" + args.profix + '/' + args.profix + '_' + str(i) + '_' + args.postfix + '.json') \
+                as inputJson:
             current_trace = json.load(inputJson)
             inputJson.close()
             if i == 0:
@@ -35,7 +35,7 @@ def merge_logs(args):
                 log['ts'] = log['ts'] - current_min_stamp
             result.extend(current_trace)
     print(len(result))
-    with open("./" + args.profix + '_' + args.postfix, 'w') as outputJson:
+    with open("../trace_json/" + args.profix + '_' + args.postfix, 'w') as outputJson:
         json.dump(result, outputJson)
 
 
@@ -43,10 +43,13 @@ def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
     parser.add_argument('--world-size', type=int, default=3, metavar='N',
                         help='distributed cluster size (default: 3)')
+    parser.add_argument('--mode', type=str, default='gpipe', metavar='S',
+                        help='use which mode: gpipe or 1f1b.')
+    parser.add_argument('--profix', type=str, default='gpt3_gpipe_b64_1_l2048_m768_w3_p3_d1', metavar='S',
+                        help='postfix of the tracing file name.')
     parser.add_argument('--postfix', type=str, default='tidy_profiling_default', metavar='S',
                         help='postfix of the tracing file name.')
-    parser.add_argument('--profix', type=str, default='gpt3_gpipe_b64_1_l2048_m768_p3_d1', metavar='S',
-                        help='postfix of the tracing file name.')
+
     args = parser.parse_args()
     merge_logs(args)
 

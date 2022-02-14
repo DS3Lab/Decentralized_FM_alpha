@@ -1,6 +1,6 @@
 source ./ip_list.sh
 
-# valid prefix includes: gpt3_gpipe_b64_1_l2048_m768_p3_d1,
+# valid prefix includes: gpt3_gpipe_b64_1_l2048_m768_w3_p3_d1,
 profix=$1
 
 postfixes=(
@@ -21,7 +21,7 @@ for postfix in "${postfixes[@]}"
 do
   for rank in "${!ips[@]}"
   do
-    scp -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}":~/GPT-home-private/trace_json/"$profix"_"$rank"_"$postfix" ../trace_json/"$profix"
+    scp -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}":~/GPT-home-private/trace_json/"$profix"_"$rank"_"$postfix".json ../trace_json/"$profix"
   done
-  python ./merge_trace_file.py --profix "$prefix" --postfix "$postfix"
+  python ./merge_trace_file.py --profix "$profix" --postfix "$postfix"
 done
