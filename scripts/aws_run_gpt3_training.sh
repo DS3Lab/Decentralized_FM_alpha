@@ -7,7 +7,7 @@ script=$1
 
 for rank in "${!ips[@]}"
 do
-  echo "Issue command $script$ in Rank-$rank node: ${ips[$rank]}"
+  echo "Issue command $script in Rank-$rank node: ${ips[$rank]}"
   if [ $# -eq 1 ]
   then
     ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" &

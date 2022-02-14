@@ -20,9 +20,11 @@ then
   RATE_GBIT=$5
   export NCCL_SOCKET_IFNAME=ens3
   export GLOO_SOCKET_IFNAME=ens3
-  sh ./scripts/tc_script/tc_netem_delay_bandwdith.sh $DELAY_MS $RATE_GBIT
+  sh ./scripts/tc_scripts/tc_netem_delay_bandwdith.sh $DELAY_MS $RATE_GBIT
   python dist_runner.py --dist-url tcp://"$ip":9000 --mode gpipe --world-size "$world_size" --pipeline-group-size 3 --data-group-size 4 --rank "$rank" --embedding-dim 768 --num-heads 12 --num-layers 4 --batch-size 64 --micro-batch-size 4 --trace-postfix "d${DELAY_MS}b${RATE_GBIT}" >> "./logs/${timestamp}_gpt3_small_pp3_dp4_d${DELAY_MS}b${RATE_GBIT}.log"
-  sh ./scripts/tc_script/tc_clear.sh
+  sh ./scripts/tc_scripts/tc_clear.sh
 else
   echo "Invalid argument number!"
 fi
+
+echo "Benchmark training is done."
