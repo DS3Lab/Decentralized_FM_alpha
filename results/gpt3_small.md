@@ -1,6 +1,6 @@
 # Result of GPT-3 Small  
 
-## Pipeline
+## Pipeline Alone
 
 For pipeline only, we have:
 
@@ -16,9 +16,11 @@ For pipeline only, we have:
   - model dim: 768
   - number of head: 12
   - sequence length: 2048;
-  - max batch size (due to DRAM limits): 64
-  - micro-batch size: 1
-  - Storage of parameters in an instances:  
+  - max batch dim (due to DRAM limits): 64
+  - micro-batch dim: 1 
+  - Storage of a micro-batch: 6 MB 
+  - Storage of parameters in an instances: 108 MB
+  - Storage of parameters in the first instance of pipeline (due to some NLP embedding): 198 MB
 
 ### Gpipe based pipeline parallel 
 
@@ -32,7 +34,7 @@ For pipeline only, we have:
 | delay 10ms  bandwidth 1Gbps         | 7.90 s              | 
 
 ### 1F1B based pipeline parallel 
-- Not fast enough, left for further optimization.
+- Not faster than Gpipe, left for further optimization.
 
 | Network setting                     | Micro batch size: 1 | Micro batch size: 2 | Micro batch size: 4 |
 |-------------------------------------|---------------------|---------------------|---------------------|
@@ -43,10 +45,21 @@ For pipeline only, we have:
 
 
 
+## Pipeline + Data Parallel
+
+- Gpipe + centralized PS Data parallel:
+- Each GPipe pipeline runs a batch of size 64;
+- The global batch size is 64 * DP degree:
+  - DP degree 1: 64
+  - DP degree 4: 256
+  - DP degree 16: 1024
+- (updated on 2022/02/14).
+
+| Network setting                     | DP Degree: 1 | DP Degree: 4 | DP Degree: 16 |
+|-------------------------------------|--------------|--------------|---------------|
+| default (about 0.1ms; up to 10Gbps) | 5.91 s       | 6.41 s       | 6.47 s        |
+| delay 1ms  bandwidth 5Gbps          | 6.01 s       | 6.67 s       | 6.74 s        |
+| delay 5ms  bandwidth 2Gbps          | 6.07 s       | 7.71 s       | 7.86 s        |
+| delay 10ms  bandwidth 1Gbps         | 7.90 s       | 11.01 s      | 11.17 s       |
 
 
-
-## ZeRO-S3 data parallel
-
-- Fail due to running out of DRAM: 
-  - for this model each data parallel node can only run a batch size of 1.

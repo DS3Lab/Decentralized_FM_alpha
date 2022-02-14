@@ -18,7 +18,17 @@ postfixes=(
 
 world_size=${#ips[@]}
 
+if [ -d "../trace_json/${profix}" ]
+then
+  rm -rf ../trace_json/"$profix"
+fi
+
+mkdir ../trace_json/"$profix"
+
 for postfix in "${postfixes[@]}"
 do
-  python ./merge_trace_file.py --world-size "$world_size" --profix "$profix" --postfix "$postfix"
+  for rank in "${!ips[@]}"
+  do
+    scp -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}":~/GPT-home-private/trace_json/"$profix"_"$rank"_"$postfix".json ../trace_json/"$profix" &
+  done
 done
