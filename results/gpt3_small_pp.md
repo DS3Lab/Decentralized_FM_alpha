@@ -23,12 +23,6 @@
 | Network setting                     | Micro batch size: 1 | Micro batch size: 2 | Micro batch size: 4 |
 |-------------------------------------|--------------------|---------------------|---------------------|
 | default (about 0.1ms; up to 10Gbps) | 6.64 s             | 6.76 s              | 6.94 s              |
-| delay 1ms                           | -                  | -                   | -                   |
-| delay 5ms                           | -                  | -                   | -                   |
-| delay 10ms                          | -                  | -                   | -                   |
-| bandwidth 5Gbps                     | -                  | -                   | -                   |
-| bandwidth 2Gbps                     | -                  | -                   | -                   |
-| bandwidth 1Gbps                     | -                  | -                   | -                   |
 | delay 1ms  bandwidth 5Gbps          | 6.68 s             | 6.82 s              | 7.01 s              |
 | delay 5ms  bandwidth 2Gbps          | 6.70 s             | 6.96 s              | 7.31 s              |
 | delay 10ms  bandwidth 1Gbps         | 8.38 s             | 8.61 s              | 9.08 s              |
@@ -37,12 +31,6 @@
 | Network setting                     | Micro batch size: 1 | Micro batch size: 2 | Micro batch size: 4 |
 |-------------------------------------|---------------------|---------------------|---------------------|
 | default (about 0.1ms; up to 10Gbps) | 6.54 s              | 6.65 s              | 6.86 s              |
-| delay 1ms                           | -                   | -                   | -                   |
-| delay 5ms                           | -                   | -                   | -                   |
-| delay 10ms                          | -                   | -                   | -                   |
-| bandwidth 5Gbps                     | -                   | -                   | -                   |
-| bandwidth 2Gbps                     | -                   | -                   | -                   |
-| bandwidth 1Gbps                     | -                   | -                   | -                   |
 | delay 1ms  bandwidth 5Gbps          | 6.86 s              | 7.05 s              | 7.22 s              |
 | delay 5ms  bandwidth 2Gbps          | 8.42 s              | 8.40 s              | 8.57 s              |
 | delay 10ms  bandwidth 1Gbps         | 11.21 s             | 11.03 s             | 11.35 s             |
