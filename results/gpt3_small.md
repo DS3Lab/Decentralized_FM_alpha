@@ -32,6 +32,7 @@ For pipeline only, we have:
 | delay 1ms  bandwidth 5Gbps          | 6.01 s              | 
 | delay 5ms  bandwidth 2Gbps          | 6.07 s              | 
 | delay 10ms  bandwidth 1Gbps         | 7.90 s              | 
+| delay 50ms  bandwidth 1Gbps         | 8.77 s              | 
 
 ### 1F1B based pipeline parallel 
 - Not faster than Gpipe, left for further optimization.
@@ -56,12 +57,12 @@ For pipeline only, we have:
 - (updated on 2022/02/14).
 
 | Network setting                     | DP Degree: 1 | DP Degree: 4 | DP Degree: 16 |
-|-------------------------------------|--------------|--------------|---------------|
-| default (about 0.1ms; up to 10Gbps) | 5.91 s       | 6.41 s       | 6.47 s        |
-| delay 1ms  bandwidth 5Gbps          | 6.01 s       | 6.67 s       | 6.74 s        |
-| delay 5ms  bandwidth 2Gbps          | 6.07 s       | 7.71 s       | 7.86 s        |
-| delay 10ms  bandwidth 1Gbps         | 7.90 s       | 11.01 s      | 11.17 s       |
-
+|-------------------------------------|--------------|-------------|---------------|
+| default (about 0.1ms; up to 10Gbps) | 5.91 s       | 6.41 s      | 6.47 s        |
+| delay 1ms  bandwidth 5Gbps          | 6.01 s       | 6.67 s      | 6.74 s        |
+| delay 5ms  bandwidth 2Gbps          | 6.07 s       | 7.71 s      | 7.86 s        |
+| delay 10ms  bandwidth 1Gbps         | 7.90 s       | 11.01 s     | 11.17 s       |
+| delay 50ms  bandwidth 1Gbps         | 8.77 s       | 12.59 s     | s             |
 
 ## ZeRO-S3 
 

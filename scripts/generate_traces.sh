@@ -1,4 +1,4 @@
-source ./ip_list_12.sh
+source ./ip_list.sh
 
 # Current valid prefix includes:
 # gpt3_gpipe_b64_1_l2048_m768_w3_p3_d1,
@@ -7,18 +7,29 @@ source ./ip_list_12.sh
 # gpt3_gpipe_b64_1_l2048_m2048_w12_p12_d1
 # gpt3_gpipe_b64_1_l2048_m2048_w48_p12_d4
 
-profix=$1
+if [ $# -eq 1 ]
+then
+  profix=$1
 
-postfixes=(
-"tidy_profiling_default"
-"tidy_profiling_d1b5"
-"tidy_profiling_d5b2"
-"tidy_profiling_d10b1"
-)
+  postfixes=(
+    "tidy_profiling_default"
+    "tidy_profiling_d1b5"
+    "tidy_profiling_d5b2"
+    "tidy_profiling_d10b1"
+  )
 
-world_size=${#ips[@]}
+  world_size=${#ips[@]}
 
-for postfix in "${postfixes[@]}"
-do
+  for postfix in "${postfixes[@]}"
+  do
+    python ./merge_trace_file.py --world-size "$world_size" --profix "$profix" --postfix "$postfix"
+  done
+fi
+
+if [ $# -eq 2 ]
+then
+  profix=$1
+  postfix=$2
+  world_size=${#ips[@]}
   python ./merge_trace_file.py --world-size "$world_size" --profix "$profix" --postfix "$postfix"
-done
+fi
