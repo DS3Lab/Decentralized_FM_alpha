@@ -63,3 +63,19 @@ For pipeline only, we have:
 | delay 10ms  bandwidth 1Gbps         | 7.90 s       | 11.01 s      | 11.17 s       |
 
 
+## ZeRO-S3 
+
+- I used FSDP from fairscale for this benchmark:
+- Due to memory limitation, I can get the batch size to 1, 2 in each instance:
+- For a cluster with 12 instances:  
+  - batch size 1: global batch size: 12
+  - batch size 2: global batch size: 24
+
+
+| Network setting                      | DP Degree: 1   | DP Degree: 2 | 
+|--------------------------------------|----------------|--------------|
+| default (about 0.1ms; up to 10Gbps)  | 1.02 s         | 1.26 s       | 
+| delay 1ms  bandwidth 5Gbps           | 1.53 s         | 1.78 s       |
+| delay 5ms  bandwidth 2Gbps           | 3.53 s         | 3.76 s       | 
+| delay 10ms  bandwidth 1Gbps          | 6.84 s         | 7.07 s       |
+| delay 50ms bandwidth 1Gbps           | 12.54 s        | 12.77 s      |
