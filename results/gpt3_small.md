@@ -73,10 +73,10 @@ For pipeline only, we have:
   - batch size 2: global batch size: 24
 
 
-| Network setting                      | DP Degree: 1   | DP Degree: 2 | 
-|--------------------------------------|----------------|--------------|
-| default (about 0.1ms; up to 10Gbps)  | 1.02 s         | 1.26 s       | 
-| delay 1ms  bandwidth 5Gbps           | 1.53 s         | 1.78 s       |
-| delay 5ms  bandwidth 2Gbps           | 3.53 s         | 3.76 s       | 
-| delay 10ms  bandwidth 1Gbps          | 6.84 s         | 7.07 s       |
-| delay 50ms bandwidth 1Gbps           | 12.54 s        | 12.77 s      |
+| Network setting                      | batch size: 1 | batch size: 2 | 
+|--------------------------------------|---------------|---------------|
+| default (about 0.1ms; up to 10Gbps)  | 1.02 s        | 1.26 s        | 
+| delay 1ms  bandwidth 5Gbps           | 1.53 s        | 1.78 s        |
+| delay 5ms  bandwidth 2Gbps           | 3.53 s        | 3.76 s        | 
+| delay 10ms  bandwidth 1Gbps          | 6.84 s        | 7.07 s        |
+| delay 50ms bandwidth 1Gbps           | 12.54 s       | 12.77 s       |
