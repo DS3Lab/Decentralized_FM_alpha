@@ -31,6 +31,7 @@ def main():
 
     tokenizer = build_tokenizer(args)
     print("token vocab size:", tokenizer.vocab_size)
+    print("batch size: ", args.batch_size)
     train_dataloader = get_glue_qqp_train_data_loader(args, tokenizer)
     vocab_size = tokenizer.vocab_size
     num_classes = 2
@@ -62,11 +63,12 @@ def main():
         iter_time = end_time - start_time
         print("Whole iteration takes {:3.2f}s".format(iter_time))
         # print(data)
-        total_time += iter_time
+        if i != 0:
+            total_time += iter_time
         if i >= args.num_iters - 1:
             break
-    averaged_time = total_time / args.num_iters
-    print("Finished running ", args.num_iters, " iterations, averaged run time:", averaged_time)
+    averaged_time = total_time / (args.num_iters - 1)
+    print("Finished running ", args.num_iters, " iters, averaged run (exclude the first iter) time:", averaged_time)
 
 
 if __name__ == '__main__':
