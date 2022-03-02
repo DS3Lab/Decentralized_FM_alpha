@@ -18,7 +18,7 @@ class Pipe1F1BAsync:
         a group of events to check if computation finishes in the backward propagation.
     """
 
-    def __init__(self, args, vocab_size, num_classes, device, use_dp=False):
+    def __init__(self, args, config, device, use_dp=False):
         self.global_rank = args.rank
         self.pipeline_group_size = args.pipeline_group_size
         self.pp_rank = get_pipeline_parallel_rank()   # Rank is the pipeline rank by default.
@@ -34,8 +34,9 @@ class Pipe1F1BAsync:
         self.micro_batch_size = args.micro_batch_size
         self.seq_length = args.seq_length
         self.embedding_dim = args.embedding_dim
-        self.vocab_size = vocab_size
-        self.num_classes = num_classes
+        self.config = config
+        self.vocab_size = config.vocab_size
+#         self.num_classes = num_classes
 
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
         self.device = device
@@ -93,11 +94,11 @@ class Pipe1F1BAsync:
 
         self._compute_micro_batch_size()
         if self.pp_rank == 0:
-            self.model = GPTShardFirst(args, vocab_size, num_classes, device)
+            self.model = GPTShardFirst(args, config, device)
         elif self.pp_rank == self.pipeline_group_size - 1:
-            self.model = GPTShardLast(args, vocab_size, num_classes, device)
+            self.model = GPTShardLast(args, config, device)
         else:
-            self.model = GPTShardMiddle(args, vocab_size, num_classes, device)
+            self.model = GPTShardMiddle(args, config, device)
 
         self.use_dp = use_dp
         if use_dp:
@@ -248,7 +249,7 @@ class Pipe1F1BAsync:
                                stream=cupy_backward_send_stream)
                 self.profile_mark_backward_send_end(backward_index)
 
-    def forward_backward_stages(self, input_data=None, target=None, loss_func=torch.nn.functional.cross_entropy):
+    def forward_backward_stages(self, input_data=None, target=None, loss_func=gpt_loss_func):
         # TODO this loading part should be updated later
         if self.pp_rank == 0:
             assert(input_data is not None)
