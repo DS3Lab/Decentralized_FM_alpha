@@ -4,7 +4,7 @@ import torch.nn.functional
 from torch import optim
 from comm.init_comm import *
 from modules.dist_gpt_pp_module import *
-from data_parallel.dist_central_ps import CentralPS
+from data_parallel.dist_dp_utils import get_dp_module
 
 
 class Pipe1F1BAsync:
@@ -100,13 +100,10 @@ class Pipe1F1BAsync:
             self.model = GPTShardMiddle(args, vocab_size, num_classes, device)
 
         self.use_dp = use_dp
+
         if use_dp:
-            if get_data_parallel_rank() == 0:
-                self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
-                self.dp_optim = CentralPS(args, device, self.model, self.optimizer)
-            else:
-                self.dp_optim = CentralPS(args, device, self.model)
-                self.optimizer = None
+            self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
+            self.dp_optim = get_dp_module(args, device, self.model, self.optimizer)
         else:
             self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
 
@@ -344,9 +341,7 @@ class Pipe1F1BAsync:
         if self.use_dp:
             with torch.cuda.stream(self.torch_comp_stream):
                 self.torch_comp_stream.record_event(self.dp_optim.backward_ready_event)
-            self.dp_optim.reduce_gradients()
             self.dp_optim.optimizer_step()
-            self.dp_optim.broadcast_parameters()
         else:
             with torch.cuda.stream(self.torch_comp_stream):
                 if self.enable_tidy_profiling:

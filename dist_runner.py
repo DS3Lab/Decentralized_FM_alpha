@@ -3,10 +3,9 @@ import torch
 import torch.autograd.profiler as profiler
 from glue_dataset.qqp import get_glue_qqp_train_data_loader
 from glue_dataset.tokenizer import build_tokenizer
-from pipeline_parallel.dist_1f1b_pipeline_async import Pipe1F1BAsync
-from pipeline_parallel.dist_gpipe_pipeline_async import GpipeAsync
+from pipeline_parallel.dist_pp_utils import get_pp_module
 from utils.dist_args_utils import *
-from utils.dist_pp_train_utils import *
+from utils.dist_train_utils import *
 from comm.init_comm import *
 
 
@@ -21,8 +20,10 @@ def main():
                         help='random seed (default: 1)')
     parser.add_argument('--profiling', type=str, default='tidy_profiling', metavar='S',
                         help='enable which profiling? default: tidy mode')
-    parser.add_argument('--mode', type=str, default='1f1b', metavar='S',
-                        help='use which mode: gpipe or 1f1b.')
+    parser.add_argument('--pp-mode', type=str, default='gpipe', metavar='S',
+                        help='use which pipeline parallel mode: gpipe or 1f1b.')
+    parser.add_argument('--dp-mode', type=str, default='allreduce', metavar='S',
+                        help='use which data parallel mode: allreduce.')
     parser.add_argument('--trace-postfix', type=str, default='default', metavar='S',
                         help='postfix of the tracing file name.')
     args = parser.parse_args()
@@ -52,13 +53,7 @@ def main():
     else:
         print("Running ", args.mode, " without data parallel.")
 
-    if args.mode == 'gpipe':
-        pipe = GpipeAsync(args, vocab_size, num_classes, device, use_dp)
-    elif args.mode == '1f1b':
-        pipe = Pipe1F1BAsync(args, vocab_size, num_classes, device, use_dp)
-    else:
-        print("Not recognize this mode.")
-        assert False
+    pipe = get_pp_module(args, vocab_size, num_classes, device, use_dp)
 
     if args.profiling == 'no-profiling':
         distributed_train_foo_iter(args, pipe, device, train_data_loader)

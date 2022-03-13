@@ -41,13 +41,13 @@ def merge_logs(args):
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
-    parser.add_argument('--world-size', type=int, default=3, metavar='N',
+    parser.add_argument('--world-size', type=int, default=12, metavar='N',
                         help='distributed cluster size (default: 3)')
     parser.add_argument('--mode', type=str, default='gpipe', metavar='S',
                         help='use which mode: gpipe or 1f1b.')
-    parser.add_argument('--profix', type=str, default='gpt3_gpipe_b64_1_l2048_m768_w3_p3_d1', metavar='S',
+    parser.add_argument('--profix', type=str, default='gpt3_gpipe_b64_1_l2048_m2048_w12_p12_d1', metavar='S',
                         help='postfix of the tracing file name.')
-    parser.add_argument('--postfix', type=str, default='tidy_profiling_default', metavar='S',
+    parser.add_argument('--postfix', type=str, default='tidy_profiling_real', metavar='S',
                         help='postfix of the tracing file name.')
 
     args = parser.parse_args()

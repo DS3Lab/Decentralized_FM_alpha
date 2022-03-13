@@ -2,7 +2,7 @@ import torch.cuda
 from comm.init_comm import *
 
 
-class CentralPS:
+class CentralPSDP:
     def __init__(self, args, device, module: torch.nn.Module, optimizer: torch.optim.Optimizer = None):
         self.global_rank = args.rank
         self.dp_group_size = args.data_group_size
@@ -59,7 +59,7 @@ class CentralPS:
         if self.enable_tidy_profiling:
             self.dp_comm_stream.record_event(self.broadcast_parameters_end_event)
 
-    def reduce_gradients(self):
+    def _reduce_gradients(self):
         with torch.cuda.stream(self.dp_comm_stream):
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
             self.dp_comm_stream.wait_event(self.backward_ready_event)
@@ -68,7 +68,7 @@ class CentralPS:
                 self.dp_comm.reduce(para.grad,dst=0, stream=cupy_dp_stream)
             self.dp_comm_stream.record_event(self.reduce_gradients_ready_event)
 
-    def broadcast_parameters(self):
+    def _broadcast_parameters(self):
         with torch.cuda.stream(self.dp_comm_stream):
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
             if self.dp_rank == 0:
@@ -79,12 +79,14 @@ class CentralPS:
             self.profile_mark_broadcast_end()
 
     def optimizer_step(self):
+        self._reduce_gradients()
         if self.dp_rank == 0:
             with torch.cuda.stream(self.torch_optim_comp_stream):
                 self.torch_optim_comp_stream.wait_event(self.reduce_gradients_ready_event)
                 self.profile_mark_optimizer_step_start()
                 self.optimizer.step()
                 self.torch_optim_comp_stream.record_event(self.optimizer_step_ready_event)
+        self._broadcast_parameters()
 
     def set_time_stamp(self, init_time_stamp, init_event):
         self.init_event = init_event

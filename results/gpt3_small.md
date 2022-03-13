@@ -24,7 +24,7 @@ For pipeline only, we have:
 
 ### Gpipe based pipeline parallel 
 
-- (updated on 2022/02/14).
+- TC run:
 
 | Network setting                     | Micro batch size: 1 | 
 |-------------------------------------|---------------------|
@@ -33,6 +33,12 @@ For pipeline only, we have:
 | delay 5ms  bandwidth 2Gbps          | 6.07 s              | 
 | delay 10ms  bandwidth 1Gbps         | 7.90 s              | 
 | delay 50ms  bandwidth 1Gbps         | 8.77 s              | 
+
+- Real Run
+
+|                      | Micro batch size: 1 | Micro batch size: 2 | Micro batch size: 4 |
+|----------------------|---------------------|---------------------|---------------------|
+| Oregon/Virginia/Ohio | 10.26 s             | 10.57 s             | 10.93 s             |
 
 ### 1F1B based pipeline parallel 
 - Not faster than Gpipe, left for further optimization.

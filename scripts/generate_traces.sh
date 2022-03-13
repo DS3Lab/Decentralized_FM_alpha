@@ -13,9 +13,9 @@ then
 
   postfixes=(
     "tidy_profiling_default"
-    "tidy_profiling_d1b5"
-    "tidy_profiling_d5b2"
-    "tidy_profiling_d10b1"
+    #"tidy_profiling_d1b5"
+    #"tidy_profiling_d5b2"
+    #"tidy_profiling_d10b1"
   )
 
   world_size=${#ips[@]}
