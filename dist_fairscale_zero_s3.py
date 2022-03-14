@@ -50,7 +50,7 @@ def main():
         assert False
     model = checkpoint_wrapper(model, offload_to_cpu=True)
     torch.cuda.set_device(args.cuda_id)
-    dist_model = FullyShardedDataParallel(model, move_params_to_cpu=True, mixed_precision=True)
+    dist_model = FullyShardedDataParallel(model, move_params_to_cpu=False, mixed_precision=False)
     print_cuda_memory(args, "Declared FSDP model-"+args.fsdp_degree, device)
     # dist_model = checkpoint_wrapper(dist_model, offload_to_cpu=True)
     optimizer = torch.optim.SGD(dist_model.parameters(), lr=args.lr)
