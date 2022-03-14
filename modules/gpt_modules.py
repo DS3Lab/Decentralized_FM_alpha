@@ -155,7 +155,7 @@ class GPTGlueModel(torch.nn.Module):
 
 class GPTGlueFSDPModel(torch.nn.Module):
     def __init__(self, args, vocab_size, num_classes, use_checkpoint=True):
-        super(GPTGlueModel, self).__init__()
+        super(GPTGlueFSDPModel, self).__init__()
         self.args = args
         self.embedding = FSDP(GPTEmbedding(vocab_size, args.embedding_dim, args.seq_length))
 
