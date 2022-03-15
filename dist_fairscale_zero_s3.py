@@ -67,6 +67,7 @@ def main():
     for i, data in enumerate(train_dataloader):
         start_time = time.time()
         input_ids = data['text'].to(device)
+        input_ids.require_grad = True
         position_ids = get_position_id(args.seq_length, args.batch_size, device)
         labels = data['label'].to(device)
         fsdp_model.zero_grad(set_to_none=True)

@@ -45,7 +45,7 @@ def main():
     print("token vocab size:", tokenizer.vocab_size)
     data_loader = get_glue_qqp_train_data_loader(args, tokenizer)
     num_classes = 2
-    model = GPTGlueModel(args, tokenizer.vocab_size, num_classes).to(device)
+    model = GPTGlueModel(args, tokenizer.vocab_size, num_classes, use_checkpoint=True).to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 
     # for i in range(len(data_loader)):
