@@ -9,7 +9,8 @@ from glue_dataset.qqp import get_glue_qqp_train_data_loader
 from glue_dataset.tokenizer import build_tokenizer
 from utils.dist_args_utils import *
 from utils.dist_debug_utils import *
-from modules.gpt_modules import GPTGlueModel, get_position_id
+from modules.gpt_modules import get_position_id
+from modules.dist_fsdp_pp_module import GPTGlueFSDPModel
 from fairscale.nn import auto_wrap, default_auto_wrap_policy, enable_wrap
 
 def main():
@@ -39,7 +40,7 @@ def main():
     train_dataloader = get_glue_qqp_train_data_loader(args, tokenizer)
     vocab_size = tokenizer.vocab_size
     num_classes = 2
-    model = GPTGlueModel(args, vocab_size, num_classes, use_checkpoint=False).to(device)
+    model = GPTGlueFSDPModel(args, vocab_size, num_classes).to(device)
     model = checkpoint_wrapper(model, offload_to_cpu=True)
     # disable my own checkpoint
     if args.fsdp_degree == 'simple':
@@ -67,7 +68,7 @@ def main():
     for i, data in enumerate(train_dataloader):
         start_time = time.time()
         input_ids = data['text'].to(device)
-        input_ids.require_grad = True
+        # input_ids.require_grad = True
         position_ids = get_position_id(args.seq_length, args.batch_size, device)
         labels = data['label'].to(device)
         fsdp_model.zero_grad(set_to_none=True)
