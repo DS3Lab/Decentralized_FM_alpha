@@ -96,12 +96,10 @@ def main():
             iter_time = end_time - start_time
             print("Whole iteration takes {:3.2f}s".format(iter_time))
             print_cuda_memory(args, "FSDP optimizer step is done")
-        # print(data)
-        if i != 0:
             total_time += iter_time
         if i >= args.num_iters - 1:
             break
-    averaged_time = total_time / (args.num_iters - 1)
+    averaged_time = total_time / (args.num_iters // multi_iter)
     print("Finished running ", args.num_iters, " iters, averaged run (exclude the first iter) time:", averaged_time)
 
 
