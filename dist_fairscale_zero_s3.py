@@ -43,7 +43,7 @@ def main():
     num_classes = 2
     model = GPTGlueFSDPModel(args, vocab_size, num_classes).to(device)
     # model = checkpoint_wrapper(model, offload_to_cpu=True)
-    # disable my own checkpoint
+    # disable my own checkpoint, notice that FSDP checkpoint cannot be combined with flatten_parameters
     if args.fsdp_degree == 'simple':
         fsdp_model = FSDP(model, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
                           flatten_parameters=False)
@@ -66,13 +66,16 @@ def main():
     fsdp_model.train()
 
     total_time = 0
+    multi_iter = 5
     for i, data in enumerate(train_dataloader):
         start_time = time.time()
         input_ids = data['text'].to(device)
         # input_ids.require_grad = True
         position_ids = get_position_id(args.seq_length, args.batch_size, device)
         labels = data['label'].to(device)
-        fsdp_model.zero_grad(set_to_none=True)
+
+        if i % multi_iter == 0:
+            fsdp_model.zero_grad(set_to_none=True)
 
         output = fsdp_model(input_ids, position_ids)
         loss = torch.nn.functional.cross_entropy(output, labels)
@@ -83,7 +86,10 @@ def main():
         backward_time = time.time()
         print("Backward pass takes {:3.2f}s".format(backward_time - forward_time))
         print_cuda_memory(args, "FSDP backward iter is done", device)
-        optimizer.step()
+
+        if (i+1) % multi_iter == 0:
+            optimizer.step()
+
         end_time = time.time()
         iter_time = end_time - start_time
         print("Whole iteration takes {:3.2f}s".format(iter_time))
