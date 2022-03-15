@@ -68,32 +68,34 @@ def main():
     total_time = 0
     multi_iter = 5
     for i, data in enumerate(train_dataloader):
-        start_time = time.time()
+        if i % multi_iter == 0:
+            fsdp_model.zero_grad(set_to_none=True)
+            start_time = time.time()
+
+        cur_start_time = time.time()
         input_ids = data['text'].to(device)
         # input_ids.require_grad = True
         position_ids = get_position_id(args.seq_length, args.batch_size, device)
         labels = data['label'].to(device)
 
-        if i % multi_iter == 0:
-            fsdp_model.zero_grad(set_to_none=True)
-
         output = fsdp_model(input_ids, position_ids)
         loss = torch.nn.functional.cross_entropy(output, labels)
         forward_time = time.time()
-        print("Forward pass takes {:3.2f}s, loss: ".format(forward_time - start_time), loss.item())
+        print("{}/{} Forward pass takes {:3.2f}s, loss: ".format(i%multi_iter, multi_iter, forward_time-cur_start_time),
+              loss.item())
         print_cuda_memory(args, "FSDP forward iter is done", device)
         loss.backward()
         backward_time = time.time()
-        print("Backward pass takes {:3.2f}s".format(backward_time - forward_time))
+        print("{}/{} Backward pass takes {:3.2f}s".format(i%multi_iter, multi_iter, backward_time-forward_time))
         print_cuda_memory(args, "FSDP backward iter is done", device)
 
         if (i+1) % multi_iter == 0:
             optimizer.step()
 
-        end_time = time.time()
-        iter_time = end_time - start_time
-        print("Whole iteration takes {:3.2f}s".format(iter_time))
-        print_cuda_memory(args, "FSDP optimizer step is done")
+            end_time = time.time()
+            iter_time = end_time - start_time
+            print("Whole iteration takes {:3.2f}s".format(iter_time))
+            print_cuda_memory(args, "FSDP optimizer step is done")
         # print(data)
         if i != 0:
             total_time += iter_time
