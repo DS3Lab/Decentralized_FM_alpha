@@ -27,7 +27,7 @@ def main():
                         help='input batch size for training (default: 100)')
     parser.add_argument('--seq-length', type=int, default=2048, metavar='N',
                         help='-')
-    parser.add_argument('--embedding-dim', type=int, default=768, metavar='N',
+    parser.add_argument('--embedding-dim', type=int, default=2048, metavar='N',
                         help='-')
     parser.add_argument('--num-layers', type=int, default=16, metavar='N',
                         help='-')
@@ -66,6 +66,8 @@ def main():
         loss.backward()
         optimizer.step()
         print("Iter ", i, "===== Loss: ", loss.item(), "======")
+        if i > 20:
+            break
         # print(data)
 
 

@@ -7,13 +7,15 @@ from fairscale.nn.checkpoint import checkpoint_wrapper
 
 
 class GPTTransformerFSDPLayer(torch.nn.Module):
-    def __init__(self, model_dim, head_num, feedforward_dim=2048, layer_norm_eps=1e-5) -> None:
+    def __init__(self, model_dim, head_num, feedforward_dim=2048, layer_norm_eps=1e-5, use_checkpoint=True) -> None:
         super(GPTTransformerFSDPLayer, self).__init__()
         self.attn = MultiHeadAttention(model_dim, head_num)
-        self.attn = checkpoint_wrapper(self.attn)
+        if use_checkpoint:
+            self.attn = checkpoint_wrapper(self.attn)
         # Implementation of Feedforward model
         self.mlp = TwoLayerMLP(model_dim, feedforward_dim)
-        self.mlp = checkpoint_wrapper(self.mlp)
+        if use_checkpoint:
+            self.mlp = checkpoint_wrapper(self.mlp)
         self.norm1 = torch.nn.LayerNorm(model_dim, eps=layer_norm_eps)
         self.norm2 = torch.nn.LayerNorm(model_dim, eps=layer_norm_eps)
         # self.dropout1 = nn.Dropout(dropout)
@@ -32,13 +34,14 @@ class GPTTransformerFSDPLayer(torch.nn.Module):
 
 
 class GPTGlueFSDPModel(torch.nn.Module):
-    def __init__(self, args, vocab_size, num_classes):
+    def __init__(self, args, vocab_size, num_classes, use_checkpoint=True):
         super(GPTGlueFSDPModel, self).__init__()
         self.embedding = GPTEmbedding(vocab_size, args.embedding_dim, args.seq_length)
 
         module_list = []
         for _ in range(args.num_layers):
-            module_list.append(GPTTransformerFSDPLayer(args.embedding_dim, args.num_heads, args.embedding_dim*4))
+            module_list.append(GPTTransformerFSDPLayer(args.embedding_dim, args.num_heads,
+                                                       args.embedding_dim*4, use_checkpoint))
         self.transformers = torch.nn.Sequential(*module_list)
         self.classifier = GlueClassification(args.embedding_dim, num_classes)
 

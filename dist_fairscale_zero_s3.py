@@ -46,10 +46,10 @@ def main():
     # disable my own checkpoint
     if args.fsdp_degree == 'simple':
         fsdp_model = FSDP(model, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
-                          flatten_parameters=True)
+                          flatten_parameters=False)
     elif args.fsdp_degree == 'recursive':
         fsdp_config = dict(reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
-                           flatten_parameters=True)
+                           flatten_parameters=False)
         with enable_wrap(wrapper_cls=FSDP, **fsdp_config):
             fsdp_model = auto_wrap(model, auto_wrap_policy=default_auto_wrap_policy)
             fsdp_model = FSDP(fsdp_model, **fsdp_config)
