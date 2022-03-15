@@ -41,7 +41,7 @@ def main():
     vocab_size = tokenizer.vocab_size
     num_classes = 2
     model = GPTGlueFSDPModel(args, vocab_size, num_classes).to(device)
-    model = checkpoint_wrapper(model, offload_to_cpu=True)
+    # model = checkpoint_wrapper(model, offload_to_cpu=True)
     # disable my own checkpoint
     if args.fsdp_degree == 'simple':
         fsdp_model = FSDP(model, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
