@@ -10,8 +10,9 @@ from glue_dataset.tokenizer import build_tokenizer
 from utils.dist_args_utils import *
 from utils.dist_debug_utils import *
 from modules.gpt_modules import get_position_id
-from modules.dist_fsdp_pp_module import GPTGlueFSDPModel
+from modules.dist_gpt_fsdp_module import GPTGlueFSDPModel
 from fairscale.nn import auto_wrap, default_auto_wrap_policy, enable_wrap
+
 
 def main():
     parser = argparse.ArgumentParser(description='Fairscale-ZeRO_S3-GPT3')
