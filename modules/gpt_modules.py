@@ -1,11 +1,8 @@
-import torch
 import math
 from torch import nn
 from torch.nn import functional
 from torch.utils.checkpoint import checkpoint
 from .task_modules import GlueClassification
-from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
-# from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from utils.dist_debug_utils import *
 
 
@@ -76,14 +73,14 @@ class GPTTransformerLayer(nn.Module):
         x = self.norm1(x)
         # x = x + self.dropout_1(self.attn(x2, x2, x2))
         if self.use_checkpoint:
-            x.requires_grad_(True)
+            # x.requires_grad_(True)
             x = checkpoint(self.attn, x)
         else:
             x = self.attn(x)
         x = self.norm2(x)
         # x = x + self.dropout_2(self.ff(x2))
         if self.use_checkpoint:
-            x.requires_grad_(True)
+            # x.requires_grad_(True)
             x = checkpoint(self.mlp, x)
         else:
             x = self.mlp(x)
@@ -96,7 +93,6 @@ def get_position_id(seq_length, size_input, device):
 
 class GPTEmbedding(torch.nn.Module):
     """Embedding parallelized in the vocabulary dimension.
-
     This is mainly adapted from torch.nn.Embedding and all the default
     values are kept.
     Arguments:
@@ -138,6 +134,7 @@ class GPTEmbedding(torch.nn.Module):
 class GPTGlueModel(torch.nn.Module):
     def __init__(self, args, vocab_size, num_classes, use_checkpoint=True):
         super(GPTGlueModel, self).__init__()
+        self.use_checkpoint = use_checkpoint
         self.embedding = GPTEmbedding(vocab_size, args.embedding_dim, args.seq_length)
 
         module_list = []
@@ -151,26 +148,3 @@ class GPTGlueModel(torch.nn.Module):
         input_emb = self.embedding(input_ids, position_ids)
         output_emb = self.transformers(input_emb)
         return self.classifier(output_emb)
-
-
-class GPTGlueFSDPModel(torch.nn.Module):
-    def __init__(self, args, vocab_size, num_classes, use_checkpoint=True):
-        super(GPTGlueFSDPModel, self).__init__()
-        self.args = args
-        self.embedding = FSDP(GPTEmbedding(vocab_size, args.embedding_dim, args.seq_length))
-
-        module_list = []
-        for _ in range(args.num_layers):
-            module_list.append(FSDP(GPTTransformerLayer(args.embedding_dim, args.num_heads, args.embedding_dim*4,
-                                                        use_checkpoint=use_checkpoint)))
-        self.transformers = torch.nn.Sequential(*module_list)
-        self.classifier = FSDP(GlueClassification(args.embedding_dim, num_classes))
-
-    def forward(self, input_ids, position_ids):
-        input_emb = self.embedding(input_ids, position_ids)
-        print_cuda_memory(self.args, "FSDP forward-emb is done")
-        output_emb = self.transformers(input_emb)
-        print_cuda_memory(self.args, "FSDP forward-transformer is done")
-        out = self.classifier(output_emb)
-        print_cuda_memory(self.args, "FSDP forward-classifier is done")
-        return out

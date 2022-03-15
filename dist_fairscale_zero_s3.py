@@ -2,15 +2,15 @@ import argparse
 import time
 import torch
 import torch.distributed as dist
-from fairscale.nn.data_parallel import FullyShardedDataParallel
+from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 # from torch.distributed.fsdp import FullyShardedDataParallel
 from fairscale.nn.checkpoint import checkpoint_wrapper
 from glue_dataset.qqp import get_glue_qqp_train_data_loader
 from glue_dataset.tokenizer import build_tokenizer
 from utils.dist_args_utils import *
 from utils.dist_debug_utils import *
-from modules.gpt_modules import GPTGlueModel, GPTGlueFSDPModel, get_position_id
-
+from modules.gpt_modules import GPTGlueModel, get_position_id
+from fairscale.nn import auto_wrap, default_auto_wrap_policy, enable_wrap
 
 def main():
     parser = argparse.ArgumentParser(description='Fairscale-ZeRO_S3-GPT3')
@@ -39,23 +39,29 @@ def main():
     train_dataloader = get_glue_qqp_train_data_loader(args, tokenizer)
     vocab_size = tokenizer.vocab_size
     num_classes = 2
-
+    model = GPTGlueModel(args, vocab_size, num_classes, use_checkpoint=False).to(device)
+    model = checkpoint_wrapper(model, offload_to_cpu=True)
     # disable my own checkpoint
     if args.fsdp_degree == 'simple':
-        model = GPTGlueModel(args, vocab_size, num_classes, use_checkpoint=False).to(device)
+        fsdp_model = FSDP(model, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
+                          flatten_parameters=True)
     elif args.fsdp_degree == 'recursive':
-        model = GPTGlueFSDPModel(args, vocab_size, num_classes, use_checkpoint=False).to(device)
+        fsdp_config = dict(reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
+                           flatten_parameters=True)
+        with enable_wrap(wrapper_cls=FSDP, **fsdp_config):
+            fsdp_model = auto_wrap(model, auto_wrap_policy=default_auto_wrap_policy)
+            fsdp_model = FSDP(fsdp_model, **fsdp_config)
     else:
         print("Illegal FSDP degree!")
         assert False
-    model = checkpoint_wrapper(model, offload_to_cpu=True)
+
     torch.cuda.set_device(args.cuda_id)
-    dist_model = FullyShardedDataParallel(model, move_params_to_cpu=False, mixed_precision=False)
+
     print_cuda_memory(args, "Declared FSDP model-"+args.fsdp_degree, device)
     # dist_model = checkpoint_wrapper(dist_model, offload_to_cpu=True)
-    optimizer = torch.optim.SGD(dist_model.parameters(), lr=args.lr)
+    optimizer = torch.optim.SGD(fsdp_model.parameters(), lr=args.lr)
     print_cuda_memory(args, "Declared optimizer for FSDP model", device)
-    dist_model.train()
+    fsdp_model.train()
 
     total_time = 0
     for i, data in enumerate(train_dataloader):
@@ -63,9 +69,9 @@ def main():
         input_ids = data['text'].to(device)
         position_ids = get_position_id(args.seq_length, args.batch_size, device)
         labels = data['label'].to(device)
-        dist_model.zero_grad()
+        fsdp_model.zero_grad(set_to_none=True)
 
-        output = dist_model(input_ids, position_ids)
+        output = fsdp_model(input_ids, position_ids)
         loss = torch.nn.functional.cross_entropy(output, labels)
         forward_time = time.time()
         print("Forward pass takes {:3.2f}s, loss: ".format(forward_time - start_time), loss.item())

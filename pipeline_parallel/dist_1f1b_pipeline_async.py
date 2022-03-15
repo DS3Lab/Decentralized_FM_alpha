@@ -376,7 +376,7 @@ class Pipe1F1BAsync:
             self.init_event.record()
         self.zero_input_grad()
         if self.optimizer is not None:
-            self.optimizer.zero_grad()
+            self.optimizer.zero_grad(set_to_none=True)
         self.forward_backward_stages(input_data=input_, target=target)
         self.optimizer_step()
         torch.cuda.synchronize()

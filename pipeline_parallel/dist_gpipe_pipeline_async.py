@@ -341,7 +341,7 @@ class GpipeAsync:
             self.init_event.record()
         self.zero_input_grad()
         if self.optimizer is not None:
-            self.optimizer.zero_grad()
+            self.optimizer.zero_grad(set_to_none=True)
         outputs = self.forward_stage(input_)
         forward_time = time.time()
         print("Rank {} node forward pass takes {:3.2f}s".format(self.global_rank,  forward_time-start_time))
