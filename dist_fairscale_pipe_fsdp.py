@@ -3,7 +3,7 @@ import time
 import tempfile
 import torch.distributed as dist
 from torch.distributed import rpc
-from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
+
 from torch.distributed.pipeline.sync import Pipe
 # from torch.distributed.fsdp import FullyShardedDataParallel
 from fairscale.nn.checkpoint import checkpoint_wrapper

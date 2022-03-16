@@ -1,22 +1,27 @@
 import torch
+from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from .task_modules import GlueClassification
-# from .dist_gpt_pp_module import GPTShardBase
-from .gpt_modules import MultiHeadAttention, TwoLayerMLP, GPTEmbedding, GPTTransformerLayer
+from .gpt_modules import MultiHeadAttention, TwoLayerMLP, GPTEmbedding
 from fairscale.nn.checkpoint import checkpoint_wrapper
 
 
 # This is only implemented to support checkpoint in FSDP
 
 class GPTTransformerFsdpLayer(torch.nn.Module):
-    def __init__(self, model_dim, head_num, feedforward_dim=2048, layer_norm_eps=1e-5, use_checkpoint=True) -> None:
+    def __init__(self, model_dim, head_num, feedforward_dim=2048, layer_norm_eps=1e-5, use_checkpoint=True,
+                 explicit_fsdp=False) -> None:
         super(GPTTransformerFsdpLayer, self).__init__()
         self.attn = MultiHeadAttention(model_dim, head_num)
         if use_checkpoint:
             self.attn = checkpoint_wrapper(self.attn)
+        if explicit_fsdp:
+            self.attn = FSDP(self.attn)
         # Implementation of Feedforward model
         self.mlp = TwoLayerMLP(model_dim, feedforward_dim)
         if use_checkpoint:
             self.mlp = checkpoint_wrapper(self.mlp)
+        if explicit_fsdp:
+            self.attn = FSDP(self.attn)
         self.norm1 = torch.nn.LayerNorm(model_dim, eps=layer_norm_eps)
         self.norm2 = torch.nn.LayerNorm(model_dim, eps=layer_norm_eps)
         # self.dropout1 = nn.Dropout(dropout)
@@ -42,7 +47,7 @@ class GPTGlueFsdpModel(torch.nn.Module):
         module_list = []
         for _ in range(args.num_layers):
             module_list.append(GPTTransformerFsdpLayer(args.embedding_dim, args.num_heads,
-                                                       args.embedding_dim * 4, use_checkpoint))
+                                                       args.embedding_dim * 4, use_checkpoint, explicit_fsdp=False))
         self.transformers = torch.nn.Sequential(*module_list)
         self.classifier = GlueClassification(args.embedding_dim, num_classes)
 
@@ -72,7 +77,7 @@ class GPTFsdpStageBase(torch.nn.Module):
 
     def _create_fsdp_transformer_layer(self):
         return GPTTransformerFsdpLayer(self._embedding_dim, self._num_heads, self._feedforward_dim,
-                                       use_checkpoint=True)
+                                       use_checkpoint=True, explicit_fsdp=True)
 
 
 class GPTFsdpStageFirst(GPTFsdpStageBase):
