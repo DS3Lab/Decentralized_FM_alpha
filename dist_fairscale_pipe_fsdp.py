@@ -45,11 +45,11 @@ def main():
     for local_cuda_rank in range(args.cuda_num):
         device = torch.device('cuda', local_cuda_rank)
         if local_cuda_rank == 0:
-            stages_model = GPTFsdpStageFirst(args, num_stage_layers, vocab_size, num_classes).to(device)
+            stages_model = GPTFsdpStageFirst(args, num_stage_layers, vocab_size, num_classes, device)
         elif local_cuda_rank == args.cuda_num - 1:
-            stages_model = GPTFsdpStageLast(args, num_stage_layers, vocab_size, num_classes).to(device)
+            stages_model = GPTFsdpStageLast(args, num_stage_layers, vocab_size, num_classes, device)
         else:
-            stages_model = GPTFsdpStageMiddle(args, num_stage_layers, vocab_size, num_classes).to(device)
+            stages_model = GPTFsdpStageMiddle(args, num_stage_layers, vocab_size, num_classes, device)
         stages_list.append(stages_model)
     model = torch.nn.Sequential(*stages_list)
     chunks = args.batch_size // args.micro_batch_size
