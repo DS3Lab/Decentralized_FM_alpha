@@ -3,6 +3,8 @@ def add_device_arguments(parser):
                         help='if this is set to True, will use cuda to train')
     parser.add_argument('--cuda-id', type=int, default=0, metavar='N',
                         help='cuda index, if the instance has multiple GPUs.')
+    parser.add_argument('--cuda-num', type=int, default=1, metavar='N',
+                        help='number of GPUs, if the instance has multiple GPUs.')
     parser.add_argument('--debug-mem', default=True, type=lambda x: (str(x).lower() == 'true'),
                         help='if this is set to True, we will print some memory stats.')
 

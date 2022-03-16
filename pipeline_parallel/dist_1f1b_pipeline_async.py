@@ -93,11 +93,11 @@ class Pipe1F1BAsync:
 
         self._compute_micro_batch_size()
         if self.pp_rank == 0:
-            self.model = GPTShardFirst(args, vocab_size, num_classes, device)
+            self.model = GPTStageFirst(args, vocab_size, num_classes, device)
         elif self.pp_rank == self.pipeline_group_size - 1:
-            self.model = GPTShardLast(args, vocab_size, num_classes, device)
+            self.model = GPTStageLast(args, vocab_size, num_classes, device)
         else:
-            self.model = GPTShardMiddle(args, vocab_size, num_classes, device)
+            self.model = GPTStageMiddle(args, vocab_size, num_classes, device)
 
         self.use_dp = use_dp
 

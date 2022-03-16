@@ -3,9 +3,9 @@ from .gpt_modules import GPTEmbedding, GPTTransformerLayer
 from .task_modules import GlueClassification
 
 
-class GPTShardBase(nn.Module):
+class GPTStageBase(nn.Module):
     def __init__(self, args, vocab_size, num_classes):
-        super(GPTShardBase, self).__init__()
+        super(GPTStageBase, self).__init__()
         self._to_cpu = (args.dist_backend == "gloo")
         self._vocab_size = vocab_size
         self._embedding_dim = args.embedding_dim  # embedding dimension
@@ -27,9 +27,9 @@ class GPTShardBase(nn.Module):
                                    use_checkpoint=True)
 
 
-class GPTShardFirst(GPTShardBase):
+class GPTStageFirst(GPTStageBase):
     def __init__(self, args, vocab_size, num_classes, device):
-        super(GPTShardFirst, self).__init__(args, vocab_size, num_classes)
+        super(GPTStageFirst, self).__init__(args, vocab_size, num_classes)
         self.device = device
         module_list = [self._create_first_layer()]
         for _ in range(self._num_layers):
@@ -41,9 +41,9 @@ class GPTShardFirst(GPTShardBase):
         return out.cpu() if self._to_cpu else out
 
 
-class GPTShardMiddle(GPTShardBase):
+class GPTStageMiddle(GPTStageBase):
     def __init__(self, args, vocab_size, num_classes, device):
-        super(GPTShardMiddle, self).__init__(args, vocab_size, num_classes)
+        super(GPTStageMiddle, self).__init__(args, vocab_size, num_classes)
         self.device = device
         module_list = []
         for _ in range(self._num_layers):
@@ -55,9 +55,9 @@ class GPTShardMiddle(GPTShardBase):
         return out.cpu() if self._to_cpu else out
 
 
-class GPTShardLast(GPTShardBase):
+class GPTStageLast(GPTStageBase):
     def __init__(self, args, vocab_size, num_classes, device):
-        super(GPTShardLast, self).__init__(args, vocab_size, num_classes)
+        super(GPTStageLast, self).__init__(args, vocab_size, num_classes)
         self.device = device
         module_list = []
         for _ in range(self._num_layers):

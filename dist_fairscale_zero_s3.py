@@ -10,7 +10,7 @@ from glue_dataset.tokenizer import build_tokenizer
 from utils.dist_args_utils import *
 from utils.dist_debug_utils import *
 from modules.gpt_modules import get_position_id
-from modules.dist_gpt_fsdp_module import GPTGlueFSDPModel
+from modules.dist_gpt_fsdp_module import GPTGlueFsdpModel
 from fairscale.nn import auto_wrap, default_auto_wrap_policy, enable_wrap
 
 
@@ -41,7 +41,7 @@ def main():
     train_dataloader = get_glue_qqp_train_data_loader(args, tokenizer)
     vocab_size = tokenizer.vocab_size
     num_classes = 2
-    model = GPTGlueFSDPModel(args, vocab_size, num_classes).to(device)
+    model = GPTGlueFsdpModel(args, vocab_size, num_classes).to(device)
     # model = checkpoint_wrapper(model, offload_to_cpu=True)
     # disable my own checkpoint, notice that FSDP checkpoint cannot be combined with flatten_parameters
     if args.fsdp_degree == 'simple':
@@ -100,7 +100,7 @@ def main():
         if i >= args.num_iters - 1:
             break
     averaged_time = total_time / (args.num_iters // multi_iter)
-    print("Finished running ", args.num_iters, " iters, averaged run (exclude the first iter) time:", averaged_time)
+    print("Finished running ", args.num_iters, " iters, averaged run time:", averaged_time)
 
 
 if __name__ == '__main__':
