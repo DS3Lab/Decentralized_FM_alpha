@@ -1,7 +1,8 @@
 import argparse
 import time
-import torch
+import tempfile
 import torch.distributed as dist
+from torch.distributed import rpc
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from torch.distributed.pipeline.sync import Pipe
 # from torch.distributed.fsdp import FullyShardedDataParallel
@@ -53,6 +54,22 @@ def main():
         stages_list.append(stages_model)
     model = torch.nn.Sequential(*stages_list)
     chunks = args.batch_size // args.micro_batch_size
+
+    tmp_file = tempfile.NamedTemporaryFile()
+    rpc.init_rpc(
+        name="worker",
+        rank=0,
+        world_size=1,
+        rpc_backend_options=rpc.TensorPipeRpcBackendOptions(
+            init_method="file://{}".format(tmp_file.name),
+            # Specifying _transports and _channels is a workaround and we no longer
+            # will have to specify _transports and _channels for PyTorch
+            # versions >= 1.8.1
+            _transports=["ibv", "uv"],
+            _channels=["cuda_ipc", "cuda_basic"],
+        )
+    )
+
     pipe_model = Pipe(model, chunks=chunks, checkpoint='never')
 
     print_multi_cuda_memory(args, "Declared Pipe-FSDP model")
