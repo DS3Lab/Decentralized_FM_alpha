@@ -20,10 +20,10 @@ class GPTTransformerFsdpLayer(torch.nn.Module):
         # Implementation of Feedforward model
         self.mlp = TwoLayerMLP(model_dim, feedforward_dim)
         if use_checkpoint:
-            self.mlp = checkpoint_wrapper(self.mlp, reshard_after_forward=True, move_params_to_cpu=False,
-                                          mixed_precision=False, flatten_parameters=False)
+            self.mlp = checkpoint_wrapper(self.mlp)
         if explicit_fsdp:
-            self.attn = FSDP(self.attn)
+            self.attn = FSDP(self.attn, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
+                             flatten_parameters=False)
         self.norm1 = torch.nn.LayerNorm(model_dim, eps=layer_norm_eps)
         self.norm2 = torch.nn.LayerNorm(model_dim, eps=layer_norm_eps)
         # self.dropout1 = nn.Dropout(dropout)
