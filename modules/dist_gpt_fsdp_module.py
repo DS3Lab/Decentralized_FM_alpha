@@ -72,10 +72,14 @@ class GPTFsdpStageBase(torch.nn.Module):
         self._num_layers = num_stage_layers
 
     def _create_first_layer(self):
-        return GPTEmbedding(self._vocab_size, self._embedding_dim, self._seq_length)
+        emb = GPTEmbedding(self._vocab_size, self._embedding_dim, self._seq_length)
+        return FSDP(emb, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
+                    flatten_parameters=False)
 
     def _create_last_layer(self):
-        return GlueClassification(self._embedding_dim, self._num_classes)
+        classifier = GlueClassification(self._embedding_dim, self._num_classes)
+        return FSDP(classifier, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
+                    flatten_parameters=False)
 
     def _create_fsdp_transformer_layer(self):
         return GPTTransformerFsdpLayer(self._embedding_dim, self._num_heads, self._feedforward_dim,
