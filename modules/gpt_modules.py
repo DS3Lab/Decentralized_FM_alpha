@@ -144,7 +144,7 @@ class GPTGlueModel(torch.nn.Module):
         self.transformers = torch.nn.Sequential(*module_list)
         self.classifier = GlueClassification(args.embedding_dim, num_classes)
 
-    def forward(self, input_ids, position_ids):
+    def forward(self, input_ids, position_ids=None):
         input_emb = self.embedding(input_ids, position_ids)
         output_emb = self.transformers(input_emb)
         return self.classifier(output_emb)

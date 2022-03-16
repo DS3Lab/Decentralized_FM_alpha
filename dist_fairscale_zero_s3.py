@@ -75,10 +75,11 @@ def main():
         cur_start_time = time.time()
         input_ids = data['text'].to(device)
         # input_ids.require_grad = True
-        position_ids = get_position_id(args.seq_length, args.batch_size, device)
+        # position_ids = get_position_id(args.seq_length, args.batch_size, device)
         labels = data['label'].to(device)
 
-        output = fsdp_model(input_ids, position_ids)
+        # output = fsdp_model(input_ids, position_ids)
+        output = fsdp_model(input_ids)
         loss = torch.nn.functional.cross_entropy(output, labels)
         forward_time = time.time()
         print("{}/{} Forward pass takes {:3.2f}s, loss: ".format(i%multi_iter, multi_iter, forward_time-cur_start_time),

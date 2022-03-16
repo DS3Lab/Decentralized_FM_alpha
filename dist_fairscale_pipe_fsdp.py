@@ -88,10 +88,11 @@ def main():
         cur_start_time = time.time()
         input_ids = data['text'].to(torch.device('cuda', 0))
         # input_ids.require_grad = True
-        position_ids = get_position_id(args.seq_length, args.batch_size, torch.device('cuda', 0))
+        # position_ids = get_position_id(args.seq_length, args.batch_size, torch.device('cuda', 0))
         labels = data['label'].to(torch.device('cuda', args.cuda_num-1))
 
-        output = pipe_model(input_ids, position_ids)
+        # output = pipe_model(input_ids, position_ids)
+        output = pipe_model(input_ids)
         loss = torch.nn.functional.cross_entropy(output, labels)
         forward_time = time.time()
         print("{} Forward pass takes {:3.2f}s, loss: ".format(i, forward_time-cur_start_time), loss.item())

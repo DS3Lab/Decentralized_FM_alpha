@@ -55,11 +55,12 @@ def main():
     for i, data in enumerate(data_loader):
 
         input_ids = data['text'].to(device)
-        position_ids = get_position_id(args.seq_length, args.batch_size, device)
+        # position_ids = get_position_id(args.seq_length, args.batch_size, device)
         labels = data['label'].to(device)
 
         optimizer.zero_grad(set_to_none=True)
-        output = model(input_ids, position_ids)
+        # output = model(input_ids, position_ids)
+        output = model(input_ids)
         print(output.shape)
         # loss = loss_func(output, labels)
         loss = torch.nn.functional.cross_entropy(output, labels)
