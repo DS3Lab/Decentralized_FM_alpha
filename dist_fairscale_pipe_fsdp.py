@@ -42,7 +42,7 @@ def main():
 
     num_stage_layers = args.num_layers // args.cuda_num
     stages_list = []
-    for local_cuda_rank in args.cuda_num:
+    for local_cuda_rank in range(args.cuda_num):
         device = torch.device('cuda', local_cuda_rank)
         if local_cuda_rank == 0:
             stages_model = GPTFsdpStageFirst(args, num_stage_layers, vocab_size, num_classes).to(device)
