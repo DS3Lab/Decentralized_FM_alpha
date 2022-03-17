@@ -77,7 +77,6 @@ def main():
         pipe_model.zero_grad(set_to_none=True)
         start_time = time.time()
 
-        cur_start_time = time.time()
         input_ids = data['text'].to(torch.device('cuda', 0))
         # input_ids.require_grad = True
         # position_ids = get_position_id(args.seq_length, args.batch_size, torch.device('cuda', 0))
@@ -98,10 +97,11 @@ def main():
         iter_time = end_time - start_time
         print("Whole iteration takes {:3.2f}s".format(iter_time))
         print_multi_cuda_memory(args, "Pipe optimizer step is done")
-        total_time += iter_time
+        if i > 0:
+            total_time += iter_time
         if i >= args.num_iters - 1:
             break
-    averaged_time = total_time / args.num_iters
+    averaged_time = total_time / (args.num_iters - 1)
     print("Finished running ", args.num_iters, " iters, averaged run time:", averaged_time)
 
 
