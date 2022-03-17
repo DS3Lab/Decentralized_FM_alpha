@@ -1,10 +1,7 @@
 import argparse
 import time
-import torch
 import torch.distributed as dist
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
-# from torch.distributed.fsdp import FullyShardedDataParallel
-from fairscale.nn.checkpoint import checkpoint_wrapper
 from glue_dataset.qqp import get_glue_qqp_train_data_loader
 from glue_dataset.tokenizer import build_tokenizer
 from utils.dist_args_utils import *
