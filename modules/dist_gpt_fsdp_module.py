@@ -60,9 +60,11 @@ class GPTGlueFsdpModel(torch.nn.Module):
 
 
 class GPTFsdpStageBase(torch.nn.Module):
-    def __init__(self, args, num_stage_layers, vocab_size, num_classes):
+    def __init__(self, args, num_stage_layers, vocab_size, num_classes, use_checkpoint=True, explicit_fsdp=True):
         super(GPTFsdpStageBase, self).__init__()
         self._vocab_size = vocab_size
+        self._explicit_fsdp = explicit_fsdp
+        self._use_checkpoint = use_checkpoint
         self._embedding_dim = args.embedding_dim  # embedding dimension
         self._seq_length = args.seq_length
         self._num_classes = num_classes
@@ -73,22 +75,29 @@ class GPTFsdpStageBase(torch.nn.Module):
 
     def _create_first_layer(self):
         emb = GPTEmbedding(self._vocab_size, self._embedding_dim, self._seq_length)
-        return FSDP(emb, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
-                    flatten_parameters=False)
+        if self._explicit_fsdp:
+            return FSDP(emb, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
+                        flatten_parameters=False)
+        else:
+            return emb
 
     def _create_last_layer(self):
         classifier = GlueClassification(self._embedding_dim, self._num_classes)
-        return FSDP(classifier, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
-                    flatten_parameters=False)
+        if self._explicit_fsdp:
+            return FSDP(classifier, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
+                        flatten_parameters=False)
+        else:
+            return classifier
 
     def _create_fsdp_transformer_layer(self):
         return GPTTransformerFsdpLayer(self._embedding_dim, self._num_heads, self._feedforward_dim,
-                                       use_checkpoint=True, explicit_fsdp=True)
+                                       use_checkpoint=self._use_checkpoint, explicit_fsdp=self._explicit_fsdp)
 
 
 class GPTFsdpStageFirst(GPTFsdpStageBase):
-    def __init__(self, args, num_stage_layers, vocab_size, num_classes, device):
-        super(GPTFsdpStageFirst, self).__init__(args, num_stage_layers, vocab_size, num_classes)
+    def __init__(self, args, num_stage_layers, vocab_size, num_classes, device, use_checkpoint=True, explicit_fsdp=True):
+        super(GPTFsdpStageFirst, self).__init__(args, num_stage_layers, vocab_size, num_classes, use_checkpoint,
+                                                explicit_fsdp)
         self.device = device
         module_list = [self._create_first_layer()]
         for _ in range(self._num_layers):
@@ -101,8 +110,9 @@ class GPTFsdpStageFirst(GPTFsdpStageBase):
 
 
 class GPTFsdpStageMiddle(GPTFsdpStageBase):
-    def __init__(self, args, num_stage_layers, vocab_size, num_classes, device):
-        super(GPTFsdpStageMiddle, self).__init__(args, num_stage_layers, vocab_size, num_classes)
+    def __init__(self, args, num_stage_layers, vocab_size, num_classes, device, use_checkpoint=True, explicit_fsdp=True):
+        super(GPTFsdpStageMiddle, self).__init__(args, num_stage_layers, vocab_size, num_classes, use_checkpoint,
+                                                 explicit_fsdp)
         self.device = device
         module_list = []
         for _ in range(self._num_layers):
@@ -115,8 +125,9 @@ class GPTFsdpStageMiddle(GPTFsdpStageBase):
 
 
 class GPTFsdpStageLast(GPTFsdpStageBase):
-    def __init__(self, args, num_stage_layers, vocab_size, num_classes, device):
-        super(GPTFsdpStageLast, self).__init__(args, num_stage_layers, vocab_size, num_classes)
+    def __init__(self, args, num_stage_layers, vocab_size, num_classes, device, use_checkpoint=True, explicit_fsdp=True):
+        super(GPTFsdpStageLast, self).__init__(args, num_stage_layers, vocab_size, num_classes, use_checkpoint,
+                                               explicit_fsdp)
         self.device = device
         module_list = []
         for _ in range(self._num_layers):

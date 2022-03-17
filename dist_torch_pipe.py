@@ -7,7 +7,7 @@ from glue_dataset.qqp import get_glue_qqp_train_data_loader
 from glue_dataset.tokenizer import build_tokenizer
 from utils.dist_args_utils import *
 from utils.dist_debug_utils import *
-from modules.dist_gpt_pp_module import GPTStageLast, GPTStageMiddle, GPTStageFirst
+from modules.dist_gpt_fsdp_module import GPTFsdpStageLast, GPTFsdpStageMiddle, GPTFsdpStageFirst
 
 
 def main():
@@ -37,11 +37,14 @@ def main():
     for local_cuda_rank in range(args.cuda_num):
         device = torch.device('cuda', local_cuda_rank)
         if local_cuda_rank == 0:
-            stages_model = GPTStageFirst(args, num_stage_layers, vocab_size, num_classes, device)
+            stages_model = GPTFsdpStageFirst(args, num_stage_layers, vocab_size, num_classes, device,
+                                             use_checkpoint=False, explicit_fsdp=False)
         elif local_cuda_rank == args.cuda_num - 1:
-            stages_model = GPTStageLast(args, num_stage_layers, vocab_size, num_classes, device)
+            stages_model = GPTFsdpStageLast(args, num_stage_layers, vocab_size, num_classes, device,
+                                            use_checkpoint=False, explicit_fsdp=False)
         else:
-            stages_model = GPTStageMiddle(args, num_stage_layers, vocab_size, num_classes, device)
+            stages_model = GPTFsdpStageMiddle(args, num_stage_layers, vocab_size, num_classes, device,
+                                              use_checkpoint=False, explicit_fsdp=False)
         stages_list.append(stages_model)
 
     model = torch.nn.Sequential(*stages_list)
@@ -62,7 +65,7 @@ def main():
         )
     )
 
-    pipe_model = Pipe(model, chunks=chunks, checkpoint='never')
+    pipe_model = Pipe(model, chunks=chunks, checkpoint='except_last')
 
     print_multi_cuda_memory(args, "Declared Pipe model")
     # dist_model = checkpoint_wrapper(dist_model, offload_to_cpu=True)
