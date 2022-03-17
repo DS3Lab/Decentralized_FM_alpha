@@ -37,11 +37,11 @@ def main():
     for local_cuda_rank in range(args.cuda_num):
         device = torch.device('cuda', local_cuda_rank)
         if local_cuda_rank == 0:
-            stages_model = GPTStageFirst(args, num_stage_layers, vocab_size, num_classes).to(device)
+            stages_model = GPTStageFirst(args, num_stage_layers, vocab_size, num_classes, device)
         elif local_cuda_rank == args.cuda_num - 1:
-            stages_model = GPTStageLast(args, num_stage_layers, vocab_size, num_classes).to(device)
+            stages_model = GPTStageLast(args, num_stage_layers, vocab_size, num_classes, device)
         else:
-            stages_model = GPTStageMiddle(args, num_stage_layers, vocab_size, num_classes).to(device)
+            stages_model = GPTStageMiddle(args, num_stage_layers, vocab_size, num_classes, device)
         stages_list.append(stages_model)
 
     model = torch.nn.Sequential(*stages_list)
@@ -86,7 +86,7 @@ def main():
         output = pipe_model(input_ids).local_value()
         loss = torch.nn.functional.cross_entropy(output, labels)
         forward_time = time.time()
-        print("{} Forward pass takes {:3.2f}s, loss: ".format(i, forward_time-cur_start_time), loss.item())
+        print("{} Forward pass takes {:3.2f}s, loss: ".format(i, forward_time-start_time), loss.item())
         print_multi_cuda_memory(args, "Pipe forward iter is done")
         loss.backward()
         backward_time = time.time()
