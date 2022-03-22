@@ -8,7 +8,7 @@ NNODES=1
 NODE_RANK=0
 WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
 
-DATA_PATH=./glue_dataset/data/QQP/train.tsv
+DATA_PATH=./glue_dataset/data/QQP/
 VOCAB_FILE=./glue_dataset/data/bert-large-cased-vocab.txt
 CHECKPOINT_PATH=./
 
