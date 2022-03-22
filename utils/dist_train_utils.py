@@ -1,4 +1,4 @@
-from comm.init_comm import *
+from comm.comm_utils import *
 
 
 def distributed_train_foo_iter(args, pipeline, device, train_data_loader):

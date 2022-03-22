@@ -35,6 +35,23 @@ For pipeline only, we have:
 | delay 50ms  bandwidth 1Gbps         | 29.08 s              | 
 
 
+### PyTorch Pipe baseline
+
+- Runs on a P3.16xlarge machine with 8 V100 each (16GB dRAM)
+- To run a batch size of 64:
+
+      python dist_torch_pipe.py --cuda-num 8 --num-layers 24 --embedding-dim 2048 --batch-size 64 --micro-batch-size 1/2 
+
+| Micro batch size | execution time |
+|------------------|----------------|
+| 1                | 17.78 s        |
+| 2                | 18.77 s        |
+| 4                | Fail           |
+
+When micro-batch size is larger than 4, it would fail due to OOM. 
+
+
+
 ## Pipeline + Data Parallel
 
 - Gpipe + centralized PS Data parallel:

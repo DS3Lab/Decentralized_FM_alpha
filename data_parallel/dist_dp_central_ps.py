@@ -1,5 +1,5 @@
 import torch.cuda
-from comm.init_comm import *
+from comm.comm_utils import *
 
 
 class CentralPSDP:

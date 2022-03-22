@@ -2,7 +2,7 @@ import time
 import json
 import torch.nn.functional
 from torch import optim
-from comm.init_comm import *
+from comm.comm_utils import *
 from modules.dist_gpt_pp_module import *
 from data_parallel.dist_dp_utils import get_dp_module
 

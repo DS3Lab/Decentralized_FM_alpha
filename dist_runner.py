@@ -6,7 +6,7 @@ from glue_dataset.tokenizer import build_tokenizer
 from pipeline_parallel.dist_pp_utils import get_pp_module
 from utils.dist_args_utils import *
 from utils.dist_train_utils import *
-from comm.init_comm import *
+from comm.comm_utils import *
 
 
 def main():
