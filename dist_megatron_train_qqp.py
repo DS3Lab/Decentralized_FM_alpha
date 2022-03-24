@@ -1,19 +1,6 @@
-# coding=utf-8
-# Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+import sys
+sys.path.append('../Megatron-LM')
 
-"""Pretrain BERT"""
 
 from functools import partial
 
@@ -25,7 +12,7 @@ from megatron import print_rank_0
 from megatron import get_timers
 from megatron import mpu
 from megatron.data.dataset_utils import build_train_valid_test_datasets
-from megatron.model import BertModel
+from megatron.model import BertModel, ModelType
 from megatron.training import pretrain
 from megatron.utils import average_losses_across_data_parallel_group
 
@@ -144,5 +131,5 @@ def train_valid_test_datasets_provider(train_val_test_num_samples):
 if __name__ == "__main__":
 
     pretrain(train_valid_test_datasets_provider, model_provider,
+             ModelType.encoder_or_decoder,
              forward_step, args_defaults={'tokenizer_type': 'BertWordPieceLowerCase'})
-
