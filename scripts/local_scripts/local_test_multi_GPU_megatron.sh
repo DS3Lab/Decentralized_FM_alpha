@@ -29,6 +29,7 @@ python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --train-iters 50 \
        --train-data $TRAIN_DATA \
        --valid-data $VALID_DATA \
+       --tokenizer-type BertWordPieceLowerCase\
        --vocab-file $VOCAB_FILE \
        --split 949,50,1 \
        --distributed-backend nccl \
