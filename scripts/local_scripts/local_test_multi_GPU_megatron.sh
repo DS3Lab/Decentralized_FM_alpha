@@ -1,11 +1,24 @@
 #!/bin/bash
 
+GPUS_PER_NODE=4
+# Change for multinode config
+MASTER_ADDR=localhost
+MASTER_PORT=6000
+NNODES=1
+NODE_RANK=0
+WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
+
 TRAIN_DATA=data/glue_dataset/data/QQP/train.tsv
 VALID_DATA=data/glue_dataset/data/QQP/test.tsv
 VOCAB_FILE=bert-vocab.txt
 
-python ../Megatron-LM/tasks/main.py \
+DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT"
+
+python -m torch.distributed.launch $DISTRIBUTED_ARGS \
+       ../Megatron-LM/tasks/main.py \
        --task QQP \
+       --tensor-model-parallel-size 2 \
+       --pipeline-model-parallel-size 2 \
        --num-layers 24 \
        --hidden-size 1024 \
        --num-attention-heads 16 \
