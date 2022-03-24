@@ -1,8 +1,8 @@
 #!/bin/bash
 
-TRAIN_DATA=data/glue_dataset/data/QQP/train.tsv
-VALID_DATA=data/glue_dataset/data/QQP/test.tsv
-VOCAB_FILE=data/glue_dataset/data/bert-large-cased-vocab.txt
+TRAIN_DATA=glue_dataset/data/QQP/train.tsv
+VALID_DATA=glue_dataset/data/QQP/test.tsv
+VOCAB_FILE=glue_dataset/data/bert-large-cased-vocab.txt
 
 python ../Megatron-LM/tasks/main.py \
        --task QQP \
