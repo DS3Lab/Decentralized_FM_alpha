@@ -2,7 +2,7 @@
 
 TRAIN_DATA=data/glue_dataset/data/QQP/train.tsv
 VALID_DATA=data/glue_dataset/data/QQP/test.tsv
-VOCAB_FILE=bert-vocab.txt
+VOCAB_FILE=data/glue_dataset/data/bert-large-cased-vocab.txt
 
 python ../Megatron-LM/tasks/main.py \
        --task QQP \
