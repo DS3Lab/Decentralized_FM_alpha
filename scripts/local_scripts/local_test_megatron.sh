@@ -29,4 +29,5 @@ python ../Megatron-LM/tasks/main.py \
        --lr-warmup-fraction .01 \
        --log-interval 1 \
        --eval-interval 1000 \
+       --epochs 1 \
        --eval-iters 1

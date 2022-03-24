@@ -41,5 +41,6 @@ python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --clip-grad 1.0 \
        --lr-warmup-fraction .01 \
        --log-interval 1 \
+       --epochs 1 \
        --eval-interval 1000 \
        --eval-iters 1
