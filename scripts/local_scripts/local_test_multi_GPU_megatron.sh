@@ -15,7 +15,7 @@ VOCAB_FILE=glue_dataset/data/bert-large-cased-vocab.txt
 DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT"
 
 python -m torch.distributed.launch $DISTRIBUTED_ARGS \
-       ../Megatron-LM/tasks/main.py \
+       ./dist_megatron_train_qqp.py \
        --task QQP \
        --tensor-model-parallel-size 2 \
        --pipeline-model-parallel-size 2 \
