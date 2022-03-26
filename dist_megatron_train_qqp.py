@@ -123,7 +123,7 @@ def glue_classification(num_classes, Dataset,
     """Finetune/evaluate."""
     print("Start training.")
     pretrain(train_valid_datasets_provider, model_provider,
-             ModelType.encoder_or_decoder, forward_step)
+             ModelType.encoder_or_decoder, forward_step, args_defaults={'tokenizer_type': 'BertWordPieceLowerCase'})
 
 
 def main():
