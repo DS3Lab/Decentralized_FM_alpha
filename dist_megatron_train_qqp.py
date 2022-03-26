@@ -120,17 +120,8 @@ def glue_classification(num_classes, Dataset,
 
         return output_tensor, partial(loss_func, loss_mask, sentence_order)
 
-    def metrics_func_provider():
-        """Privde metrics callback function."""
-        def single_dataset_provider(datapath):
-            args = get_args()
-            tokenizer = get_tokenizer()
-
-            name = name_from_datapath_func(datapath)
-            return Dataset(name, [datapath], tokenizer, args.seq_length)
-        return accuracy_func_provider(single_dataset_provider)
-
     """Finetune/evaluate."""
+    print("Start training.")
     pretrain(train_valid_datasets_provider, model_provider,
              ModelType.encoder_or_decoder, forward_step)
 
@@ -146,3 +137,7 @@ def main():
         return datapath.split('QQP')[-1].strip('.tsv').strip('/').replace('_', '-')
 
     glue_classification(num_classes, Dataset, name_from_datapath)
+
+
+if __name__ == '__main__':
+    main()
