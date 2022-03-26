@@ -43,9 +43,9 @@ def train_valid_datasets_provider():
     args = get_args()
     tokenizer = get_tokenizer()
 
-    train_dataset = Dataset('training', args.train_data,
+    train_dataset = Dataset('training', './glue_dataset/data/QQP/train.tsv',
                             tokenizer, args.seq_length)
-    valid_dataset = Dataset('validation', args.valid_data,
+    valid_dataset = Dataset('validation', './glue_dataset/data/QQP/test.tsv',
                             tokenizer, args.seq_length)
 
     return train_dataset, valid_dataset

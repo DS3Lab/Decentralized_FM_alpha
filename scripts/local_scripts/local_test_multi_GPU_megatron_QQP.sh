@@ -8,15 +8,12 @@ NNODES=1
 NODE_RANK=0
 WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
 
-TRAIN_DATA=glue_dataset/data/QQP/train.tsv
-VALID_DATA=glue_dataset/data/QQP/test.tsv
 VOCAB_FILE=glue_dataset/data/bert-large-cased-vocab.txt
 
 DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT"
 
 python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        ./dist_megatron_train_qqp.py \
-       --task QQP \
        --tensor-model-parallel-size 2 \
        --pipeline-model-parallel-size 2 \
        --num-layers 24 \
@@ -27,8 +24,6 @@ python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --seq-length 512 \
        --max-position-embeddings 512 \
        --train-iters 50 \
-       --train-data $TRAIN_DATA \
-       --valid-data $VALID_DATA \
        --tokenizer-type BertWordPieceLowerCase\
        --vocab-file $VOCAB_FILE \
        --split 949,50,1 \
