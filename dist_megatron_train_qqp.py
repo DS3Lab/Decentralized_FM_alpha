@@ -38,8 +38,7 @@ from megatron.initialize import initialize_megatron
 from megatron.utils import average_losses_across_data_parallel_group,unwrap_model
 from megatron.training import setup_model_and_optimizer, print_datetime
 from megatron.schedules import get_forward_backward_func
-
-from glue_dataset.qqp import QQPDataset
+from tasks.glue.qqp import QQPDataset
 
 
 def get_qqp_args(parser):
