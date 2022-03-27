@@ -41,7 +41,7 @@ def main():
     tokenizer = build_tokenizer(args)
     data_loader = train_data_loader(args, tokenizer)
     data_iter = iter(data_loader)
-    for i in range(4):
+    for i in range(len(data_iter)):
         batch = next(data_iter)
         print(batch)
     # for data in data_loader:

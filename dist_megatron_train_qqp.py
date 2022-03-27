@@ -39,6 +39,7 @@ from megatron.utils import average_losses_across_data_parallel_group,unwrap_mode
 from megatron.training import setup_model_and_optimizer, print_datetime
 from megatron.schedules import get_forward_backward_func
 from tasks.glue.qqp import QQPDataset
+from megatron.data.data_samplers import MegatronPretrainingSampler
 
 
 def get_qqp_args(parser):
@@ -62,7 +63,12 @@ def train_dataset_provider():
         tokenizer = get_tokenizer()
         train_dataset = QQPDataset('training', [args.train_data_path],
                                    tokenizer, args.seq_length)
-        train_sampler = torch.utils.data.RandomSampler(train_dataset)
+        train_sampler = MegatronPretrainingSampler(
+            total_samples=len(train_dataset),
+            consumed_samples=args.consumed_train_samples,
+            micro_batch_size=args.micro_batch_size,
+            data_parallel_rank=mpu.get_data_parallel_rank(),
+            data_parallel_size=mpu.get_data_parallel_world_size())
         train_dataloader = torch.utils.data.DataLoader(train_dataset,
                                        batch_sampler=train_sampler,
                                        num_workers=args.num_workers,
