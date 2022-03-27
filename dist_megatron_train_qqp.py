@@ -2,10 +2,6 @@ import sys
 sys.path.append('../Megatron-LM')
 
 
-import sys
-sys.path.append('../Megatron-LM')
-
-
 # coding=utf-8
 # Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
 #
@@ -24,6 +20,7 @@ sys.path.append('../Megatron-LM')
 """GLUE finetuning/evaluation."""
 from functools import partial
 import torch
+import time
 import torch.nn.functional as F
 from megatron import get_args
 from megatron import print_rank_0
@@ -34,8 +31,10 @@ from megatron.model import ModelType
 from megatron.model.classification import Classification
 from tasks.eval_utils import accuracy_func_provider
 from megatron.training import pretrain
+from megatron.initialize import initialize_megatron
 from megatron.utils import average_losses_across_data_parallel_group
 from tasks.glue.qqp import QQPDataset as Dataset
+from megatron.training import setup_model_and_optimizer, print_datetime
 
 
 def train_valid_datasets_provider():
@@ -43,9 +42,9 @@ def train_valid_datasets_provider():
     args = get_args()
     tokenizer = get_tokenizer()
 
-    train_dataset = Dataset('training', './glue_dataset/data/QQP/train.tsv',
+    train_dataset = Dataset('training', args.train_data,
                             tokenizer, args.seq_length)
-    valid_dataset = Dataset('validation', './glue_dataset/data/QQP/test.tsv',
+    valid_dataset = Dataset('validation', args.valid_data,
                             tokenizer, args.seq_length)
 
     return train_dataset, valid_dataset
@@ -55,7 +54,8 @@ def model_provider(pre_process=True, post_process=True):
     """Build the model."""
     args = get_args()
     num_classes = 2
-    print_rank_0('building classification model for QQP')
+    print_rank_0('building classification model for {} ...'.format(
+        args.task))
     model = Classification(num_classes=num_classes, num_tokentypes=2,
                            pre_process=pre_process, post_process=post_process)
     return model
@@ -120,8 +120,54 @@ def forward_step(data_iterator, model):
     return output_tensor, partial(loss_func, loss_mask, sentence_order)
 
 
+
+def train_qqp(train_valid_dataset_provider,
+              model_provider,
+              model_type,
+              forward_step_func,
+              extra_args_provider=None,
+              args_defaults={}):
+    # Initalize and get arguments, timers, and Tensorboard writer.
+    initialize_megatron(extra_args_provider=extra_args_provider,
+                        args_defaults=args_defaults)
+
+    # Adjust the startup time so it reflects the largest value.
+    # This will be closer to what scheduler will see (outside of
+    # image ... launches.
+    _TRAIN_START_TIME = time.time()
+    start_time_tensor = torch.cuda.DoubleTensor([_TRAIN_START_TIME])
+    torch.distributed.all_reduce(start_time_tensor,
+                                 op=torch.distributed.ReduceOp.MIN)
+    _TRAIN_START_TIME = start_time_tensor.item()
+    print_rank_0('time to initialize megatron (seconds): {:.3f}'.format(
+        time.time() - _TRAIN_START_TIME))
+    print_datetime('after megatron is initialized')
+
+    args = get_args()
+    timers = get_timers()
+
+    # Model, optimizer, and learning rate.
+    timers('model-and-optimizer-setup').start()
+
+    model, optimizer, lr_scheduler = setup_model_and_optimizer(model_provider,
+                                                               model_type)
+    timers('model-and-optimizer-setup').stop()
+    print_datetime('after model, optimizer, and learning rate '
+                   'scheduler are built')
+
+    # Data stuff.
+    timers('train/valid/test-data-iterators-setup').start()
+    print_datetime('after dataloaders are built')
+
+    # Print setup timing.
+    print_rank_0('done with setup ...')
+    timers.log(['model-and-optimizer-setup', 'train/valid/test-data-iterators-setup'])
+    print_rank_0('training ...')
+
+    iteration = 0
+
 if __name__ == '__main__':
     """Finetune/evaluate."""
     print("Start training.")
-    pretrain(train_valid_datasets_provider, model_provider,
-             ModelType.encoder_or_decoder, forward_step)
+    train_qqp(train_valid_datasets_provider, model_provider,
+              ModelType.encoder_or_decoder, forward_step)
