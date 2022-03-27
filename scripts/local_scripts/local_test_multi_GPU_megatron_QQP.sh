@@ -43,4 +43,5 @@ python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --lr-warmup-fraction .01 \
        --log-interval 1 \
        --eval-interval 1000 \
-       --eval-iters 1
+       --eval-iters 1 \
+       --no-bias-dropout-fusion
