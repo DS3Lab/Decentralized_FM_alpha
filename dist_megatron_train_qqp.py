@@ -33,7 +33,7 @@ from tasks.eval_utils import accuracy_func_provider
 from megatron.training import pretrain
 from megatron.initialize import initialize_megatron
 from megatron.utils import average_losses_across_data_parallel_group
-from tasks.glue.qqp import QQPDataset as Dataset
+from glue_dataset.qqp import QQPDataset
 from megatron.training import setup_model_and_optimizer, print_datetime, build_train_valid_test_data_iterators
 
 
@@ -41,12 +41,11 @@ def train_valid_dataset_provider(train_val_test_num_samples):
     """Build train and validation dataset."""
     args = get_args()
     tokenizer = get_tokenizer()
-
-    train_dataset = Dataset('training', './glue_dataset/data/QQP/train.tsv',
+    train_dataset = QQPDataset('training', './glue_dataset/data/QQP/train.tsv',
                             tokenizer, args.seq_length)
-    valid_dataset = Dataset('validation', './glue_dataset/data/QQP/dev.tsv',
+    valid_dataset = QQPDataset('validation', './glue_dataset/data/QQP/dev.tsv',
                             tokenizer, args.seq_length)
-    test_dataset = Dataset('test', './glue_dataset/data/QQP/test.tsv',
+    test_dataset = QQPDataset('test', './glue_dataset/data/QQP/test.tsv',
                            tokenizer, args.seq_length)
 
     return train_dataset, valid_dataset, test_dataset
