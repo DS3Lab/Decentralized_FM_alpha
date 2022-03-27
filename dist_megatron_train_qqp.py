@@ -1,6 +1,6 @@
 import sys
-sys.path.append('../Megatron-LM')
 
+sys.path.append('../Megatron-LM')
 
 # coding=utf-8
 # Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
@@ -48,18 +48,51 @@ def get_qqp_args(parser):
     return parser
 
 
-def train_valid_dataset_provider(train_val_test_num_samples):
+def train_dataset_provider():
     """Build train and validation dataset."""
     args = get_args()
-    tokenizer = get_tokenizer()
-    train_dataset = QQPDataset('training', args.train_data_path,
-                               tokenizer, args.seq_length)
-    valid_dataset = QQPDataset('validation', args.valid_data_path,
-                               tokenizer, args.seq_length)
-    test_dataset = QQPDataset('test', args.test_data_path,
-                              tokenizer, args.seq_length)
 
-    return train_dataset, valid_dataset, test_dataset
+    if mpu.get_tensor_model_parallel_rank() == 0:
+        tokenizer = get_tokenizer()
+        train_dataset = QQPDataset('training', args.train_data_path,
+                                   tokenizer, args.seq_length)
+
+        # Build dataloders.
+        train_sampler = torch.utils.data.RandomSampler(train_dataset)
+        train_dataloader = torch.utils.data.DataLoader(train_dataset,
+                                                       batch_sampler=train_sampler,
+                                                       num_workers=args.num_workers,
+                                                       pin_memory=True)
+
+        # Flags to know if we need to do training/validation/testing.
+        do_train = train_dataloader is not None and args.train_iters > 0
+        do_valid = False
+        do_test = False
+        # Need to broadcast num_tokens and num_type_tokens.
+        flags = torch.cuda.LongTensor(
+            [int(do_train), int(do_valid), int(do_test)])
+    else:
+        flags = torch.cuda.LongTensor([0, 0, 0])
+
+    # Broadcast num tokens.
+    torch.distributed.broadcast(flags,
+                                mpu.get_tensor_model_parallel_src_rank(),
+                                group=mpu.get_tensor_model_parallel_group())
+    args.do_train = flags[0].item()
+    args.do_valid = flags[1].item()
+    args.do_test = flags[2].item()
+
+    # Build iterators.
+    dl_type = args.dataloader_type
+    assert dl_type in ['single', 'cyclic']
+
+    if train_dataloader is not None:
+        train_data_iterator = iter(train_dataloader)
+    else:
+        train_data_iterator = None
+    valid_data_iterator = None
+    test_data_iterator = None
+    return train_data_iterator, valid_data_iterator, test_data_iterator
 
 
 def model_provider(pre_process=True, post_process=True):
@@ -130,7 +163,7 @@ def forward_step(data_iterator, model):
     return output_tensor, partial(loss_func, loss_mask, sentence_order)
 
 
-def train_qqp(train_valid_dataset_provider,
+def train_qqp(train_dataset_provider,
               model_provider,
               model_type,
               forward_step_func,
@@ -167,8 +200,7 @@ def train_qqp(train_valid_dataset_provider,
     # Data stuff.
     timers('train/valid-data-iterators-setup').start()
     print_datetime('after dataloaders are built')
-    train_data_iterator, valid_data_iterator, test_data_iterator = build_train_valid_test_data_iterators(
-        train_valid_dataset_provider)
+    train_data_iterator, valid_data_iterator, test_data_iterator = train_dataset_provider()
     # Print setup timing.
     print_rank_0('done with setup ...')
     timers.log(['model-and-optimizer-setup', 'train/valid-data-iterators-setup'])
@@ -176,8 +208,9 @@ def train_qqp(train_valid_dataset_provider,
 
     iteration = 0
 
+
 if __name__ == '__main__':
     """Finetune/evaluate."""
     print("Start training.")
-    train_qqp(train_valid_dataset_provider, model_provider,
+    train_qqp(train_dataset_provider, model_provider,
               ModelType.encoder_or_decoder, forward_step)
