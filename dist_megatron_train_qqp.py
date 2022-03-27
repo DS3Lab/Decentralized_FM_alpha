@@ -138,6 +138,7 @@ def forward_step(data_iterator, model):
         data = None
     data_b = mpu.broadcast_data(keys, data, datatype)
     tokens = data_b['text'].long()
+    print_rank_0(tokens.shape)
     types = data_b['types'].long()
     lm_labels = data_b['label'].long()
     padding_mask = data_b['padding_mask'].long()
@@ -297,8 +298,9 @@ def train_qqp(train_dataset_provider,
     for i in range(args.train_iters):
         print_rank_0('training iter '+str(i+1))
         megatron_train_step(forward_step_func, train_data_iterator, model, optimizer, lr_scheduler)
-    timers('benchmark-iter'+str(args.train_iters)).stop()
+    timers('benchmark-iter-'+str(args.train_iters)).stop()
     print_datetime('Benchmark iter stop')
+    timers.log(['first-train-iter', 'benchmark-iter-'+str(args.train_iters)])
 
 
 if __name__ == '__main__':
