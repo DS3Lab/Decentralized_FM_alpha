@@ -37,6 +37,17 @@ from glue_dataset.qqp import QQPDataset
 from megatron.training import setup_model_and_optimizer, print_datetime, build_train_valid_test_data_iterators
 
 
+def get_qqp_args(parser):
+    group = parser.add_argument_group(title='tasks')
+    group.add_argument('--train-data-path', type=str, required=True,
+                       help='train data path.')
+    group.add_argument('--valid-data-path', type=str, required=True,
+                       help='train data path.')
+    group.add_argument('--test-data-path', type=str, required=True,
+                       help='train data path.')
+    return parser
+
+
 def train_valid_dataset_provider(train_val_test_num_samples):
     """Build train and validation dataset."""
     args = get_args()
@@ -123,7 +134,7 @@ def train_qqp(train_valid_dataset_provider,
               model_provider,
               model_type,
               forward_step_func,
-              extra_args_provider=None,
+              extra_args_provider=get_qqp_args,
               args_defaults={}):
     # Initalize and get arguments, timers, and Tensorboard writer.
     initialize_megatron(extra_args_provider=extra_args_provider,
