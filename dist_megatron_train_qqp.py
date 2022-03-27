@@ -1,6 +1,6 @@
 import sys
-
 sys.path.append('../Megatron-LM')
+
 
 # coding=utf-8
 # Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
@@ -54,15 +54,15 @@ def train_dataset_provider():
 
     if mpu.get_tensor_model_parallel_rank() == 0:
         tokenizer = get_tokenizer()
-        train_dataset = QQPDataset('training', args.train_data_path,
+        train_dataset = QQPDataset('training', [args.train_data_path],
                                    tokenizer, args.seq_length)
 
         # Build dataloders.
         train_sampler = torch.utils.data.RandomSampler(train_dataset)
         train_dataloader = torch.utils.data.DataLoader(train_dataset,
-                                                       batch_sampler=train_sampler,
-                                                       num_workers=args.num_workers,
-                                                       pin_memory=True)
+                                       batch_sampler=train_sampler,
+                                       num_workers=args.num_workers,
+                                       pin_memory=True)
 
         # Flags to know if we need to do training/validation/testing.
         do_train = train_dataloader is not None and args.train_iters > 0
@@ -93,6 +93,8 @@ def train_dataset_provider():
     valid_data_iterator = None
     test_data_iterator = None
     return train_data_iterator, valid_data_iterator, test_data_iterator
+
+
 
 
 def model_provider(pre_process=True, post_process=True):
@@ -207,7 +209,6 @@ def train_qqp(train_dataset_provider,
     print_rank_0('training ...')
 
     iteration = 0
-
 
 if __name__ == '__main__':
     """Finetune/evaluate."""
