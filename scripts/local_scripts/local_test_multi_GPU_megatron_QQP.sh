@@ -25,7 +25,7 @@ python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --micro-batch-size 2 \
        --global-batch-size 16 \
        --seq-length 2048 \
-       --max-position-embeddings 512 \
+       --max-position-embeddings 2048 \
        --tokenizer-type BertWordPieceLowerCase\
        --vocab-file $VOCAB_FILE \
        --train-data-path $TRAIN_FILE \
