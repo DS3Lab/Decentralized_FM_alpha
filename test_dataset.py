@@ -1,7 +1,7 @@
 import torch
 import argparse
-from qqp import QQPDataset
-from tokenizer import build_tokenizer
+from glue_dataset.qqp import QQPDataset
+from glue_dataset.tokenizer import build_tokenizer
 
 
 def train_data_loader(args, tokenizer):
@@ -21,9 +21,9 @@ def train_data_loader(args, tokenizer):
 
 def main():
     parser = argparse.ArgumentParser(description='Test Glue-qqp dataset')
-    parser.add_argument('--train-data', nargs='+', default=['./data/QQP/train.tsv'], metavar='S',
+    parser.add_argument('--train-data', nargs='+', default=['./glue_dataset/data/QQP/train.tsv'], metavar='S',
                         help='path to the training data')
-    parser.add_argument('--valid-data', nargs='+', default=['./data/QQP/test.tsv'], metavar='S',
+    parser.add_argument('--valid-data', nargs='+', default=['./glue_dataset/data/QQP/test.tsv'], metavar='S',
                         help='path to the training data')
     parser.add_argument('--seq-length', type=int, default=2048, metavar='N',
                         help='-')
@@ -31,7 +31,7 @@ def main():
                         help='-')
     parser.add_argument('--tokenizer-type', type=str, default='BertWordPieceLowerCase', metavar='S',
                         help='which tokenizer to use.')
-    parser.add_argument('--vocab-file', type=str, default='./data/bert-large-cased-vocab.txt', metavar='S',
+    parser.add_argument('--vocab-file', type=str, default='./glue_dataset/data/bert-large-cased-vocab.txt', metavar='S',
                         help='which tokenizer to use.')
     parser.add_argument('--vocab-extra-ids', type=int, default=0, metavar='N',
                         help='-')
@@ -40,10 +40,12 @@ def main():
     args = parser.parse_args()
     tokenizer = build_tokenizer(args)
     data_loader = train_data_loader(args, tokenizer)
-
-    for data in data_loader:
-        print(data)
-
+    data_iter = iter(data_loader)
+    for i in range(4):
+        batch = next(data_iter)
+        print(batch)
+    # for data in data_loader:
+    #    print(data)
 
 
 if __name__ == '__main__':

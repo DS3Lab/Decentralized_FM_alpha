@@ -1,6 +1,6 @@
 import sys
-
 sys.path.append('../Megatron-LM')
+
 
 # coding=utf-8
 # Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
@@ -35,7 +35,7 @@ from torch.nn.parallel.distributed import DistributedDataParallel as torchDDP
 
 from megatron.model.classification import Classification
 from megatron.initialize import initialize_megatron
-from megatron.utils import average_losses_across_data_parallel_group, unwrap_model
+from megatron.utils import average_losses_across_data_parallel_group,unwrap_model
 from megatron.training import setup_model_and_optimizer, print_datetime
 from megatron.schedules import get_forward_backward_func
 
@@ -65,9 +65,9 @@ def train_dataset_provider():
                                    tokenizer, args.seq_length)
         train_sampler = torch.utils.data.RandomSampler(train_dataset)
         train_dataloader = torch.utils.data.DataLoader(train_dataset,
-                                                       batch_sampler=train_sampler,
-                                                       num_workers=args.num_workers,
-                                                       pin_memory=True)
+                                       batch_sampler=train_sampler,
+                                       num_workers=args.num_workers,
+                                       pin_memory=True)
 
         # Flags to know if we need to do training/validation/testing.
         do_train = train_dataloader is not None and args.train_iters > 0
@@ -112,7 +112,7 @@ def model_provider(pre_process=True, post_process=True):
 def loss_func(labels, output_tensor):
     loss = F.cross_entropy(output_tensor, labels)
     averaged_losses = average_losses_across_data_parallel_group(
-        [loss])
+            [loss])
     return loss, {'classification loss': averaged_losses[0]}
 
 
@@ -123,7 +123,7 @@ def forward_step(data_iterator, model):
 
     # Get the batch.
     timers('batch-generator').start()
-    keys = ['text', 'types', 'labels', 'is_random', 'loss_mask', 'padding_mask']
+    keys = ['text', 'types', 'label', 'uid', 'padding_mask']
     datatype = torch.int64
 
     # Broadcast data.
@@ -284,6 +284,7 @@ def train_qqp(train_dataset_provider,
 
     for i in range(10):
         megatron_train_step(forward_step_func, train_data_iterator, model, optimizer, lr_scheduler)
+
 
 
 if __name__ == '__main__':
