@@ -34,20 +34,22 @@ from megatron.training import pretrain
 from megatron.initialize import initialize_megatron
 from megatron.utils import average_losses_across_data_parallel_group
 from tasks.glue.qqp import QQPDataset as Dataset
-from megatron.training import setup_model_and_optimizer, print_datetime
+from megatron.training import setup_model_and_optimizer, print_datetime, build_train_valid_test_data_iterators
 
 
-def train_valid_datasets_provider():
+def train_valid_dataset_provider(train_val_test_num_samples):
     """Build train and validation dataset."""
     args = get_args()
     tokenizer = get_tokenizer()
 
-    train_dataset = Dataset('training', args.train_data,
+    train_dataset = Dataset('training', './glue_dataset/data/QQP/train.tsv',
                             tokenizer, args.seq_length)
-    valid_dataset = Dataset('validation', args.valid_data,
+    valid_dataset = Dataset('validation', './glue_dataset/data/QQP/dev.tsv',
                             tokenizer, args.seq_length)
+    test_dataset = Dataset('test', './glue_dataset/data/QQP/test.tsv',
+                           tokenizer, args.seq_length)
 
-    return train_dataset, valid_dataset
+    return train_dataset, valid_dataset, test_dataset
 
 
 def model_provider(pre_process=True, post_process=True):
@@ -118,7 +120,6 @@ def forward_step(data_iterator, model):
     return output_tensor, partial(loss_func, loss_mask, sentence_order)
 
 
-
 def train_qqp(train_valid_dataset_provider,
               model_provider,
               model_type,
@@ -154,12 +155,13 @@ def train_qqp(train_valid_dataset_provider,
                    'scheduler are built')
 
     # Data stuff.
-    timers('train/valid/test-data-iterators-setup').start()
+    timers('train/valid-data-iterators-setup').start()
     print_datetime('after dataloaders are built')
-
+    train_data_iterator, valid_data_iterator, test_data_iterator = build_train_valid_test_data_iterators(
+        train_valid_dataset_provider)
     # Print setup timing.
     print_rank_0('done with setup ...')
-    timers.log(['model-and-optimizer-setup', 'train/valid/test-data-iterators-setup'])
+    timers.log(['model-and-optimizer-setup', 'train/valid-data-iterators-setup'])
     print_rank_0('training ...')
 
     iteration = 0
@@ -167,5 +169,5 @@ def train_qqp(train_valid_dataset_provider,
 if __name__ == '__main__':
     """Finetune/evaluate."""
     print("Start training.")
-    train_qqp(train_valid_datasets_provider, model_provider,
+    train_qqp(train_valid_dataset_provider, model_provider,
               ModelType.encoder_or_decoder, forward_step)
