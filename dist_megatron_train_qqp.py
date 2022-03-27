@@ -293,11 +293,11 @@ def train_qqp(train_dataset_provider,
     print_datetime('First iter stop')
 
     print_datetime('Benchmark iter start')
-    timers('benchmark-iter').start()
-    for i in range(10):
+    timers('benchmark-iter-'+str(args.train_iters)).start()
+    for i in range(args.train_iters):
         print_rank_0('training iter '+str(i+1))
         megatron_train_step(forward_step_func, train_data_iterator, model, optimizer, lr_scheduler)
-    timers('benchmark-iter').stop()
+    timers('benchmark-iter'+str(args.train_iters)).stop()
     print_datetime('Benchmark iter stop')
 
 

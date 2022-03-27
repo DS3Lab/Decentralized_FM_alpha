@@ -43,4 +43,5 @@ python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --log-interval 1 \
        --eval-interval 1000 \
        --eval-iters 1 \
+       --train-iters 10 \
        --no-bias-dropout-fusion
