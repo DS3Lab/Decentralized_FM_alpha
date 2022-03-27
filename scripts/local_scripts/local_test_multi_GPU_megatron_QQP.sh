@@ -9,9 +9,9 @@ NODE_RANK=0
 WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
 
 VOCAB_FILE=glue_dataset/data/bert-large-cased-vocab.txt
-TRAIN_FILE=./glue_dataset/data/QQP/train.tsv
-VALID_FILE=./glue_dataset/data/QQP/dev.tsv
-TEST_FILE=./glue_dataset/data/QQP/test.tsv
+TRAIN_FILE=glue_dataset/data/QQP/train.tsv
+VALID_FILE=glue_dataset/data/QQP/dev.tsv
+TEST_FILE=glue_dataset/data/QQP/test.tsv
 
 DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT"
 
