@@ -138,12 +138,13 @@ def forward_step(data_iterator, model):
         data = None
     data_b = mpu.broadcast_data(keys, data, datatype)
     tokens = data_b['text'].long()
+    types = data_b['types'].long()
     lm_labels = data_b['label'].long()
     padding_mask = data_b['padding_mask'].long()
     timers('batch-generator').stop()
 
     # Forward pass through the model.
-    output_tensor = model(tokens, padding_mask, tokentype_ids=None)
+    output_tensor = model(tokens, padding_mask, tokentype_ids=types)
 
     return output_tensor, partial(loss_func, lm_labels)
 
