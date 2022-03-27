@@ -27,14 +27,19 @@ from megatron import print_rank_0
 from megatron import get_tokenizer
 from megatron import get_timers
 from megatron import mpu
-from megatron.model import ModelType
+from megatron import get_num_microbatches
+from megatron.model import ModelType, Float16Module
+
+from megatron.model import DistributedDataParallel as LocalDDP
+from torch.nn.parallel.distributed import DistributedDataParallel as torchDDP
+
 from megatron.model.classification import Classification
-from tasks.eval_utils import accuracy_func_provider
-from megatron.training import pretrain
 from megatron.initialize import initialize_megatron
-from megatron.utils import average_losses_across_data_parallel_group
+from megatron.utils import average_losses_across_data_parallel_group, unwrap_model
+from megatron.training import setup_model_and_optimizer, print_datetime
+from megatron.schedules import get_forward_backward_func
+
 from glue_dataset.qqp import QQPDataset
-from megatron.training import setup_model_and_optimizer, print_datetime, build_train_valid_test_data_iterators
 
 
 def get_qqp_args(parser):
@@ -58,8 +63,6 @@ def train_dataset_provider():
         tokenizer = get_tokenizer()
         train_dataset = QQPDataset('training', [args.train_data_path],
                                    tokenizer, args.seq_length)
-
-        # Build dataloders.
         train_sampler = torch.utils.data.RandomSampler(train_dataset)
         train_dataloader = torch.utils.data.DataLoader(train_dataset,
                                                        batch_sampler=train_sampler,
@@ -106,29 +109,11 @@ def model_provider(pre_process=True, post_process=True):
     return model
 
 
-def loss_func(loss_mask, sentence_order, output_tensor):
-    lm_loss_, sop_logits = output_tensor
-
-    lm_loss_ = lm_loss_.float()
-    loss_mask = loss_mask.float()
-    lm_loss = torch.sum(
-        lm_loss_.view(-1) * loss_mask.reshape(-1)) / loss_mask.sum()
-
-    if sop_logits is not None:
-        sop_loss = F.cross_entropy(sop_logits.view(-1, 2).float(),
-                                   sentence_order.view(-1),
-                                   ignore_index=-1)
-        sop_loss = sop_loss.float()
-        loss = lm_loss + sop_loss
-        averaged_losses = average_losses_across_data_parallel_group(
-            [lm_loss, sop_loss])
-        return loss, {'lm loss': averaged_losses[0],
-                      'sop loss': averaged_losses[1]}
-    else:
-        loss = lm_loss
-        averaged_losses = average_losses_across_data_parallel_group(
-            [lm_loss])
-        return loss, {'lm loss': averaged_losses[0]}
+def loss_func(labels, output_tensor):
+    loss = F.cross_entropy(output_tensor, labels)
+    averaged_losses = average_losses_across_data_parallel_group(
+        [loss])
+    return loss, {'classification loss': averaged_losses[0]}
 
 
 def forward_step(data_iterator, model):
@@ -148,21 +133,110 @@ def forward_step(data_iterator, model):
         data = None
     data_b = mpu.broadcast_data(keys, data, datatype)
     tokens = data_b['text'].long()
-    types = data_b['types'].long()
-    sentence_order = data_b['is_random'].long()
-    loss_mask = data_b['loss_mask'].float()
-    lm_labels = data_b['labels'].long()
+    lm_labels = data_b['label'].long()
     padding_mask = data_b['padding_mask'].long()
     timers('batch-generator').stop()
 
-    if not args.bert_binary_head:
-        types = None
-
     # Forward pass through the model.
-    output_tensor = model(tokens, padding_mask, tokentype_ids=types,
+    output_tensor = model(tokens, padding_mask, tokentype_ids=None,
                           lm_labels=lm_labels)
 
-    return output_tensor, partial(loss_func, loss_mask, sentence_order)
+    return output_tensor, partial(loss_func, lm_labels)
+
+
+def megatron_train_step(forward_step_func, data_iterator,
+                        model, optimizer, lr_scheduler):
+    """Single training step."""
+    args = get_args()
+    timers = get_timers()
+
+    # Set grad to zero.
+    if args.DDP_impl == 'local' and args.use_contiguous_buffers_in_local_ddp:
+        for partition in model:
+            partition.zero_grad_buffer()
+    optimizer.zero_grad()
+
+    forward_backward_func = get_forward_backward_func()
+    losses_reduced = forward_backward_func(
+        forward_step_func, data_iterator, model,
+        optimizer, timers, forward_only=False)
+
+    # Empty unused memory
+    if args.empty_unused_memory_level >= 1:
+        torch.cuda.empty_cache()
+
+    # All-reduce if needed.
+    if args.DDP_impl == 'local':
+        timers('backward-params-all-reduce').start()
+        for model_module in model:
+            model_module.allreduce_gradients()
+        timers('backward-params-all-reduce').stop()
+
+    # All-reduce word_embeddings' grad across first and last stages to ensure
+    # that word_embeddings parameters stay in sync.
+    # This should only run for models that support pipelined model parallelism
+    # (BERT and GPT-2).
+    timers('backward-embedding-all-reduce').start()
+    if mpu.is_rank_in_embedding_group(ignore_virtual=True) and \
+            mpu.get_pipeline_model_parallel_world_size() > 1:
+        if mpu.is_pipeline_first_stage(ignore_virtual=True):
+            unwrapped_model = model[0]
+        elif mpu.is_pipeline_last_stage(ignore_virtual=True):
+            unwrapped_model = model[-1]
+        else:  # We do not support the interleaved schedule for T5 yet.
+            unwrapped_model = model[0]
+        unwrapped_model = unwrap_model(unwrapped_model, (torchDDP, LocalDDP, Float16Module))
+
+        if unwrapped_model.share_word_embeddings:
+            word_embeddings_weight = unwrapped_model.word_embeddings_weight()
+            if args.DDP_impl == 'local':
+                grad = word_embeddings_weight.main_grad
+            else:
+                grad = word_embeddings_weight.grad
+            torch.distributed.all_reduce(grad, group=mpu.get_embedding_group())
+
+    # All-reduce position_embeddings grad across first (encoder) and split (decoder)
+    # stages to ensure that position embeddings parameters stay in sync.
+    # This should only run for T5 models with pipeline parallelism
+    if mpu.is_rank_in_position_embedding_group() and \
+            mpu.get_pipeline_model_parallel_world_size() > 1 and \
+            args.pipeline_model_parallel_split_rank is not None:
+        unwrapped_model = model[0]
+        unwrapped_model = unwrap_model(
+            unwrapped_model, (torchDDP, LocalDDP, Float16Module))
+        assert args.DDP_impl == 'local', \
+            'T5 model is only supported with local DDP mode'
+        grad = unwrapped_model.language_model.embedding.position_embeddings.weight.main_grad
+        torch.distributed.all_reduce(grad, group=mpu.get_position_embedding_group())
+    timers('backward-embedding-all-reduce').stop()
+
+    # Update parameters.
+    timers('optimizer').start()
+    update_successful, grad_norm, num_zeros_in_grad = optimizer.step()
+    timers('optimizer').stop()
+
+    # Update learning rate.
+    if update_successful:
+        increment = get_num_microbatches() * \
+                    args.micro_batch_size * \
+                    args.data_parallel_size
+        lr_scheduler.step(increment=increment)
+        skipped_iter = 0
+    else:
+        skipped_iter = 1
+
+    # Empty unused memory
+    if args.empty_unused_memory_level >= 2:
+        torch.cuda.empty_cache()
+
+    if mpu.is_pipeline_last_stage(ignore_virtual=True):
+        # Average loss across microbatches.
+        loss_reduced = {}
+        for key in losses_reduced[0]:
+            losses_reduced_for_key = [x[key] for x in losses_reduced]
+            loss_reduced[key] = sum(losses_reduced_for_key) / len(losses_reduced_for_key)
+        return loss_reduced, skipped_iter, grad_norm, num_zeros_in_grad
+    return {}, skipped_iter, grad_norm, num_zeros_in_grad
 
 
 def train_qqp(train_dataset_provider,
@@ -208,7 +282,8 @@ def train_qqp(train_dataset_provider,
     timers.log(['model-and-optimizer-setup', 'train/valid-data-iterators-setup'])
     print_rank_0('training ...')
 
-    iteration = 0
+    for i in range(10):
+        megatron_train_step(forward_step_func, train_data_iterator, model, optimizer, lr_scheduler)
 
 
 if __name__ == '__main__':
