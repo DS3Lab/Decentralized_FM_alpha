@@ -41,12 +41,12 @@ def train_valid_dataset_provider(train_val_test_num_samples):
     """Build train and validation dataset."""
     args = get_args()
     tokenizer = get_tokenizer()
-    train_dataset = QQPDataset('training', './glue_dataset/data/QQP/train.tsv',
-                            tokenizer, args.seq_length)
-    valid_dataset = QQPDataset('validation', './glue_dataset/data/QQP/dev.tsv',
-                            tokenizer, args.seq_length)
-    test_dataset = QQPDataset('test', './glue_dataset/data/QQP/test.tsv',
-                           tokenizer, args.seq_length)
+    train_dataset = QQPDataset('training', args.train_data_path,
+                               tokenizer, args.seq_length)
+    valid_dataset = QQPDataset('validation', args.valid_data_path,
+                               tokenizer, args.seq_length)
+    test_dataset = QQPDataset('test', args.test_data_path,
+                              tokenizer, args.seq_length)
 
     return train_dataset, valid_dataset, test_dataset
 

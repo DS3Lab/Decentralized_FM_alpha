@@ -9,6 +9,9 @@ NODE_RANK=0
 WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
 
 VOCAB_FILE=glue_dataset/data/bert-large-cased-vocab.txt
+TRAIN_FILE=./glue_dataset/data/QQP/train.tsv
+VALID_FILE=./glue_dataset/data/QQP/dev.tsv
+TEST_FILE=./glue_dataset/data/QQP/test.tsv
 
 DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT"
 
@@ -26,6 +29,9 @@ python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --train-iters 50 \
        --tokenizer-type BertWordPieceLowerCase\
        --vocab-file $VOCAB_FILE \
+       --train-data-path $TRAIN_FILE \
+       --valid-data-path $VALID_FILE \
+       --test-data-path $TEST_FILE \
        --split 949,50,1 \
        --distributed-backend nccl \
        --lr 0.0001 \
