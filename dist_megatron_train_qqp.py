@@ -52,10 +52,8 @@ def train_valid_datasets_provider():
 
 def model_provider(pre_process=True, post_process=True):
     """Build the model."""
-    args = get_args()
     num_classes = 2
-    print_rank_0('building classification model for {} ...'.format(
-        args.task))
+    print_rank_0('building classification model for QQP ...')
     model = Classification(num_classes=num_classes, num_tokentypes=2,
                            pre_process=pre_process, post_process=post_process)
     return model
