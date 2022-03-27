@@ -1,6 +1,6 @@
 import sys
-sys.path.append('../Megatron-LM')
 
+sys.path.append('../Megatron-LM')
 
 # coding=utf-8
 # Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
@@ -35,7 +35,7 @@ from torch.nn.parallel.distributed import DistributedDataParallel as torchDDP
 
 from megatron.model.classification import Classification
 from megatron.initialize import initialize_megatron
-from megatron.utils import average_losses_across_data_parallel_group,unwrap_model
+from megatron.utils import average_losses_across_data_parallel_group, unwrap_model
 from megatron.training import setup_model_and_optimizer, print_datetime
 from megatron.schedules import get_forward_backward_func
 from tasks.glue.qqp import QQPDataset
@@ -70,9 +70,9 @@ def train_dataset_provider():
             data_parallel_rank=mpu.get_data_parallel_rank(),
             data_parallel_size=mpu.get_data_parallel_world_size())
         train_dataloader = torch.utils.data.DataLoader(train_dataset,
-                                       batch_sampler=train_sampler,
-                                       num_workers=args.num_workers,
-                                       pin_memory=True)
+                                                       batch_sampler=train_sampler,
+                                                       num_workers=args.num_workers,
+                                                       pin_memory=True)
 
         # Flags to know if we need to do training/validation/testing.
         do_train = train_dataloader is not None and args.train_iters > 0
@@ -117,7 +117,7 @@ def model_provider(pre_process=True, post_process=True):
 def loss_func(labels, output_tensor):
     loss = F.cross_entropy(output_tensor, labels)
     averaged_losses = average_losses_across_data_parallel_group(
-            [loss])
+        [loss])
     return loss, {'classification loss': averaged_losses[0]}
 
 
@@ -262,8 +262,7 @@ def train_qqp(train_dataset_provider,
     torch.distributed.all_reduce(start_time_tensor,
                                  op=torch.distributed.ReduceOp.MIN)
     _TRAIN_START_TIME = start_time_tensor.item()
-    print_rank_0('time to initialize megatron (seconds): {:.3f}'.format(
-        time.time() - _TRAIN_START_TIME))
+    print_rank_0('time to initialize megatron (seconds): {:.3f}'.format(time.time() - _TRAIN_START_TIME))
     print_datetime('after megatron is initialized')
 
     args = get_args()
@@ -271,25 +270,35 @@ def train_qqp(train_dataset_provider,
 
     # Model, optimizer, and learning rate.
     timers('model-and-optimizer-setup').start()
-
-    model, optimizer, lr_scheduler = setup_model_and_optimizer(model_provider,
-                                                               model_type)
+    model, optimizer, lr_scheduler = setup_model_and_optimizer(model_provider, model_type)
     timers('model-and-optimizer-setup').stop()
-    print_datetime('after model, optimizer, and learning rate '
-                   'scheduler are built')
+    print_datetime('after model, optimizer, and learning rate scheduler are built')
 
     # Data stuff.
-    timers('train/valid-data-iterators-setup').start()
-    print_datetime('after dataloaders are built')
+    timers('train-data-iterators-setup').start()
     train_data_iterator, valid_data_iterator, test_data_iterator = train_dataset_provider()
+    timers('train-data-iterators-setup').stop()
+    print_datetime('after data iterators are built')
+
     # Print setup timing.
     print_rank_0('done with setup ...')
-    timers.log(['model-and-optimizer-setup', 'train/valid-data-iterators-setup'])
+    timers.log(['model-and-optimizer-setup', 'train/train-data-iterators-setup'])
     print_rank_0('training ...')
 
-    for i in range(10):
-        megatron_train_step(forward_step_func, train_data_iterator, model, optimizer, lr_scheduler)
+    print_datetime('First iter start')
+    timers('first-train-iter').start()
+    print_rank_0('training iter 0')
+    megatron_train_step(forward_step_func, train_data_iterator, model, optimizer, lr_scheduler)
+    timers('first-train-iter').stop()
+    print_datetime('First iter stop')
 
+    print_datetime('Benchmark iter start')
+    timers('benchmark-iter').start()
+    for i in range(10):
+        print_rank_0('training iter ' + str(i + 1))
+        megatron_train_step(forward_step_func, train_data_iterator, model, optimizer, lr_scheduler)
+    timers('benchmark-iter').stop()
+    print_datetime('Benchmark iter stop')
 
 
 if __name__ == '__main__':
