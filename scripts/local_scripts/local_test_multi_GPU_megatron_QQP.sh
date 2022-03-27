@@ -20,13 +20,12 @@ python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --tensor-model-parallel-size 2 \
        --pipeline-model-parallel-size 2 \
        --num-layers 24 \
-       --hidden-size 1024 \
+       --hidden-size 2048 \
        --num-attention-heads 16 \
        --micro-batch-size 2 \
        --global-batch-size 16 \
        --seq-length 512 \
-       --max-position-embeddings 512 \
-       --train-iters 50 \
+       --max-position-embeddings 2048 \
        --tokenizer-type BertWordPieceLowerCase\
        --vocab-file $VOCAB_FILE \
        --train-data-path $TRAIN_FILE \
