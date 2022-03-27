@@ -22,7 +22,7 @@ python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --num-layers 24 \
        --hidden-size 2048 \
        --num-attention-heads 16 \
-       --micro-batch-size 2 \
+       --micro-batch-size 1 \
        --global-batch-size 16 \
        --seq-length 2048 \
        --max-position-embeddings 2048 \
