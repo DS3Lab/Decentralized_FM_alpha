@@ -60,6 +60,7 @@ def get_megatron_tensor_parallel_world_size() -> int:
 
 def init_communicators(args):
     default_init(args)
+    assert args.world_size == args.data_group_size * args.pipeline_group_size
     if args.world_size == args.data_group_size * args.pipeline_group_size:
         """
             We do the following hard code alignment of communication groups:
