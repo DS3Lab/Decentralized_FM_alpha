@@ -301,7 +301,7 @@ def train_qqp(train_dataset_provider,
     print_datetime('First iter start')
     timers('first-train-iter').start()
     print_rank_0('training iter 0')
-    megatron_train_step(forward_step_func, train_data_iterator, model, optimizer, lr_scheduler)
+    megatron_train_step(forward_step_func, train_data_iterator, model, optimizer, lr_scheduler, profile=True)
     timers('first-train-iter').stop()
     print_datetime('First iter stop')
     timers.log(['first-train-iter'])
@@ -310,7 +310,7 @@ def train_qqp(train_dataset_provider,
     timers('benchmark-iter-'+str(args.train_iters)).start()
     for i in range(args.train_iters):
         print_rank_0('training iter '+str(i+1))
-        megatron_train_step(forward_step_func, train_data_iterator, model, optimizer, lr_scheduler)
+        megatron_train_step(forward_step_func, train_data_iterator, model, optimizer, lr_scheduler, profile=False)
     timers('benchmark-iter-'+str(args.train_iters)).stop()
     print_datetime('Benchmark iter stop')
     timers.log(['first-train-iter', 'benchmark-iter-'+str(args.train_iters)])
