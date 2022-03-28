@@ -84,24 +84,23 @@ def init_communicators(args):
             _DATA_PARALLEL_RANK = args.rank // args.pipeline_group_size
             _DATA_PARALLEL_COMM = NCCLCommunicator(_DATA_PARALLEL_RANK, args.cuda_id, args.data_group_size,
                                                    "data_group_"+str(args.rank % args.pipeline_group_size))
-
-    elif args.world_size == args.data_group_size * args.tensor_group_size:
-        global _DATA_PARALLEL_COMM
-        global _TENSOR_PARALLEL_COMM
-        global _DATA_PARALLEL_RANK
-        global _TENSOR_PARALLEL_RANK
-        global _DATA_PARALLEL_WORLD_SIZE
-        global _TENSOR_PARALLEL_WORLD_SIZE
+    # elif args.world_size == args.data_group_size * args.tensor_group_size:
+    #    global _DATA_PARALLEL_COMM
+    #    global _TENSOR_PARALLEL_COMM
+    #    global _DATA_PARALLEL_RANK
+    #    global _TENSOR_PARALLEL_RANK
+    #    global _DATA_PARALLEL_WORLD_SIZE
+    #    global _TENSOR_PARALLEL_WORLD_SIZE
         # We use megatron tensor parallel by default.
-        _TENSOR_PARALLEL_WORLD_SIZE = args.tensor_group_size
-        _TENSOR_PARALLEL_RANK = args.rank % args.tensor_group_size
-        _TENSOR_PARALLEL_COMM = NCCLCommunicator(_TENSOR_PARALLEL_RANK, args.cuda_id, args.tensor_group_size,
-                                                 "tensor_group_" + str(args.rank // args.tensor_group_size))
-        if args.data_group_size != 1:
-            _DATA_PARALLEL_WORLD_SIZE = args.data_group_size
-            _DATA_PARALLEL_RANK = args.rank // args.tensor_group_size
-            _DATA_PARALLEL_COMM = NCCLCommunicator(_DATA_PARALLEL_RANK, args.cuda_id, args.data_group_size,
-                                                   "data_group_" + str(args.rank % args.tensor_group_size))
+    #    _TENSOR_PARALLEL_WORLD_SIZE = args.tensor_group_size
+    #    _TENSOR_PARALLEL_RANK = args.rank % args.tensor_group_size
+    #    _TENSOR_PARALLEL_COMM = NCCLCommunicator(_TENSOR_PARALLEL_RANK, args.cuda_id, args.tensor_group_size,
+    #                                             "tensor_group_" + str(args.rank // args.tensor_group_size))
+    #    if args.data_group_size != 1:
+    #        _DATA_PARALLEL_WORLD_SIZE = args.data_group_size
+    #        _DATA_PARALLEL_RANK = args.rank // args.tensor_group_size
+    #        _DATA_PARALLEL_COMM = NCCLCommunicator(_DATA_PARALLEL_RANK, args.cuda_id, args.data_group_size,
+    #                                              "data_group_" + str(args.rank % args.tensor_group_size))
     else:
         print("Not supported yet")
         assert False
