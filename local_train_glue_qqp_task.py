@@ -3,7 +3,7 @@ import argparse
 from glue_dataset.qqp import get_glue_qqp_train_data_loader
 from glue_dataset.tokenizer import build_tokenizer
 from modules.gpt_modules import GPTGlueModel, get_position_id
-
+from deepspeed.profiling.flops_profiler import FlopsProfiler
 
 def main():
     parser = argparse.ArgumentParser(description='Test Glue-qqp dataset')
@@ -48,11 +48,15 @@ def main():
     model = GPTGlueModel(args, tokenizer.vocab_size, num_classes, use_checkpoint=True).to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 
+    prof = FlopsProfiler(model)
+
     # for i in range(len(data_loader)):
     #    data = data_loader[i]
     # train_data_loader_iter = iter(data_loader)
     # print(next(train_data_loader_iter))
     for i, data in enumerate(data_loader):
+        if i == 1:
+            prof.start_profile()
 
         input_ids = data['text'].to(device)
         # position_ids = get_position_id(args.seq_length, args.batch_size, device)
@@ -64,10 +68,23 @@ def main():
         print(output.shape)
         # loss = loss_func(output, labels)
         loss = torch.nn.functional.cross_entropy(output, labels)
+
+        if i == 1:
+            prof.stop_profile()
+            flops = prof.get_total_flops()
+            macs = prof.get_total_macs()
+            params = prof.get_total_params()
+            prof.print_model_profile()
+            prof.end_profile()
+            print("Flops:", flops)
+            print("Macs:", macs)
+            print("Params:", params)
+
         loss.backward()
         optimizer.step()
+
         print("Iter ", i, "===== Loss: ", loss.item(), "======")
-        if i > 20:
+        if i > 10:
             break
         # print(data)
 

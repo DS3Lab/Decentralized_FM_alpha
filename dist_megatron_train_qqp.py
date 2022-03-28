@@ -22,6 +22,7 @@ from functools import partial
 import torch
 import time
 import torch.nn.functional as F
+from deepspeed.profiling.flops_profiler import FlopsProfiler
 from megatron import get_args
 from megatron import print_rank_0
 from megatron import get_tokenizer
@@ -29,10 +30,8 @@ from megatron import get_timers
 from megatron import mpu
 from megatron import get_num_microbatches
 from megatron.model import ModelType, Float16Module
-
 from megatron.model import DistributedDataParallel as LocalDDP
 from torch.nn.parallel.distributed import DistributedDataParallel as torchDDP
-
 from megatron.model.classification import Classification
 from megatron.initialize import initialize_megatron
 from megatron.utils import average_losses_across_data_parallel_group,unwrap_model
@@ -151,10 +150,13 @@ def forward_step(data_iterator, model):
 
 
 def megatron_train_step(forward_step_func, data_iterator,
-                        model, optimizer, lr_scheduler):
+                        model, optimizer, lr_scheduler, profile=False):
     """Single training step."""
     args = get_args()
     timers = get_timers()
+    if profile:
+        prof = FlopsProfiler(model)
+        prof.start_profile()
 
     # Set grad to zero.
     if args.DDP_impl == 'local' and args.use_contiguous_buffers_in_local_ddp:
@@ -165,8 +167,18 @@ def megatron_train_step(forward_step_func, data_iterator,
     forward_backward_func = get_forward_backward_func()
     losses_reduced = forward_backward_func(
         forward_step_func, data_iterator, model,
-        optimizer, timers, forward_only=False)
-
+        optimizer, timers, forward_only=profile)
+    if profile:
+        prof.stop_profile()
+        if torch.distributed.get_rank() == 0:
+            flops = prof.get_total_flops()
+            macs = prof.get_total_macs()
+            params = prof.get_total_params()
+            prof.print_model_profile()
+            print("Flops:", flops)
+            print("Macs:", macs)
+            print("Params:", params)
+        prof.end_profile()
     # Empty unused memory
     if args.empty_unused_memory_level >= 1:
         torch.cuda.empty_cache()
