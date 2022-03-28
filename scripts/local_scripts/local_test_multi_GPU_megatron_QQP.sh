@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GPUS_PER_NODE=4
+GPUS_PER_NODE=8
 # Change for multinode config
 MASTER_ADDR=localhost
 MASTER_PORT=6000
@@ -17,13 +17,13 @@ DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $
 
 python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        ./dist_megatron_train_qqp.py \
-       --tensor-model-parallel-size 2 \
-       --pipeline-model-parallel-size 2 \
+       --tensor-model-parallel-size 8 \
+       --pipeline-model-parallel-size 1 \
        --num-layers 24 \
        --hidden-size 2048 \
        --num-attention-heads 16 \
        --micro-batch-size 1 \
-       --global-batch-size 2 \
+       --global-batch-size 64 \
        --seq-length 2048 \
        --max-position-embeddings 2048 \
        --tokenizer-type BertWordPieceLowerCase\
