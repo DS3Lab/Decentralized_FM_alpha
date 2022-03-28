@@ -81,6 +81,19 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 | 16               | Fail        | Fail      | Fail    | Fail    | 
 
 
+- To run a batch size of 252:
+- DP degree 6
+- FP16
+
+| Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
+|------------------|-------------|-----------|----|---------|
+| 1                |  s     | s         |  s |  s |
+| 2                |  s     | s         |  s |  s |
+| 4                |  s     |  s        |  s |  s | 
+| 8                |  s     | Fail      |  s | Fail    | 
+| 16               | Fail        | Fail      | Fail | Fail    | 
+
+
 ## Pipeline + Data Parallel
 
 - Gpipe + centralized PS Data parallel:
