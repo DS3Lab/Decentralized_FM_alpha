@@ -27,7 +27,7 @@ python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --hidden-size 2048 \
        --num-attention-heads 16 \
        --micro-batch-size $MICRO_BATCH_SIZE \
-       --global-batch-size 32 \
+       --global-batch-size 64 \
        --seq-length 2048 \
        --max-position-embeddings 2048 \
        --tokenizer-type BertWordPieceLowerCase\
@@ -50,4 +50,5 @@ python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --eval-iters 1 \
        --train-iters 10 \
        --no-bias-dropout-fusion \
-       --checkpoint-activations
+       --checkpoint-activations \
+       --fp16
