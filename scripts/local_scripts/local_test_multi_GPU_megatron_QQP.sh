@@ -6,10 +6,11 @@ TENSOR_PARALLEL_SIZE=$3
 
 GPUS_PER_NODE=8
 # Change for multinode config
-MASTER_ADDR=localhost
+# MASTER_ADDR=localhost
+MASTER_ADDR=172.31.12.24
 MASTER_PORT=6000
-NNODES=1
-NODE_RANK=0
+NNODES=6
+NODE_RANK=$4
 WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
 
 VOCAB_FILE=glue_dataset/data/bert-large-cased-vocab.txt
@@ -27,7 +28,7 @@ python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --hidden-size 2048 \
        --num-attention-heads 16 \
        --micro-batch-size $MICRO_BATCH_SIZE \
-       --global-batch-size 64 \
+       --global-batch-size 252 \
        --seq-length 2048 \
        --max-position-embeddings 2048 \
        --tokenizer-type BertWordPieceLowerCase\

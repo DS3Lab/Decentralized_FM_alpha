@@ -32,7 +32,7 @@ For pipeline only, we have:
 | delay 1ms  bandwidth 5Gbps          | 15.49 s             | 
 | delay 5ms  bandwidth 2Gbps          | 16.80 s             | 
 | delay 10ms  bandwidth 1Gbps         | 22.90 s             |
-| delay 50ms  bandwidth 1Gbps         | 29.08 s              | 
+| delay 50ms  bandwidth 1Gbps         | 29.08 s             | 
 
 
 ### PyTorch Pipe baseline
