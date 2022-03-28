@@ -49,9 +49,9 @@ def main():
 
     use_dp = (args.world_size != args.pipeline_group_size)
     if use_dp:
-        print("Running ", args.mode, " with data parallel.")
+        print("Running ", args.pp_mode, " with data parallel.")
     else:
-        print("Running ", args.mode, " without data parallel.")
+        print("Running ", args.pp_mode, " without data parallel.")
 
     pipe = get_pp_module(args, vocab_size, num_classes, device, use_dp)
 
