@@ -5,7 +5,7 @@ MASTER_PORT=6000
 MICRO_BATCH_SIZE=$1
 
 FIXED_MODEL_CONFIG="--embedding-dim 2048 --num-heads 16 --num-layers 2 --batch-size 64"
-DIST_CONFIG="--dist-url tcp://$MASTER_ADDR:$MASTER_PORT --mode gpipe --world-size $GPUS_PER_NODE --pipeline-group-size $GPUS_PER_NODE --data-group-size 1"
+DIST_CONFIG="--dist-url tcp://$MASTER_ADDR:$MASTER_PORT --pp-mode gpipe --world-size $GPUS_PER_NODE --pipeline-group-size $GPUS_PER_NODE --data-group-size 1"
 
 for rank in `seq 0 7`
 do
