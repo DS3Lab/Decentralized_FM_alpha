@@ -50,18 +50,21 @@ For pipeline only, we have:
 
 When micro-batch size is larger than 4, it would fail due to OOM. 
 
-### Megtraon Pipe/Tensor Baseline
+### Megatron Pipe/Tensor Baseline
 
 - Runs on a P3.16xlarge machine with 8 V100 each (16GB dRAM)
+- Enabled checkpointing (activation recompute)
 - To run a batch size of 64:
   
-       sh ./scripts/local_scripts/local_test_multi_GPU_megatron_QQP.sh 
+       sh ./scripts/local_scripts/local_test_multi_GPU_megatron_QQP.sh $MICRO_BATCH_SIZE $PIPELINE_PARALLEL_SIZE $TENSOR_PARALLEL_SIZE 
 
-| Micro batch size | Tensor Parallel | Pipe Parallel |
-|------------------|-----------------|---------------|
-| 1                | 25.78 s         |               |
-| 2                | 18.77 s         |               | 
-| 4                | Fail            |               |
+| Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
+|------------------|-------------|-----------|---------|---------|
+| 1                | 25.00 s     | 19.81 s   |         |         |
+| 2                | 24.18 s     | 21.52 s   |         |         |
+| 4                | 23.31 s     |           |         |         | 
+| 8                | 20.90 s     |           |         |         | 
+| 16               | Fail        |           |         |         | 
 
 
 
