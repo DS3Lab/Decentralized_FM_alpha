@@ -137,7 +137,7 @@ def forward_step(data_iterator, model):
         data = None
     data_b = mpu.broadcast_data(keys, data, datatype)
     tokens = data_b['text'].long()
-    # print_rank_0(tokens.shape)
+    print_rank_0(tokens.shape)
     types = data_b['types'].long()
     lm_labels = data_b['label'].long()
     padding_mask = data_b['padding_mask'].long()
