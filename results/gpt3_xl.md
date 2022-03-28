@@ -66,9 +66,11 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 | 8                | 20.90 s     | Fail      | 21.67 s | Fail    | 
 | 16               | Fail        | Fail      | Fail    | Fail    | 
 
-- To run a batch size of 64:
+
   
        sh ./scripts/local_scripts/local_test_multi_GPU_megatron_QQP.sh $MICRO_BATCH_SIZE $PIPELINE_PARALLEL_SIZE $TENSOR_PARALLEL_SIZE 
+
+- To run a batch size of 64:
 
 | Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
 |------------------|-------------|-----------|---------|---------|
