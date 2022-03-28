@@ -35,6 +35,7 @@ python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --train-data-path $TRAIN_FILE \
        --valid-data-path $VALID_FILE \
        --test-data-path $TEST_FILE \
+       --optimizer sgd \
        --split 949,50,1 \
        --distributed-backend nccl \
        --lr 0.0001 \
