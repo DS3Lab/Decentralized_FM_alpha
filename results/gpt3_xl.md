@@ -60,12 +60,11 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 
 | Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
 |------------------|-------------|-----------|---------|---------|
-| 1                | 25.00 s     | 19.81 s   |         |         |
-| 2                | 24.18 s     | 21.52 s   |         |         |
-| 4                | 23.31 s     |           |         |         | 
-| 8                | 20.90 s     |           |         |         | 
-| 16               | Fail        |           |         |         | 
-
+| 1                | 25.00 s     | 19.71 s   | 20.64 s | 20.81 s |
+| 2                | 24.18 s     | 21.52 s   | 26.72 s | 21.46 s |
+| 4                | 23.31 s     | 25.14 s   | 20.91 s | 22.79 s | 
+| 8                | 20.90 s     | Fail      | 21.67 s | Fail    | 
+| 16               | Fail        | Fail      | Fail    | Fail    | 
 
 
 ## Pipeline + Data Parallel
