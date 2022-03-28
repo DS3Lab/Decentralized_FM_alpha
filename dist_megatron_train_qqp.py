@@ -301,7 +301,8 @@ def train_qqp(train_dataset_provider,
     print_datetime('First iter start')
     timers('first-train-iter').start()
     print_rank_0('training iter 0')
-    megatron_train_step(forward_step_func, train_data_iterator, model, optimizer, lr_scheduler, profile=True)
+    # Profiling does not work yet.
+    megatron_train_step(forward_step_func, train_data_iterator, model, optimizer, lr_scheduler, profile=False)
     timers('first-train-iter').stop()
     print_datetime('First iter stop')
     timers.log(['first-train-iter'])
