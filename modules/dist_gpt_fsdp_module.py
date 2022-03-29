@@ -15,14 +15,14 @@ class GPTTransformerFsdpLayer(torch.nn.Module):
         if use_checkpoint:
             self.attn = checkpoint_wrapper(self.attn)
         if explicit_fsdp:
-            self.attn = FSDP(self.attn, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=True,
+            self.attn = FSDP(self.attn, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
                              flatten_parameters=False)
         # Implementation of Feedforward model
         self.mlp = TwoLayerMLP(model_dim, feedforward_dim)
         if use_checkpoint:
             self.mlp = checkpoint_wrapper(self.mlp)
         if explicit_fsdp:
-            self.attn = FSDP(self.attn, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=True,
+            self.attn = FSDP(self.attn, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
                              flatten_parameters=False)
         self.norm1 = torch.nn.LayerNorm(model_dim, eps=layer_norm_eps)
         self.norm2 = torch.nn.LayerNorm(model_dim, eps=layer_norm_eps)
@@ -76,7 +76,7 @@ class GPTFsdpStageBase(torch.nn.Module):
     def _create_first_layer(self):
         emb = GPTEmbedding(self._vocab_size, self._embedding_dim, self._seq_length)
         if self._explicit_fsdp:
-            return FSDP(emb, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=True,
+            return FSDP(emb, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
                         flatten_parameters=False)
         else:
             return emb
@@ -84,7 +84,7 @@ class GPTFsdpStageBase(torch.nn.Module):
     def _create_last_layer(self):
         classifier = GlueClassification(self._embedding_dim, self._num_classes)
         if self._explicit_fsdp:
-            return FSDP(classifier, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=True,
+            return FSDP(classifier, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
                         flatten_parameters=False)
         else:
             return classifier
