@@ -82,28 +82,25 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 | 1                | 25.00 s     | 19.71 s    | 20.64 s    | 20.81 s    |
 | 2                | 24.18 s     | 21.52 s    | 26.72 s    | 21.46 s    |
 | 4                | 23.31 s     | 25.14 s    | 20.91 s    | 22.79 s    | 
-| 8                | 20.90 s     | Fail(OOM)  | 21.67 s    | Fail(OOM)  | 
-| 16               | Fail(OOM)   | Fail(OOM)  | Fail(OOM)  | Fail(OOM)  |
+| 8                | 20.90 s     | Fail(OOM)  | 21.67 s    | Fail(OOM)  |
 
 - fp16 & activation recompute
 
-| Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
-|------------------|-------------|-----------|---------|---------|
-| 1                | s           | s         | s       | s       |
-| 2                | s           | s         | s       | s       |
-| 4                | s           | s         | s       | s       | 
-| 8                | s           | s         | s       | s       | 
-| 16               | s           | s         | s       | s       | 
+| Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2   | T-2 P-4 |
+|------------------|-------------|-----------|-----------|---------|
+| 1                | 11.26 s     | 4.23 s    | 6.00 s    | 5.30 s  |
+| 2                | 17.43 s     | 4.82 s    | 22.29 s?? | 7.60 s  |
+| 4                | 23.15 s ??  | 5.35 s    | 7.60 s    | 5.61 s  | 
+| 8                | 7.13 s      | 6.84 s    | 5.34 s    | 6.17 s  |
 
 - fp16 & No activation recompute
 
-| Micro batch size | Tensor(T)-8 | Pipe(P)-8  | T-4 P-2       | T-2 P-4   |
-|------------------|------------|------------|---------------|-----------|
-| 1                | 8.18 s     | 3.1 s      | 4.36 s        | s         |
-| 2                | 36.37 s ?? | Fail(OOM)  | 10.56 s       | s         |
-| 4                | 10.06 s    | Fail(OOM)  | Fail(OOM)     | Fail(OOM) | 
-| 8                | Fail(OOM)  | Fail(OOM)  | Fail(OOM)     | Fail(OOM) | 
-
+| Micro batch size | Tensor(T)-8 | Pipe(P)-8   | T-4 P-2   | T-2 P-4   |
+|------------------|------------|-------------|-----------|-----------|
+| 1                | 8.18 s     | 3.10  s     | 4.36 s    | 3.83 s    |
+| 2                | 36.37 s ?? | Fail(OOM)   | 10.56 s   | 4.46 s    |
+| 4                | 10.06 s    | Fail(OOM)   | Fail(OOM) | Fail(OOM) | 
+| 8                | Fail(OOM)  | Fail(OOM)   | Fail(OOM) | Fail(OOM) | 
 
 - To run a batch size of 252:
 - 6 p3.16xlarge instances (25 Gbps inter-node connection)
@@ -123,7 +120,7 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 |------------------|-------------|-----------|---------|---------|
 | 1                | 9.19 s      | 7.58 s    | 5.25 s  | 10.86 s |
 | 2                | 41.06 s ??  | 7.47 s    | 12.45 s | 10.33 s |
-| 3                | 20.68 s     | 6.07 s    | 7.33 s  | 8.68 s  |
+| 3                | 20.68 s ??  | 6.07 s    | 7.33 s  | 8.68 s  |
 
 - FP16 & NO activation recompute:
 
