@@ -50,6 +50,8 @@ For pipeline only, we have:
 
 When micro-batch size is larger than 4, it would fail due to OOM. 
 
+
+
 ### Megatron Pipe/Tensor Baseline
 
 - Runs on a P3.16xlarge machine with 8 V100 each (16GB dRAM)
@@ -100,17 +102,17 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 |------------------|-------------|-----------|---------|---------|
 | 1                | 9.19 s      | 7.58 s    | 5.25 s  | 10.86 s |
 | 2                | 41.06 s ??  | 7.47 s    | 12.45 s | 10.33 s |
-| 3                | 20.68 s     | 6.07 s    | 7.33 s  | 8.68 s  | 
-
-(Not sure what happens for config ?? Run this twice with the same result.)
+| 3                | 20.68 s     | 6.07 s    | 7.33 s  | 8.68 s  |
 
 - FP16 & NO activation recompute:
 
-| Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
-|------------------|-------------|-----------|---------|---------|
-| 1                | s           | s         |  s      | s       |
-| 2                | s           | s         | s       | s       |
-| 3                | s           | s         | s       | s       | 
+| Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4    |
+|------------------|-------------|-----------|---------|------------|
+| 1                | 7.22 s      | 7.03 s    | 4.21 s  | 10.09 s    |
+| 2                | 18.75 s ??  | Fail(OOM) | 6.78 s  | 9.06 s     |
+| 3                | 10.18 s     | Fail(OOM) | 4.51 s  | Fail(OOM)  |
+
+(Not sure what happens for config ?? Run this twice with the same result.)
 
 ## Pipeline + Data Parallel
 

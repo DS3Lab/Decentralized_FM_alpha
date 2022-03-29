@@ -93,6 +93,7 @@ def main():
 
         # output = pipe_model(input_ids, position_ids)
         output = pipe_model(input_ids).local_value()
+        print(output.shape, labels.shape)
         loss = torch.nn.functional.cross_entropy(output, labels)
         forward_time = time.time()
         print("{} Forward pass takes {:3.2f}s, loss: ".format(i, forward_time-cur_start_time), loss.item())
