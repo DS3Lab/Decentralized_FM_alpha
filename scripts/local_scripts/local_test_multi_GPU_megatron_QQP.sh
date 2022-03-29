@@ -51,5 +51,6 @@ python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --eval-iters 1 \
        --train-iters 10 \
        --no-bias-dropout-fusion \
+       --DDP-impl local \
        --checkpoint-activations \
-       --DDP-impl local
+       --fp16

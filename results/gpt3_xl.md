@@ -71,6 +71,7 @@ When micro-batch size is larger than 4, it would fail due to OOM.
        sh ./scripts/local_scripts/local_test_multi_GPU_megatron_QQP.sh $MICRO_BATCH_SIZE $PIPELINE_PARALLEL_SIZE $TENSOR_PARALLEL_SIZE 
 
 - To run a batch size of 64:
+- 1 p3.16xlarge instance
 
 | Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
 |------------------|-------------|-----------|---------|---------|
@@ -82,24 +83,32 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 
 
 - To run a batch size of 252:
-- 6 p3.24xlarge instances (100 Gbps inter-node connection)
+- 6 p3.16xlarge instances (25 Gbps inter-node connection)
 - DP degree 6
-- FP32:
+
+- FP32 & activation recompute:
 
 | Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
 |------------------|-------------|-----------|---------|---------|
-| 1                | s           | s         |  s      |  s      |
-| 2                | s           | s         | s       | s       |
-| 4                | s           | s         | s       | s       |
+| 1                | 19.71 s     | 20.04 s   | 15.91 s | s       |
+| 2                | 20.46 s     | 18.90 s   | 17.79 s | 21.34 s |
+| 3                | 23.48 s     | 19.44 s   | 16.18 s | 20.59 s |
 
-- FP16:
+- FP16 & activation recompute:
 
 | Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
 |------------------|-------------|-----------|---------|---------|
 | 1                | s           | s         |  s      | s       |
 | 2                | s           | s         | s       | s       |
-| 4                | s           | s         | s       | s       | 
+| 3                | s           | s         | s       | s       | 
 
+- FP16 & NO activation recompute:
+
+| Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
+|------------------|-------------|-----------|---------|---------|
+| 1                | s           | s         |  s      | s       |
+| 2                | s           | s         | s       | s       |
+| 3                | s           | s         | s       | s       | 
 
 ## Pipeline + Data Parallel
 
