@@ -59,12 +59,12 @@ When micro-batch size is larger than 4, it would fail due to OOM.
   
       python dist_fairscale_pipe_fsdp.py --world-size 6 --dist-backend nccl --dist-url tcp://172.31.14.156:6000 --cuda-num 8 --num-layers 24 --seq-length 2048 --embedding-dim 2048 --batch-size 42 --micro-batch-size 1 --rank 0
      
-| Micro batch size | execution time |
-|------------------|----------------|
-| 1                | Fail           |
-| 2                | 23.49 s        |
-| 4                | 15.22 s        |
-| 8                | Fail           |
+| Micro batch size | execution time   |
+|------------------|------------------|
+| 1                | Fail(Dead Lock?) |
+| 2                | 23.49 s          |
+| 4                | 15.22 s          |
+| 8                | Fail(OOM)        |
 
 
 ### Megatron Tensor/Pipeline/Data Baseline
