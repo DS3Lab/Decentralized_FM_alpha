@@ -52,5 +52,5 @@ python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --train-iters 10 \
        --no-bias-dropout-fusion \
        --DDP-impl local \
-       --fp16
-#      --checkpoint-activations \
+       --fp16 \
+       --checkpoint-activations

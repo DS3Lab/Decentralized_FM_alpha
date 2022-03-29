@@ -46,7 +46,7 @@ For pipeline only, we have:
 |------------------|----------------|
 | 1                | 17.78 s        |
 | 2                | 18.77 s        |
-| 4                | Fail           |
+| 4                | Fail(OOM)      |
 
 When micro-batch size is larger than 4, it would fail due to OOM. 
 
@@ -75,17 +75,17 @@ When micro-batch size is larger than 4, it would fail due to OOM.
   
        sh ./scripts/local_scripts/local_test_multi_GPU_megatron_QQP.sh $MICRO_BATCH_SIZE $PIPELINE_PARALLEL_SIZE $TENSOR_PARALLEL_SIZE 0
 
-| Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
-|------------------|-------------|-----------|---------|---------|
-| 1                | 25.00 s     | 19.71 s   | 20.64 s | 20.81 s |
-| 2                | 24.18 s     | 21.52 s   | 26.72 s | 21.46 s |
-| 4                | 23.31 s     | 25.14 s   | 20.91 s | 22.79 s | 
-| 8                | 20.90 s     | Fail      | 21.67 s | Fail    | 
-| 16               | Fail        | Fail      | Fail    | Fail    |
+- fp32 & activation recompute
 
-- To run a batch size of 64:
-- fp16 & enabled checkpointing (activation recompute)
-- (add -fp16 in the script)
+| Micro batch size | Tensor(T)-8 | Pipe(P)-8  | T-4 P-2    | T-2 P-4    |
+|------------------|-------------|------------|------------|------------|
+| 1                | 25.00 s     | 19.71 s    | 20.64 s    | 20.81 s    |
+| 2                | 24.18 s     | 21.52 s    | 26.72 s    | 21.46 s    |
+| 4                | 23.31 s     | 25.14 s    | 20.91 s    | 22.79 s    | 
+| 8                | 20.90 s     | Fail(OOM)  | 21.67 s    | Fail(OOM)  | 
+| 16               | Fail(OOM)   | Fail(OOM)  | Fail(OOM)  | Fail(OOM)  |
+
+- fp16 & activation recompute
 
 | Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
 |------------------|-------------|-----------|---------|---------|
@@ -94,6 +94,15 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 | 4                | s           | s         | s       | s       | 
 | 8                | s           | s         | s       | s       | 
 | 16               | s           | s         | s       | s       | 
+
+- fp16 & No activation recompute
+
+| Micro batch size | Tensor(T)-8 | Pipe(P)-8  | T-4 P-2       | T-2 P-4   |
+|------------------|------------|------------|---------------|-----------|
+| 1                | 8.18 s     | 3.1 s      | 4.36 s        | s         |
+| 2                | 36.37 s ?? | Fail(OOM)  | 10.56 s       | s         |
+| 4                | 10.06 s    | Fail(OOM)  | Fail(OOM)     | Fail(OOM) | 
+| 8                | Fail(OOM)  | Fail(OOM)  | Fail(OOM)     | Fail(OOM) | 
 
 
 - To run a batch size of 252:
