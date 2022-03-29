@@ -90,7 +90,7 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 
 | Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
 |------------------|-------------|-----------|---------|---------|
-| 1                | 19.71 s     | 20.04 s   | 15.91 s | s       |
+| 1                | 19.71 s     | 20.04 s   | 15.91 s | 25.59 s |
 | 2                | 20.46 s     | 18.90 s   | 17.79 s | 21.34 s |
 | 3                | 23.48 s     | 19.44 s   | 16.18 s | 20.59 s |
 
@@ -98,9 +98,11 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 
 | Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
 |------------------|-------------|-----------|---------|---------|
-| 1                | s           | s         |  s      | s       |
-| 2                | s           | s         | s       | s       |
-| 3                | s           | s         | s       | s       | 
+| 1                | 9.19 s      | 7.58 s    | 5.25 s  | 10.86 s |
+| 2                | 41.06 s ??  | 7.47 s    | 12.45 s | 10.33 s |
+| 3                | 20.68 s     | 6.07 s    | 7.33 s  | 8.68 s  | 
+
+(Not sure what happens for config ?? Run this twice with the same result.)
 
 - FP16 & NO activation recompute:
 
