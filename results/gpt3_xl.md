@@ -54,16 +54,17 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 ### PyTorch Pipe + Fairscale FSDP
 
 - Runs on 6 P3.16xlarge machine with 8 V100 each (16GB dRAM)
-- To run a batch size of 252 (notice --world-size is 6 instead of 48):
+- To run a batch size of 96 (16 * 6)
+- (notice --world-size is 6 instead of 48):
   
       python dist_fairscale_pipe_fsdp.py --world-size 6 --dist-backend nccl --dist-url tcp://172.31.14.156:6000 --cuda-num 8 --num-layers 24 --seq-length 2048 --embedding-dim 2048 --batch-size 42 --micro-batch-size 1 --rank 0
      
 | Micro batch size | execution time |
-|------------------|-----------|
-| 1                |  s        |
-| 2                |  s        |
-| 4                | Fail      |
-
+|------------------|----------------|
+| 1                | Fail           |
+| 2                | 23.49 s        |
+| 4                | 15.22 s        |
+| 8                | Fail           |
 
 
 ### Megatron Tensor/Pipeline/Data Baseline
