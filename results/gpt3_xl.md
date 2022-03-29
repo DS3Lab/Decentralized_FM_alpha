@@ -35,7 +35,7 @@ For pipeline only, we have:
 | delay 50ms  bandwidth 1Gbps         | 29.08 s             | 
 
 
-### PyTorch Pipe baseline
+### PyTorch Pipe Baseline
 
 - Runs on a P3.16xlarge machine with 8 V100 each (16GB dRAM)
 - To run a batch size of 64:
@@ -51,14 +51,28 @@ For pipeline only, we have:
 When micro-batch size is larger than 4, it would fail due to OOM. 
 
 
+### PyTorch Pipe + Fairscale FSDP
 
-### Megatron Pipe/Tensor Baseline
+- Runs on 6 P3.16xlarge machine with 8 V100 each (16GB dRAM)
+- To run a batch size of 252 (notice --world-size is 6 instead of 48):
+  
+      python dist_fairscale_pipe_fsdp.py --world-size 6 --dist-backend nccl --dist-url tcp://172.31.14.156:6000 --cuda-num 8 --num-layers 24 --seq-length 2048 --embedding-dim 2048 --batch-size 42 --micro-batch-size 1 --rank 0
+     
+| Micro batch size | execution time |
+|------------------|-----------|
+| 1                |  s        |
+| 2                |  s        |
+| 4                | Fail      |
+
+
+
+### Megatron Tensor/Pipeline/Data Baseline
 
 - Runs on a P3.16xlarge machine with 8 V100 each (16GB dRAM)
-- Enabled checkpointing (activation recompute)
+- fp32 & enabled checkpointing (activation recompute)
 - To run a batch size of 64:
   
-       sh ./scripts/local_scripts/local_test_multi_GPU_megatron_QQP.sh $MICRO_BATCH_SIZE $PIPELINE_PARALLEL_SIZE $TENSOR_PARALLEL_SIZE 
+       sh ./scripts/local_scripts/local_test_multi_GPU_megatron_QQP.sh $MICRO_BATCH_SIZE $PIPELINE_PARALLEL_SIZE $TENSOR_PARALLEL_SIZE 0
 
 | Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
 |------------------|-------------|-----------|---------|---------|
@@ -66,22 +80,19 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 | 2                | 24.18 s     | 21.52 s   | 26.72 s | 21.46 s |
 | 4                | 23.31 s     | 25.14 s   | 20.91 s | 22.79 s | 
 | 8                | 20.90 s     | Fail      | 21.67 s | Fail    | 
-| 16               | Fail        | Fail      | Fail    | Fail    | 
-
-
-  
-       sh ./scripts/local_scripts/local_test_multi_GPU_megatron_QQP.sh $MICRO_BATCH_SIZE $PIPELINE_PARALLEL_SIZE $TENSOR_PARALLEL_SIZE 
+| 16               | Fail        | Fail      | Fail    | Fail    |
 
 - To run a batch size of 64:
-- 1 p3.16xlarge instance
+- fp16 & enabled checkpointing (activation recompute)
+- (add -fp16 in the script)
 
 | Micro batch size | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
 |------------------|-------------|-----------|---------|---------|
-| 1                | 25.00 s     | 19.71 s   | 20.64 s | 20.81 s |
-| 2                | 24.18 s     | 21.52 s   | 26.72 s | 21.46 s |
-| 4                | 23.31 s     | 25.14 s   | 20.91 s | 22.79 s | 
-| 8                | 20.90 s     | Fail      | 21.67 s | Fail    | 
-| 16               | Fail        | Fail      | Fail    | Fail    | 
+| 1                | s           | s         | s       | s       |
+| 2                | s           | s         | s       | s       |
+| 4                | s           | s         | s       | s       | 
+| 8                | s           | s         | s       | s       | 
+| 16               | s           | s         | s       | s       | 
 
 
 - To run a batch size of 252:
@@ -114,7 +125,8 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 
 (Not sure what happens for config ?? Run this twice with the same result.)
 
-## Pipeline + Data Parallel
+
+## Ours Pipeline + Data Parallel
 
 - Gpipe + centralized PS Data parallel:
 - Each GPipe pipeline runs a batch of size 64;
