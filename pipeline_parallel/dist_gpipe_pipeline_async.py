@@ -5,6 +5,7 @@ from torch import optim
 from comm.comm_utils import *
 from modules.dist_gpt_pp_module import *
 from data_parallel.dist_dp_utils import get_dp_module
+from optimizer.optimizer import get_fp16_optimizer
 
 
 class GpipeAsync:
@@ -19,6 +20,12 @@ class GpipeAsync:
     """
 
     def __init__(self, args, vocab_size, num_classes, device, use_dp=False):
+        if args.fp16:
+            self.use_fp16 = True
+        else:
+            self.use_fp16 = False
+        self.use_dp = use_dp
+        self.dtype = torch.float16 if self.use_fp16 else torch.float32
         self.global_rank = args.rank
         self.pipeline_group_size = args.pipeline_group_size
         self.pp_rank = get_pipeline_parallel_rank()  # Rank is the pipeline rank by default.
@@ -79,13 +86,13 @@ class GpipeAsync:
             self.input_micro_batches = None
         else:
             self.input_micro_batches = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
-                                                    requires_grad=True, device=self.device)
+                                                    requires_grad=True, device=self.device, dtype=self.dtype)
                                         for _ in range(self.micro_batch_num)]
         if self.pp_rank == self.pipeline_group_size - 1:
             self.output_micro_batches_grad = None
         else:
             self.output_micro_batches_grad = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
-                                                          requires_grad=False, device=self.device)
+                                                          requires_grad=False, device=self.device, dtype=self.dtype)
                                               for _ in range(self.micro_batch_num)]
 
         if self.pp_rank == 0:
@@ -95,16 +102,23 @@ class GpipeAsync:
         else:
             self.model = GPTStageMiddle(args, vocab_size, num_classes, device)
 
-        self.use_dp = use_dp
-        if use_dp:
-            self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
-            self.dp_optim = get_dp_module(args, device, self.model, self.optimizer)
+        if self.use_fp16:
+            self.model.half()
+            tmp_optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
+            self.optimizer = get_fp16_optimizer(args, tmp_optimizer)
         else:
             self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
 
+        # Notice that if we use fp16, gradients are aggregated in fp16, this may not be the default in Megatron.
+        if use_dp:
+            self.dp_optim = get_dp_module(args, device, self.model, self.optimizer)
+
     def _compute_micro_batch_size(self):
         micro_batch_float_num = self.micro_batch_size * self.seq_length * self.embedding_dim
-        print("Current micro-batch send/recv size: {} MB".format(micro_batch_float_num*4//1024//1024))
+        if self.use_fp16:
+            print("Current micro-batch send/recv size: {} MB (fp16)".format(micro_batch_float_num * 2 // 1024 // 1024))
+        else:
+            print("Current micro-batch send/recv size: {} MB (fp32)".format(micro_batch_float_num*4//1024//1024))
 
     def zero_input_grad(self):
         if self.input_micro_batches:

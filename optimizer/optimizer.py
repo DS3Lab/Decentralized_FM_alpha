@@ -139,3 +139,20 @@ class Fp16Optimizer:
         self._copy_optimizer_params_to_model_params()
         # Successful update.
         return True
+
+
+def get_fp16_optimizer(args, optimizer):
+    assert args.fp16 is not None
+    if args.loss_scale:
+        grad_scaler = ConstantGradScaler(args.loss_scale)
+    else:
+        grad_scaler = DynamicGradScaler(
+            initial_scale=args.initial_loss_scale,
+            min_scale=args.min_loss_scale,
+            growth_factor=2.0,
+            backoff_factor=0.5,
+            growth_interval=args.loss_scale_window,
+            hysteresis=args.hysteresis)
+    return Fp16Optimizer(optimizer, grad_scaler)
+
+

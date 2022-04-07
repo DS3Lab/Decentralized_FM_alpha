@@ -4,6 +4,8 @@ from glue_dataset.qqp import get_glue_qqp_train_data_loader
 from glue_dataset.tokenizer import build_tokenizer
 from modules.gpt_modules import GPTGlueModel, get_position_id
 from deepspeed.profiling.flops_profiler import FlopsProfiler
+from optimizer.optimizer import get_fp16_optimizer
+
 
 def main():
     parser = argparse.ArgumentParser(description='Test Glue-qqp dataset')
@@ -35,6 +37,10 @@ def main():
                         help='-')
     parser.add_argument('--lr', type=float, default=0.01, metavar='N',
                         help='-')
+    parser.add_argument('--loss-scale', type=float, default=64,
+                        help='Static loss scaling, positive power of 2 values can improve fp16 convergence. ')
+    parser.add_argument('--fp16', action='store_true',
+                        help='Run model in fp16 mode.')
     args = parser.parse_args()
     if args.use_cuda:
         assert (torch.cuda.is_available())
@@ -46,7 +52,13 @@ def main():
     data_loader = get_glue_qqp_train_data_loader(args, tokenizer)
     num_classes = 2
     model = GPTGlueModel(args, tokenizer.vocab_size, num_classes, use_checkpoint=True).to(device)
+    if args.fp16:
+        print("Training in fp16.")
+        model.half()
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+
+    if args.fp16:
+        optimizer = get_fp16_optimizer(args, optimizer)
 
     prof = FlopsProfiler(model)
 

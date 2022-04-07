@@ -61,6 +61,21 @@ def add_training_hyper_parameter_arguments(parser):
                         help='-')
 
 
+def add_mixed_precision_arguments(parser):
+    parser.add_argument('--fp16', action='store_true',
+                        help='Run model in fp16 mode.')
+    parser.add_argument('--loss-scale', type=float, default=64,
+                        help='Static loss scaling, positive power of 2 values can improve fp16 convergence. ')
+    parser.add_argument('--initial-loss-scale', type=float, default=2 ** 32,
+                        help='Initial loss-scale for dynamic loss scaling.')
+    parser.add_argument('--min-loss-scale', type=float, default=1.0,
+                        help='Minimum loss scale for dynamic loss scale.')
+    parser.add_argument('--loss-scale-window', type=float, default=1000,
+                        help='Window over which to raise/lower dynamic scale.')
+    parser.add_argument('--hysteresis', type=int, default=2,
+                        help='hysteresis for dynamic loss scaling')
+
+
 def get_model_arguments_str(args):
     return '_l' + str(args.seq_length) + '_m' + str(args.embedding_dim)
 
@@ -74,3 +89,10 @@ def get_dist_arguments_str(args, add_rank=True):
 
 def get_learning_arguments_str(args):
     return '_b' + str(args.batch_size) + '_' + str(args.micro_batch_size)
+
+
+def get_mixed_precision_arguments_str(args):
+    if args.fp16:
+        return '_fp16'
+    else:
+        return ''
