@@ -40,11 +40,11 @@ For pipeline only, we have:
 
 | Network setting                     | Micro batch size: 1 | 
 |-------------------------------------|---------------------|
-| default (about 0.1ms; up to 10Gbps) | s                   |
-| delay 1ms  bandwidth 5Gbps          | s                   | 
-| delay 5ms  bandwidth 2Gbps          | s                   | 
-| delay 10ms  bandwidth 1Gbps         | s                   | 
-| delay 50ms  bandwidth 1Gbps         | s                   | 
+| default (about 0.1ms; up to 10Gbps) | 2.25 s              |
+| delay 1ms  bandwidth 5Gbps          | 2.26 s              | 
+| delay 5ms  bandwidth 2Gbps          | 2.55 s              | 
+| delay 10ms  bandwidth 1Gbps         | 4.01 s              | 
+| delay 50ms  bandwidth 1Gbps         | 4.78 s              | 
 
 
 - Real Run

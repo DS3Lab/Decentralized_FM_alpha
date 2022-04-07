@@ -7,15 +7,18 @@ source ./ip_list.sh
 # gpt3_gpipe_b64_1_l2048_m2048_w12_p12_d1
 # gpt3_gpipe_b64_1_l2048_m2048_w48_p12_d4
 
+# gpt3_gpipe_allreduce_b64_1_l2048_m768_w3_p3_d1
+
 if [ $# -eq 1 ]
 then
   profix=$1
 
   postfixes=(
-    "tidy_profiling_default"
-    "tidy_profiling_d1b5"
-    "tidy_profiling_d5b2"
-    "tidy_profiling_d10b1"
+    "fp16_tidy_profiling_default"
+    "fp16_tidy_profiling_d1b5"
+    "fp16_tidy_profiling_d5b2"
+    "fp16_tidy_profiling_d10b1"
+    "fp16_tidy_profiling_d50b1"
   )
 
   world_size=${#ips[@]}
