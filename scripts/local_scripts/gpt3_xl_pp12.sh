@@ -13,7 +13,7 @@ fi
 
 if [ $# -eq 3 ]
 then
-  python dist_runner.py --dist-url tcp://"$ip":9000 --mode gpipe --world-size "$world_size" --pipeline-group-size "$world_size" --data-group-size 1 --rank "$rank" --embedding-dim 2048 --num-heads 16 --num-layers 2 --batch-size 64 --micro-batch-size 1 >> "./logs/${timestamp}_gpt3_xl_pp12_default.log"
+  python dist_runner.py --dist-url tcp://"$ip":9000 --pp-mode gpipe --world-size "$world_size" --pipeline-group-size "$world_size" --data-group-size 1 --rank "$rank" --embedding-dim 2048 --num-heads 16 --num-layers 2 --batch-size 64 --micro-batch-size 1 >> "./logs/${timestamp}_gpt3_xl_pp12_default.log"
 elif [ $# -eq 5 ]
 then
   DELAY_MS=$4

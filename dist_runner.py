@@ -16,6 +16,7 @@ def main():
     add_model_arguments(parser)
     add_task_arguments(parser)
     add_training_hyper_parameter_arguments(parser)
+    add_mixed_precision_arguments(parser)
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
     parser.add_argument('--profiling', type=str, default='tidy_profiling', metavar='S',

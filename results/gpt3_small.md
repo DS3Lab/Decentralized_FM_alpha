@@ -26,6 +26,8 @@ For pipeline only, we have:
 
 - TC run:
 
+  - Full precision:
+
 | Network setting                     | Micro batch size: 1 | 
 |-------------------------------------|---------------------|
 | default (about 0.1ms; up to 10Gbps) | 5.91 s              |
@@ -33,6 +35,17 @@ For pipeline only, we have:
 | delay 5ms  bandwidth 2Gbps          | 6.07 s              | 
 | delay 10ms  bandwidth 1Gbps         | 7.90 s              | 
 | delay 50ms  bandwidth 1Gbps         | 8.77 s              | 
+
+  - fp16:
+
+| Network setting                     | Micro batch size: 1 | 
+|-------------------------------------|---------------------|
+| default (about 0.1ms; up to 10Gbps) | s                   |
+| delay 1ms  bandwidth 5Gbps          | s                   | 
+| delay 5ms  bandwidth 2Gbps          | s                   | 
+| delay 10ms  bandwidth 1Gbps         | s                   | 
+| delay 50ms  bandwidth 1Gbps         | s                   | 
+
 
 - Real Run
 
