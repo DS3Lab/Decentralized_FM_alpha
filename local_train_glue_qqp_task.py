@@ -47,13 +47,14 @@ def main():
         device = torch.device('cuda', args.cuda_id)
     else:
         device = torch.device('cpu')
+    if args.fp16:
+        print("<=== Training in fp16. ===>")
     tokenizer = build_tokenizer(args)
     print("token vocab size:", tokenizer.vocab_size)
     data_loader = get_glue_qqp_train_data_loader(args, tokenizer)
     num_classes = 2
     model = GPTGlueModel(args, tokenizer.vocab_size, num_classes, use_checkpoint=True).to(device)
     if args.fp16:
-        print("Training in fp16.")
         model.half()
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 
