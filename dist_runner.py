@@ -59,9 +59,9 @@ def main():
     if args.profiling == 'no-profiling':
         distributed_train_foo_iter(args, pipe, device, train_data_loader)
     else:
-        trace_file = './trace_json/gpt3_' + args.pp_mode + '_' + args.dp_mode + get_learning_arguments_str(args) \
-                     + get_model_arguments_str(args) + get_dist_arguments_str(args) + '_' + \
-                     get_mixed_precision_arguments_str(args) + args.profiling + '_' + args.trace_postfix + '.json'
+        trace_file = './trace_json/gpt3_' + args.pp_mode + '_' + args.dp_mode + get_learning_arguments_str(args) + \
+                     get_model_arguments_str(args) + get_dist_arguments_str(args) + \
+                     get_mixed_precision_arguments_str(args) + '_' + args.profiling + '_' + args.trace_postfix + '.json'
         if args.profiling == 'tidy_profiling':
             distributed_train_foo_iter(args, pipe, device, train_data_loader)
             pipe.export_profiling_result(filename=trace_file)
