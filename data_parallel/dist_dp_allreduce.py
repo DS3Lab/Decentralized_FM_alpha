@@ -14,13 +14,10 @@ class AllReduceDP:
         self.backward_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
         self.allreduce_grad_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
         self.module = module
-        if self.dp_rank == 0:
-            assert optimizer is not None
-            self.optimizer = optimizer
-            self.optimizer_step_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
-        else:
-            self.optimizer = None
-            self.optimizer_step_ready_event = None
+        assert optimizer is not None
+        self.optimizer = optimizer
+        self.optimizer_step_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
+
         num_paras = self._compute_total_para_num()
         print("Total number of parameters: {} of size {} MB".format(num_paras, num_paras * 4 // 1024 // 1024))
         if self.enable_tidy_profiling:
