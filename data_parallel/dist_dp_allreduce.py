@@ -76,7 +76,7 @@ class AllReduceDP:
         self.set_time_stamp(init_time_stamp, init_event)
         profiling_log = []
         allreduce_slot = self.allreduce_grad_start_event.elapsed_time(self.allreduce_grad_ready_event) * 1e+3
-        allreduce_log = {"name": "opt_reduce", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-comm",
+        allreduce_log = {"name": "opt_allreduce", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-comm",
                          "ts": self.get_ts(self.allreduce_grad_start_event), "dur": allreduce_slot,
                          "cname": "cq_build_passed"}
         # print(allreduce_log)
