@@ -41,7 +41,7 @@ class AllReduceDP:
             self.dp_comm_stream.record_event(self.allreduce_grad_start_event)
 
     def profile_mark_optimizer_step_start(self):
-        if self.enable_tidy_profiling and self.dp_rank == 0:
+        if self.enable_tidy_profiling:
             self.torch_optim_comp_stream.record_event(self.optimizer_step_start_event)
 
     def profile_mark_allreduce_end(self):
