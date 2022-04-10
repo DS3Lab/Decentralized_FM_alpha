@@ -24,7 +24,7 @@ For pipeline only, we have:
   
 ### Gpipe based pipeline parallel
 
-- (updated on 2022/02/14).
+- fp32 (updated on 2022/02/14).
 
 | Network setting                     | Micro batch size: 1 | 
 |-------------------------------------|---------------------|
@@ -34,6 +34,16 @@ For pipeline only, we have:
 | delay 10ms  bandwidth 1Gbps         | 22.90 s             |
 | delay 50ms  bandwidth 1Gbps         | 29.08 s             | 
 
+
+- fp16 (updated on 2022/04/10).
+
+| Network setting                     | Micro batch size: 1 | 
+|-------------------------------------|---------------------|
+| default (about 0.1ms; up to 10Gbps) | 4.56 s              |
+| delay 1ms  bandwidth 5Gbps          | 5.32 s              | 
+| delay 5ms  bandwidth 2Gbps          | 7.16 s              | 
+| delay 10ms  bandwidth 1Gbps         | 12.24 s             |
+| delay 50ms  bandwidth 1Gbps         | 12.96 s             | 
 
 ### PyTorch Pipe Baseline
 
@@ -73,7 +83,7 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 - fp32 & enabled checkpointing (activation recompute)
 - To run a batch size of 64:
   
-       sh ./scripts/local_scripts/local_test_multi_GPU_megatron_QQP.sh $MICRO_BATCH_SIZE $PIPELINE_PARALLEL_SIZE $TENSOR_PARALLEL_SIZE 0
+       sh ./scripts/local_scripts/multi_GPU_megatron_gpt3_xl.sh.sh $MICRO_BATCH_SIZE $PIPELINE_PARALLEL_SIZE $TENSOR_PARALLEL_SIZE 1 0
 
 - fp32 & activation recompute
 
@@ -104,7 +114,9 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 
 - To run a batch size of 252:
 - 6 p3.16xlarge instances (25 Gbps inter-node connection)
-- DP degree 6
+- DP degree 6 (on each node):
+
+      sh ./scripts/local_scripts/multi_GPU_megatron_gpt3_xl.sh $MICRO_BATCH_SIZE $PIPELINE_PARALLEL_SIZE $TENSOR_PARALLEL_SIZE 6 0~5
 
 - FP32 & activation recompute:
 

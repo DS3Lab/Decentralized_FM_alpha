@@ -73,7 +73,7 @@ For pipeline only, we have:
   - DP degree 1: 64
   - DP degree 4: 256
   - DP degree 16: 1024
-- (updated on 2022/02/14).
+- fp32 (updated on 2022/02/14).
 
 | Network setting                     | DP Degree: 1 | DP Degree: 4 | DP Degree: 16 |
 |-------------------------------------|--------------|-------------|---------------|
@@ -82,6 +82,16 @@ For pipeline only, we have:
 | delay 5ms  bandwidth 2Gbps          | 6.07 s       | 7.71 s      | 7.86 s        |
 | delay 10ms  bandwidth 1Gbps         | 7.90 s       | 11.01 s     | 11.17 s       |
 | delay 50ms  bandwidth 1Gbps         | 8.77 s       | 12.59 s     | s             |
+
+- fp32 (updated on 2022/02/14).
+
+| Network setting                     | DP Degree: 1 | DP Degree: 4 | DP Degree: 16 |
+|-------------------------------------|--------------|--------------|---------------|
+| default (about 0.1ms; up to 10Gbps) | 2.25 s       | s            | s             |
+| delay 1ms  bandwidth 5Gbps          | 2.26 s       | s            | s             |
+| delay 5ms  bandwidth 2Gbps          | 2.55 s       | s            | s             |
+| delay 10ms  bandwidth 1Gbps         | 4.01 s       | s            | s             |
+| delay 50ms  bandwidth 1Gbps         | 4.78 s       | s            | s             |
 
 ## ZeRO-S3 
 
