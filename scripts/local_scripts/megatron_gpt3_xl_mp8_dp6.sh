@@ -1,4 +1,6 @@
 #!/bin/bash
+cd ~/GPT-home-private
+source activate pytorch_p38
 
 MICRO_BATCH_SIZE=$1
 PIPELINE_PARALLEL_SIZE=$2

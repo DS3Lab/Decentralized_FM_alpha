@@ -101,11 +101,11 @@ For pipeline only, we have:
   
 | Network setting                     | DP Degree: 1 | DP Degree: 4 | DP Degree: 16 |
 |-------------------------------------|--------------|--------------|---------------|
-| default (about 0.1ms; up to 10Gbps) | 2.25 s       | s            | s             |
-| delay 1ms  bandwidth 5Gbps          | 2.26 s       | s            | s             |
-| delay 5ms  bandwidth 2Gbps          | 2.55 s       | s            | s             |
-| delay 10ms  bandwidth 1Gbps         | 4.01 s       | s            | s             |
-| delay 50ms  bandwidth 1Gbps         | 4.78 s       | s            | s             |
+| default (about 0.1ms; up to 10Gbps) | 2.25 s       | 2.44 s       | s             |
+| delay 1ms  bandwidth 5Gbps          | 2.26 s       | 2.52 s       | s             |
+| delay 5ms  bandwidth 2Gbps          | 2.55 s       | 3.19 s       | s             |
+| delay 10ms  bandwidth 1Gbps         | 4.01 s       | 5.53 s       | s             |
+| delay 50ms  bandwidth 1Gbps         | 4.78 s       | 6.23 s       | s             |
 
 ## ZeRO-S3 
 
