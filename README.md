@@ -56,4 +56,4 @@
       
 - Enable environment: (This is optional but load conda env seems to be slow for the first time)
 
-      bash aws
+      bash aws_foo_load_lib.sh
