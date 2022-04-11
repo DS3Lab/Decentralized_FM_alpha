@@ -26,7 +26,7 @@ PARALLEL_ARGS="--distributed-backend nccl --tensor-model-parallel-size $TENSOR_P
 NLP_ARGS="--tokenizer-type BertWordPieceLowerCase --vocab-file $VOCAB_FILE  --train-data-path $TRAIN_FILE  --valid-data-path $VALID_FILE  --test-data-path $TEST_FILE"
 HYPER_PARA_ARGS="--optimizer sgd --lr 0.0001 --train-iters 10"
 #OPTION_ARGS="--fp16 --checkpoint-activations"
-OPTION_ARGS="--fp16"
+OPTION_ARGS="--checkpoint-activations"
 timestamp=$(date +%Y_%m_%d_%H_%M)
 
 log_path="./logs/${timestamp}_megatron_gpt3_xl_w${NNODES}_t${TENSOR_PARALLEL_SIZE}_p${PIPELINE_PARALLEL_SIZE}"

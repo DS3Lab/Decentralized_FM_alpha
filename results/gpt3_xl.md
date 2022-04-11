@@ -150,12 +150,12 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 
 
 | Network setting                     | fp32 & re | fp16 & re | fp16 & no re | 
-|-------------------------------------|-----------|----------|--------------|
-| default (about 0.1ms; up to 10Gbps) | s         | s        | 27.6 s       |
-| delay 1ms  bandwidth 5Gbps          | s         | s        | s            |
-| delay 5ms  bandwidth 2Gbps          | s         | s        | s            |
-| delay 10ms  bandwidth 1Gbps         | s         | s        | s            |
-| delay 50ms  bandwidth 1Gbps         | s         | s        | s            |
+|-------------------------------------|-----------|-----------|--------------|
+| default (about 0.1ms; up to 10Gbps) | 89.32 s   | 39.39 s   | 27.67 s      |
+| delay 1ms  bandwidth 5Gbps          |           |           | 75.31 s      |
+| delay 5ms  bandwidth 2Gbps          |           |           | 205.32 s     |
+| delay 10ms  bandwidth 1Gbps         |           |           | 401.39 s     |
+| delay 50ms  bandwidth 1Gbps         |           |           | -            |
 
 
 
