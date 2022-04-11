@@ -144,6 +144,29 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 
 (Not sure what happens for config ?? Run this twice with the same result.)
 
+- To run a batch size of 252 in slow network: (2022/04/11)
+  - 48 p3.2xlarge instances 
+  - TP:4; PP:2; DP:6; Micro-batch-size 1 (Optional above:15.91s, 5.25s, 4.21s)
+
+
+| Network setting                     | fp32 & re | fp16 & re | fp16 & no re | 
+|-------------------------------------|-----------|----------|--------------|
+| default (about 0.1ms; up to 10Gbps) | s         | s        | 27.6 s       |
+| delay 1ms  bandwidth 5Gbps          | s         | s        | s            |
+| delay 5ms  bandwidth 2Gbps          | s         | s        | s            |
+| delay 10ms  bandwidth 1Gbps         | s         | s        | s            |
+| delay 50ms  bandwidth 1Gbps         | s         | s        | s            |
+
+
+
+
+
+
+
+
+
+
+
 
 ## Ours Pipeline + Data Parallel
 
