@@ -152,11 +152,25 @@ When micro-batch size is larger than 4, it would fail due to OOM.
 - The global batch size is 64 * DP degree:
   - DP degree 1: 64
   - DP degree 4: 256
-- (updated on 2022/02/14).
+- (updated on 2022/02/14)(Centralized PS implementation of DP).
 
-| Network setting                     | DP Degree: 1 | DP Degree: 4 | 
-|-------------------------------------|--------------|--------------|
-| default (about 0.1ms; up to 10Gbps) | 15.16 s      | 16.17 s      |
-| delay 1ms  bandwidth 5Gbps          | 15.49 s      | 17.55 s      |
-| delay 5ms  bandwidth 2Gbps          | 16.80 s      | 21.99 s      |
-| delay 10ms  bandwidth 1Gbps         | 22.90 s      | 33.39 s      |
+- fp32:
+  
+| Network setting                     | DP Degree: 1    | DP Degree: 4 | 
+|-------------------------------------|-----------------|--------------|
+| default (about 0.1ms; up to 10Gbps) | 15.16 s         | 16.17 s      |
+| delay 1ms  bandwidth 5Gbps          | 15.49 s         | 17.55 s      |
+| delay 5ms  bandwidth 2Gbps          | 16.80 s         | 21.99 s      |
+| delay 10ms  bandwidth 1Gbps         | 22.90 s         | 33.39 s      |
+| delay 50ms  bandwidth 1Gbps         | 29.08  s        | 37.61 s      |
+
+ 
+- fp16(2022/04/11):
+
+| Network setting                     | DP Degree: 1  | DP Degree: 4 |
+|-------------------------------------|---------------|--------------|
+| default (about 0.1ms; up to 10Gbps) | 4.56 s        | 5.30 s       | 
+| delay 1ms  bandwidth 5Gbps          | 5.32 s        | 6.28 s       |
+| delay 5ms  bandwidth 2Gbps          | 7.16 s        | 10.88 s      |
+| delay 10ms  bandwidth 1Gbps         | 12.24 s       | 18.21 s      |
+| delay 50ms  bandwidth 1Gbps         | 12.96 s       | 18.68 s      |
