@@ -89,8 +89,28 @@ class ShardedPSDP:
             self.profile_mark_broadcast_end()
             self.dp_comm_stream.record_event(self.broadcast_reduced_gradients_ready_event)
 
+    def _reduce_gradients(self):
+        with torch.cuda.stream(self.dp_comm_stream):
+            cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
+            self.dp_comm_stream.wait_event(self.backward_ready_event)
+            self.profile_mark_reduce_start()
+            for para in self.module.parameters():
+                self.dp_comm.reduce(para.grad, dst=para.dp_prime_rank, stream=cupy_dp_stream)
+            self.dp_comm_stream.record_event(self.reduce_gradients_ready_event)
+
+    def _broadcast_reduced_gradients(self):
+        with torch.cuda.stream(self.dp_comm_stream):
+            cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
+            self.profile_mark_broadcast_start()
+            for para in self.module.parameters():
+                self.dp_comm.broadcast(para.grad, src=para.dp_prime_rank, stream=cupy_dp_stream)
+            self.dp_comm_stream.record_event(self.broadcast_reduced_gradients_ready_event)
+            self.profile_mark_broadcast_end()
+
     def optimizer_step(self):
-        self._grouped_reduce_broadcast_sync()
+        # self._grouped_reduce_broadcast_sync()
+        self._reduce_gradients()
+        self._broadcast_reduced_gradients()
         with torch.cuda.stream(self.torch_optim_comp_stream):
             self.torch_optim_comp_stream.wait_event(self.broadcast_reduced_gradients_ready_event)
             self.profile_mark_optimizer_step_start()
