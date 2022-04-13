@@ -75,17 +75,17 @@ class ShardedPSDP:
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
             self.dp_comm_stream.wait_event(self.backward_ready_event)
             self.profile_mark_reduce_start()
-            cupy.cuda.nccl.groupStart()
+            # cupy.cuda.nccl.groupStart()
             for para in self.module.parameters():
                 self.dp_comm.reduce(para.grad, dst=para.dp_prime_rank, stream=cupy_dp_stream)
-            cupy.cuda.nccl.groupEnd()
+            # cupy.cuda.nccl.groupEnd()
             self.dp_comm_stream.record_event(self.reduce_gradients_ready_event)
 
             self.profile_mark_broadcast_start()
-            cupy.cuda.nccl.groupStart()
+            # cupy.cuda.nccl.groupStart()
             for para in self.module.parameters():
                 self.dp_comm.broadcast(para.grad, src=para.dp_prime_rank, stream=cupy_dp_stream)
-            cupy.cuda.nccl.groupEnd()
+            # cupy.cuda.nccl.groupEnd()
             self.profile_mark_broadcast_end()
             self.dp_comm_stream.record_event(self.broadcast_reduced_gradients_ready_event)
 
