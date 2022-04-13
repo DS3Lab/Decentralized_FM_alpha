@@ -21,7 +21,7 @@ class ShardedPSDP:
         self.optimizer_step_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
         num_paras = self._compute_total_para_num()
         print("Total number of parameters: {} of size {} MB".format(num_paras, num_paras * 4 // 1024 // 1024))
-        self._foo_assign_main_parameter_rank()
+        self._foo_assign_main_parameter()
         if self.enable_tidy_profiling:
             self.global_rank = args.rank
             self.init_event = None
@@ -33,10 +33,10 @@ class ShardedPSDP:
             self.broadcast_parameters_start_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling,
                                                                      blocking=False)
 
-    def _foo_assign_main_parameter_rank(self):
+    def _foo_assign_main_parameter(self):
         # Round robin determined
         assign_loc = 0
-        for name, param in self.model.named_parameters():
+        for name, param in self.module.named_parameters():
             if self.dp_rank == 0:
                 setattr(param, 'dp_prime_rank', assign_loc)
                 self.dp_comm.store_set(name, str(assign_loc))

@@ -87,7 +87,7 @@ For pipeline only, we have:
 
 - fp16 (updated on 2022/04/10).
   
-  - AllReduce (This is not going to be used.):
+- AllReduce (This is not going to be used.):
   
 | Network setting                     | DP Degree: 1 | DP Degree: 4 | DP Degree: 16 |
 |-------------------------------------|--------------|--------------|---------------|
@@ -97,7 +97,18 @@ For pipeline only, we have:
 | delay 10ms  bandwidth 1Gbps         | 4.01 s       | 10.19 s      | 19.09 s       |
 | delay 50ms  bandwidth 1Gbps         | 4.78 s       | 27.08 s      | 62.86 s       |
 
-  - Centralized PS (on rank-0):
+- Centralized PS (on rank-0):
+  
+| Network setting                     | DP Degree: 1 | DP Degree: 4 | DP Degree: 16 |
+|-------------------------------------|--------------|--------------|---------------|
+| default (about 0.1ms; up to 10Gbps) | 2.25 s       | 2.44 s       | 2.49 s        |
+| delay 1ms  bandwidth 5Gbps          | 2.26 s       | 2.52 s       | 2.97 s        |
+| delay 5ms  bandwidth 2Gbps          | 2.55 s       | 3.19 s       | 4.09 s        |
+| delay 10ms  bandwidth 1Gbps         | 4.01 s       | 5.53 s       | 5.92 s        |
+| delay 50ms  bandwidth 1Gbps         | 4.78 s       | 6.23 s       | 7.80 s        |
+
+- Sharded PS:
+
   
 | Network setting                     | DP Degree: 1 | DP Degree: 4 | DP Degree: 16 |
 |-------------------------------------|--------------|--------------|---------------|
