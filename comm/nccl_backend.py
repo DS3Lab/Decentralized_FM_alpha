@@ -29,16 +29,16 @@ class NCCLCommunicator:
         cupy.cuda.Device(cuda_id).use()
         self.comm_group_size = comm_group_size
         print("Initialize NCCLCommunicator: <", comm_name, ">; rank:", comm_rank)
-        dist_store = dist.distributed_c10d._get_default_store()
+        self.dist_store = dist.distributed_c10d._get_default_store()
 
         if self.comm_rank == 0:
             cuda_id = cupy.cuda.nccl.get_unique_id()
             # print(cuda_id)
             cuda_id_str = np.array(cuda_id).tobytes()
-            dist_store.set('group-'+comm_name+'-unique-id', cuda_id_str)
+            self.dist_store.set('group-'+comm_name+'-unique-id', cuda_id_str)
             # print("Master put <group-"+comm_name+"-unique-id: ", cuda_id_str, ">.")
         else:
-            cuda_id_str = dist_store.get('group-'+comm_name+'-unique-id')
+            cuda_id_str = self.dist_store.get('group-'+comm_name+'-unique-id')
 
         comm_id = tuple(np.frombuffer(cuda_id_str, dtype=int))
         # comm_id = cupy.cuda.nccl.get_unique_id()
@@ -48,6 +48,12 @@ class NCCLCommunicator:
     @staticmethod
     def barrier():
         dist.barrier()
+
+    def store_set(self, key, value):
+        self.dist_store.set(key, value)
+
+    def store_get(self, key):
+        return self.dist_store.get(key)
 
     def send(self,
              tensor: torch.Tensor,

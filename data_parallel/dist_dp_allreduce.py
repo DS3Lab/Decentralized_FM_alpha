@@ -44,10 +44,6 @@ class AllReduceDP:
         if self.enable_tidy_profiling:
             self.torch_optim_comp_stream.record_event(self.optimizer_step_start_event)
 
-    def profile_mark_allreduce_end(self):
-        if self.enable_tidy_profiling:
-            self.dp_comm_stream.record_event(self.allreduce_grad_ready_event)
-
     def _allreduce_gradients(self):
         with torch.cuda.stream(self.dp_comm_stream):
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)

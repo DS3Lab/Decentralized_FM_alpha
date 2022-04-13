@@ -54,6 +54,10 @@ def main():
     data_loader = get_glue_qqp_train_data_loader(args, tokenizer)
     num_classes = 2
     model = GPTGlueModel(args, tokenizer.vocab_size, num_classes, use_checkpoint=True).to(device)
+    print("Model info:")
+    for name, param in model.named_parameters():
+        print(name, ":", param.size())
+
     if args.fp16:
         model.half()
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
