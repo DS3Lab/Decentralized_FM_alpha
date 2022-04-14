@@ -96,7 +96,7 @@ class ShardedPSDP:
         with torch.cuda.stream(self.dp_comm_stream):
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
             # cupy.cuda.nccl.groupStart()
-            for name, para in self.module.parameters():
+            for name, para in self.module.named_parameters():
                 self.profile_mark_broadcast_start(name)
                 self.dp_comm.broadcast(para.grad, src=para.dp_prime_rank, stream=cupy_dp_stream)
                 self.profile_mark_broadcast_end(name)

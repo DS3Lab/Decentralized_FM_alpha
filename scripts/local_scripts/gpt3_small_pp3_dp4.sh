@@ -14,10 +14,10 @@ then
   exit 1
 fi
 
-if [ $# -eq 4 ]
+if [ $# -eq 3 ]
 then
   python dist_runner.py --dist-url tcp://"$ip":9000 --fp16 --pp-mode gpipe --dp-mode "$dp_mode" --world-size "$world_size" --pipeline-group-size 3 --data-group-size 4 --rank "$rank" --embedding-dim 768 --num-heads 12 --num-layers 4 --batch-size 64 --micro-batch-size 1 >> "./logs/${timestamp}_gpt3_small_gpipe_${dp_mode}_pp3_dp4_default.log"
-elif [ $# -eq 6 ]
+elif [ $# -eq 5 ]
 then
   DELAY_MS=$4
   RATE_GBIT=$5

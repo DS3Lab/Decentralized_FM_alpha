@@ -77,7 +77,7 @@ class CentralPSDP:
     def _broadcast_reduced_gradients(self):
         with torch.cuda.stream(self.dp_comm_stream):
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
-            for name, para in self.module.parameters():
+            for name, para in self.module.named_parameters():
                 self.profile_mark_broadcast_start(name)
                 self.dp_comm.broadcast(para.grad, src=0, stream=cupy_dp_stream)
                 self.profile_mark_broadcast_end(name)

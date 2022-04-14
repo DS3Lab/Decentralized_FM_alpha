@@ -57,3 +57,14 @@
 - Enable environment: (This is optional but load conda env seems to be slow for the first time)
 
       bash aws_foo_load_lib.sh
+
+- Run Tasks (e.g.,):
+
+      bash aws_run_gpt3_training.sh gpt3_small_pp3_dp4.sh
+      bash aws_run_gpt3_training.sh gpt3_small_pp3_dp4.sh #DELAY #BANDWIDTH
+
+- Clear logs:
+
+      bash aws_clear_logs.sh
+
+- 
