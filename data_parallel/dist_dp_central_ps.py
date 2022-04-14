@@ -107,7 +107,7 @@ class CentralPSDP:
                 self.reduce_gradients_end_events[name]) * 1e+3
             reduce_log = {"name": "opt_reduce", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-comm",
                           "ts": self.get_ts(self.reduce_gradients_start_events[name]), "dur": reduce_slot,
-                          "cname": "cq_build_passed", "args": {'para': name, 'size': torch.numel(para.grad)}}
+                          "cname": "cq_build_passed", "args": {'para': name, 'size': torch.numel(para.data)}}
             # print(reduce_log)
             profiling_log.append(reduce_log)
 
@@ -122,7 +122,7 @@ class CentralPSDP:
                 self.broadcast_reduced_grad_start_events[name]) * 1e+3
             broadcast_log = {"name": "opt_broadcast", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-comm",
                              "ts": self.get_ts(self.broadcast_reduced_grad_start_events[name]), "dur": broadcast_slot,
-                             "cname": "cq_build_passed", "args": {'para': name, 'size': torch.numel(para.grad)}}
+                             "cname": "cq_build_passed", "args": {'para': name, 'size': torch.numel(para.data)}}
             # print(broadcast_log)
             profiling_log.append(broadcast_log)
         return profiling_log

@@ -128,7 +128,7 @@ class ShardedPSDP:
             reduce_log = {"name": "opt_reduce", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-comm",
                           "ts": self.get_ts(self.reduce_gradients_start_events[name]), "dur": reduce_slot,
                           "cname": "cq_build_passed",
-                          "args": {'para': name, 'size': torch.numel(para.grad), 'loc': para.dp_prime_rank}}
+                          "args": {'para': name, 'size': torch.numel(para.data), 'loc': para.dp_prime_rank}}
             # print(reduce_log)
             profiling_log.append(reduce_log)
 
@@ -144,7 +144,7 @@ class ShardedPSDP:
             broadcast_log = {"name": "opt_broadcast", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-comm",
                              "ts": self.get_ts(self.broadcast_reduced_grad_start_events[name]), "dur": broadcast_slot,
                              "cname": "cq_build_passed",
-                             "args": {'para': name, 'size': torch.numel(para.grad), 'loc': para.dp_prime_rank}}
+                             "args": {'para': name, 'size': torch.numel(para.data), 'loc': para.dp_prime_rank}}
             # print(broadcast_log)
             profiling_log.append(broadcast_log)
         return profiling_log

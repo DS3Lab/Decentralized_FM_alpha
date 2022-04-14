@@ -85,7 +85,7 @@ class AllReduceDP:
                 self.allreduce_gradients_end_events[name]) * 1e+3
             allreduce_log = {"name": "opt_allreduce", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-comm",
                              "ts": self.get_ts(self.allreduce_gradients_start_events[name]), "dur": allreduce_slot,
-                             "cname": "cq_build_passed", "args": {'para': name, 'size': torch.numel(para.grad)}}
+                             "cname": "cq_build_passed", "args": {'para': name, 'size': torch.numel(para.data)}}
             # print(allreduce_log)
             profiling_log.append(allreduce_log)
 
