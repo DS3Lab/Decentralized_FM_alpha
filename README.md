@@ -67,4 +67,12 @@
 
       bash aws_clear_logs.sh
 
-- 
+- Copy training logs from Rank-0 node (For my implementation the benchmark result is on the rank-0 node.)
+
+      bash copy_rank0_logs.sh
+
+- Download and generate trace:
+
+      bash copy_traces.sh #PREFIX
+      bash generate_traces.sh #PREFIX
+

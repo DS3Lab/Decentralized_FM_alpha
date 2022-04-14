@@ -140,7 +140,7 @@ class ShardedPSDP:
 
         for name, para in self.module.named_parameters():
             broadcast_slot = self.broadcast_reduced_grad_start_events[name].elapsed_time(
-                self.broadcast_reduced_grad_start_events[name]) * 1e+3
+                self.broadcast_reduced_grad_end_events[name]) * 1e+3
             broadcast_log = {"name": "opt_broadcast", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-comm",
                              "ts": self.get_ts(self.broadcast_reduced_grad_start_events[name]), "dur": broadcast_slot,
                              "cname": "cq_build_passed",
