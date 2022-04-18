@@ -52,6 +52,7 @@ def compute_data_parallel_cost(candidate_partition=None):
 
 
 class open_loop_tsp:
+    # https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=5388488
     def __init__(self, cost_matrix, start_node):
         self.cost_matrix = cost_matrix
         self.num_nodes = self.cost_matrix.shape[0]
@@ -138,8 +139,6 @@ def compute_pipeline_parallel_cost(candidate_partition=None):
         pipeline_parallel_cost.append(cost)
         pipeline_parallel_path.append(path)
     dp_pipeline_parallel_cost = min(pipeline_parallel_cost)
-    dp_pipeline_parallel_path = pipeline_parallel_path[pipeline_parallel_cost.index(
-        dp_pipeline_parallel_cost)]
     end = time.perf_counter()
     print("open loop tsp program solver")
     print("dynamic programming: " + str(end - start) + " seconds")
