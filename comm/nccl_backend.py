@@ -128,8 +128,8 @@ class NCCLCommunicator:
                 src: int,
                 stream=cupy.cuda.Stream.null):
         cupy.cuda.nccl.groupStart()
-        if self.rank == src:
-            for i in range(self.world_size):
+        if self.comm_rank == src:
+            for i in range(self.comm_group_size):
                 self.send(
                     scatter_list[i],
                     i,
@@ -148,8 +148,8 @@ class NCCLCommunicator:
                dst: int,
                stream=cupy.cuda.Stream.null):
         cupy.cuda.nccl.groupStart()
-        if self.rank == dst:
-            for i in range(self.world_size):
+        if self.comm_rank == dst:
+            for i in range(self.comm_group_size):
                 self.recv(
                     gather_list[i],
                     i,
@@ -160,6 +160,29 @@ class NCCLCommunicator:
             dst,
             stream
         )
+        cupy.cuda.nccl.groupEnd()
+
+    def all_to_all(self,
+                   output_tensor_list: List[torch.Tensor],
+                   input_tensor_list: List[torch.Tensor],
+                   stream=cupy.cuda.Stream.null):
+        assert len(output_tensor_list) == self.comm_group_size and len(input_tensor_list) == self.comm_group_size
+        cupy.cuda.nccl.groupStart()
+        for i in range(self.comm_group_size):
+            self.send(input_tensor_list[i], i, stream)
+            self.recv(output_tensor_list[i], i, stream)
+        cupy.cuda.nccl.groupEnd()
+
+    def all_gather(self,
+                   tensor: torch.Tensor,
+                   output_tensor_list: List[torch.Tensor],
+                   stream=cupy.cuda.Stream.null
+                   ):
+        assert len(output_tensor_list) == self.comm_group_size
+        cupy.cuda.nccl.groupStart()
+        for i in range(self.comm_group_size):
+            self.send(tensor, i, stream)
+            self.recv(output_tensor_list[i], i, stream)
         cupy.cuda.nccl.groupEnd()
 
 

@@ -5,7 +5,7 @@ world_size=$2
 rank=$3
 
 #central_ps, sharded_ps, allreduce
-dp_mode=sharded_ps
+dp_mode=central_ps
 
 timestamp=$(date +%Y_%m_%d_%H_%M)
 

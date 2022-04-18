@@ -19,8 +19,9 @@ class ShardedPSDP:
         self.module = module
         assert optimizer is not None
         self.optimizer = optimizer
-        num_paras = self._compute_total_para_num()
-        print("Total number of parameters: {} of size {} MB".format(num_paras, num_paras * 4 // 1024 // 1024))
+        num_paras, element_size = self._compute_total_para_num()
+        print("Total number of parameters: {}, element size: {}, total size {} MB."
+              .format(num_paras, element_size, num_paras * element_size // 1024 // 1024))
         self._foo_assign_main_parameter()
 
         if self.enable_tidy_profiling:
@@ -42,10 +43,12 @@ class ShardedPSDP:
 
     def _compute_total_para_num(self):
         total_count = 0
+        element_size = 0
         for para in self.module.parameters():
             # print("Parameter: ", para.data.shape)
             total_count += torch.numel(para.data)
-        return total_count
+            element_size = para.element_size()
+        return total_count, element_size
 
     def _foo_assign_main_parameter(self):
         # Round robin determined
