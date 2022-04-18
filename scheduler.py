@@ -51,6 +51,63 @@ def compute_data_parallel_cost(candidate_partition=None):
     return data_parallel_cost
 
 
+class open_loop_tsp:
+    def __init__(self, cost_matrix, start_node):
+        self.cost_matrix = cost_matrix
+        self.num_nodes = self.cost_matrix.shape[0]
+        self.start_node = start_node
+        self.dp_table = np.full(
+            shape=(self.num_nodes, pow(2, self.num_nodes)), fill_value=np.inf)
+        self.trace_table = np.zeros(
+            shape=(self.num_nodes, pow(2, self.num_nodes)))
+
+    def convert(self, future_nodes):
+        binary_future_nodes = 0
+        for future_node in future_nodes:
+            binary_future_nodes += pow(2, future_node)
+        return binary_future_nodes
+
+    def solve(self, node, future_nodes):
+        if len(future_nodes) == 0:
+            # closed loop tsp problem: return self.cost_matrix[node][self.start_node]
+            # open loop tsp problem: return 0
+            return 0
+
+        all_distance = []
+        for next_node in future_nodes:
+            next_future_nodes = future_nodes.copy()
+            next_future_nodes.remove(next_node)
+            binary_next_future_nodes = self.convert(next_future_nodes)
+            if self.dp_table[next_node][binary_next_future_nodes] == np.inf:
+                all_distance.append(
+                    self.cost_matrix[node][next_node] + self.solve(next_node, next_future_nodes))
+            else:
+                all_distance.append(
+                    self.cost_matrix[node][next_node] + self.dp_table[next_node][binary_next_future_nodes])
+
+        min_distance = min(all_distance)
+        next_node = future_nodes[all_distance.index(min_distance)]
+
+        binary_future_nodes = self.convert(future_nodes)
+        self.dp_table[node][binary_future_nodes] = min_distance
+        self.trace_table[node][binary_future_nodes] = next_node
+        return min_distance
+
+    def get_shortest_path(self):
+        future_nodes = list(range(self.num_nodes))
+        future_nodes.remove(self.start_node)
+        cost = self.solve(self.start_node, future_nodes)
+
+        path = [self.start_node]
+        cur_node = self.start_node
+        while len(future_nodes) > 0:
+            binary_future_nodes = self.convert(future_nodes)
+            cur_node = int(self.trace_table[cur_node][binary_future_nodes])
+            future_nodes.remove(cur_node)
+            path.append(cur_node)
+        return cost, path
+
+
 def compute_pipeline_parallel_cost(candidate_partition=None):
     way = len(candidate_partition)
 
@@ -71,7 +128,23 @@ def compute_pipeline_parallel_cost(candidate_partition=None):
 
     crose_partition_cost = crose_partition_cost + crose_partition_cost.T
 
-    # hamiltonian path
+    import time
+    start = time.perf_counter()
+    pipeline_parallel_cost = []
+    pipeline_parallel_path = []
+    for start_node in range(way):
+        tsp = open_loop_tsp(crose_partition_cost, start_node)
+        cost, path = tsp.get_shortest_path()
+        pipeline_parallel_cost.append(cost)
+        pipeline_parallel_path.append(path)
+    dp_pipeline_parallel_cost = min(pipeline_parallel_cost)
+    dp_pipeline_parallel_path = pipeline_parallel_path[pipeline_parallel_cost.index(
+        dp_pipeline_parallel_cost)]
+    end = time.perf_counter()
+    print("open loop tsp program solver")
+    print("dynamic programming: " + str(end - start) + " seconds")
+
+    start = time.perf_counter()
     pipeline_parallel_cost = float('inf')
     pipeline_parallel_path = None
     for path in itertools.permutations(range(way)):
@@ -81,6 +154,10 @@ def compute_pipeline_parallel_cost(candidate_partition=None):
         if cur_cost < pipeline_parallel_cost:
             pipeline_parallel_cost = cur_cost
             pipeline_parallel_path = path
+    end = time.perf_counter()
+    print("brute force: " + str(end - start) + " seconds")
+
+    assert(dp_pipeline_parallel_cost == pipeline_parallel_cost)
     return pipeline_parallel_cost, pipeline_parallel_path
 
 
