@@ -41,7 +41,6 @@ class CentralPSDP:
                 self.reduce_gradients_start_event = torch.cuda.Event(enable_timing=True, blocking=False)
                 self.reduce_gradients_end_event = torch.cuda.Event(enable_timing=True, blocking=False)
                 self.broadcast_reduced_grad_start_event = torch.cuda.Event(enable_timing=True, blocking=False)
-                self.broadcast_reduced_grad_end_event = torch.cuda.Event(enable_timing=True, blocking=False)
             else:
                 self.reduce_gradients_start_events = dict()
                 self.reduce_gradients_end_events = dict()
@@ -92,9 +91,7 @@ class CentralPSDP:
             
     def profile_mark_broadcast_end(self, name=None):
         if self.enable_tidy_profiling:
-            if name is None:
-                self.dp_comm_stream.record_event(self.broadcast_reduced_grad_end_event)
-            else:
+            if name:
                 self.dp_comm_stream.record_event(self.broadcast_reduced_grad_end_events[name])
 
     def _reduce_gradients(self):
@@ -170,7 +167,7 @@ class CentralPSDP:
 
         if self.flatten:
             broadcast_slot = self.broadcast_reduced_grad_start_event.elapsed_time(
-                self.broadcast_reduced_grad_end_event) * 1e+3
+                self.broadcast_reduced_gradients_ready_event) * 1e+3
             broadcast_log = {"name": "opt_broadcast", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-comm",
                              "ts": self.get_ts(self.broadcast_reduced_grad_start_event),
                              "dur": broadcast_slot, "cname": "cq_build_passed",

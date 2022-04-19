@@ -38,7 +38,6 @@ class AllReduceDP:
             self.init_time_stamp = None
             if self.flatten:
                 self.allreduce_gradients_start_event = torch.cuda.Event(enable_timing=True, blocking=False)
-                self.allreduce_gradients_end_event = torch.cuda.Event(enable_timing=True, blocking=False)
             else:
                 self.allreduce_gradients_start_events = dict()
                 self.allreduce_gradients_end_events = dict()
@@ -67,9 +66,7 @@ class AllReduceDP:
 
     def profile_mark_allreduce_end(self, name=None):
         if self.enable_tidy_profiling:
-            if name is None:
-                self.dp_comm_stream.record_event(self.allreduce_gradients_end_event)
-            else:
+            if name:
                 self.dp_comm_stream.record_event(self.allreduce_gradients_end_events[name])
 
     def profile_mark_optimizer_step_start(self):
@@ -111,7 +108,7 @@ class AllReduceDP:
         profiling_log = []
 
         if self.flatten:
-            allreduce_slot = self.allreduce_gradients_start_event.elapsed_time(self.allreduce_gradients_end_event)*1e+3
+            allreduce_slot = self.allreduce_gradients_start_event.elapsed_time(self.allreduce_grad_ready_event)*1e+3
             allreduce_log = {"name": "opt_allreduce", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-comm",
                              "ts": self.get_ts(self.allreduce_gradients_start_event),
                              "dur": allreduce_slot, "cname": "cq_build_passed",
