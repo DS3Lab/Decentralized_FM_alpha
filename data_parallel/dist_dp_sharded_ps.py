@@ -31,6 +31,8 @@ class ShardedPSDP:
         print("Flattened parameter grad number: {}, element size: {}."
               .format(self.flatten_para.grad.numel(), self.flatten_para.grad.element_size()))
 
+        self.grad_buffer = self._declare_grad_buffer()
+
         if self.enable_tidy_profiling:
             self.global_rank = args.rank
             self.init_event = None
@@ -50,6 +52,13 @@ class ShardedPSDP:
             element_size = para.element_size()
         return total_count, element_size
 
+    def _declare_grad_buffer(self):
+        assert self.flatten_para.data.numel() % self.dp_group_size == 0
+        chunk_size = self.flatten_para.data.numel() // self.dp_group_size
+        grad_buffer = [torch.zeros(chunk_size, device=self.flatten_para.device, dtype=self.flatten_para.dtype)
+                       for _ in range(self.dp_group_size)]
+        return grad_buffer
+
     def profile_mark_sync_grad_start(self):
         if self.enable_tidy_profiling:
             self.dp_comm_stream.record_event(self.sync_gradients_start_event)
@@ -67,7 +76,7 @@ class ShardedPSDP:
             self.dp_comm_stream.wait_event(self.backward_ready_event)
             assert self.flatten
             self.profile_mark_sync_grad_start()
-            self.dp_comm.all_reduce_opt(self.flatten_para.grad, stream=cupy_dp_stream)
+            self.dp_comm.all_reduce_opt(self.flatten_para.grad, self.grad_buffer, stream=cupy_dp_stream)
             self.profile_mark_allreduce_end()
             self.dp_comm_stream.record_event(self.sync_gradients_ready_event)
 

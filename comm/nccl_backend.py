@@ -187,13 +187,13 @@ class NCCLCommunicator:
 
     def all_reduce_opt(self,
                        tensor: torch.Tensor,
+                       buffer: List[torch.Tensor],
                        stream=cupy.cuda.Stream.null):
         # First do all-to-all
         assert torch.numel(tensor.data) % self.comm_group_size == 0
         chunk_size = torch.numel(tensor.data) // self.comm_group_size
-        t_type= _type_torch_to_cupy(tensor.dtype)
+        t_type = _type_torch_to_cupy(tensor.dtype)
         element_size = tensor.data.element_size()
-        buffer = [torch.zeros(chunk_size) for _ in range(self.comm_group_size)]
         cupy.cuda.nccl.groupStart()
         for i in range(self.comm_group_size):
             self.comm.send(tensor.data_ptr()+i*chunk_size*element_size, chunk_size, t_type, i, stream.ptr)
