@@ -1,6 +1,6 @@
 import torch.cuda
 from comm.comm_utils import *
-from flatten_utils import flatten_params
+from .flatten_utils import flatten_params
 
 
 class CentralPSDP:
