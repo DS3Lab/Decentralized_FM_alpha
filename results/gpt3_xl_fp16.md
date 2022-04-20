@@ -29,10 +29,10 @@ For pipeline only, we have:
 - One pipline use 8 p3.2xlarge
 
 
-| Network setting                     | DP-1    | Sharded PS DP-2 | Central PS DP-2 | Sharded PS DP-4 | Central PS DP-4 |
-|-------------------------------------|---------|-----------------|-----------------|-----------------|-----------------|
-| default (about 0.1ms; up to 10Gbps) | 8.14 s  | 9.01 s          | 9.06 s          |                 | 9.36 s          |
-| delay 1ms  bandwidth 5Gbps          | 8.79 s  | 10.16 s         | 10.50 s         |                 | 10.76 s         |
-| delay 5ms  bandwidth 2Gbps          | 10.69 s | 12.37 s         | 13.49 s         |                 | 13.90 s         |
-| delay 10ms  bandwidth 1Gbps         | 15.64 s | 20.56 s         | 23.92 s         |                 | 24.30 s         |
-| delay 50ms  bandwidth 1Gbps         | 16.23 s | 21.01 s         | 24.26 s         |                 | 24.97 s         |
+| Network setting                     | DP-1    | Sharded PS DP-2 | Central PS DP-2 | Sharded PS DP-4 | Central PS DP-4 | Sharded PS DP-8 | Central PS DP-8 |
+|-------------------------------------|---------|-----------------|-----------------|-----------------|-----------------|-----------------|-----------------|
+| default (about 0.1ms; up to 10Gbps) | 8.14 s  | 9.01 s          | 9.06 s          | 9.25 s          | 9.36 s          | 9.78 s          | 9.59 s          |
+| delay 1ms  bandwidth 5Gbps          | 8.79 s  | 10.16 s         | 10.50 s         | 10.54 s         | 10.76 s         | 10.88 s         | 10.89 s         |
+| delay 5ms  bandwidth 2Gbps          | 10.69 s | 12.37 s         | 13.49 s         | 13.92 s         | 13.90 s         | 15.07 s         | 14.27 s         |
+| delay 10ms  bandwidth 1Gbps         | 15.64 s | 20.56 s         | 23.92 s         | 24.13 s         | 24.30 s         | 27.39 s         | 24.83 s         |
+| delay 50ms  bandwidth 1Gbps         | 16.23 s | 21.01 s         | 24.26 s         | 24.21 s         | 24.97 s         | 27.68 s         | 25.66 s         |
