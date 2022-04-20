@@ -1,5 +1,7 @@
 import numpy as np
 import itertools
+import config
+
 
 # GPT-3 XL
 batch_size = 0.5e6
@@ -7,32 +9,15 @@ layer_size = 24
 para_size = 1.3e9
 
 # physical topology
-num_devices = 8
-bandwidth = 1e9  # 1GB/s
-# https://www.cloudping.co/grid
-peer_latency = np.random.rand(num_devices, num_devices) * 200
-peer_latency = np.tril(peer_latency) + np.tril(peer_latency, -1).T
+num_devices = config.nodes
+peer_delay = None
+peer_bandwidth = None
 
 # assigned task
 batch_size_per_task = 0.25e6
 layer_size_per_task = 6
-send_activation_size = 4e9  # bytes
-send_gradient_size = 1e9  # bytes
-
-
-def heuristic_partition(num_nodes=None, way=None):
-    # https://dl.acm.org/doi/pdf/10.5555/2933718.2933740
-    subsets = [set() for _ in range(way)]
-    subset_size = num_nodes/way
-    vertix_idx = 0
-    while vertix_idx < num_nodes:
-        subset_idx = np.random.randint(way)
-        if len(subsets[subset_idx]) >= subset_size:
-            continue
-        else:
-            subsets[subset_idx].add(vertix_idx)
-            vertix_idx += 1
-    return subsets
+send_activation_size = 4  # gigabytes
+send_gradient_size = 1  # gigabytes
 
 
 def all_candidate_partitions(nodes=None, partition_size=None):
@@ -61,7 +46,9 @@ def compute_data_parallel_cost(candidate_partition=None):
             cur_cost = 0
             for secondary in partition:
                 if primary != secondary:
-                    cur_cost += peer_latency[primary, secondary]
+                    cur_cost += peer_delay[primary, secondary] / 1e3 + \
+                        send_activation_size * 8 / \
+                        peer_bandwidth[primary, secondary]
             if cur_cost < within_partition_cost:
                 within_partition_cost = cur_cost
         data_parallel_cost += within_partition_cost
@@ -140,7 +127,8 @@ def compute_pipeline_parallel_cost(candidate_partition=None):
             for bipartite_match in bipartite_matches:
                 cur_transfer_times = []
                 for pair in bipartite_match:
-                    cur_transfer_times.append(peer_latency[pair[0], pair[1]])
+                    cur_transfer_times.append(
+                        peer_delay[pair[0], pair[1]]/1e3 + send_gradient_size * 8 / peer_bandwidth[pair[0], pair[1]])
                 all_transfer_times.append(max(cur_transfer_times))
             crose_partition_cost[i, j] = min(all_transfer_times)
     crose_partition_cost = crose_partition_cost + crose_partition_cost.T
@@ -176,50 +164,37 @@ if __name__ == "__main__":
     assert(num_devices == batch_size * layer_size /
            (batch_size_per_task * layer_size_per_task))
 
+    simulate_cases = [config.simulate_0_datacenter, config.simulate_1_datacenter_spot_gpu, config.simulate_2_multi_universities,
+                      config.simulate_3_regional_geo_distributed, config.simulate_4_worldwide_geo_distributed]
     import time
-    start = time.perf_counter()
-    candidate_partition = heuristic_partition(
-        num_nodes=num_devices, way=int(layer_size/layer_size_per_task))
-
-    data_parallel_cost = compute_data_parallel_cost(
-        candidate_partition=candidate_partition)
-
-    pipeline_parallel_cost, pipeline_parallel_path = compute_pipeline_parallel_cost(
-        candidate_partition)
-    end = time.perf_counter()
-    print("run time(per candidate): " + str(end - start) + " seconds")
-    print("candidate partition: " + str(candidate_partition))
-    print("pipeline parallel path: " + str(pipeline_parallel_path))
-    print("total cost: " + str(data_parallel_cost + pipeline_parallel_cost))
-    print("data parallel cost: " + str(data_parallel_cost))
-    print("pipeline parallel cost: " + str(pipeline_parallel_cost))
-
-    start = time.perf_counter()
-    min_total_cost = float('inf')
-    candidate_partition = None
-    data_parallel_cost = None
-    pipeline_parallel_cost = None
-    pipeline_parallel_path = None
-    all_cost_records = []
-    for cur_candidate_partition in all_candidate_partitions(list(range(num_devices)),
-                                                            int(batch_size / batch_size_per_task)):
-        cur_data_parallel_cost = compute_data_parallel_cost(
-            candidate_partition=cur_candidate_partition)
-        cur_pipeline_parallel_cost, cur_pipeline_parallel_path = compute_pipeline_parallel_cost(
-            cur_candidate_partition)
-        cur_total_cost = cur_data_parallel_cost + cur_pipeline_parallel_cost
-        all_cost_records.append(cur_total_cost)
-        if min_total_cost >= cur_total_cost:
-            min_total_cost = cur_total_cost
-            candidate_partition = cur_candidate_partition
-            pipeline_parallel_path = cur_pipeline_parallel_path
-            data_parallel_cost = cur_data_parallel_cost
-            pipeline_parallel_cost = cur_pipeline_parallel_cost
-    end = time.perf_counter()
-    print("run time(" + str(len(all_cost_records)) +
-          " candidates): " + str(end - start) + " seconds")
-    print("candidate partition: " + str(candidate_partition))
-    print("pipeline parallel path: " + str(pipeline_parallel_path))
-    print("total cost: " + str(data_parallel_cost + pipeline_parallel_cost))
-    print("data parallel cost: " + str(data_parallel_cost))
-    print("pipeline parallel cost: " + str(pipeline_parallel_cost))
+    for simulate_case in simulate_cases:
+        peer_delay, peer_bandwidth = simulate_case()
+        start = time.perf_counter()
+        min_total_cost = float('inf')
+        candidate_partition = None
+        data_parallel_cost = None
+        pipeline_parallel_cost = None
+        pipeline_parallel_path = None
+        all_cost_records = []
+        for cur_candidate_partition in all_candidate_partitions(list(range(num_devices)),
+                                                                int(batch_size / batch_size_per_task)):
+            cur_data_parallel_cost = compute_data_parallel_cost(
+                candidate_partition=cur_candidate_partition)
+            cur_pipeline_parallel_cost, cur_pipeline_parallel_path = compute_pipeline_parallel_cost(
+                cur_candidate_partition)
+            cur_total_cost = cur_data_parallel_cost + cur_pipeline_parallel_cost
+            all_cost_records.append(cur_total_cost)
+            if min_total_cost >= cur_total_cost:
+                min_total_cost = cur_total_cost
+                candidate_partition = cur_candidate_partition
+                pipeline_parallel_path = cur_pipeline_parallel_path
+                data_parallel_cost = cur_data_parallel_cost
+                pipeline_parallel_cost = cur_pipeline_parallel_cost
+        end = time.perf_counter()
+        print("run time(" + str(len(all_cost_records)) +
+              " candidates): " + str(end - start) + " seconds")
+        print("candidate partition: " + str(candidate_partition))
+        print("pipeline parallel path: " + str(pipeline_parallel_path))
+        print("total cost: " + str(data_parallel_cost + pipeline_parallel_cost))
+        print("data parallel cost: " + str(data_parallel_cost))
+        print("pipeline parallel cost: " + str(pipeline_parallel_cost))
