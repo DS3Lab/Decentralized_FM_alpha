@@ -119,6 +119,7 @@ class GpipeAsync:
             print("Current micro-batch send/recv size: {} MB (fp16)".format(micro_batch_float_num * 2 // 1024 // 1024))
         else:
             print("Current micro-batch send/recv size: {} MB (fp32)".format(micro_batch_float_num*4//1024//1024))
+        print("Number of micro-batches: {}.".format(self.micro_batch_num))
 
     def zero_input_grad(self):
         if self.input_micro_batches:
