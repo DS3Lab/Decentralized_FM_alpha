@@ -115,11 +115,11 @@ class CentralPSDP:
                 self.profile_mark_broadcast_start()
                 self.dp_comm.broadcast(self.flatten_para.grad, src=0, stream=cupy_dp_stream)
                 self.profile_mark_broadcast_end()
-
-            for name, para in self.module.named_parameters():
-                self.profile_mark_broadcast_start(name)
-                self.dp_comm.broadcast(para.grad, src=0, stream=cupy_dp_stream)
-                self.profile_mark_broadcast_end(name)
+            else:
+                for name, para in self.module.named_parameters():
+                    self.profile_mark_broadcast_start(name)
+                    self.dp_comm.broadcast(para.grad, src=0, stream=cupy_dp_stream)
+                    self.profile_mark_broadcast_end(name)
             self.dp_comm_stream.record_event(self.broadcast_reduced_gradients_ready_event)
 
     def optimizer_step(self):
