@@ -7,7 +7,7 @@ rank=$3
 timestamp=$(date +%Y_%m_%d_%H_%M)
 
 #central_ps, sharded_ps, allreduce
-dp_mode=central_ps
+dp_mode=sharded_ps
 
 if [ "$world_size" -ne 32 ]
 then

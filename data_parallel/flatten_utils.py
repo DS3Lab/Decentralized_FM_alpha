@@ -9,12 +9,14 @@ def _assert_contiguous(tensors):
         data_ptr = t.data_ptr() + t.numel() * t.element_size()
 
 
-def flatten_params(param_set):
+def flatten_params(param_set, chunk=None):
     params = [p for p in param_set]
     weights = [p.data for p in params]
     grads = [p.grad.data if p.grad is not None else torch.zeros_like(p.data) for p in params]
     sizes = [p.numel() for p in params]
     total_size = sum(sizes)
+    if chunk:
+        total_size = ((total_size+chunk-1)//chunk)*chunk
 
     flatten_weights_tensor = torch.zeros(total_size, dtype=weights[0].dtype).to(weights[0].device)
     flatten_grads_tensor = torch.zeros(total_size, dtype=weights[0].dtype).to(weights[0].device)

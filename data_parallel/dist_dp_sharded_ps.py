@@ -25,7 +25,7 @@ class ShardedPSDP:
               .format(num_paras, element_size, num_paras * element_size // 1024 // 1024))
 
         assert self.flatten
-        self.flatten_para = flatten_params(self.module.parameters())
+        self.flatten_para = flatten_params(self.module.parameters(), self.dp_group_size)
         print("Flattened parameter number: {}, element size: {}."
               .format(self.flatten_para.data.numel(), self.flatten_para.data.element_size()))
         print("Flattened parameter grad number: {}, element size: {}."
