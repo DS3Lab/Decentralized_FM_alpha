@@ -1,4 +1,5 @@
 import numpy as np
+import random
 import itertools
 import config
 
@@ -18,6 +19,69 @@ batch_size_per_task = 0.25e6
 layer_size_per_task = 6
 send_activation_size = 4  # gigabytes
 send_gradient_size = 1  # gigabytes
+
+
+def normalization(parent1=None, parent2=None, partition_size=None):
+    parent1_str = [0] * num_devices
+    parent2_str = [0] * num_devices
+    for i in range(num_devices):
+        parent1_str[parent1[i]] = i // partition_size
+        parent2_str[parent2[i]] = i // partition_size
+
+    way = int(num_devices / partition_size)
+    count = np.zeros(shape=(way, way))
+    for i in range(num_devices):
+        count[parent1_str[i], parent2_str[i]] += 1
+
+    map = [0] * way
+    for i in range(way):
+        max_idx = np.argmax(count)
+        p = max_idx // way
+        q = max_idx - p * way
+        for j in range(way):
+            count[p][j] = float('-inf')
+            count[j][q] = float('-inf')
+        map[q] = p
+
+    for i in range(num_devices):
+        parent2_str[i] = map[parent2_str[i]]
+
+    return parent1_str, parent2_str
+
+
+def five_point_crossover(parent1_str=None, parent2_str=None, partition_size=None):
+    points = list(range(num_devices))
+    random.shuffle(points)
+    points = points[:5]
+
+    for point in points:
+        parent2_str[point] = parent1_str[point]
+
+    way = int(num_devices / partition_size)
+    unbalanced_offspring = [[] for _ in range(way)]
+    for i in range(num_devices):
+        unbalanced_offspring[parent2_str[i]].append(i)
+
+    offspring = list(itertools.chain.from_iterable(unbalanced_offspring))
+    return offspring
+
+
+def GCMA(nodes=None, partition_size=None, population_size=None, trails=None):
+    # https://dl.acm.org/doi/10.5555/2933718.2933740
+    candidate_partitions = []
+    for i in range(population_size):
+        cur_nodes = nodes.copy()
+        random.seed = i
+        random.shuffle(cur_nodes)
+        candidate_partitions.append(cur_nodes)
+    for i in range(trails):
+        np.random.seed = i
+        parent1_idx, parent2_idx = np.random.randint(population_size, size=2)
+        parent1_str, parent2_str = normalization(
+            candidate_partitions[parent1_idx], candidate_partitions[parent2_idx], partition_size)
+        offspring = five_point_crossover(
+            parent1_str, parent2_str, partition_size)
+    return candidate_partitions
 
 
 def all_candidate_partitions(nodes=None, partition_size=None):
@@ -163,6 +227,9 @@ if __name__ == "__main__":
     assert(layer_size % layer_size_per_task == 0)
     assert(num_devices == batch_size * layer_size /
            (batch_size_per_task * layer_size_per_task))
+    GCMA(nodes=list(range(num_devices)),
+         partition_size=2, population_size=50, trails=100)
+    exit()
 
     simulate_cases = [config.simulate_0_datacenter, config.simulate_1_datacenter_spot_gpu, config.simulate_2_multi_universities,
                       config.simulate_3_regional_geo_distributed, config.simulate_4_worldwide_geo_distributed]
