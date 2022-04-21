@@ -367,8 +367,12 @@ class GpipeAsync:
         for step in range(self.gradient_accumulate_step):
             outputs = self.forward_stage(input_)
             forward_time = time.time()
+            if step == 0:
+                forward_slot = forward_time-start_time
+            else:
+                forward_slot = forward_time-backward_time
             print("Rank {} node forward pass {}/{} takes {:3.2f}s"
-                  .format(self.global_rank, step, self.gradient_accumulate_step, forward_time-start_time))
+                  .format(self.global_rank, step, self.gradient_accumulate_step, forward_slot))
             self.comm.barrier()  # This is an educated guess that such barrier would make it fair TC (probably required)
             self.backward_stage(outputs, target)
             backward_time = time.time()
@@ -382,6 +386,7 @@ class GpipeAsync:
         print("Rank {} node optimizer step takes {:3.2f}s".format(self.global_rank, end_time - optimizer_time))
         iter_time = end_time - start_time
         print("Rank {} node whole iteration takes {:3.2f}s".format(self.global_rank, iter_time))
+        print("-------------------------------------------")
         # torch.cuda.empty_cache()
         # print(torch.cuda.memory_summary())
         return iter_time
