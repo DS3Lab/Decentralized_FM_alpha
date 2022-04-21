@@ -90,8 +90,8 @@ def get_model_arguments_str(args):
 
 
 def get_dist_arguments_str(args, add_rank=True):
-    dist_str = '_w' + str(args.world_size) + '_p' + str(args.pipeline_group_size) + "_" + args.gradient_accumulate_step\
-               + '_d' + str(args.data_group_size)
+    dist_str = '_w' + str(args.world_size) + '_p' + str(args.pipeline_group_size) + "_" + \
+               str(args.gradient_accumulate_step) + '_d' + str(args.data_group_size)
     if add_rank:
         dist_str = dist_str + '_' + str(args.rank)
     return dist_str
