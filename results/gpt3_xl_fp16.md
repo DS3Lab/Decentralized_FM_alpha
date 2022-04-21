@@ -55,5 +55,10 @@ Assume 3 layer on each node, () includes the special cases of first/last stage:
     - Total: 3 GB (first stage: 1.5 GB, last stage 1.5 GB)
   - Total:  4.73 GB (first stage: 3.89 GB, last stage: 3.23 GB)
 
+- Run time profiling:
+  - Local simulation without communication: ()[]
+  - Real execution: 
+
+
 
 
