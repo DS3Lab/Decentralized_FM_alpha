@@ -17,14 +17,11 @@ def main():
     add_task_arguments(parser)
     add_training_hyper_parameter_arguments(parser)
     add_mixed_precision_arguments(parser)
+    add_parallel_schema_arguments(parser)
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
     parser.add_argument('--profiling', type=str, default='tidy_profiling', metavar='S',
                         help='enable which profiling? default: tidy mode')
-    parser.add_argument('--pp-mode', type=str, default='gpipe', metavar='S',
-                        help='use which pipeline parallel mode: gpipe or 1f1b.')
-    parser.add_argument('--dp-mode', type=str, default='allreduce', metavar='S',
-                        help='use which data parallel mode: allreduce.')
     parser.add_argument('--trace-postfix', type=str, default='default', metavar='S',
                         help='postfix of the tracing file name.')
     args = parser.parse_args()

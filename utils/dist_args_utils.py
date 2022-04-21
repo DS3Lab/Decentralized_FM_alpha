@@ -76,6 +76,15 @@ def add_mixed_precision_arguments(parser):
                         help='hysteresis for dynamic loss scaling')
 
 
+def add_parallel_schema_arguments(parser):
+    parser.add_argument('--pp-mode', type=str, default='gpipe', metavar='S',
+                        help='use which pipeline parallel mode: gpipe or 1f1b.')
+    parser.add_argument('--dp-mode', type=str, default='allreduce', metavar='S',
+                        help='use which data parallel mode: allreduce.')
+    parser.add_argument('--gradient-accumulate-step', type=int, default=1,
+                        help='Number of gradient computation in Pipeline without data parallel sync.')
+
+
 def get_model_arguments_str(args):
     return '_l' + str(args.seq_length) + '_m' + str(args.embedding_dim)
 
