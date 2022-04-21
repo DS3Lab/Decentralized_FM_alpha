@@ -105,7 +105,8 @@ def GCMA(nodes=None, population_size=None, trails=None):
         for i in range(num_devices):
             for j in range(i, num_devices):
                 if (i // partition_size) != (j // partition_size):
-                    score += peer_delay[i, j]
+                    score += peer_delay[candidate_partition[i],
+                                        candidate_partition[j]]
         return score
 
     candidate_partitions = []
