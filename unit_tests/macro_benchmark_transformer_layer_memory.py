@@ -25,7 +25,7 @@ def benchmark_transformer_layer(args, device):
     batch_shape = (args.batch_size, args.seq_length, args.embedding_dim)
 
     # activities=[ProfilerActivity.CUDA]
-    n = 64
+    n = 96
     fake_input_batches = [torch.zeros(batch_shape, requires_grad=True, device=device, dtype=torch.float16)
                           for _ in range(n)]
     for micro_batch in fake_input_batches:

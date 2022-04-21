@@ -370,5 +370,6 @@ class GpipeAsync:
         end_time = time.time()
         iter_time = end_time - start_time
         print("Rank {} node whole iteration takes {:3.2f}s".format(self.global_rank, iter_time))
+        torch.cuda.empty_cache()
         print(torch.cuda.memory_summary())
         return iter_time
