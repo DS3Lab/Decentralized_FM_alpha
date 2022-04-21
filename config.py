@@ -1,6 +1,6 @@
 import numpy as np
 
-nodes = 8
+nodes = 16
 
 
 def simulate_0_datacenter():
@@ -137,10 +137,10 @@ def simulate_3_regional_geo_distributed():
 # Assume within region is 2 GB, 5 ms.
 def simulate_4_worldwide_geo_distributed():
     print("Simulate case 4: worldwide geo distributed")
-    # regions = ["Oregon", "Oregon", "Virginia", "Ohio", "Ohio", "Tokyo", "Seoul", "Seoul",
-    #           "Singapore", "Sydney", "London", "London", "Frankfurt", "Frankfurt", "Ireland", "Ireland"]
-    regions = ["Oregon", "Virginia", "Tokyo", "Seoul",
-               "Singapore", "London", "Frankfurt", "Ireland"]
+    regions = ["Oregon", "Oregon", "Virginia", "Ohio", "Ohio", "Tokyo", "Seoul", "Seoul",
+               "Singapore", "Sydney", "London", "London", "Frankfurt", "Frankfurt", "Ireland", "Ireland"]
+    # regions = ["Oregon", "Virginia", "Tokyo", "Seoul",
+    #           "Singapore", "London", "Frankfurt", "Ireland"]
     assert len(regions) == nodes
 
     def get_delay_bandwidth(region1: str, region2: str):

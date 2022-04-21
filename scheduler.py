@@ -17,7 +17,7 @@ peer_bandwidth = None
 
 # assigned task
 batch_size_per_task = 0.25e6
-layer_size_per_task = 6
+layer_size_per_task = 3
 send_activation_size = 4  # gigabytes
 send_gradient_size = 1  # gigabytes
 
@@ -297,7 +297,7 @@ if __name__ == "__main__":
         all_cost_records = []
 
         # for cur_candidate_partition in all_candidate_partitions(list(range(num_devices))):
-        for cur_raw_candidate_partition in GCMA(nodes=list(range(num_devices)), population_size=50, trails=500):
+        for cur_raw_candidate_partition in GCMA(nodes=list(range(num_devices)), population_size=50, trails=450):
             cur_candidate_partition = [cur_raw_candidate_partition[i: i +
                                                                    partition_size] for i in range(0, num_devices, partition_size)]
             cur_data_parallel_cost = compute_data_parallel_cost(
