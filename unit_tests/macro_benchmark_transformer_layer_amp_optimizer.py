@@ -19,8 +19,8 @@ def benchmark_transformer_layer(args, device):
     layers.half()
     optimizer = torch.optim.SGD(layers.parameters(), lr=args.lr)
     # optimizer = apex.optimizers.FusedSGD(layers.parameters(), lr=args.lr)
-    grad_scaler = ConstantGradScaler(0.1)
-    fp16_optimizer = Fp16Optimizer(optimizer, grad_scaler)
+    grad_scaler = ConstantGradScaler(0.1, offload=True)
+    fp16_optimizer = Fp16Optimizer(optimizer, grad_scaler, device, offload=True)
 
     batch_shape = (args.batch_size, args.seq_length, args.embedding_dim)
 

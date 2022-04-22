@@ -74,6 +74,8 @@ def add_mixed_precision_arguments(parser):
                         help='Window over which to raise/lower dynamic scale.')
     parser.add_argument('--hysteresis', type=int, default=2,
                         help='hysteresis for dynamic loss scaling')
+    parser.add_argument('--use-offload', default=True, type=lambda x: (str(x).lower() == 'true'),
+                        help='if this is set to True, we will offload the fp32 model to CPU RAM.')
 
 
 def add_parallel_schema_arguments(parser):

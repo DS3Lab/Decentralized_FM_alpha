@@ -110,7 +110,7 @@ class GpipeAsync:
         if self.use_fp16:
             self.model.half()
             tmp_optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
-            self.optimizer = get_fp16_optimizer(args, tmp_optimizer)
+            self.optimizer = get_fp16_optimizer(args, tmp_optimizer, device)
         else:
             self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
 
