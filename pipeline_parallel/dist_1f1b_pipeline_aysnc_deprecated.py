@@ -2,7 +2,7 @@ import time
 import json
 import torch.nn.functional
 from torch import optim
-from comm.init_comm import *
+from comm.comm_utils import *
 from modules.dist_gpt_pp_module import *
 
 
@@ -90,11 +90,11 @@ class Pipe1F1BAsync:
                                           for _ in range(self.micro_batch_num)]
 
         if self.rank == 0:
-            self.model = GPTShardFirst(args, vocab_size, num_classes, device)
+            self.model = GPTStageFirst(args, vocab_size, num_classes, device)
         elif self.rank == self.world_size - 1:
-            self.model = GPTShardLast(args, vocab_size, num_classes, device)
+            self.model = GPTStageLast(args, vocab_size, num_classes, device)
         else:
-            self.model = GPTShardMiddle(args, vocab_size, num_classes, device)
+            self.model = GPTStageMiddle(args, vocab_size, num_classes, device)
         self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
 
     def zero_input_grad(self):

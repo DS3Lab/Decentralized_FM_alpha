@@ -2,9 +2,10 @@ import time
 import json
 import torch.nn.functional
 from torch import optim
-from comm.init_comm import *
+from comm.comm_utils import *
 from modules.dist_gpt_pp_module import *
-from data_parallel.dist_central_ps import CentralPS
+from data_parallel.dist_dp_utils import get_dp_module
+from optimizer.optimizer import get_fp16_optimizer
 
 
 class GpipeAsync:
@@ -19,12 +20,23 @@ class GpipeAsync:
     """
 
     def __init__(self, args, config, device, use_dp=False):
+        print("=======Initialize Gpipe.")
+        if args.fp16:
+            self.use_fp16 = True
+            print("=======Gpipe use FP16")
+        else:
+            self.use_fp16 = False
+            print("=======Gpipe use FP32")
+        self.use_dp = use_dp
+        self.dtype = torch.float16 if self.use_fp16 else torch.float32
         self.global_rank = args.rank
         self.pipeline_group_size = args.pipeline_group_size
         self.pp_rank = get_pipeline_parallel_rank()  # Rank is the pipeline rank by default.
         self.pre_node_rank = self.pp_rank - 1
         self.post_node_rank = self.pp_rank + 1 if self.pp_rank != self.pipeline_group_size - 1 else -1
         self.comm = get_pipeline_parallel_comm()
+        self.gradient_accumulate_step = args.gradient_accumulate_step
+        print("=======Gradient accumulate step: ", self.gradient_accumulate_step)
 
         assert (args.batch_size % args.micro_batch_size == 0)
         self.micro_batch_num = args.batch_size // args.micro_batch_size
@@ -33,7 +45,7 @@ class GpipeAsync:
         self.embedding_dim = args.embedding_dim
         self.config = config
         self.vocab_size = config.vocab_size
-#         self.num_classes = num_classes
+        self.num_classes = config.num_labels
 
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
         self.device = device
@@ -80,36 +92,42 @@ class GpipeAsync:
             self.input_micro_batches = None
         else:
             self.input_micro_batches = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
-                                                    requires_grad=True, device=self.device)
+                                                    requires_grad=True, device=self.device, dtype=self.dtype)
                                         for _ in range(self.micro_batch_num)]
         if self.pp_rank == self.pipeline_group_size - 1:
             self.output_micro_batches_grad = None
         else:
             self.output_micro_batches_grad = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
-                                                          requires_grad=False, device=self.device)
+                                                          requires_grad=False, device=self.device, dtype=self.dtype)
                                               for _ in range(self.micro_batch_num)]
 
         if self.pp_rank == 0:
-            self.model = GPTShardFirst(args, config, device)
+            self.model = GPTStageFirst(args, config, device)
         elif self.pp_rank == self.pipeline_group_size - 1:
-            self.model = GPTShardLast(args, config, device)
+            self.model = GPTStageLast(args, config, device)
         else:
-            self.model = GPTShardMiddle(args, config, device)
+            self.model = GPTStageMiddle(args, config, device)
 
-        self.use_dp = use_dp
-        if use_dp:
-            if get_data_parallel_rank() == 0:
-                self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
-                self.dp_optim = CentralPS(args, device, self.model, self.optimizer)
-            else:
-                self.dp_optim = CentralPS(args, device, self.model)
-                self.optimizer = None
+        if self.use_fp16:
+            self.model.half()
+            tmp_optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
+            self.optimizer = get_fp16_optimizer(args, tmp_optimizer)
         else:
             self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
 
+        # Notice that if we use fp16, gradients are aggregated in fp16, this may not be the default in Megatron.
+        if use_dp:
+            self.dp_optim = get_dp_module(args, device, self.model, self.optimizer)
+
     def _compute_micro_batch_size(self):
         micro_batch_float_num = self.micro_batch_size * self.seq_length * self.embedding_dim
-        print("Current micro-batch send/recv size: {} MB".format(micro_batch_float_num*4//1024//1024))
+        if self.use_fp16:
+            print("=======Current micro-batch send/recv size: {} MB (fp16)"
+                  .format(micro_batch_float_num * 2 // 1024 // 1024))
+        else:
+            print("=======Current micro-batch send/recv size: {} MB (fp32)"
+                  .format(micro_batch_float_num*4//1024//1024))
+        print("=======Number of micro-batches: {}.".format(self.micro_batch_num))
 
     def zero_input_grad(self):
         if self.input_micro_batches:
@@ -231,7 +249,7 @@ class GpipeAsync:
                 self.profiling_log.append(send_log)
 
     def backward_stage(self, cached_output_micro_batches: List[torch.Tensor], target=None,
-                       loss_func=gpt_loss_func):
+                       loss_func=torch.nn.functional.cross_entropy):
         # print("Backward stage start! rank-", self.rank)
         if self.pp_rank == self.pipeline_group_size - 1:
             assert(target is not None)
@@ -244,6 +262,7 @@ class GpipeAsync:
                     self.profile_mark_backward_comp_start(i)
                     loss = loss_func(input=cached_output_micro_batches[i], target=target_as_micro_batches[i])
                     loss.backward()
+                    print('loss:', loss.item())
                     self.torch_comp_stream.record_event(self.backward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
@@ -311,9 +330,7 @@ class GpipeAsync:
         if self.use_dp:
             with torch.cuda.stream(self.torch_comp_stream):
                 self.torch_comp_stream.record_event(self.dp_optim.backward_ready_event)
-            self.dp_optim.reduce_gradients()
             self.dp_optim.optimizer_step()
-            self.dp_optim.broadcast_parameters()
         else:
             with torch.cuda.stream(self.torch_comp_stream):
                 if self.enable_tidy_profiling:
@@ -347,18 +364,31 @@ class GpipeAsync:
             self.init_time_stamp = time.time() * 1e+6
             self.init_event.record()
         self.zero_input_grad()
-        if self.optimizer is not None:
-            self.optimizer.zero_grad()
-        outputs = self.forward_stage(input_)
-        forward_time = time.time()
-        print("Rank {} node forward pass takes {:3.2f}s".format(self.global_rank,  forward_time-start_time))
-        self.comm.barrier()  # This is an educated guess that such barrier would make it fair TC (probably required)
-        self.backward_stage(outputs, target)
-        backward_time = time.time()
-        print("Rank {} node backward pass takes {:3.2f}s".format(self.global_rank,  backward_time-forward_time))
+        self.optimizer.zero_grad(set_to_none=True)
+
+        for step in range(self.gradient_accumulate_step):
+            outputs = self.forward_stage(input_)
+            forward_time = time.time()
+            if step == 0:
+                forward_slot = forward_time-start_time
+            else:
+                forward_slot = forward_time-backward_time
+            print("Rank {} node forward pass {}/{} takes {:3.2f}s"
+                  .format(self.global_rank, step, self.gradient_accumulate_step, forward_slot))
+            self.comm.barrier()  # This is an educated guess that such barrier would make it fair TC (probably required)
+            self.backward_stage(outputs, target)
+            backward_time = time.time()
+            print("Rank {} node backward pass {}/{} takes {:3.2f}s"
+                  .format(self.global_rank, step, self.gradient_accumulate_step, backward_time-forward_time))
+        optimizer_time = time.time()
         self.optimizer_step()
         torch.cuda.synchronize()
+        self.comm.barrier()
         end_time = time.time()
+        print("Rank {} node optimizer step takes {:3.2f}s".format(self.global_rank, end_time - optimizer_time))
         iter_time = end_time - start_time
         print("Rank {} node whole iteration takes {:3.2f}s".format(self.global_rank, iter_time))
+        print("-------------------------------------------")
+        # torch.cuda.empty_cache()
+        # print(torch.cuda.memory_summary())
         return iter_time

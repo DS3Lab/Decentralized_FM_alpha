@@ -94,3 +94,17 @@ def get_glue_qqp_train_data_loader(args, tokenizer, num_workers=0):
                                                     pin_memory=True,
                                                     collate_fn=None)
     return train_data_loader
+
+
+def get_glue_qqp_test_data_loader(args, tokenizer, num_workers=0):
+    test_dataset = QQPDataset('testing', args.test_data, tokenizer, args.seq_length)
+    test_sampler = torch.utils.data.RandomSampler(test_dataset)
+    test_data_loader = torch.utils.data.DataLoader(test_dataset,
+                                                    batch_size=args.batch_size,
+                                                    sampler=test_sampler,
+                                                    shuffle=False,
+                                                    num_workers=num_workers,
+                                                    drop_last=True,
+                                                    pin_memory=True,
+                                                    collate_fn=None)
+    return test_data_loader

@@ -12,6 +12,7 @@ from transformers.models.gpt2.modeling_gpt2 import GPT2MLP as _GPT2MLP
 from transformers.models.gpt2.modeling_gpt2 import GPT2Block as _GPT2Block
 from transformers.models.gpt2.modeling_gpt2 import GPT2Model as _GPT2Model
 from transformers.models.gpt2.modeling_gpt2 import GPT2LMHeadModel as _GPT2LMHeadModel
+from transformers.models.gpt2.modeling_gpt2 import GPT2ForSequenceClassification as _GPT2ForSequenceClassification
 from transformers.models.gpt2.configuration_gpt2 import GPT2Config as GPTConfig
 
 # @torch.jit.script
@@ -139,8 +140,45 @@ class GPTLMHeadModel(_GPT2LMHeadModel):
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
         # ln_f will be calculated in self.transformer
 
-        self.init_weights()
+        # Model parallel
+        self.model_parallel = False
+        self.device_map = None
+        
+        # Initialize weights and apply final processing
+        self.post_init()
+        
+class GPTClassificationHead(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+        self.ln_f = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
+        self.score = nn.Linear(config.n_embd, config.num_labels, bias=False)
+        
+    def forward(self, hidden_states, input_ids=None):
+        
+        batch_size, sequence_length = hidden_states.shape[:2]
+        if input_ids is not None:
+            sequence_lengths = torch.ne(input_ids, self.config.pad_token_id).sum(-1) - 1
+        else:
+            sequence_lengths = -1
+        
+        pooled_hidden_states = hidden_states[torch.arange(batch_size, device=hidden_states.device), sequence_lengths]
+        
+        logits = self.score(self.ln_f(pooled_hidden_states))
+        
+        return logits
+        
+class GPTForClassification(_GPT2ForSequenceClassification):
+    
+    def __init__(self, config):
+        super().__init__(config)
+        self.num_labels = config.num_labels
+        self.transformer = GPTModel(config)
+        self.score = nn.Linear(config.n_embd, self.num_labels, bias=False)
 
         # Model parallel
         self.model_parallel = False
         self.device_map = None
+
+        # Initialize weights and apply final processing
+        self.post_init()

@@ -2,14 +2,17 @@ import argparse
 import time
 import torch
 import torch.autograd.profiler as profiler
-from tasks.data_loaders.wikitext import get_wikitext_data_loader
+from tasks.data_loaders.qqp import get_qqp_data_loader
+from tasks.data_loaders.mrpc import get_mrpc_data_loader
 from modules.gpt_modules import GPTConfig
 from modules.tokenizer import build_tokenizer
 from pipeline_parallel.dist_1f1b_pipeline_async import Pipe1F1BAsync
 from pipeline_parallel.dist_gpipe_pipeline_async import GpipeAsync
+from pipeline_parallel.dist_pp_utils import get_pp_module
+
 from utils.dist_args_utils import *
-from utils.dist_pp_train_utils import *
-from comm.init_comm import *
+from utils.dist_train_utils import *
+from comm.comm_utils import *
 
 
 def main():
@@ -19,14 +22,16 @@ def main():
     add_model_arguments(parser)
     add_task_arguments(parser)
     add_training_hyper_parameter_arguments(parser)
-    parser.add_argument('--tokenizer-name', type=str, default='gpt2', metavar='S',
-                        help='which tokenizer to use.')
+    add_mixed_precision_arguments(parser)
+    add_parallel_schema_arguments(parser)
+    parser.add_argument('--model-name', type=str, default='gpt2', metavar='S',
+                        help='model name or path')
+    parser.add_argument('--load-pretrained-model', type=int, default=1, metavar='S',
+                        help='load pretrained model or not.')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
     parser.add_argument('--profiling', type=str, default='tidy_profiling', metavar='S',
                         help='enable which profiling? default: tidy mode')
-    parser.add_argument('--mode', type=str, default='1f1b', metavar='S',
-                        help='use which mode: gpipe or 1f1b.')
     parser.add_argument('--trace-postfix', type=str, default='default', metavar='S',
                         help='postfix of the tracing file name.')
     args = parser.parse_args()
@@ -39,13 +44,14 @@ def main():
 
     init_communicators(args)
     
-    config = GPTConfig.from_pretrained('gpt2')
+    config = GPTConfig.from_pretrained(args.model_name)
     config.n_embd = args.embedding_dim
     config.n_inner = args.embedding_dim*4
     config.n_layer = args.num_layers
     config.n_head = args.num_heads
     config.n_positions = args.seq_length
     config.n_ctx = args.seq_length
+    config.num_labels = 2 # TODO
     
     if get_pipeline_parallel_rank() == 0 or get_pipeline_parallel_rank() == args.pipeline_group_size-1:
         tokenizer = build_tokenizer(args)
@@ -53,33 +59,53 @@ def main():
         config.vocab_size = tokenizer.vocab_size
         config.bos_token_id = tokenizer.bos_token_id
         config.eos_token_id = tokenizer.eos_token_id
+        config.pad_token_id = tokenizer.pad_token_id
         print("token vocab size:", tokenizer.vocab_size)
-        train_data_loader = get_wikitext_data_loader(args, tokenizer)
-        vocab_size = tokenizer.vocab_size
+        train_data_loader = get_mrpc_data_loader(args, tokenizer)
     else:
         train_data_loader = None
-        vocab_size = -1
 
     use_dp = (args.world_size != args.pipeline_group_size)
     if use_dp:
-        print("Running ", args.mode, " with data parallel.")
+        print("Running ", args.pp_mode, " with data parallel.")
     else:
-        print("Running ", args.mode, " without data parallel.")
+        print("Running ", args.pp_mode, " without data parallel.")
 
-    if args.mode == 'gpipe':
-        pipe = GpipeAsync(args, config, device, use_dp)
-    elif args.mode == '1f1b':
-        pipe = Pipe1F1BAsync(args, config, device, use_dp)
-    else:
-        print("Not recognize this mode.")
-        assert False
+    pipe = get_pp_module(args, config, device, use_dp)
+    
+    if args.load_pretrained_model:
+        if get_pipeline_parallel_rank() == 0:
+            pipe.model.model[0].load_state_dict(
+                torch.load(f'{args.model_name}/pytorch_embs.pt')
+            )
+            for i in range(len(pipe.model.model)-1):
+                pipe.model.model[i+1].load_state_dict(
+                    torch.load(f'{args.model_name}/pytorch_{i}.pt')
+                )
+        elif get_pipeline_parallel_rank() == args.pipeline_group_size-1:
+            _i = get_pipeline_parallel_rank() * args.num_layers
+            # skip last classification layer
+            for i in range(len(pipe.model.model)-1):
+                pipe.model.model[i].load_state_dict(
+                    torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
+                )
+        else:
+            _i = get_pipeline_parallel_rank() * args.num_layers
+            for i in range(len(pipe.model.model)):
+                pipe.model.model[i].load_state_dict(
+                    torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
+                )
+            
 
     if args.profiling == 'no-profiling':
         distributed_train_foo_iter(args, pipe, device, train_data_loader)
     else:
-        trace_file = './trace_json/gpt3_' + args.mode + get_learning_arguments_str(args) \
-                     + get_model_arguments_str(args) + get_dist_arguments_str(args) + '_' \
-                     + args.profiling + '_' + args.trace_postfix + '.json'
+        prefix = './trace_json/gpt3_' + args.pp_mode
+        if use_dp:
+            prefix = prefix + '_' + args.dp_mode
+        trace_file = prefix + get_learning_arguments_str(args) + get_model_arguments_str(args) + \
+                     get_dist_arguments_str(args) + get_mixed_precision_arguments_str(args) + '_' + \
+                     args.profiling + '_' + args.trace_postfix + '.json'
         if args.profiling == 'tidy_profiling':
             try:
                 distributed_train_foo_iter(args, pipe, device, train_data_loader)

@@ -1,11 +1,11 @@
 from torch import nn
-from .gpt_modules import gpt_loss_func
-from .gpt_modules import GPTEmbeddings, GPTBlock, GPTLMHead
+# from .gpt_modules import gpt_loss_func
+from .gpt_modules import GPTEmbeddings, GPTBlock, GPTClassificationHead
 
 
-class GPTShardBase(nn.Module):
+class GPTStageBase(nn.Module):
     def __init__(self, args, config):
-        super(GPTShardBase, self).__init__()
+        super(GPTStageBase, self).__init__()
         self._to_cpu = (args.dist_backend == "gloo")
 #         self._vocab_size = vocab_size
         self._embedding_dim = args.embedding_dim  # embedding dimension
@@ -22,15 +22,15 @@ class GPTShardBase(nn.Module):
         return GPTEmbeddings(self.config)
 
     def _create_last_layer(self):
-        return GPTLMHead(self.config)
+        return GPTClassificationHead(self.config)
 
     def _create_transformer_layer(self):
         return GPTBlock(self.config) # TODO: checkpoint
 
 
-class GPTShardFirst(GPTShardBase):
+class GPTStageFirst(GPTStageBase):
     def __init__(self, args, config, device):
-        super(GPTShardFirst, self).__init__(args, config)
+        super(GPTStageFirst, self).__init__(args, config)
         self.device = device
         module_list = [self._create_first_layer()]
         for _ in range(self._num_layers):
@@ -42,9 +42,9 @@ class GPTShardFirst(GPTShardBase):
         return out.cpu() if self._to_cpu else out
 
 
-class GPTShardMiddle(GPTShardBase):
+class GPTStageMiddle(GPTStageBase):
     def __init__(self, args, config, device):
-        super(GPTShardMiddle, self).__init__(args, config)
+        super(GPTStageMiddle, self).__init__(args, config)
         self.device = device
         module_list = []
         for _ in range(self._num_layers):
@@ -56,9 +56,9 @@ class GPTShardMiddle(GPTShardBase):
         return out.cpu() if self._to_cpu else out
 
 
-class GPTShardLast(GPTShardBase):
+class GPTStageLast(GPTStageBase):
     def __init__(self, args, config, device):
-        super(GPTShardLast, self).__init__(args, config)
+        super(GPTStageLast, self).__init__(args, config)
         self.device = device
         module_list = []
         for _ in range(self._num_layers):

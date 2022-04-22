@@ -3,6 +3,10 @@ def add_device_arguments(parser):
                         help='if this is set to True, will use cuda to train')
     parser.add_argument('--cuda-id', type=int, default=0, metavar='N',
                         help='cuda index, if the instance has multiple GPUs.')
+    parser.add_argument('--cuda-num', type=int, default=1, metavar='N',
+                        help='number of GPUs, if the instance has multiple GPUs.')
+    parser.add_argument('--debug-mem', default=True, type=lambda x: (str(x).lower() == 'true'),
+                        help='if this is set to True, we will print some memory stats.')
 
 
 def add_torch_distributed_arguments(parser):
@@ -57,12 +61,37 @@ def add_training_hyper_parameter_arguments(parser):
                         help='-')
 
 
+def add_mixed_precision_arguments(parser):
+    parser.add_argument('--fp16', action='store_true',
+                        help='Run model in fp16 mode.')
+    parser.add_argument('--loss-scale', type=float, default=64,
+                        help='Static loss scaling, positive power of 2 values can improve fp16 convergence. ')
+    parser.add_argument('--initial-loss-scale', type=float, default=2 ** 32,
+                        help='Initial loss-scale for dynamic loss scaling.')
+    parser.add_argument('--min-loss-scale', type=float, default=1.0,
+                        help='Minimum loss scale for dynamic loss scale.')
+    parser.add_argument('--loss-scale-window', type=float, default=1000,
+                        help='Window over which to raise/lower dynamic scale.')
+    parser.add_argument('--hysteresis', type=int, default=2,
+                        help='hysteresis for dynamic loss scaling')
+
+
+def add_parallel_schema_arguments(parser):
+    parser.add_argument('--pp-mode', type=str, default='gpipe', metavar='S',
+                        help='use which pipeline parallel mode: gpipe or 1f1b.')
+    parser.add_argument('--dp-mode', type=str, default='allreduce', metavar='S',
+                        help='use which data parallel mode: allreduce.')
+    parser.add_argument('--gradient-accumulate-step', type=int, default=1,
+                        help='Number of gradient computation in Pipeline without data parallel sync.')
+
+
 def get_model_arguments_str(args):
     return '_l' + str(args.seq_length) + '_m' + str(args.embedding_dim)
 
 
 def get_dist_arguments_str(args, add_rank=True):
-    dist_str = '_w' + str(args.world_size)  + '_p' + str(args.pipeline_group_size) + '_d' + str(args.data_group_size)
+    dist_str = '_w' + str(args.world_size) + '_p' + str(args.pipeline_group_size) + "_" + \
+               str(args.gradient_accumulate_step) + '_d' + str(args.data_group_size)
     if add_rank:
         dist_str = dist_str + '_' + str(args.rank)
     return dist_str
@@ -70,3 +99,10 @@ def get_dist_arguments_str(args, add_rank=True):
 
 def get_learning_arguments_str(args):
     return '_b' + str(args.batch_size) + '_' + str(args.micro_batch_size)
+
+
+def get_mixed_precision_arguments_str(args):
+    if args.fp16:
+        return '_fp16'
+    else:
+        return ''

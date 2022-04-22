@@ -29,16 +29,16 @@ class NCCLCommunicator:
         cupy.cuda.Device(cuda_id).use()
         self.comm_group_size = comm_group_size
         print("Initialize NCCLCommunicator: <", comm_name, ">; rank:", comm_rank)
-        dist_store = dist.distributed_c10d._get_default_store()
+        self.dist_store = dist.distributed_c10d._get_default_store()
 
         if self.comm_rank == 0:
             cuda_id = cupy.cuda.nccl.get_unique_id()
             # print(cuda_id)
             cuda_id_str = np.array(cuda_id).tobytes()
-            dist_store.set('group-'+comm_name+'-unique-id', cuda_id_str)
+            self.dist_store.set('group-'+comm_name+'-unique-id', cuda_id_str)
             # print("Master put <group-"+comm_name+"-unique-id: ", cuda_id_str, ">.")
         else:
-            cuda_id_str = dist_store.get('group-'+comm_name+'-unique-id')
+            cuda_id_str = self.dist_store.get('group-'+comm_name+'-unique-id')
 
         comm_id = tuple(np.frombuffer(cuda_id_str, dtype=int))
         # comm_id = cupy.cuda.nccl.get_unique_id()
@@ -48,6 +48,12 @@ class NCCLCommunicator:
     @staticmethod
     def barrier():
         dist.barrier()
+
+    def store_set(self, key, value):
+        self.dist_store.set(key, value)
+
+    def store_get(self, key):
+        return self.dist_store.get(key)
 
     def send(self,
              tensor: torch.Tensor,
@@ -122,8 +128,8 @@ class NCCLCommunicator:
                 src: int,
                 stream=cupy.cuda.Stream.null):
         cupy.cuda.nccl.groupStart()
-        if self.rank == src:
-            for i in range(self.world_size):
+        if self.comm_rank == src:
+            for i in range(self.comm_group_size):
                 self.send(
                     scatter_list[i],
                     i,
@@ -142,8 +148,8 @@ class NCCLCommunicator:
                dst: int,
                stream=cupy.cuda.Stream.null):
         cupy.cuda.nccl.groupStart()
-        if self.rank == dst:
-            for i in range(self.world_size):
+        if self.comm_rank == dst:
+            for i in range(self.comm_group_size):
                 self.recv(
                     gather_list[i],
                     i,
@@ -154,6 +160,51 @@ class NCCLCommunicator:
             dst,
             stream
         )
+        cupy.cuda.nccl.groupEnd()
+
+    def all_to_all(self,
+                   output_tensor_list: List[torch.Tensor],
+                   input_tensor_list: List[torch.Tensor],
+                   stream=cupy.cuda.Stream.null):
+        assert len(output_tensor_list) == self.comm_group_size and len(input_tensor_list) == self.comm_group_size
+        cupy.cuda.nccl.groupStart()
+        for i in range(self.comm_group_size):
+            self.send(input_tensor_list[i], i, stream)
+            self.recv(output_tensor_list[i], i, stream)
+        cupy.cuda.nccl.groupEnd()
+
+    def all_gather(self,
+                   tensor: torch.Tensor,
+                   output_tensor_list: List[torch.Tensor],
+                   stream=cupy.cuda.Stream.null
+                   ):
+        assert len(output_tensor_list) == self.comm_group_size
+        cupy.cuda.nccl.groupStart()
+        for i in range(self.comm_group_size):
+            self.send(tensor, i, stream)
+            self.recv(output_tensor_list[i], i, stream)
+        cupy.cuda.nccl.groupEnd()
+
+    def all_reduce_opt(self,
+                       tensor: torch.Tensor,
+                       buffer: List[torch.Tensor],
+                       stream=cupy.cuda.Stream.null):
+        # First do all-to-all
+        assert torch.numel(tensor.data) % self.comm_group_size == 0
+        chunk_size = torch.numel(tensor.data) // self.comm_group_size
+        t_type = _type_torch_to_cupy(tensor.dtype)
+        element_size = tensor.data.element_size()
+        cupy.cuda.nccl.groupStart()
+        for i in range(self.comm_group_size):
+            self.comm.send(tensor.data_ptr()+i*chunk_size*element_size, chunk_size, t_type, i, stream.ptr)
+            self.comm.recv(buffer[i].data_ptr(), chunk_size, t_type, i, stream.ptr)
+        cupy.cuda.nccl.groupEnd()
+        for i in range(1, self.comm_group_size):
+            buffer[0] += buffer[i]
+        cupy.cuda.nccl.groupStart()
+        for i in range(self.comm_group_size):
+            self.comm.send(buffer[0].data_ptr(), chunk_size, t_type, i, stream.ptr)
+            self.comm.recv(tensor.data_ptr()+i*chunk_size*element_size, chunk_size, t_type, i, stream.ptr)
         cupy.cuda.nccl.groupEnd()
 
 

@@ -41,3 +41,38 @@
 - On each node, run:
       
       python dist_pipeline_runner.py --dist-url tcp://XXX.XXX.XXX.XXX:9000 --world-size N --rank i (i=0,...,N-1)
+
+## Run with Advanced Scripts (under scripts directory):
+
+- First update the public IPs and private IP of the rank-0 node in ip_list.sh.
+
+- Allow SSH connects: 
+
+      bash accept_ssh_keys.sh
+
+- Update local repository:
+
+      bash aws_sync_code.sh #GIT_TOKEN
+      
+- Enable environment: (This is optional but load conda env seems to be slow for the first time)
+
+      bash aws_foo_load_lib.sh
+
+- Run Tasks (e.g.,):
+
+      bash aws_run_gpt3_training.sh gpt3_small_pp3_dp4.sh
+      bash aws_run_gpt3_training.sh gpt3_small_pp3_dp4.sh #DELAY #BANDWIDTH
+
+- Clear logs:
+
+      bash aws_clear_logs.sh
+
+- Copy training logs from Rank-0 node (For my implementation the benchmark result is on the rank-0 node.)
+
+      bash copy_rank0_logs.sh
+
+- Download and generate trace:
+
+      bash copy_traces.sh #PREFIX
+      bash generate_traces.sh #PREFIX
+
