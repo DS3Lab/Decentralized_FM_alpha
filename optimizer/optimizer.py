@@ -4,6 +4,39 @@ from .grad_scalar import *
 # This follows some implementation from Megatron
 
 
+def _has_overflow_serial(grads):
+
+    def _has_inf_or_nan(x):
+        try:
+            # if x is half, the .float() incurs an additional deep copy, but it's necessary if
+            # Pytorch's .sum() creates a one-element tensor of the same type as x
+            # (which is true for some recent version of pytorch).
+            cpu_sum = float(x.float().sum())
+            # More efficient version that can be used if .sum() returns a Python scalar
+            # cpu_sum = float(x.sum())
+        except RuntimeError as instance:
+            # We want to check if inst is actually an overflow exception.
+            # RuntimeError could come from a different error.
+            # If so, we still want the exception to propagate.
+            if "value cannot be converted" not in instance.args[0]:
+                raise
+            return True
+        else:
+            if cpu_sum in [float('inf'), -float('inf')] or cpu_sum != cpu_sum:
+                return True
+            return False
+
+    for p in grads:
+        if _has_inf_or_nan(p):
+            return torch.FloatTensor([1.0])
+
+    return torch.FloatTensor([0.0])
+
+
+# `x` is a torch.Tensor
+
+
+
 def _zero_grad_group(group, set_to_none):
     """Zero out the gradient for a group of parameters.
     Note: copied from torch.optim.optimizer."""
@@ -113,7 +146,10 @@ class Fp16Optimizer:
         self.found_inf.fill_(0.0)
         # Unscale and set found inf/nan
         print(optimizer_grads[0].device, self.found_inf.device, self.grad_scaler.inv_scale.device)
-        torch._amp_foreach_non_finite_check_and_unscale_(optimizer_grads, self.found_inf, self.grad_scaler.inv_scale)
+        if self.offload:
+            self.found_inf = _has_overflow_serial(optimizer_grads)
+        else:
+            torch._amp_foreach_non_finite_check_and_unscale_(optimizer_grads, self.found_inf, self.grad_scaler.inv_scale)
         # Check for nan.
         found_inf_flag = (self.found_inf.item() > 0)
         return found_inf_flag

@@ -19,8 +19,8 @@ def benchmark_transformer_layer(args, device):
     layers.half()
     optimizer = torch.optim.SGD(layers.parameters(), lr=args.lr)
     # optimizer = apex.optimizers.FusedSGD(layers.parameters(), lr=args.lr)
-    grad_scaler = ConstantGradScaler(0.1, offload=True)
-    fp16_optimizer = Fp16Optimizer(optimizer, grad_scaler, device, offload=True)
+    grad_scaler = ConstantGradScaler(0.1, offload=args.offload)
+    fp16_optimizer = Fp16Optimizer(optimizer, grad_scaler, device, offload=args.offload)
 
     batch_shape = (args.batch_size, args.seq_length, args.embedding_dim)
 
@@ -62,6 +62,8 @@ def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
     parser.add_argument('--use-checkpoint', default=True, type=lambda x: (str(x).lower() == 'true'),
                         help='if this is set to True, will use check point for activation recompute')
+    parser.add_argument('--offload', default=True, type=lambda x: (str(x).lower() == 'true'),
+                        help='if this is set to True, will use CPU to store model.')
     parser.add_argument('--use-cuda', default=True, type=lambda x: (str(x).lower() == 'true'),
                         help='if this is set to True, will use cuda to train')
     parser.add_argument('--cuda-id', type=int, default=0, metavar='N',
