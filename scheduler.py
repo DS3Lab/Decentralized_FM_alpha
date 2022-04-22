@@ -1,7 +1,7 @@
-import sys
 import random
 import itertools
 import numpy as np
+from scipy.optimize import linear_sum_assignment
 import config
 
 
@@ -16,7 +16,7 @@ peer_delay = None
 peer_bandwidth = None
 
 # assigned task
-batch_size_per_task = 0.25e6
+batch_size_per_task = 0.625e5
 layer_size_per_task = 3
 send_activation_size = 4  # gigabytes
 send_gradient_size = 1  # gigabytes
@@ -234,27 +234,49 @@ def compute_pipeline_parallel_cost(candidate_partition=None):
                 path.append(cur_node)
             return cost, path
 
-    # bipartite matching
-    crose_partition_cost = np.zeros(shape=(way, way))
+    def bipartite_matching(candidate_partition_0, candidate_partition_1):
+        cost_matrix = np.zeros(shape=(partition_size, partition_size))
+        for i in range(partition_size):
+            for j in range(partition_size):
+                cost_matrix[i, j] = peer_delay[candidate_partition_0[i], candidate_partition_1[j]]/1e3 + \
+                    send_gradient_size * 8 / \
+                    peer_bandwidth[candidate_partition_0[i],
+                                   candidate_partition_1[j]]
+
+        descending_order = np.argsort(cost_matrix.flatten())[::-1]
+        inf_weight = 1e6
+        for idx in descending_order:
+            cur_max_weight = cost_matrix[idx //
+                                         partition_size][idx % partition_size]
+            cost_matrix[idx//partition_size][idx % partition_size] = inf_weight
+            row_ind, col_ind = linear_sum_assignment(cost_matrix)
+            if cost_matrix[row_ind, col_ind].sum() >= inf_weight:
+                return cur_max_weight
+
+
+    cross_partition_cost = np.zeros(shape=(way, way))
     for i in range(way):
         for j in range(i+1, way):
-            bipartite_matches = []
-            for x in itertools.permutations(candidate_partition[i]):
-                bipartite_matches.append(list(zip(x, candidate_partition[j])))
-            all_transfer_times = []
-            for bipartite_match in bipartite_matches:
-                cur_transfer_times = []
-                for pair in bipartite_match:
-                    cur_transfer_times.append(
-                        peer_delay[pair[0], pair[1]]/1e3 + send_gradient_size * 8 / peer_bandwidth[pair[0], pair[1]])
-                all_transfer_times.append(max(cur_transfer_times))
-            crose_partition_cost[i, j] = min(all_transfer_times)
-    crose_partition_cost = crose_partition_cost + crose_partition_cost.T
+            #bipartite_matches = []
+            # for x in itertools.permutations(candidate_partition[i]):
+            #    bipartite_matches.append(list(zip(x, candidate_partition[j])))
+            #all_transfer_times = []
+            # for bipartite_match in bipartite_matches:
+            #    cur_transfer_times = []
+            #    for pair in bipartite_match:
+            #        cur_transfer_times.append(
+            #            peer_delay[pair[0], pair[1]]/1e3 + send_gradient_size * 8 / peer_bandwidth[pair[0], pair[1]])
+            #    all_transfer_times.append(max(cur_transfer_times))
+            #cross_partition_cost[i, j] = min(all_transfer_times)
+            #assert(min(all_transfer_times) == bipartite_matching(candidate_partition[i], candidate_partition[j]))
+            cross_partition_cost[i, j] = bipartite_matching(
+                candidate_partition[i], candidate_partition[j])
+    cross_partition_cost = cross_partition_cost + cross_partition_cost.T
 
     pipeline_parallel_cost = []
     pipeline_parallel_path = []
     for start_node in range(way):
-        tsp = open_loop_tsp(crose_partition_cost, start_node)
+        tsp = open_loop_tsp(cross_partition_cost, start_node)
         cost, path = tsp.get_least_cost_route()
         pipeline_parallel_cost.append(cost)
         pipeline_parallel_path.append(path)
@@ -267,7 +289,7 @@ def compute_pipeline_parallel_cost(candidate_partition=None):
     # for path in itertools.permutations(range(way)):
     #    cur_cost = 0
     #    for i in range(way - 1):
-    #        cur_cost += crose_partition_cost[path[i], path[i+1]]
+    #        cur_cost += cross_partition_cost[path[i], path[i+1]]
     #    if cur_cost < pipeline_parallel_cost:
     #        pipeline_parallel_cost = cur_cost
     #        pipeline_parallel_path = path

@@ -1,6 +1,6 @@
 import numpy as np
 
-nodes = 16
+nodes = 64
 
 
 def simulate_0_datacenter():
@@ -137,8 +137,15 @@ def simulate_3_regional_geo_distributed():
 # Assume within region is 2 GB, 5 ms.
 def simulate_4_worldwide_geo_distributed():
     print("Simulate case 4: worldwide geo distributed")
-    regions = ["Oregon", "Oregon", "Virginia", "Ohio", "Ohio", "Tokyo", "Seoul", "Seoul",
-               "Singapore", "Sydney", "London", "London", "Frankfurt", "Frankfurt", "Ireland", "Ireland"]
+    cities = ["Oregon", "Virginia", "Ohio", "Tokyo", "Seoul",
+              "Singapore", "Sydney", "London", "Frankfurt", "Ireland"]
+
+    regions = []
+    for i in np.random.randint(low=0, high=len(cities), size=nodes):
+        regions.append(cities[i])
+
+    # regions = ["Oregon", "Oregon", "Virginia", "Ohio", "Ohio", "Tokyo", "Seoul", "Seoul",
+    #           "Singapore", "Sydney", "London", "London", "Frankfurt", "Frankfurt", "Ireland", "Ireland"]
     # regions = ["Oregon", "Virginia", "Tokyo", "Seoul",
     #           "Singapore", "London", "Frankfurt", "Ireland"]
     assert len(regions) == nodes
