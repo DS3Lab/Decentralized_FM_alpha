@@ -88,7 +88,7 @@ def add_parallel_schema_arguments(parser):
 
 
 def get_model_arguments_str(args):
-    return '_l' + str(args.seq_length) + '_m' + str(args.embedding_dim)
+    return '_s' + str(args.seq_length) + '_m' + str(args.embedding_dim) + '_l' + str(args.num_layers)
 
 
 def get_dist_arguments_str(args, add_rank=True):
@@ -104,7 +104,9 @@ def get_learning_arguments_str(args):
 
 
 def get_mixed_precision_arguments_str(args):
+    arg_str = ''
     if args.fp16:
-        return '_fp16'
-    else:
-        return ''
+        arg_str = '_fp16'
+    if args.use_offload:
+        arg_str += '_offload'
+    return arg_str

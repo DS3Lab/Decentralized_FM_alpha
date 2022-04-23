@@ -65,9 +65,9 @@ def main():
                         help='if this is set to True, will use cuda to train')
     parser.add_argument('--cuda-id', type=int, default=0, metavar='N',
                         help='cuda index, if the instance has multiple GPUs.')
-    parser.add_argument('--batch-size', type=int, default=1, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=3, metavar='N',
                         help='input batch size for training (default: 100)')
-    parser.add_argument('--num-layers', type=int, default=3, metavar='N',
+    parser.add_argument('--num-layers', type=int, default=10, metavar='N',
                         help='-')
     parser.add_argument('--seq-length', type=int, default=2048, metavar='N',
                         help='-')
