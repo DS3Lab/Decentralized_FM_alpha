@@ -70,7 +70,7 @@ class GPTBlock(_GPT2Block):
         def mlp_res(x: torch.Tensor) -> torch.Tensor:
             res = x
             x = self.ln_2(x)
-            x = self.mlp(x)[0]
+            x = self.mlp(x)
             return x + res
         self.mlp_res = mlp_res
 
@@ -97,7 +97,6 @@ class GPTModel(_GPT2Model):
         emb_layer = GPTEmbeddings(config)
         self.wte = emb_layer.wte
         self.wpe = emb_layer.wpe
-        self.emb_layer = emb_layer
 
         self.drop = nn.Dropout(config.embd_pdrop)
         self.h = nn.ModuleList([GPTBlock(config, layer_idx=i, use_checkpoint=True) for i in range(config.num_hidden_layers)])
@@ -113,15 +112,34 @@ class GPTModel(_GPT2Model):
         
     def forward(self, input_ids, attention_mask=None, **kargs):
         
-        hidden_states = self.emb_layer(input_ids)
+        device = input_ids.device
+        
+        # input ids
+        input_shape = input_ids.size()
+        input_ids = input_ids.view(-1, input_shape[-1])
+        batch_size = input_shape[0]
+        
+        # position ids
+        position_ids = torch.arange(0, input_shape[-1], dtype=torch.long, device=device)
+        position_ids = position_ids.unsqueeze(0).view(-1, input_shape[-1])
+            
+        inputs_embeds = self.wte(input_ids)
+        position_embeds = self.wpe(position_ids)
+        hidden_states = inputs_embeds + position_embeds
+
+        hidden_states = self.drop(hidden_states)
+
+        hidden_states_tuple = tuple()
         for layer in self.h:
+            hidden_states_tuple = hidden_states_tuple + (hidden_states,)
             hidden_states = layer(hidden_states)
         hidden_states = self.ln_f(hidden_states)
+        hidden_states_tuple = hidden_states_tuple + (hidden_states,)
         
         return BaseModelOutputWithPastAndCrossAttentions(
             last_hidden_state=hidden_states,
             past_key_values=None,
-            hidden_states=None,
+            hidden_states=hidden_states_tuple,
             attentions=None,
             cross_attentions=None,
         )

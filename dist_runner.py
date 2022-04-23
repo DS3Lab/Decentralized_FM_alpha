@@ -26,7 +26,8 @@ def main():
     add_parallel_schema_arguments(parser)
     parser.add_argument('--model-name', type=str, default='gpt2', metavar='S',
                         help='model name or path')
-    parser.add_argument('--load-pretrained-model', type=int, default=1, metavar='S',
+    parser.add_argument('--load-pretrained-model', 
+                        type=lambda x: x.lower()=='true', default=False, metavar='S',
                         help='load pretrained model or not.')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
@@ -45,9 +46,12 @@ def main():
     init_communicators(args)
     
     config = GPTConfig.from_pretrained(args.model_name)
+    if args.load_pretrained_model:
+        assert config.n_embd == args.embedding_dim
+        assert config.n_head == args.num_heads
     config.n_embd = args.embedding_dim
     config.n_inner = args.embedding_dim*4
-    config.n_layer = args.num_layers
+    config.n_layer = args.num_layers  # num_layers per node
     config.n_head = args.num_heads
     config.n_positions = args.seq_length
     config.n_ctx = args.seq_length
