@@ -55,9 +55,34 @@ Assume 3 layer on each node, () includes the special cases of first/last stage:
     - Total: 3 GB (first stage: 1.5 GB, last stage 1.5 GB)
   - Total:  4.73 GB (first stage: 3.89 GB, last stage: 3.23 GB)
 
-- Run time profiling:
-  - Local simulation without communication: ()[]
-  - Real execution: 
+
+### Result of 2022/04/23
+
+Check the largest batch size for different number of layers: 
+
+- Standard GPT-XL 
+  - Include fp32 model offload.
+  - Total of 8 P3.2xlarge instances, each hold 3 layers:
+
+| Network setting                     | Batch-size 108 | Batch-size 96 | Batch-size 64 | Batch-size 32 |
+|-------------------------------------|----------------|---------------|---------------|---------------|
+| default (about 0.1ms; up to 10Gbps) | 9.30 s         | 8.34 s        | 5.97 s        | 3.51 s        |
+| delay 1ms  bandwidth 5Gbps          | 10.20 s        | 9.36 s        | 6.20 s        | 3.63 s        |
+| delay 5ms  bandwidth 2Gbps          | 11.60 s        | 11.02 s       | 8.31 s        | 5.09 s        |
+| delay 10ms  bandwidth 1Gbps         | 17.78 s        | 16.27 s       | 12.04 s       | 8.50 s        |
+| delay 50ms  bandwidth 1Gbps         | 18.41 s        | 16.74 s       | 12.62 s       | 10.06 s       |
+
+
+- Scale with number of layers.
+  - Fix a batch size of 64:
+
+| Network setting                     | 3 Layer | 4 Layer | 5 Layer |
+|-------------------------------------|---------|---------|---------|
+| default (about 0.1ms; up to 10Gbps) | 5.97 s  | 7.30 s  | 8.86 s  |
+| delay 1ms  bandwidth 5Gbps          | 6.20 s  | 7.62 s  | 9.33 s  |
+| delay 5ms  bandwidth 2Gbps          | 8.31 s  | 10.06 s | 10.4 s  |
+| delay 10ms  bandwidth 1Gbps         | 12.04 s | 12.16 s | 12.51 s |
+| delay 50ms  bandwidth 1Gbps         | 12.62 s | 12.91 s | 13.19 s |
 
 
 
