@@ -74,7 +74,9 @@ def get_qqp_data_loader(args, tokenizer, data_split='train', num_workers=0):
         ])
     
     
-    train_sampler = torch.utils.data.RandomSampler(train_set)
+    generator = torch.Generator()
+    generator.manual_seed(args.seed)
+    train_sampler = torch.utils.data.RandomSampler(train_set, generator=generator)
     train_data_loader = torch.utils.data.DataLoader(train_set,
                                                     batch_size=args.batch_size,
                                                     sampler=train_sampler,

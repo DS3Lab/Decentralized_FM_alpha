@@ -6,7 +6,10 @@ from comm.comm_utils import *
 from modules.dist_gpt_pp_module import *
 from data_parallel.dist_dp_utils import get_dp_module
 from optimizer.optimizer import get_fp16_optimizer
+from compress import Compressor
+import cupy
 
+import wandb
 
 class GpipeAsync:
     r"""
@@ -46,6 +49,31 @@ class GpipeAsync:
         self.config = config
         self.vocab_size = config.vocab_size
         self.num_classes = config.num_labels
+        
+        # Compression
+        self.forward_compressor = Compressor(
+            bits=8, compress_method='fixpoint', 
+            scale_method='max', scale_dims=(0,1), 
+            activ_shape=(self.micro_batch_size, self.seq_length, self.embedding_dim), device=device,
+        )
+        self.backward_compressor = Compressor(
+            bits=8, compress_method='none', 
+            scale_method='max', scale_dims=(0,1), 
+            activ_shape=(self.micro_batch_size, self.seq_length, self.embedding_dim), device=device,
+        )
+        
+        # forward comm buffer
+        if self.pp_rank == 0:
+            self.input_comm_micro_batches = None
+        else:
+            _shape_a, _dtype_a, _shape_s, _dtype_s = self.forward_compressor.get_comm_shape_and_dtype()
+            self.input_comm_micro_batches = [
+                (
+                    torch.zeros(_shape_a, requires_grad=False, device=self.device, dtype=_dtype_a),
+                    torch.zeros(_shape_s, requires_grad=False, device=self.device, dtype=_dtype_s),
+                ) for _ in range(self.micro_batch_num)
+            ]
+        
 
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
         self.device = device
@@ -88,36 +116,45 @@ class GpipeAsync:
             self.optimizer_end_event = torch.cuda.Event(enable_timing=True, blocking=False)
 
         self._compute_micro_batch_size()
+        
         if self.pp_rank == 0:
             self.input_micro_batches = None
         else:
-            self.input_micro_batches = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
-                                                    requires_grad=True, device=self.device, dtype=self.dtype)
-                                        for _ in range(self.micro_batch_num)]
+            self.input_micro_batches = [
+                torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
+                            requires_grad=True, device=self.device, dtype=self.dtype
+                           ) for _ in range(self.micro_batch_num)
+            ]
+                
+                
         if self.pp_rank == self.pipeline_group_size - 1:
             self.output_micro_batches_grad = None
         else:
-            self.output_micro_batches_grad = [torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
-                                                          requires_grad=False, device=self.device, dtype=self.dtype)
-                                              for _ in range(self.micro_batch_num)]
+            self.output_micro_batches_grad = [
+                torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
+                            requires_grad=False, device=self.device, dtype=self.dtype
+                           ) for _ in range(self.micro_batch_num)
+            ]
 
         if self.pp_rank == 0:
             self.model = GPTStageFirst(args, config, device)
         elif self.pp_rank == self.pipeline_group_size - 1:
+            wandb.init(project='test', entity='pipeline-activation-compression')
             self.model = GPTStageLast(args, config, device)
         else:
             self.model = GPTStageMiddle(args, config, device)
 
         if self.use_fp16:
             self.model.half()
-            tmp_optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
+            tmp_optimizer = optim.AdamW(self.model.parameters(), lr=args.lr)
             self.optimizer = get_fp16_optimizer(args, tmp_optimizer)
         else:
-            self.optimizer = optim.SGD(self.model.parameters(), lr=args.lr)
+            self.optimizer = optim.AdamW(self.model.parameters(), lr=args.lr)
 
         # Notice that if we use fp16, gradients are aggregated in fp16, this may not be the default in Megatron.
         if use_dp:
             self.dp_optim = get_dp_module(args, device, self.model, self.optimizer)
+            
 
     def _compute_micro_batch_size(self):
         micro_batch_float_num = self.micro_batch_size * self.seq_length * self.embedding_dim
@@ -187,13 +224,22 @@ class GpipeAsync:
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
                     self.torch_send_stream.wait_event(self.forward_comp_ready_events[i])
                     self.profile_mark_forward_send_start(i)
-                    self.comm.send(current_micro_output.data, dst=self.post_node_rank, stream=cupy_send_stream)
+                    # compress
+                    _data = self.forward_compressor.compress(current_micro_output.data)
+                    self.comm.send(_data[0], dst=self.post_node_rank, stream=cupy_send_stream)
+                    self.comm.send(_data[1], dst=self.post_node_rank, stream=cupy_send_stream)
+#                     self.comm.send(current_micro_output.data, dst=self.post_node_rank, stream=cupy_send_stream)
                     self.profile_mark_forward_send_end(i)
             elif self.pp_rank == self.pipeline_group_size - 1:  # Only receive input from last node, do not send
                 with torch.cuda.stream(self.torch_recv_stream):
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                     self.profile_mark_forward_recv_start(i)
-                    self.comm.recv(self.input_micro_batches[i], src=self.pre_node_rank, stream=cupy_recv_stream)
+                    # decompress
+                    self.comm.recv(self.input_comm_micro_batches[i][0], src=self.pre_node_rank, stream=cupy_recv_stream)
+                    self.comm.recv(self.input_comm_micro_batches[i][1], src=self.pre_node_rank, stream=cupy_recv_stream)
+                    _data = self.forward_compressor.decompress(self.input_comm_micro_batches[i])
+                    self.input_micro_batches[i].data.copy_(_data)
+#                     self.comm.recv(self.input_micro_batches[i], src=self.pre_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.forward_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
@@ -204,7 +250,12 @@ class GpipeAsync:
                 with torch.cuda.stream(self.torch_recv_stream):
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                     self.profile_mark_forward_recv_start(i)
-                    self.comm.recv(self.input_micro_batches[i], src=self.pre_node_rank, stream=cupy_recv_stream)
+                    # decompress
+                    self.comm.recv(self.input_comm_micro_batches[i][0], src=self.pre_node_rank, stream=cupy_recv_stream)
+                    self.comm.recv(self.input_comm_micro_batches[i][1], src=self.pre_node_rank, stream=cupy_recv_stream)
+                    _data = self.forward_compressor.decompress(self.input_comm_micro_batches[i])
+                    self.input_micro_batches[i].data.copy_(_data)
+#                     self.comm.recv(self.input_micro_batches[i], src=self.pre_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.forward_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
@@ -215,7 +266,11 @@ class GpipeAsync:
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
                     self.torch_send_stream.wait_event(self.forward_comp_ready_events[i])
                     self.profile_mark_forward_send_start(i)
-                    self.comm.send(current_micro_output.data, dst=self.post_node_rank, stream=cupy_send_stream)
+                    # compress
+                    _data = self.forward_compressor.compress(current_micro_output.data)
+                    self.comm.send(_data[0], dst=self.post_node_rank, stream=cupy_send_stream)
+                    self.comm.send(_data[1], dst=self.post_node_rank, stream=cupy_send_stream)
+#                     self.comm.send(current_micro_output.data, dst=self.post_node_rank, stream=cupy_send_stream)
                     self.profile_mark_forward_send_end(i)
             output_micro_batches.append(current_micro_output)
         if self.enable_tidy_profiling:
@@ -256,13 +311,17 @@ class GpipeAsync:
             target_as_micro_batches = torch.chunk(target, self.micro_batch_num, dim=0)
         else:
             assert(target is None)
+        
+        if self.pp_rank == self.pipeline_group_size - 1:
+            tr_loss = []
+        
         for i in range(self.micro_batch_num):
             if self.pp_rank == self.pipeline_group_size - 1:  # only send grad back to last node, do not receive
                 with torch.cuda.stream(self.torch_comp_stream) as st:
                     self.profile_mark_backward_comp_start(i)
                     loss = loss_func(input=cached_output_micro_batches[i], target=target_as_micro_batches[i])
                     loss.backward()
-                    print('loss:', loss.item())
+                    tr_loss.append(loss.item())
                     self.torch_comp_stream.record_event(self.backward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
@@ -300,6 +359,9 @@ class GpipeAsync:
                     self.profile_mark_backward_send_end(i)
         if self.enable_tidy_profiling:
             self.profiling_backward_stage()
+            
+        if self.pp_rank == self.pipeline_group_size - 1:
+            wandb.log({'loss': sum(tr_loss)/len(tr_loss)})
 
     def profiling_backward_stage(self):
         torch.cuda.synchronize()
@@ -327,6 +389,8 @@ class GpipeAsync:
                 self.profiling_log.append(send_log)
 
     def optimizer_step(self):
+        # hard code: grad clipping
+#         torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
         if self.use_dp:
             with torch.cuda.stream(self.torch_comp_stream):
                 self.torch_comp_stream.record_event(self.dp_optim.backward_ready_event)

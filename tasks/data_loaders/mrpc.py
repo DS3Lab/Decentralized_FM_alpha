@@ -17,8 +17,9 @@ def get_mrpc_data_loader(args, tokenizer, data_split='train', num_workers=0):
             'text', 'input_ids', 'attention_mask', 'label', 'idx',
         ])
     
-    
-    train_sampler = torch.utils.data.RandomSampler(train_set)
+    generator = torch.Generator()
+    generator.manual_seed(args.seed)
+    train_sampler = torch.utils.data.RandomSampler(train_set, generator=generator)
     train_data_loader = torch.utils.data.DataLoader(train_set,
                                                     batch_size=args.batch_size,
                                                     sampler=train_sampler,

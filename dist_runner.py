@@ -1,5 +1,7 @@
 import argparse
 import time
+import random
+import numpy as np
 import torch
 import torch.autograd.profiler as profiler
 from tasks.data_loaders.qqp import get_qqp_data_loader
@@ -14,7 +16,6 @@ from utils.dist_args_utils import *
 from utils.dist_train_utils import *
 from comm.comm_utils import *
 
-
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
     add_device_arguments(parser)
@@ -27,7 +28,7 @@ def main():
     parser.add_argument('--model-name', type=str, default='gpt2', metavar='S',
                         help='model name or path')
     parser.add_argument('--load-pretrained-model', 
-                        type=lambda x: x.lower()=='true', default=False, metavar='S',
+                        type=lambda x: x.lower()=='true', default=True, metavar='S',
                         help='load pretrained model or not.')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
@@ -36,7 +37,11 @@ def main():
     parser.add_argument('--trace-postfix', type=str, default='default', metavar='S',
                         help='postfix of the tracing file name.')
     args = parser.parse_args()
+    
     torch.manual_seed(args.seed)
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    
     if args.use_cuda:
         assert (torch.cuda.is_available())
         device = torch.device('cuda', args.cuda_id)
@@ -46,15 +51,7 @@ def main():
     init_communicators(args)
     
     config = GPTConfig.from_pretrained(args.model_name)
-    if args.load_pretrained_model:
-        assert config.n_embd == args.embedding_dim
-        assert config.n_head == args.num_heads
-    config.n_embd = args.embedding_dim
-    config.n_inner = args.embedding_dim*4
     config.n_layer = args.num_layers  # num_layers per node
-    config.n_head = args.num_heads
-    config.n_positions = args.seq_length
-    config.n_ctx = args.seq_length
     config.num_labels = 2 # TODO
     
     if get_pipeline_parallel_rank() == 0 or get_pipeline_parallel_rank() == args.pipeline_group_size-1:
@@ -76,6 +73,7 @@ def main():
         print("Running ", args.pp_mode, " without data parallel.")
 
     pipe = get_pp_module(args, config, device, use_dp)
+    pipe.model.eval()
     
     if args.load_pretrained_model:
         if get_pipeline_parallel_rank() == 0:

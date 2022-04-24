@@ -44,16 +44,16 @@ def add_model_arguments(parser):
                         help='-')
     parser.add_argument('--embedding-dim', type=int, default=768, metavar='N',
                         help='-')
-    parser.add_argument('--num-layers', type=int, default=2, metavar='N',
+    parser.add_argument('--num-layers', type=int, default=4, metavar='N',
                         help='-')
-    parser.add_argument('--num-heads', type=int, default=16, metavar='N',
+    parser.add_argument('--num-heads', type=int, default=12, metavar='N',
                         help='-')
 
 
 def add_training_hyper_parameter_arguments(parser):
-    parser.add_argument('--batch-size', type=int, default=16, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=32, metavar='N',
                         help='input batch size for training (default: 100)')
-    parser.add_argument('--micro-batch-size', type=int, default=4, metavar='N',
+    parser.add_argument('--micro-batch-size', type=int, default=8, metavar='N',
                         help='input micro batch size for training (default: 100)')
     parser.add_argument('--lr', type=float, default=0.01, metavar='N',
                         help='-')
@@ -84,6 +84,20 @@ def add_parallel_schema_arguments(parser):
     parser.add_argument('--gradient-accumulate-step', type=int, default=1,
                         help='Number of gradient computation in Pipeline without data parallel sync.')
 
+    
+def add_acitvation_compression_arguments(parser):
+    parser.add_argument('--compression-method', type=str, default='none', metavar='N',
+                        help='-')
+    parser.add_argument('--scale-method', type=str, default='l2', metavar='N',
+                        help='-')
+    parser.add_argument('--scale-dims', type=lambda x: (int(i) for i in x.lstrip('(').rstrip(')').split(',')), 
+                        default=(0,1), metavar='N',
+                        help='-')
+    parser.add_argument('--forward-bits', type=int, default=4, metavar='N',
+                        help='-')
+    parser.add_argument('--backward-bits', type=int, default=8, metavar='N',
+                        help='-')
+    
 
 def get_model_arguments_str(args):
     return '_l' + str(args.seq_length) + '_m' + str(args.embedding_dim)

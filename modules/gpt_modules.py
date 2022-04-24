@@ -200,3 +200,15 @@ class GPTForClassification(_GPT2ForSequenceClassification):
 
         # Initialize weights and apply final processing
         self.post_init()
+        
+#     def forward(self, input_ids, labels=None):
+        
+#         ret = self.transformer(input_ids)
+#         pool_hidden_state = ret.last_hidden_state[:, -1]
+        
+#         logits = self.score(pool_hidden_state)
+        
+#         loss = functional.cross_entropy(logits, labels)
+        
+#         return loss
+        
