@@ -61,52 +61,113 @@ def GCMA(nodes=None, population_size=None, trails=None):
         for point in points:
             parent2_str[point] = parent1_str[point]
 
-        unbalanced_offspring = [[] for _ in range(way)]
+        partition_sizes = [0] * way
+        for partition_idx in parent2_str:
+            partition_sizes[partition_idx] += 1
         for i in range(num_devices):
-            unbalanced_offspring[parent2_str[i]].append(i)
+            if partition_sizes[parent2_str[i]] > partition_size:
+                for j in range(way):
+                    if partition_sizes[j] < partition_size:
+                        partition_sizes[j] += 1
+                        break
+                partition_sizes[parent2_str[i]] -= 1
+                parent2_str[i] = j
+        return parent2_str
 
-        offspring = list(itertools.chain.from_iterable(unbalanced_offspring))
-        return offspring
-
-    def move_cycles(offspring=None):
-        def calculate_gain(cur_offspring=None):
+    def cyclic_partitioning(offspring=None):
+        def calculate_gain(cur_offspring=None, locked_v_idx=None):
             gain = np.zeros(shape=(num_devices, way))
             for v_idx, v in enumerate(cur_offspring):
-                current_partition_idx = v_idx // partition_size
-                for k in range(way):
-                    cur_gain = 0
-                    for i in range(k * partition_size, (k + 1) * partition_size):
-                        cur_gain += peer_delay[v, cur_offspring[i]]
-                    gain[v_idx][k] = cur_gain
+                if locked_v_idx[v_idx] == 0:
+                    for target_idx, target in enumerate(cur_offspring):
+                        if v != target:
+                            gain[v_idx][target] += peer_delay[v_idx, target_idx]/1e3 + \
+                                send_gradient_size * 8 / \
+                                peer_bandwidth[v_idx, target_idx]
 
-                for i in range(current_partition_idx * partition_size,
-                               (current_partition_idx + 1) * partition_size):
-                    gain[v_idx] -= peer_delay[v, cur_offspring[i]]
-            return gain
+            G_ij = np.full(shape=(way, way), fill_value=-np.inf)
+            G_i = np.full(shape=(way), fill_value=-np.inf)
+            G_i_trace = [[] for i in range(way)]
+            for v_idx, v in enumerate(cur_offspring):
+                if locked_v_idx[v_idx] == 0:
+                    for target_idx, target_gain in enumerate(gain[v_idx]):
+                        if target_gain > G_ij[v, target_idx]:
+                            G_ij[v, target_idx] = target_gain
+                        if target_gain > G_i[v]:
+                            G_i[v] = target_gain
+                            G_i_trace[v] = (v_idx, target_idx)
+            return G_ij, G_i, G_i_trace
 
-        cur_offspring = offspring
-        gain = calculate_gain(cur_offspring)
-        Si = np.argmax(gain) % way
+        def move_cycles(offspring=None):
+            sum = [0]
+            locked_partition_idx = [0] * way
+            locked_v_idx = [0] * num_devices
+            offsprings = [offspring]
+            for _ in range(num_devices):  # how many cycles
+                cur_offspring = offsprings[-1].copy()
+                movements = []
+                epsilon = []
+                tau = []
+                G_ij, G_i, G_i_trace = calculate_gain(
+                    cur_offspring, locked_v_idx)
+                S0 = Si = np.argmax(G_i)
+                for _ in range(num_devices):  # how many movement per cycle
+                    if len(G_i_trace[Si]):
+                        v_idx = G_i_trace[Si][0]
+                        Pv = G_i_trace[Si][1]
+                    else:
+                        Pv = S0
+                    cur_offspring[v_idx] = Pv
+                    locked_v_idx[v_idx] = 1
+                    locked_partition_idx[Pv] = 1
+                    movements.append((v_idx, Si, Pv))
+                    epsilon.append(G_i[Si])
+                    tau.append(G_ij[Si, S0])
+                    Si = Pv
+                    if Si == S0:
+                        break
+                    G_ij, G_i, G_i_trace = calculate_gain(
+                        cur_offspring, locked_v_idx)
 
-        for _ in range(way):
-            max_idx = np.argmax(
-                gain[Si * partition_size: (Si + 1) * partition_size])
-            v_idx = Si * partition_size + max_idx // way
-            Pv = max_idx % way
-            Si = Pv
+                max_sum = 0
+                l = 0
+                for i in range(1, len(epsilon)):
+                    if np.sum(epsilon[:i]) + tau[i] > max_sum:
+                        max_sum = np.sum(epsilon[:i]) + tau[i]
+                        l = i - 1
 
-            move_node = offspring[v_idx]
-            cur_offspring.pop(v_idx)
-            cur_offspring.insert(Pv * partition_size, move_node)
-        return cur_offspring
+                for i in range(len(epsilon) - 1, l, -1):
+                    cur_offspring[movements[i][0]] = movements[i][1]
+                cur_offspring[movements[l][0]] = S0
+                offsprings.append(cur_offspring)
+                sum.append(max_sum)
+
+                if np.sum(locked_partition_idx) == len(locked_partition_idx):
+                    break
+
+            max_sum = 0
+            m = 0
+            for i in range(1, len(sum)):
+                if np.sum(sum[:i]) > max_sum:
+                    max_sum = np.sum(sum[:i])
+                    m = i - 1
+            offspring = offsprings[m]
+
+            return offspring
+
+        for _ in range(1):
+            offspring = move_cycles(offspring)
+        return offspring
 
     def evaluate_candidate(candidate_partition=None):
         score = 0
         for i in range(num_devices):
             for j in range(i, num_devices):
                 if (i // partition_size) != (j // partition_size):
-                    score += peer_delay[candidate_partition[i],
-                                        candidate_partition[j]]
+                    score += peer_delay[candidate_partition[i], candidate_partition[j]]/1e3 + \
+                        send_gradient_size * 8 / \
+                        peer_bandwidth[candidate_partition[i],
+                                       candidate_partition[j]]
         return score
 
     candidate_partitions = []
@@ -120,8 +181,12 @@ def GCMA(nodes=None, population_size=None, trails=None):
         parent1_idx, parent2_idx = np.random.randint(population_size, size=2)
         parent1_str, parent2_str = normalization(
             candidate_partitions[parent1_idx], candidate_partitions[parent2_idx])
-        offspring = five_point_crossover(parent1_str, parent2_str)
-        offspring = move_cycles(offspring)
+        offspring_str = five_point_crossover(parent1_str, parent2_str)
+        offspring_str = cyclic_partitioning(offspring_str)
+        offspring = [[] for i in range(way)]
+        for v_idx, partition_idx in enumerate(offspring_str):
+            offspring[partition_idx].append(v_idx)
+        offspring = list(itertools.chain.from_iterable(offspring))
 
         parent1_score = evaluate_candidate(candidate_partitions[parent1_idx])
         parent2_score = evaluate_candidate(candidate_partitions[parent2_idx])
@@ -129,16 +194,12 @@ def GCMA(nodes=None, population_size=None, trails=None):
 
         if offspring_score > parent1_score and offspring_score > parent2_score:
             candidate_partitions.append(offspring)
-        elif parent1_score > parent2_score:
-            parent1 = candidate_partitions[parent1_idx]
-            candidate_partitions.pop(parent1_idx)
-            candidate_partitions.insert(0, offspring)
-            candidate_partitions.append(parent1)
         else:
-            parent2 = candidate_partitions[parent2_idx]
-            candidate_partitions.pop(parent2_idx)
+            replaced_idx = parent1_idx if parent1_score > parent2_score else parent2_idx
+            replaced_candidate = candidate_partitions[replaced_idx]
+            candidate_partitions.pop(replaced_idx)
             candidate_partitions.insert(0, offspring)
-            candidate_partitions.append(parent2)
+            candidate_partitions.append(replaced_candidate)
     return candidate_partitions
 
 
@@ -252,7 +313,6 @@ def compute_pipeline_parallel_cost(candidate_partition=None):
             row_ind, col_ind = linear_sum_assignment(cost_matrix)
             if cost_matrix[row_ind, col_ind].sum() >= inf_weight:
                 return cur_max_weight
-
 
     cross_partition_cost = np.zeros(shape=(way, way))
     for i in range(way):
