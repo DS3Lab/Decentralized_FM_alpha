@@ -76,26 +76,41 @@ def GCMA(nodes=None, population_size=None, trails=None):
 
     def cyclic_partitioning(offspring=None):
         def calculate_gain(cur_offspring=None, locked_v_idx=None):
-            gain = np.zeros(shape=(num_devices, way))
-            for v_idx, v in enumerate(cur_offspring):
+            gain = np.full(shape=(num_devices, way), fill_value=-np.inf)
+            for v_idx, partition_idx in enumerate(cur_offspring):
                 if locked_v_idx[v_idx] == 0:
-                    for target_idx, target in enumerate(cur_offspring):
-                        if v != target:
-                            gain[v_idx][target] += peer_delay[v_idx, target_idx]/1e3 + \
-                                send_gradient_size * 8 / \
-                                peer_bandwidth[v_idx, target_idx]
+                    gain[v_idx] = 0
+                    for target_idx, target_partition_idx in enumerate(cur_offspring):
+                        if target_partition_idx == partition_idx:
+                            gain[v_idx] += peer_delay[v_idx, target_idx]/1e3 + (
+                                send_activation_size + send_gradient_size) * 8 / peer_bandwidth[v_idx, target_idx]
+                        else:
+                            gain[v_idx][target_partition_idx] -= peer_delay[v_idx, target_idx]/1e3 + (
+                                send_activation_size + send_gradient_size) * 8 / peer_bandwidth[v_idx, target_idx]
 
-            G_ij = np.full(shape=(way, way), fill_value=-np.inf)
             G_i = np.full(shape=(way), fill_value=-np.inf)
-            G_i_trace = [[] for i in range(way)]
-            for v_idx, v in enumerate(cur_offspring):
+            G_i_trace = [[None, None] for i in range(way)]
+            for v_idx, partition_idx in enumerate(cur_offspring):
                 if locked_v_idx[v_idx] == 0:
-                    for target_idx, target_gain in enumerate(gain[v_idx]):
-                        if target_gain > G_ij[v, target_idx]:
-                            G_ij[v, target_idx] = target_gain
-                        if target_gain > G_i[v]:
-                            G_i[v] = target_gain
-                            G_i_trace[v] = (v_idx, target_idx)
+                    if gain[v_idx][partition_idx] > G_i[partition_idx]:
+                        G_i[partition_idx] = gain[v_idx][partition_idx]
+                        G_i_trace[partition_idx][0] = v_idx
+
+            G_i = np.full(shape=(way), fill_value=-np.inf)
+            G_ij = np.full(shape=(way, way), fill_value=-np.inf)
+            for partition_idx, trace in enumerate(G_i_trace):
+                v_idx = trace[0]
+                if v_idx != None:
+                    for target_partition_idx, target_gain in enumerate(gain[v_idx]):
+                        if target_partition_idx != partition_idx:
+                            if target_gain > G_ij[partition_idx, target_partition_idx]:
+                                G_ij[partition_idx,
+                                     target_partition_idx] = target_gain
+                            if target_gain > G_i[partition_idx]:
+                                G_i[partition_idx] = target_gain
+                                G_i_trace[partition_idx] = [
+                                    v_idx, target_partition_idx]
+
             return G_ij, G_i, G_i_trace
 
         def move_cycles(offspring=None):
@@ -103,7 +118,7 @@ def GCMA(nodes=None, population_size=None, trails=None):
             locked_partition_idx = [0] * way
             locked_v_idx = [0] * num_devices
             offsprings = [offspring]
-            for _ in range(num_devices):  # how many cycles
+            for _ in range(way):  # how many cycles
                 cur_offspring = offsprings[-1].copy()
                 movements = []
                 epsilon = []
@@ -112,10 +127,9 @@ def GCMA(nodes=None, population_size=None, trails=None):
                     cur_offspring, locked_v_idx)
                 S0 = Si = np.argmax(G_i)
                 for _ in range(num_devices):  # how many movement per cycle
-                    if len(G_i_trace[Si]):
-                        v_idx = G_i_trace[Si][0]
-                        Pv = G_i_trace[Si][1]
-                    else:
+                    v_idx, Pv = G_i_trace[Si]
+                    if v_idx == None:
+                        v_idx = movements[-1][0]
                         Pv = S0
                     cur_offspring[v_idx] = Pv
                     locked_v_idx[v_idx] = 1
@@ -159,23 +173,29 @@ def GCMA(nodes=None, population_size=None, trails=None):
             offspring = move_cycles(offspring)
         return offspring
 
-    def evaluate_candidate(candidate_partition=None):
-        score = 0
-        for i in range(num_devices):
-            for j in range(i, num_devices):
-                if (i // partition_size) != (j // partition_size):
-                    score += peer_delay[candidate_partition[i], candidate_partition[j]]/1e3 + \
-                        send_gradient_size * 8 / \
-                        peer_bandwidth[candidate_partition[i],
-                                       candidate_partition[j]]
-        return score
-
+    candidate_scores = []
     candidate_partitions = []
+    pre_clustering = False
     for i in range(population_size):
+        candidate_scores.append(None)
         cur_nodes = nodes.copy()
         random.seed = i
         random.shuffle(cur_nodes)
+        if pre_clustering:
+            clusters = []
+            for _ in range(way):
+                clusters.append([cur_nodes.pop(0)])
+                cost_array = []
+                for cur_node in cur_nodes:
+                    cost_array.append(peer_delay[clusters[-1][0], cur_node]/1e3 + (
+                        send_activation_size + send_gradient_size) * 8 / peer_bandwidth[clusters[-1][0], cur_node])
+                while len(clusters[-1]) < partition_size:
+                    min_cost_idx = np.argmin(cost_array)
+                    clusters[-1].append(cur_nodes.pop(min_cost_idx))
+                    cost_array.pop(min_cost_idx)
+            cur_nodes = list(itertools.chain.from_iterable(clusters))
         candidate_partitions.append(cur_nodes)
+
     for i in range(trails):
         np.random.seed = i
         parent1_idx, parent2_idx = np.random.randint(population_size, size=2)
@@ -183,24 +203,52 @@ def GCMA(nodes=None, population_size=None, trails=None):
             candidate_partitions[parent1_idx], candidate_partitions[parent2_idx])
         offspring_str = five_point_crossover(parent1_str, parent2_str)
         offspring_str = cyclic_partitioning(offspring_str)
-        offspring = [[] for i in range(way)]
+
+        if candidate_scores[parent1_idx] == None:
+            parent1 = [[] for _ in range(way)]
+            for v_idx, partition_idx in enumerate(parent1_str):
+                parent1[partition_idx].append(v_idx)
+            parent1_data_parallel_cost = compute_data_parallel_cost(
+                candidate_partition=parent1)
+            parent1_pipeline_parallel_cost, parent1_parallel_path = compute_pipeline_parallel_cost(
+                parent1)
+            candidate_scores[parent1_idx] = parent1_data_parallel_cost + \
+                parent1_pipeline_parallel_cost
+
+        if candidate_scores[parent2_idx] == None:
+            parent2 = [[] for i in range(way)]
+            for v_idx, partition_idx in enumerate(parent2_str):
+                parent2[partition_idx].append(v_idx)
+            parent2_data_parallel_cost = compute_data_parallel_cost(
+                candidate_partition=parent2)
+            parent2_pipeline_parallel_cost, parent2_parallel_path = compute_pipeline_parallel_cost(
+                parent2)
+            candidate_scores[parent2_idx] = parent2_data_parallel_cost + \
+                parent2_pipeline_parallel_cost
+
+        offspring = [[] for _ in range(way)]
         for v_idx, partition_idx in enumerate(offspring_str):
             offspring[partition_idx].append(v_idx)
+        offspring_data_parallel_cost = compute_data_parallel_cost(
+            candidate_partition=offspring)
+        offspring_pipeline_parallel_cost, offspring_parallel_path = compute_pipeline_parallel_cost(
+            offspring)
+        offspring_score = offspring_data_parallel_cost + offspring_pipeline_parallel_cost
         offspring = list(itertools.chain.from_iterable(offspring))
 
-        parent1_score = evaluate_candidate(candidate_partitions[parent1_idx])
-        parent2_score = evaluate_candidate(candidate_partitions[parent2_idx])
-        offspring_score = evaluate_candidate(offspring)
-
-        if offspring_score > parent1_score and offspring_score > parent2_score:
+        if offspring_score > candidate_scores[parent1_idx] and offspring_score > candidate_scores[parent2_idx]:
             candidate_partitions.append(offspring)
+            candidate_scores.append(offspring_score)
         else:
-            replaced_idx = parent1_idx if parent1_score > parent2_score else parent2_idx
+            replaced_idx = parent1_idx if candidate_scores[
+                parent1_idx] > candidate_scores[parent2_idx] else parent2_idx
             replaced_candidate = candidate_partitions[replaced_idx]
-            candidate_partitions.pop(replaced_idx)
-            candidate_partitions.insert(0, offspring)
+            candidate_partitions[replaced_idx] = offspring
             candidate_partitions.append(replaced_candidate)
-    return candidate_partitions
+            replaced_score = candidate_scores[replaced_idx]
+            candidate_scores[replaced_idx] = offspring_score
+            candidate_scores.append(replaced_score)
+    return candidate_partitions, candidate_scores
 
 
 def all_candidate_partitions(nodes=None):
@@ -377,24 +425,33 @@ if __name__ == "__main__":
         data_parallel_cost = None
         pipeline_parallel_cost = None
         pipeline_parallel_path = None
-        all_cost_records = []
 
+        # all_cost_records = []
         # for cur_candidate_partition in all_candidate_partitions(list(range(num_devices))):
-        for cur_raw_candidate_partition in GCMA(nodes=list(range(num_devices)), population_size=50, trails=450):
-            cur_candidate_partition = [cur_raw_candidate_partition[i: i +
-                                                                   partition_size] for i in range(0, num_devices, partition_size)]
-            cur_data_parallel_cost = compute_data_parallel_cost(
-                candidate_partition=cur_candidate_partition)
-            cur_pipeline_parallel_cost, cur_pipeline_parallel_path = compute_pipeline_parallel_cost(
-                cur_candidate_partition)
-            cur_total_cost = cur_data_parallel_cost + cur_pipeline_parallel_cost
-            all_cost_records.append(cur_total_cost)
-            if min_total_cost >= cur_total_cost:
-                min_total_cost = cur_total_cost
-                candidate_partition = cur_candidate_partition
-                pipeline_parallel_path = cur_pipeline_parallel_path
-                data_parallel_cost = cur_data_parallel_cost
-                pipeline_parallel_cost = cur_pipeline_parallel_cost
+        #    cur_data_parallel_cost = compute_data_parallel_cost(
+        #        candidate_partition=cur_candidate_partition)
+        #    cur_pipeline_parallel_cost, cur_pipeline_parallel_path = compute_pipeline_parallel_cost(
+        #        cur_candidate_partition)
+        #    cur_total_cost = cur_data_parallel_cost + cur_pipeline_parallel_cost
+        #    all_cost_records.append(cur_total_cost)
+        #    if min_total_cost >= cur_total_cost:
+        #        min_total_cost = cur_total_cost
+        #        candidate_partition = cur_candidate_partition
+        #        pipeline_parallel_path = cur_pipeline_parallel_path
+        #        data_parallel_cost = cur_data_parallel_cost
+        #        pipeline_parallel_cost = cur_pipeline_parallel_cost
+
+        candidate_partitions, all_cost_records = GCMA(
+            nodes=list(range(num_devices)), population_size=50, trails=450)
+        candidate_partition_idx = np.argmin(all_cost_records)
+        candidate_partition = [candidate_partitions[candidate_partition_idx][i: i + partition_size]
+                               for i in range(0, num_devices, partition_size)]
+        data_parallel_cost = compute_data_parallel_cost(
+            candidate_partition=candidate_partition)
+        pipeline_parallel_cost, pipeline_parallel_path = compute_pipeline_parallel_cost(
+            candidate_partition)
+        min_total_cost = data_parallel_cost + pipeline_parallel_cost
+
         end = time.perf_counter()
         print("run time(" + str(len(all_cost_records)) +
               " candidates): " + str(end - start) + " seconds")
@@ -403,3 +460,10 @@ if __name__ == "__main__":
         print("total cost: " + str(data_parallel_cost + pipeline_parallel_cost))
         print("data parallel cost: " + str(data_parallel_cost))
         print("pipeline parallel cost: " + str(pipeline_parallel_cost))
+        if len(config.regions):
+            for pipeline_idx, partition_idx in enumerate(pipeline_parallel_path):
+                print("pipeline " + str(pipeline_idx) +
+                      ", partition " + str(partition_idx) + ": ", end="")
+                for region_id in candidate_partition[partition_idx]:
+                    print(config.regions[region_id], end=", ")
+                print()

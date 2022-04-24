@@ -1,7 +1,7 @@
 import numpy as np
 
 nodes = 64
-
+regions = []
 
 def simulate_0_datacenter():
     print("Simulate case 0: on-demand datacenter.")
@@ -82,7 +82,7 @@ delay_bandwidth_dict = {
     "Seoul-Sydney": (148, 0.58),
     "Seoul-London": (238, 0.342),
     "Seoul-Frankfurt": (235, 0.358),
-    "Seoul-Ireland": (228, 335),
+    "Seoul-Ireland": (228, 0.335),
     "Singapore-Sydney": (92, 0.816),
     "Singapore-London": (169, 0.500),
     "Singapore-Frankfurt": (155, 0.535),
@@ -140,7 +140,7 @@ def simulate_4_worldwide_geo_distributed():
     cities = ["Oregon", "Virginia", "Ohio", "Tokyo", "Seoul",
               "Singapore", "Sydney", "London", "Frankfurt", "Ireland"]
 
-    regions = []
+    global regions
     for i in np.random.randint(low=0, high=len(cities), size=nodes):
         regions.append(cities[i])
 
