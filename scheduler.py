@@ -177,7 +177,6 @@ def GCMA(nodes=None, population_size=None, trails=None):
     candidate_partitions = []
     pre_clustering = False
     for i in range(population_size):
-        candidate_scores.append(None)
         cur_nodes = nodes.copy()
         random.seed = i
         random.shuffle(cur_nodes)
@@ -196,6 +195,15 @@ def GCMA(nodes=None, population_size=None, trails=None):
             cur_nodes = list(itertools.chain.from_iterable(clusters))
         candidate_partitions.append(cur_nodes)
 
+    for candidate_partition in candidate_partitions:
+        candidate_partition = [candidate_partition[i: i + partition_size]
+                               for i in range(0, num_devices, partition_size)]
+        data_parallel_cost = compute_data_parallel_cost(
+            candidate_partition=candidate_partition)
+        pipeline_parallel_cost, pipeline_parallel_path = compute_pipeline_parallel_cost(
+            candidate_partition)
+        candidate_scores.append(data_parallel_cost + pipeline_parallel_cost)
+
     for i in range(trails):
         np.random.seed = i
         parent1_idx, parent2_idx = np.random.randint(population_size, size=2)
@@ -203,28 +211,6 @@ def GCMA(nodes=None, population_size=None, trails=None):
             candidate_partitions[parent1_idx], candidate_partitions[parent2_idx])
         offspring_str = five_point_crossover(parent1_str, parent2_str)
         offspring_str = cyclic_partitioning(offspring_str)
-
-        if candidate_scores[parent1_idx] == None:
-            parent1 = [[] for _ in range(way)]
-            for v_idx, partition_idx in enumerate(parent1_str):
-                parent1[partition_idx].append(v_idx)
-            parent1_data_parallel_cost = compute_data_parallel_cost(
-                candidate_partition=parent1)
-            parent1_pipeline_parallel_cost, parent1_parallel_path = compute_pipeline_parallel_cost(
-                parent1)
-            candidate_scores[parent1_idx] = parent1_data_parallel_cost + \
-                parent1_pipeline_parallel_cost
-
-        if candidate_scores[parent2_idx] == None:
-            parent2 = [[] for i in range(way)]
-            for v_idx, partition_idx in enumerate(parent2_str):
-                parent2[partition_idx].append(v_idx)
-            parent2_data_parallel_cost = compute_data_parallel_cost(
-                candidate_partition=parent2)
-            parent2_pipeline_parallel_cost, parent2_parallel_path = compute_pipeline_parallel_cost(
-                parent2)
-            candidate_scores[parent2_idx] = parent2_data_parallel_cost + \
-                parent2_pipeline_parallel_cost
 
         offspring = [[] for _ in range(way)]
         for v_idx, partition_idx in enumerate(offspring_str):
@@ -248,6 +234,7 @@ def GCMA(nodes=None, population_size=None, trails=None):
             replaced_score = candidate_scores[replaced_idx]
             candidate_scores[replaced_idx] = offspring_score
             candidate_scores.append(replaced_score)
+    assert(len(candidate_partitions) == len(candidate_scores))
     return candidate_partitions, candidate_scores
 
 
