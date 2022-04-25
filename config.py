@@ -1,20 +1,20 @@
 import numpy as np
+import scipy
 import random
 
 nodes = 64
 regions = []
 
+
 def simulate_0_datacenter():
     print("Simulate case 0: on-demand datacenter.")
     delay = np.zeros((nodes, nodes))
-    bandwidth = np.zeros((nodes, nodes))
-    split = min(nodes//2, 8)
-    for i in range(nodes):
-        for j in range(nodes):
-            if (i < split and j < split) or (i >= split and j >= split):
-                bandwidth[i][j] = 100
-            else:
-                bandwidth[i][j] = 25
+    bandwidth = np.ones((nodes, nodes)) * 25
+    gpu_per_instances = min(nodes//2, 8)
+    instances = nodes // gpu_per_instances
+    bandwidth_blocks = [
+        np.ones((gpu_per_instances, gpu_per_instances))*75 for _ in range(instances)]
+    bandwidth = bandwidth + scipy.linalg.block_diag(*bandwidth_blocks)
     print('delay(ms):', delay)
     print('bandwidth(Gbps):', bandwidth)
     return delay, bandwidth
@@ -24,9 +24,11 @@ def simulate_1_datacenter_spot_gpu():
     print("Simulate case 1: spot datacenter.")
     delay = np.zeros((nodes, nodes))
     bandwidth = np.ones((nodes, nodes)) * 10
-    random.seed(2022)
+    random.seed = 2022
     spot_pair_num = nodes//4
-    spot_pair = [(i, i+1) for i in random.sample(range(0, nodes-1, 2), spot_pair_num)]  # pair of instances on the same machine.
+    # pair of instances on the same machine.
+    spot_pair = [(i, i+1)
+                 for i in random.sample(range(0, nodes-1, 2), spot_pair_num)]
     for (i, j) in spot_pair:
         bandwidth[i][j] = 100
         bandwidth[j][i] = 100
@@ -36,10 +38,17 @@ def simulate_1_datacenter_spot_gpu():
 
 
 def simulate_2_multi_universities():
-    print("Simulate case 2: multi universities. 0~5 in Ohio, 6~15 in Virginia.")
+    print("Simulate case 2: multi universities. 0~30 in Ohio, 31~63 in Virginia.")
     delay = np.zeros((nodes, nodes))
     bandwidth = np.ones((nodes, nodes)) * 10
     split = nodes//2 - 1
+    global regions
+    regions = []
+    for i in range(nodes):
+        if i < split:
+            regions.append("Ohio")
+        else:
+            regions.append("Virginia")
     for i in range(nodes):
         for j in range(nodes):
             if not ((i < split and j < split) or (i >= split and j >= split)):
@@ -102,7 +111,7 @@ delay_bandwidth_dict = {
 
 
 def simulate_3_regional_geo_distributed():
-    print("Simulate case 3: regional geo distributed: 0~5 in Virgina; 5~10 in Oregon, 11~15 in Ohio")
+    print("Simulate case 3: regional geo distributed: 0~16 in Virgina; 17~33 in Oregon, 34~63 in Ohio")
 
     def in_virgina(index: int):
         return index <= nodes//4
@@ -112,6 +121,16 @@ def simulate_3_regional_geo_distributed():
 
     def in_ohio(index: int):
         return index > nodes//2+1
+
+    global regions
+    regions = []
+    for i in range(nodes):
+        if in_virgina(i):
+            regions.append("Virginia")
+        elif in_oregon(i):
+            regions.append("Oregon")
+        elif in_ohio(i):
+            regions.append("Ohio")
 
     delay = np.ones((nodes, nodes)) * 5
     bandwidth = np.ones((nodes, nodes)) * 2
@@ -144,6 +163,7 @@ def simulate_4_worldwide_geo_distributed():
               "Singapore", "Sydney", "London", "Frankfurt", "Ireland"]
 
     global regions
+    regions = []
     for i in np.random.randint(low=0, high=len(cities), size=nodes):
         regions.append(cities[i])
 
