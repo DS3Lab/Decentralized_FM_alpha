@@ -17,8 +17,9 @@ def distributed_train_foo_iter(args, pipeline, device, train_data_loader):
                   " iterations, averaged (exclude the first iter) run time:", averaged_time)
         elif get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
             for i, data in enumerate(train_data_loader):
+                input_ids = data['text'].to(device)
                 labels = data['label'].to(device)
-                pipeline.sgd_iter(None, labels)
+                pipeline.sgd_iter(input_ids, labels)
                 if i >= args.num_iters-1:
                     break
         else:

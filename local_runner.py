@@ -98,7 +98,7 @@ def main():
             loss = torch.nn.functional.cross_entropy(logits, data['label'])
             optimizer.zero_grad()
             loss.backward()
-#             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             wandb.log({'loss': loss.item()})
 #             optimizer0.step()
 #             optimizer1.step()

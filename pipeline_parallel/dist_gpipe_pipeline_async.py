@@ -6,7 +6,7 @@ from comm.comm_utils import *
 from modules.dist_gpt_pp_module import *
 from data_parallel.dist_dp_utils import get_dp_module
 from optimizer.optimizer import get_fp16_optimizer
-from compress import Compressor
+from compress import get_compressor
 import cupy
 
 import wandb
@@ -51,29 +51,29 @@ class GpipeAsync:
         self.num_classes = config.num_labels
         
         # Compression
-        self.forward_compressor = Compressor(
-            bits=8, compress_method='fixpoint', 
-            scale_method='max', scale_dims=(0,1), 
-            activ_shape=(self.micro_batch_size, self.seq_length, self.embedding_dim), device=device,
+        self.forward_compressor = get_compressor(
+            compress_method='fixpoint', bits=4, 
+            scale_method='max', scale_dims=(0,1),
         )
-        self.backward_compressor = Compressor(
-            bits=8, compress_method='none', 
-            scale_method='max', scale_dims=(0,1), 
-            activ_shape=(self.micro_batch_size, self.seq_length, self.embedding_dim), device=device,
+        self.forward_compressor.build_buffer(
+            batch_size=args.batch_size,
+            micro_batch_size=args.micro_batch_size,
+            seq_length=args.seq_length,
+            embedding_dim=args.embedding_dim,
+            device=device, dtype=self.dtype,
         )
         
-        # forward comm buffer
-        if self.pp_rank == 0:
-            self.input_comm_micro_batches = None
-        else:
-            _shape_a, _dtype_a, _shape_s, _dtype_s = self.forward_compressor.get_comm_shape_and_dtype()
-            self.input_comm_micro_batches = [
-                (
-                    torch.zeros(_shape_a, requires_grad=False, device=self.device, dtype=_dtype_a),
-                    torch.zeros(_shape_s, requires_grad=False, device=self.device, dtype=_dtype_s),
-                ) for _ in range(self.micro_batch_num)
-            ]
-        
+        self.backward_compressor = get_compressor(
+            compress_method='fixpoint', bits=8,
+            scale_method='max', scale_dims=(0,1),
+        )
+        self.backward_compressor.build_buffer(
+            batch_size=args.batch_size,
+            micro_batch_size=args.micro_batch_size,
+            seq_length=args.seq_length,
+            embedding_dim=args.embedding_dim,
+            device=device, dtype=self.dtype,
+        )
 
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
         self.device = device
@@ -225,21 +225,19 @@ class GpipeAsync:
                     self.torch_send_stream.wait_event(self.forward_comp_ready_events[i])
                     self.profile_mark_forward_send_start(i)
                     # compress
-                    _data = self.forward_compressor.compress(current_micro_output.data)
-                    self.comm.send(_data[0], dst=self.post_node_rank, stream=cupy_send_stream)
-                    self.comm.send(_data[1], dst=self.post_node_rank, stream=cupy_send_stream)
-#                     self.comm.send(current_micro_output.data, dst=self.post_node_rank, stream=cupy_send_stream)
+                    self.forward_compressor.compress_send(
+                        current_micro_output.data,
+                        comm=self.comm, dst=self.post_node_rank, stream=cupy_send_stream
+                    )
                     self.profile_mark_forward_send_end(i)
             elif self.pp_rank == self.pipeline_group_size - 1:  # Only receive input from last node, do not send
                 with torch.cuda.stream(self.torch_recv_stream):
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                     self.profile_mark_forward_recv_start(i)
                     # decompress
-                    self.comm.recv(self.input_comm_micro_batches[i][0], src=self.pre_node_rank, stream=cupy_recv_stream)
-                    self.comm.recv(self.input_comm_micro_batches[i][1], src=self.pre_node_rank, stream=cupy_recv_stream)
-                    _data = self.forward_compressor.decompress(self.input_comm_micro_batches[i])
+                    _data = self.forward_compressor.recv_decompress(
+                        i, comm=self.comm, src=self.pre_node_rank, stream=cupy_recv_stream)
                     self.input_micro_batches[i].data.copy_(_data)
-#                     self.comm.recv(self.input_micro_batches[i], src=self.pre_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.forward_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
@@ -251,11 +249,9 @@ class GpipeAsync:
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                     self.profile_mark_forward_recv_start(i)
                     # decompress
-                    self.comm.recv(self.input_comm_micro_batches[i][0], src=self.pre_node_rank, stream=cupy_recv_stream)
-                    self.comm.recv(self.input_comm_micro_batches[i][1], src=self.pre_node_rank, stream=cupy_recv_stream)
-                    _data = self.forward_compressor.decompress(self.input_comm_micro_batches[i])
+                    _data = self.forward_compressor.recv_decompress(
+                        i, comm=self.comm, src=self.pre_node_rank, stream=cupy_recv_stream)
                     self.input_micro_batches[i].data.copy_(_data)
-#                     self.comm.recv(self.input_micro_batches[i], src=self.pre_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.forward_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
@@ -267,12 +263,14 @@ class GpipeAsync:
                     self.torch_send_stream.wait_event(self.forward_comp_ready_events[i])
                     self.profile_mark_forward_send_start(i)
                     # compress
-                    _data = self.forward_compressor.compress(current_micro_output.data)
-                    self.comm.send(_data[0], dst=self.post_node_rank, stream=cupy_send_stream)
-                    self.comm.send(_data[1], dst=self.post_node_rank, stream=cupy_send_stream)
-#                     self.comm.send(current_micro_output.data, dst=self.post_node_rank, stream=cupy_send_stream)
+                    self.forward_compressor.compress_send(
+                        current_micro_output.data,
+                        comm=self.comm, dst=self.post_node_rank, stream=cupy_send_stream
+                    )
                     self.profile_mark_forward_send_end(i)
+                    
             output_micro_batches.append(current_micro_output)
+            
         if self.enable_tidy_profiling:
             self.profiling_forward_stage()
         return output_micro_batches
@@ -327,13 +325,22 @@ class GpipeAsync:
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
                     self.torch_send_stream.wait_event(self.backward_comp_ready_events[i])
                     self.profile_mark_backward_send_start(i)
-                    self.comm.send(self.input_micro_batches[i].grad, dst=self.pre_node_rank, stream=cupy_send_stream)
+                    # compress
+                    self.backward_compressor.compress_send(
+                        self.input_micro_batches[i].grad,
+                        comm=self.comm, dst=self.pre_node_rank, stream=cupy_send_stream
+                    )
+#                     self.comm.send(self.input_micro_batches[i].grad, dst=self.pre_node_rank, stream=cupy_send_stream)
                     self.profile_mark_backward_send_end(i)
             elif self.pp_rank == 0:  # only receive grad from previous node, do not send
                 with torch.cuda.stream(self.torch_recv_stream):
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                     self.profile_mark_backward_recv_start(i)
-                    self.comm.recv(self.output_micro_batches_grad[i], src=self.post_node_rank, stream=cupy_recv_stream)
+                    # decompress
+                    _data = self.backward_compressor.recv_decompress(
+                        i, comm=self.comm, src=self.post_node_rank, stream=cupy_recv_stream)
+                    self.output_micro_batches_grad[i].copy_(_data)
+#                     self.comm.recv(self.output_micro_batches_grad[i], src=self.post_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.backward_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.backward_recv_ready_events[i])
@@ -344,7 +351,11 @@ class GpipeAsync:
                 with torch.cuda.stream(self.torch_recv_stream):
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                     self.profile_mark_backward_recv_start(i)
-                    self.comm.recv(self.output_micro_batches_grad[i], src=self.post_node_rank, stream=cupy_recv_stream)
+                    # decompress
+                    _data = self.backward_compressor.recv_decompress(
+                        i, comm=self.comm, src=self.post_node_rank, stream=cupy_recv_stream)
+                    self.output_micro_batches_grad[i].copy_(_data)
+#                     self.comm.recv(self.output_micro_batches_grad[i], src=self.post_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.backward_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.backward_recv_ready_events[i])
@@ -355,7 +366,12 @@ class GpipeAsync:
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
                     self.torch_send_stream.wait_event(self.backward_comp_ready_events[i])
                     self.profile_mark_backward_send_start(i)
-                    self.comm.send(self.input_micro_batches[i].grad, dst=self.pre_node_rank, stream=cupy_send_stream)
+                    # compress
+                    self.backward_compressor.compress_send(
+                        self.input_micro_batches[i].grad,
+                        comm=self.comm, dst=self.pre_node_rank, stream=cupy_send_stream
+                    )
+#                     self.comm.send(self.input_micro_batches[i].grad, dst=self.pre_node_rank, stream=cupy_send_stream)
                     self.profile_mark_backward_send_end(i)
         if self.enable_tidy_profiling:
             self.profiling_backward_stage()
@@ -390,7 +406,7 @@ class GpipeAsync:
 
     def optimizer_step(self):
         # hard code: grad clipping
-#         torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
         if self.use_dp:
             with torch.cuda.stream(self.torch_comp_stream):
                 self.torch_comp_stream.record_event(self.dp_optim.backward_ready_event)

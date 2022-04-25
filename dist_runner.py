@@ -73,7 +73,7 @@ def main():
         print("Running ", args.pp_mode, " without data parallel.")
 
     pipe = get_pp_module(args, config, device, use_dp)
-    pipe.model.eval()
+    pipe.model.train() # Flag .training to True to enable Dropout
     
     if args.load_pretrained_model:
         if get_pipeline_parallel_rank() == 0:
