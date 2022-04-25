@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 nodes = 64
 regions = []
@@ -7,7 +8,7 @@ def simulate_0_datacenter():
     print("Simulate case 0: on-demand datacenter.")
     delay = np.zeros((nodes, nodes))
     bandwidth = np.zeros((nodes, nodes))
-    split = nodes//2
+    split = min(nodes//2, 8)
     for i in range(nodes):
         for j in range(nodes):
             if (i < split and j < split) or (i >= split and j >= split):
@@ -23,7 +24,9 @@ def simulate_1_datacenter_spot_gpu():
     print("Simulate case 1: spot datacenter.")
     delay = np.zeros((nodes, nodes))
     bandwidth = np.ones((nodes, nodes)) * 10
-    spot_pair = {(1, 2), (3, 5)}  # pair of instances on the same machine.
+    random.seed(2022)
+    spot_pair_num = nodes//4
+    spot_pair = [(i, i+1) for i in random.sample(range(0, nodes-1, 2), spot_pair_num)]  # pair of instances on the same machine.
     for (i, j) in spot_pair:
         bandwidth[i][j] = 100
         bandwidth[j][i] = 100
