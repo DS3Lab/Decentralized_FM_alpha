@@ -15,6 +15,8 @@ def simulate_0_datacenter():
     bandwidth_blocks = [
         np.ones((gpu_per_instances, gpu_per_instances))*75 for _ in range(instances)]
     bandwidth = bandwidth + scipy.linalg.block_diag(*bandwidth_blocks)
+    for i in range(nodes):
+        regions.append("instance_" + str(i//8))
     print('delay(ms):', delay)
     print('bandwidth(Gbps):', bandwidth)
     return delay, bandwidth
@@ -29,9 +31,16 @@ def simulate_1_datacenter_spot_gpu():
     # pair of instances on the same machine.
     spot_pair = [(i, i+1)
                  for i in random.sample(range(0, nodes-1, 2), spot_pair_num)]
+    global regions
+    regions = ["individual"] * nodes
+    for pair_idx, (i, j) in enumerate(spot_pair):
+        regions[i] = "pair_" + str(pair_idx)
+        regions[j] = "pair_" + str(pair_idx)
+
     for (i, j) in spot_pair:
         bandwidth[i][j] = 100
         bandwidth[j][i] = 100
+
     print('delay(ms):', delay)
     print('bandwidth(Gbps):', bandwidth)
     return delay, bandwidth
