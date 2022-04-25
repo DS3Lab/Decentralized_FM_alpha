@@ -52,8 +52,9 @@ class GpipeAsync:
         
         # Compression
         self.forward_compressor = get_compressor(
-            compress_method='fixpoint', bits=4, 
-            scale_method='max', scale_dims=(0,1),
+            compress_method=args.forward_compress_method, 
+            bits=args.forward_bits, 
+            scale_method=args.forward_scale_method, scale_dims=args.forward_scale_dims,
         )
         self.forward_compressor.build_buffer(
             batch_size=args.batch_size,
@@ -64,8 +65,9 @@ class GpipeAsync:
         )
         
         self.backward_compressor = get_compressor(
-            compress_method='fixpoint', bits=8,
-            scale_method='max', scale_dims=(0,1),
+            compress_method=args.backward_compress_method, 
+            bits=args.backward_bits, 
+            scale_method=args.backward_scale_method, scale_dims=args.backward_scale_dims,
         )
         self.backward_compressor.build_buffer(
             batch_size=args.batch_size,
@@ -212,6 +214,11 @@ class GpipeAsync:
         if self.pp_rank == 0:
             assert(input_data is not None)
             self.input_micro_batches = torch.chunk(input_data, self.micro_batch_num, dim=0)
+        if self.pp_rank == self.pipeline_group_size - 1:
+            if input_data is not None:
+                input_ids_micro_batches = torch.chunk(input_data, self.micro_batch_num, dim=0)
+            else:
+                input_ids_micro_batches = [None]*self.micro_batch_num
         output_micro_batches = []
 
         for i in range(self.micro_batch_num):
@@ -242,7 +249,7 @@ class GpipeAsync:
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
                     self.profile_mark_forward_comp_start(i)
-                    current_micro_output = self.model(self.input_micro_batches[i])
+                    current_micro_output = self.model(self.input_micro_batches[i], input_ids=input_ids_micro_batches[i])
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
             else:  # receive, compute, and send
                 with torch.cuda.stream(self.torch_recv_stream):

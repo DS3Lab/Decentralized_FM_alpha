@@ -86,16 +86,23 @@ def add_parallel_schema_arguments(parser):
 
     
 def add_acitvation_compression_arguments(parser):
-    parser.add_argument('--compression-method', type=str, default='none', metavar='N',
-                        help='-')
-    parser.add_argument('--scale-method', type=str, default='l2', metavar='N',
-                        help='-')
-    parser.add_argument('--scale-dims', type=lambda x: (int(i) for i in x.lstrip('(').rstrip(')').split(',')), 
-                        default=(0,1), metavar='N',
+    parser.add_argument('--forward-compress-method', type=str, default='none', metavar='N',
                         help='-')
     parser.add_argument('--forward-bits', type=int, default=4, metavar='N',
                         help='-')
+    parser.add_argument('--forward-scale-method', type=str, default='max', metavar='N',
+                        help='-')
+    parser.add_argument('--forward-scale-dims', type=lambda x: (int(i) for i in x.lstrip('(').rstrip(')').split(',')), 
+                        default=(0,1), metavar='N',
+                        help='-')
+    parser.add_argument('--backward-compress-method', type=str, default='none', metavar='N',
+                        help='-')
     parser.add_argument('--backward-bits', type=int, default=8, metavar='N',
+                        help='-')
+    parser.add_argument('--backward-scale-method', type=str, default='max', metavar='N',
+                        help='-')
+    parser.add_argument('--backward-scale-dims', type=lambda x: (int(i) for i in x.lstrip('(').rstrip(')').split(',')), 
+                        default=(0,1), metavar='N',
                         help='-')
     
 

@@ -66,6 +66,14 @@ class GPTStageLast(GPTStageBase):
         module_list.append(self._create_last_layer())
         self.model = nn.Sequential(*module_list).to(device)
 
-    def forward(self, x):
-        out = self.model(x.to(self.device)) if self._to_cpu else self.model(x)
+    def forward(self, x, input_ids=None):
+        if input_ids is None:
+            out = self.model(x.to(self.device)) if self._to_cpu else self.model(x)
+        else:
+            x = x.to(self.device) if self._to_cpu else x
+            input_ids = input_ids.to(self.device) if self._to_cpu else input_ids
+            for layer in self.model[:-1]:
+                x = layer(x)
+            out = self.model[-1](x, input_ids=input_ids)
+            
         return out.cpu() if self._to_cpu else out

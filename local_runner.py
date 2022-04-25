@@ -7,7 +7,7 @@ from tasks.data_loaders.mrpc import get_mrpc_data_loader
 from modules.tokenizer import build_tokenizer
 from modules.gpt_modules import GPTForClassification, GPTConfig
 from modules.gpt_modules import *
-# from transformers import GPT2ForSequenceClassification as GPTForClassification
+from transformers import GPT2ForSequenceClassification as GPTForClassification
 
 import wandb
 
@@ -54,54 +54,36 @@ def main():
     print("token vocab size:", tokenizer.vocab_size)
     data_loader = get_mrpc_data_loader(args, tokenizer)
     
-    config = GPTConfig.from_pretrained('gpt2')
-    config.pad_token_id = config.eos_token_id
-    model = torch.nn.Sequential(
-        GPTEmbeddings(config),
-        *[GPTBlock(config) for i in range(12)],
-        GPTClassificationHead(config),
-    )
-    model[0].load_state_dict(torch.load('./checkpoints/gpt2/pytorch_embs.pt'))
-    for i in range(12):
-        model[1+i].load_state_dict(torch.load(f'./checkpoints/gpt2/pytorch_{i}.pt'))
-    tokenizer.model_max_length = args.seq_length
-#     if args.model_name:
-#         model = GPTForClassification.from_pretrained(args.model_name)
-#         tokenizer.model_max_length = args.seq_length
-#     else:
-#         config = GPTConfig.from_pretrained('gpt2')
-#         config.n_embd = args.embedding_dim
-#         config.n_inner = args.embedding_dim*4
-#         config.n_layer = args.num_layers
-#         config.n_head = args.num_heads
-#         config.n_positions = args.seq_length
-#         config.n_ctx = args.seq_length
-#         config.vocab_size = tokenizer.vocab_size
-#         config.bos_token_id = tokenizer.bos_token_id
-#         config.eos_token_id = tokenizer.eos_token_id
-#         tokenizer.model_max_length = args.seq_length
-#         model = GPTForClassification(config=config)
+    if args.model_name:
+        model = GPTForClassification.from_pretrained(args.model_name)
+        tokenizer.model_max_length = args.seq_length
+    else:
+        config = GPTConfig.from_pretrained('gpt2')
+        config.n_embd = args.embedding_dim
+        config.n_inner = args.embedding_dim*4
+        config.n_layer = args.num_layers
+        config.n_head = args.num_heads
+        config.n_positions = args.seq_length
+        config.n_ctx = args.seq_length
+        config.vocab_size = tokenizer.vocab_size
+        config.bos_token_id = tokenizer.bos_token_id
+        config.eos_token_id = tokenizer.eos_token_id
+        tokenizer.model_max_length = args.seq_length
+        model = GPTForClassification(config=config)
     model = model.to(device)
-    model.eval()
-#     model.config.pad_token_id = model.config.eos_token_id
+    model.train()
+    model.config.pad_token_id = model.config.eos_token_id
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
-#     optimizer0 = torch.optim.AdamW(sum([list(layer.parameters()) for layer in model[:5]], []), lr=args.lr)
-#     optimizer1 = torch.optim.AdamW(sum([list(layer.parameters()) for layer in model[5:9]], []), lr=args.lr)
-#     optimizer2 = torch.optim.AdamW(sum([list(layer.parameters()) for layer in model[9:]], []), lr=args.lr)
 
     for e in range(10):
         for i, data in enumerate(data_loader):
             data = {k: v.to(device) for k, v in data.items()}
-#             outputs = model(input_ids=data['input_ids'], labels=data['label'])
-#             loss = outputs#.loss
-            logits = model(data['input_ids'])
-            loss = torch.nn.functional.cross_entropy(logits, data['label'])
+            outputs = model(input_ids=data['input_ids'], labels=data['label'])
+            loss = outputs.loss
             optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             wandb.log({'loss': loss.item()})
-#             optimizer0.step()
-#             optimizer1.step()
             optimizer.step()
             print("Iter ", i, "===== Loss: ", loss.item(), "======")
 

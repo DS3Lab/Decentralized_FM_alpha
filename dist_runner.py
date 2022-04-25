@@ -25,6 +25,7 @@ def main():
     add_training_hyper_parameter_arguments(parser)
     add_mixed_precision_arguments(parser)
     add_parallel_schema_arguments(parser)
+    add_acitvation_compression_arguments(parser)
     parser.add_argument('--model-name', type=str, default='gpt2', metavar='S',
                         help='model name or path')
     parser.add_argument('--load-pretrained-model', 
