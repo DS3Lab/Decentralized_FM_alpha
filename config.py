@@ -207,3 +207,11 @@ def simulate_4_worldwide_geo_distributed():
     print('delay(ms):', delay)
     print('bandwidth(Gbps):', bandwidth)
     return delay, bandwidth
+
+
+def simulate_5_homogeneous_tc(delay=50, bandwidth=1):
+    delay = np.ones((nodes, nodes)) * delay
+    bandwidth = np.ones((nodes, nodes)) * bandwidth
+    print('delay(ms):', delay)
+    print('bandwidth(Gbps):', bandwidth)
+    return delay, bandwidth
