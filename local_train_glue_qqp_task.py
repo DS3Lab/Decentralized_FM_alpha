@@ -41,6 +41,8 @@ def main():
                         help='Static loss scaling, positive power of 2 values can improve fp16 convergence. ')
     parser.add_argument('--fp16', action='store_true',
                         help='Run model in fp16 mode.')
+    parser.add_argument('--use-offload', default=False, type=lambda x: (str(x).lower() == 'true'),
+                        help='if this is set to True, we will offload the fp32 model to CPU RAM.')
     args = parser.parse_args()
     if args.use_cuda:
         assert (torch.cuda.is_available())
@@ -63,7 +65,7 @@ def main():
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 
     if args.fp16:
-        optimizer = get_fp16_optimizer(args, optimizer)
+        optimizer = get_fp16_optimizer(args, optimizer, device)
 
     prof = FlopsProfiler(model)
 
@@ -93,7 +95,7 @@ def main():
             params = prof.get_total_params()
             prof.print_model_profile()
             prof.end_profile()
-            print("Flops:", flops)
+            print("Flop raw: {}, PFlop: {} for a batch of 1024".format(flops, flops * 1024 / 10**15))
             print("Macs:", macs)
             print("Params:", params)
 
@@ -101,7 +103,7 @@ def main():
         optimizer.step()
 
         print("Iter ", i, "===== Loss: ", loss.item(), "======")
-        if i > 10:
+        if i > 3:
             break
         # print(data)
 

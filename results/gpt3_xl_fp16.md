@@ -85,5 +85,21 @@ Check the largest batch size for different number of layers:
 | delay 50ms  bandwidth 1Gbps         | 12.62 s | 12.91 s | 13.19 s |
 
 
+### Result of Megatron (2022/04/26)
 
+- Megatron Baseline for GPT3-XL
+  - Follow some setting from the Alpa Paper. 
+  - Their setting: 64 V100 8 P3.16xlarge AWS instances.
+  - Global batch size 1024, sequence length 2048 (This is different, Alpa use 1024).
+  - They do not report micro-batch size, I use micro-batch size = 1.
+  - Number of Para: 1.3B
+  - Computation (in PFlop): 23.64
+    - Forward: 5.91
+    - Backward (with activation recompute X3): 17.73
+  - DP degree: 8.
+
+| Setting       | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
+|---------------|-------------|-----------|---------|---------|
+| 8 P3.16xlarge |  s          |  s        |  s      |  s      |
+| 64 P3.2xlarge |  s          |  s        |  s      |  s      |
 
