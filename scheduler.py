@@ -256,7 +256,7 @@ def all_candidate_partitions(nodes=None):
 
 
 def compute_data_parallel_cost(candidate_partition=None):
-    data_parallel_cost = 0
+    data_parallel_cost = float('-inf')
     for partition in candidate_partition:
         within_partition_cost = float('inf')
         for primary in partition:
@@ -266,9 +266,11 @@ def compute_data_parallel_cost(candidate_partition=None):
                     cur_cost += peer_delay[primary, secondary] / 1e3 + \
                         send_activation_size * 8 / \
                         peer_bandwidth[primary, secondary]
+            cur_cost = cur_cost / partition_size
             if cur_cost < within_partition_cost:
                 within_partition_cost = cur_cost
-        data_parallel_cost += within_partition_cost
+        if data_parallel_cost < within_partition_cost:
+            data_parallel_cost = within_partition_cost
     return data_parallel_cost
 
 
