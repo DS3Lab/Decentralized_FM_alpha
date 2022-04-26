@@ -97,9 +97,9 @@ Check the largest batch size for different number of layers:
     - Forward: 5.91
     - Backward (with activation recompute X3): 17.73
   - DP degree: 8.
-
-| Setting       | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 |
-|---------------|-------------|-----------|---------|---------|
-| 8 P3.16xlarge |  s          |  s        |  s      |  s      |
-| 64 P3.2xlarge |  s          |  s        |  s      |  s      |
+  
+| Setting       | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 | Best PFlops |
+|---------------|-------------|-----------|---------|---------|-------------|
+| 8 P3.16xlarge | s           | s         | s       | s       |             |
+| 64 P3.2xlarge | s           | s         | s       | s       |             |
 
