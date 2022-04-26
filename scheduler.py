@@ -8,7 +8,6 @@ import config
 # GPT-3 XL
 batch_size = 0.5e6
 layer_size = 24
-para_size = 1.3e9
 
 # physical topology
 num_devices = config.nodes
@@ -18,8 +17,8 @@ peer_bandwidth = None
 # assigned task
 batch_size_per_task = 0.625e5
 layer_size_per_task = 3
-send_activation_size = 4  # gigabytes
-send_gradient_size = 1  # gigabytes
+send_activation_size = 1  # gigabytes
+send_gradient_size = 288/1024  # gigabytes
 
 way = None
 partition_size = None
@@ -202,7 +201,8 @@ def GCMA(nodes=None, population_size=None, trails=None):
             candidate_partition=candidate_partition)
         pipeline_parallel_cost, pipeline_parallel_path = compute_pipeline_parallel_cost(
             candidate_partition)
-        candidate_scores.append(data_parallel_cost + pipeline_parallel_cost)
+        candidate_scores.append(data_parallel_cost +
+                                2 * pipeline_parallel_cost)
 
     for i in range(trails):
         np.random.seed = i
@@ -219,7 +219,8 @@ def GCMA(nodes=None, population_size=None, trails=None):
             candidate_partition=offspring)
         offspring_pipeline_parallel_cost, offspring_parallel_path = compute_pipeline_parallel_cost(
             offspring)
-        offspring_score = offspring_data_parallel_cost + offspring_pipeline_parallel_cost
+        offspring_score = offspring_data_parallel_cost + \
+            2 * offspring_pipeline_parallel_cost
         offspring = list(itertools.chain.from_iterable(offspring))
 
         if offspring_score > candidate_scores[parent1_idx] and offspring_score > candidate_scores[parent2_idx]:
@@ -258,19 +259,14 @@ def all_candidate_partitions(nodes=None):
 def compute_data_parallel_cost(candidate_partition=None):
     data_parallel_cost = float('-inf')
     for partition in candidate_partition:
-        within_partition_cost = float('inf')
-        for primary in partition:
-            cur_cost = 0
-            for secondary in partition:
-                if primary != secondary:
-                    cur_cost += peer_delay[primary, secondary] / 1e3 + \
-                        send_activation_size * 8 / \
-                        peer_bandwidth[primary, secondary]
-            cur_cost = cur_cost / partition_size
-            if cur_cost < within_partition_cost:
-                within_partition_cost = cur_cost
-        if data_parallel_cost < within_partition_cost:
-            data_parallel_cost = within_partition_cost
+        within_partition_cost = [0] * partition_size
+        for i in range(partition_size):
+            for j in range(partition_size):
+                if i != j:
+                    within_partition_cost[i] += 2 * (peer_delay[partition[i], partition[j]] / 1e3 + send_activation_size * 8 / (
+                        peer_bandwidth[partition[i], partition[j]] * partition_size))
+        if data_parallel_cost < np.max(within_partition_cost):
+            data_parallel_cost = np.max(within_partition_cost)
     return data_parallel_cost
 
 
@@ -404,7 +400,7 @@ if __name__ == "__main__":
     partition_size = int(batch_size / batch_size_per_task)
 
     simulate_cases = [config.simulate_0_datacenter, config.simulate_1_datacenter_spot_gpu, config.simulate_2_multi_universities,
-                      config.simulate_3_regional_geo_distributed, config.simulate_4_worldwide_geo_distributed]
+                      config.simulate_3_regional_geo_distributed, config.simulate_4_worldwide_geo_distributed, config.simulate_5_homogeneous_tc]
     import time
     for simulate_case in simulate_cases:
         peer_delay, peer_bandwidth = simulate_case()
@@ -439,7 +435,7 @@ if __name__ == "__main__":
             candidate_partition=candidate_partition)
         pipeline_parallel_cost, pipeline_parallel_path = compute_pipeline_parallel_cost(
             candidate_partition)
-        min_total_cost = data_parallel_cost + pipeline_parallel_cost
+        min_total_cost = data_parallel_cost + 2 * pipeline_parallel_cost
 
         end = time.perf_counter()
         print("run time(" + str(len(all_cost_records)) +
