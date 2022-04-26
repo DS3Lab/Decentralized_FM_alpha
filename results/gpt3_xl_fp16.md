@@ -87,19 +87,57 @@ Check the largest batch size for different number of layers:
 
 ### Result of Megatron (2022/04/26)
 
-- Megatron Baseline for GPT3-XL
+##### 8 P3.16xlarge for GPT-XL
+
+- Megatron Baseline of GPT3 XL
   - Follow some setting from the Alpa Paper. 
-  - Their setting: 64 V100 8 P3.16xlarge AWS instances.
-  - Global batch size 1024, sequence length 2048 (This is different, Alpa use 1024).
-  - They do not report micro-batch size, I use micro-batch size = 1.
+  - 64 V100 8 P3.16xlarge AWS instances.
+  - Global batch size 1024. 
+  - Sequence length 2048 (Note Alpa use 1024).
+  - They do not report micro-batch size. (I tune it below)
   - Number of Para: 1.3B
-  - Computation (in PFlop): 23.64
+  - Computation of GPT3-XL (in PFlop): 23.64
     - Forward: 5.91
     - Backward (with activation recompute X3): 17.73
   - DP degree: 8.
-  
-| Setting       | Tensor(T)-8 | Pipe(P)-8 | T-4 P-2 | T-2 P-4 | Best PFlops |
-|---------------|-------------|-----------|---------|---------|-------------|
-| 8 P3.16xlarge | s           | s         | s       | s       |             |
-| 64 P3.2xlarge | s           | s         | s       | s       |             |
 
+| Setting       | P-8 T-1 D-8 | P-1 T-8 D-8 | P-4 T-2 D-8 | P-2 T-4 D-8 | P-8 T-8 D-1 | Best PFlops  |
+|---------------|-------------|-------------|-------------|-------------|-------------|--------------|
+| Micro-batch 1 | 26.91 s     | 25.04 s     | 12.52 s     | 14.25 s     | 72.38 s     | 1.888 PFlops |
+| Micro-batch 2 | 23.44 s     | 45.68 s     | 16.96 s     | 21.09 s     | -           | 1.393 PFlops |
+| Micro-batch 4 | 21.06 s     | 20.29 s     | 13.20 s     | 15.10 s     | -           | 1.791 PFlops |
+
+- Extend GPT3-XL to 40 layer
+- Number of Para: 1.3B
+  - Computation of GPT3-XL (in PFlop): 39.4
+    - Forward: 9.85
+    - Backward (with activation recompute X3): 29.55
+
+| Setting       | Pipe(P)-8 | Tensor(T)-8 | P-4 T-2 | P-2 T-4 | P-8 T-8 D-1 | Best PFlops |
+|---------------|-----------|-------------|---------|---------|-------------|-------------|
+| Micro-batch 1 | 28.02 s   | 40.46 s     | 18.88 s | 22.60 s | 75.97 s     | 2.09 PFlops |
+| Micro-batch 2 | 25.98 s   | 102.02 s    | 24.38 s | 39.04 s | -           | 1.62 PFlops |
+| Micro-batch 4 | 23.08 s   | 37.76 s     | 23.76 s | 22.54 s | -           | 1.75 PFlops |
+
+
+- Megatron Baseline of GPT3-39b
+  - Follow some setting from the Alpa Paper. 
+  - 64 V100 8 P3.16xlarge AWS instances.
+  - Global batch size 1024; 
+  - Sequence length 1024;
+  - Model dim: 8192;
+  - Number of layers: 48;
+  - They do not report micro-batch size. (I tune it below)
+  - Number of Para: 39B
+  - Computation of GPT3-XL (in PFlop): 459.9 
+    - Forward: 114.95
+    - Backward (with activation recompute X3): 344.85
+  - DP degree: 1.
+
+##### 8 P3.16xlarge for GPT-39B
+
+| Setting       | P-8 T-8  | P-16 T-4  | Best PFlops |
+|---------------|----------|-----------|-------------|
+| Micro-batch 1 | 119.52 s | 96.24 s   | 4.77 PFlops |
+| Micro-batch 2 | 182.32 s | 113.77 s  | 4.04 PFlops |
+| Micro-batch 4 | 115.21 s | 91.85 s   | 5.00 PFlops |
