@@ -11,6 +11,50 @@ import cupy
 
 import wandb
 
+def get_parameter_names(model, forbidden_layer_types):
+    """
+    Returns the names of the model parameters that are not inside a forbidden layer.
+    """
+    result = []
+    for name, child in model.named_children():
+        result += [
+            f"{name}.{n}"
+            for n in get_parameter_names(child, forbidden_layer_types)
+            if not isinstance(child, tuple(forbidden_layer_types))
+        ]
+    # Add model specific parameters (defined with nn.Parameter) since they are not in any child.
+    result += list(model._parameters.keys())
+    return result
+
+def create_optimizer(model, adafactor=None, weight_decay=0.01, learning_rate=2e-5,
+                     adam_beta1=0.9, adam_beta2=0.999, adam_epsilon=1e-8):
+    from transformers.optimization import Adafactor, AdamW
+    decay_parameters = get_parameter_names(model, [torch.nn.LayerNorm])
+    decay_parameters = [name for name in decay_parameters if "bias" not in name]
+    optimizer_grouped_parameters = [
+        {
+            "params": [p for n, p in model.named_parameters() if n in decay_parameters],
+            "weight_decay": weight_decay,
+        },
+        {
+            "params": [p for n, p in model.named_parameters() if n not in decay_parameters],
+            "weight_decay": 0.0,
+        },
+    ]
+    optimizer_cls = Adafactor if adafactor else AdamW
+    if adafactor:
+        optimizer_cls = Adafactor
+        optimizer_kwargs = {"scale_parameter": False, "relative_step": False}
+    else:
+        optimizer_cls = AdamW
+        optimizer_kwargs = {
+            "betas": (adam_beta1, adam_beta2),
+            "eps": adam_epsilon,
+        }
+    optimizer_kwargs["lr"] = learning_rate
+    optimizer = optimizer_cls(optimizer_grouped_parameters, **optimizer_kwargs)
+    return optimizer
+
 class GpipeAsync:
     r"""
     Async implementation of Gpipe.
@@ -51,9 +95,11 @@ class GpipeAsync:
         self.num_classes = config.num_labels
         
         # Compression
+        self.forward_compress_method = args.forward_compress_method
         self.forward_compressor = get_compressor(
             compress_method=args.forward_compress_method, 
             bits=args.forward_bits, 
+            bits_act=args.forward_bits_act,
             scale_method=args.forward_scale_method, scale_dims=args.forward_scale_dims,
         )
         self.forward_compressor.build_buffer(
@@ -141,17 +187,23 @@ class GpipeAsync:
         if self.pp_rank == 0:
             self.model = GPTStageFirst(args, config, device)
         elif self.pp_rank == self.pipeline_group_size - 1:
-            wandb.init(project='test', entity='pipeline-activation-compression')
+            wandb.init(
+                project='test', 
+                entity='pipeline-activation-compression',
+                config=args,
+            )
             self.model = GPTStageLast(args, config, device)
         else:
             self.model = GPTStageMiddle(args, config, device)
 
         if self.use_fp16:
             self.model.half()
-            tmp_optimizer = optim.AdamW(self.model.parameters(), lr=args.lr)
+#             tmp_optimizer = optim.AdamW(self.model.parameters(), lr=args.lr)
+            self.optimizer = create_optimizer(self.model, learning_rate=args.lr)
             self.optimizer = get_fp16_optimizer(args, tmp_optimizer)
         else:
-            self.optimizer = optim.AdamW(self.model.parameters(), lr=args.lr)
+#             self.optimizer = optim.AdamW(self.model.parameters(), lr=args.lr)
+            self.optimizer = create_optimizer(self.model, learning_rate=args.lr)
 
         # Notice that if we use fp16, gradients are aggregated in fp16, this may not be the default in Megatron.
         if use_dp:
@@ -209,7 +261,7 @@ class GpipeAsync:
     def get_ts(self, event):
         return self.init_time_stamp + self.init_event.elapsed_time(event) * 1e+3
 
-    def forward_stage(self, input_data=None):
+    def forward_stage(self, input_data=None, sample_ids=None):
         # print("Forward stage start! rank-", self.rank)
         if self.pp_rank == 0:
             assert(input_data is not None)
@@ -220,6 +272,11 @@ class GpipeAsync:
             else:
                 input_ids_micro_batches = [None]*self.micro_batch_num
         output_micro_batches = []
+        
+        # TODO: should be placed at the end of last mini-batch
+        if self.forward_compress_method in {'delta', 'delta-lowbits'}:
+            assert sample_ids is not None
+            self.forward_compressor.read_from_cache(sample_ids)
 
         for i in range(self.micro_batch_num):
             if self.pp_rank == 0:  # Only send output to next node, do not receive
@@ -233,9 +290,10 @@ class GpipeAsync:
                     self.profile_mark_forward_send_start(i)
                     # compress
                     self.forward_compressor.compress_send(
-                        current_micro_output.data,
+                        current_micro_output.data, i_micro_batch=i,
                         comm=self.comm, dst=self.post_node_rank, stream=cupy_send_stream
                     )
+#                     print(f'rank{self.pp_rank} {i} sending', current_micro_output.data[0, 0, :10])
                     self.profile_mark_forward_send_end(i)
             elif self.pp_rank == self.pipeline_group_size - 1:  # Only receive input from last node, do not send
                 with torch.cuda.stream(self.torch_recv_stream):
@@ -258,6 +316,7 @@ class GpipeAsync:
                     # decompress
                     _data = self.forward_compressor.recv_decompress(
                         i, comm=self.comm, src=self.pre_node_rank, stream=cupy_recv_stream)
+#                     print(f'rank{self.pp_rank} {i} getting', _data[0, 0, :10])
                     self.input_micro_batches[i].data.copy_(_data)
                     self.torch_recv_stream.record_event(self.forward_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
@@ -271,7 +330,7 @@ class GpipeAsync:
                     self.profile_mark_forward_send_start(i)
                     # compress
                     self.forward_compressor.compress_send(
-                        current_micro_output.data,
+                        current_micro_output.data, i_micro_batch=i,
                         comm=self.comm, dst=self.post_node_rank, stream=cupy_send_stream
                     )
                     self.profile_mark_forward_send_end(i)
@@ -280,6 +339,11 @@ class GpipeAsync:
             
         if self.enable_tidy_profiling:
             self.profiling_forward_stage()
+            
+        if self.forward_compress_method in {'delta', 'delta-lowbits'}:
+            assert sample_ids is not None
+            self.forward_compressor.write_to_cache(sample_ids)
+            
         return output_micro_batches
 
     def profiling_forward_stage(self):
@@ -334,7 +398,7 @@ class GpipeAsync:
                     self.profile_mark_backward_send_start(i)
                     # compress
                     self.backward_compressor.compress_send(
-                        self.input_micro_batches[i].grad,
+                        self.input_micro_batches[i].grad, i_micro_batch=i,
                         comm=self.comm, dst=self.pre_node_rank, stream=cupy_send_stream
                     )
 #                     self.comm.send(self.input_micro_batches[i].grad, dst=self.pre_node_rank, stream=cupy_send_stream)
@@ -375,7 +439,7 @@ class GpipeAsync:
                     self.profile_mark_backward_send_start(i)
                     # compress
                     self.backward_compressor.compress_send(
-                        self.input_micro_batches[i].grad,
+                        self.input_micro_batches[i].grad, i_micro_batch=i,
                         comm=self.comm, dst=self.pre_node_rank, stream=cupy_send_stream
                     )
 #                     self.comm.send(self.input_micro_batches[i].grad, dst=self.pre_node_rank, stream=cupy_send_stream)
@@ -443,7 +507,7 @@ class GpipeAsync:
         with open(filename, 'w') as outfile:
             json.dump(self.profiling_log, outfile)
 
-    def sgd_iter(self, input_=None, target=None):
+    def sgd_iter(self, input_=None, target=None, sample_ids=None):
         self.comm.barrier()
         start_time = time.time()
         if self.enable_tidy_profiling:
@@ -454,7 +518,7 @@ class GpipeAsync:
         self.optimizer.zero_grad(set_to_none=True)
 
         for step in range(self.gradient_accumulate_step):
-            outputs = self.forward_stage(input_)
+            outputs = self.forward_stage(input_, sample_ids)
             forward_time = time.time()
             if step == 0:
                 forward_slot = forward_time-start_time

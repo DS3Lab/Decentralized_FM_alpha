@@ -28,6 +28,8 @@ def main():
     add_acitvation_compression_arguments(parser)
     parser.add_argument('--model-name', type=str, default='gpt2', metavar='S',
                         help='model name or path')
+    parser.add_argument('--n-epochs', type=int, default=10, help='-')
+    parser.add_argument('--warmup-epochs', type=int, default=1, help='-')
     parser.add_argument('--load-pretrained-model', 
                         type=lambda x: x.lower()=='true', default=True, metavar='S',
                         help='load pretrained model or not.')
@@ -55,17 +57,25 @@ def main():
     config.n_layer = args.num_layers  # num_layers per node
     config.num_labels = 2 # TODO
     
-    if get_pipeline_parallel_rank() == 0 or get_pipeline_parallel_rank() == args.pipeline_group_size-1:
-        tokenizer = build_tokenizer(args)
-        tokenizer.model_max_length = args.seq_length
-        config.vocab_size = tokenizer.vocab_size
-        config.bos_token_id = tokenizer.bos_token_id
-        config.eos_token_id = tokenizer.eos_token_id
-        config.pad_token_id = tokenizer.pad_token_id
-        print("token vocab size:", tokenizer.vocab_size)
-        train_data_loader = get_mrpc_data_loader(args, tokenizer)
-    else:
-        train_data_loader = None
+#     if get_pipeline_parallel_rank() == 0 or get_pipeline_parallel_rank() == args.pipeline_group_size-1:
+#         tokenizer = build_tokenizer(args)
+#         tokenizer.model_max_length = args.seq_length
+#         config.vocab_size = tokenizer.vocab_size
+#         config.bos_token_id = tokenizer.bos_token_id
+#         config.eos_token_id = tokenizer.eos_token_id
+#         config.pad_token_id = tokenizer.pad_token_id
+#         print("token vocab size:", tokenizer.vocab_size)
+#         train_data_loader = get_mrpc_data_loader(args, tokenizer)
+#     else:
+#         train_data_loader = None
+    tokenizer = build_tokenizer(args)
+    tokenizer.model_max_length = args.seq_length
+    config.vocab_size = tokenizer.vocab_size
+    config.bos_token_id = tokenizer.bos_token_id
+    config.eos_token_id = tokenizer.eos_token_id
+    config.pad_token_id = tokenizer.pad_token_id
+    print("token vocab size:", tokenizer.vocab_size)
+    train_data_loader = get_mrpc_data_loader(args, tokenizer)
 
     use_dp = (args.world_size != args.pipeline_group_size)
     if use_dp:
@@ -74,7 +84,6 @@ def main():
         print("Running ", args.pp_mode, " without data parallel.")
 
     pipe = get_pp_module(args, config, device, use_dp)
-    pipe.model.train() # Flag .training to True to enable Dropout
     
     if args.load_pretrained_model:
         if get_pipeline_parallel_rank() == 0:

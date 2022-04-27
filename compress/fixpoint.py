@@ -1,8 +1,34 @@
-
 import torch
 import cupy
+import numpy as np
+from torch.utils.dlpack import to_dlpack, from_dlpack
 
-def compress_nbit(x, bits, scale_method='max', scale_dims=(0,1)):
+def _cupy_to_tensor(x):
+    return from_dlpack(x.toDlpack())
+
+def _tensor_to_cupy(x):
+    return cupy.fromDlpack(to_dlpack(x))
+
+def pack_low_bit_tensor(x, bits):
+    assert x.dtype == torch.uint8
+    y = cupy.packbits(
+        cupy.unpackbits(_tensor_to_cupy(x)).reshape(*x.shape, 8)[..., -bits:]
+    )
+    y = _cupy_to_tensor(y)
+    return y
+
+def unpack_low_bit_tensor(x, bits, original_shape):
+    y = cupy.packbits(cupy.pad(
+        cupy.unpackbits(
+            _tensor_to_cupy(x)
+        )[:np.prod(original_shape)*bits].reshape(-1, bits),
+        ((0,0), (8-bits, 0))
+    ))
+    y = _cupy_to_tensor(y).view(original_shape)
+    return y
+
+
+def _compress_nbits(x, bits, scale_method='max', scale_dims=(0,1)):
     
     fbits = bits - 1
     
@@ -31,7 +57,7 @@ def compress_nbit(x, bits, scale_method='max', scale_dims=(0,1)):
     return x, scale
 
 
-def decompress_nbits(x, scale, bits):
+def _decompress_nbits(x, scale, bits):
     
     fbits = bits - 1
     
@@ -47,20 +73,20 @@ def decompress_nbits(x, scale, bits):
 
 def compress_8bit(x, scale_method='max', scale_dims=(0,1)):
 
-    x, scale = compress_nbit(x, bits=8, scale_method=scale_method, scale_dims=scale_dims)
+    x, scale = _compress_nbits(x, bits=8, scale_method=scale_method, scale_dims=scale_dims)
     
     return x, scale
 
 
 def decompress_8bit(x, scale):
     
-    x = decompress_nbits(x, scale, bits=8)
+    x = _decompress_nbits(x, scale, bits=8)
     
     return x
 
 def compress_4bit(x, scale_method='max', scale_dims=(0,1)):
 
-    x, scale = compress_nbit(x, bits=4, scale_method=scale_method, scale_dims=scale_dims)
+    x, scale = _compress_nbits(x, bits=4, scale_method=scale_method, scale_dims=scale_dims)
     
     x0, x1 = x.chunk(2, -1)
     x = (x0 << 4) + x1
@@ -77,14 +103,14 @@ def decompress_4bit(x, scale):
     
     x = torch.cat([x0, x1], -1)
     
-    x = decompress_nbits(x, scale, bits=4)
+    x = _decompress_nbits(x, scale, bits=4)
     
     return x
 
 
 def compress_2bit(x, scale_method='max', scale_dims=(0,1)):
 
-    x, scale = compress_nbit(x, bits=2, scale_method=scale_method, scale_dims=scale_dims)
+    x, scale = _compress_nbits(x, bits=2, scale_method=scale_method, scale_dims=scale_dims)
     
     x0, x1, x2, x3 = x.chunk(4, -1)
     x = (x0 << 6) + (x1 << 4) + (x2 << 2) + x3
@@ -102,6 +128,52 @@ def decompress_2bit(x, scale):
     x3 = x & bitmask
     x = torch.cat([x0, x1, x2, x3], -1)
     
-    x = decompress_nbits(x, scale, bits=2)
+    x = _decompress_nbits(x, scale, bits=2)
     
     return x
+
+
+
+def compress_flexible_nbits(x, bits, scale_method='max', scale_dims=(0,1)):
+    # support any bits
+    # CUDA only
+    
+    x, scale = _compress_nbits(x, bits=bits, scale_method=scale_method, scale_dims=scale_dims)
+    
+    x = pack_low_bit_tensor(x, bits)
+    
+    return x, scale
+
+
+def decompress_flexible_nbits(x, scale, bits, original_shape):
+    # support any bits, but need to know original_shape
+    # CUDA only
+    
+    x = unpack_low_bit_tensor(x, bits, original_shape)
+    
+    x = _decompress_nbits(x, scale, bits=bits)
+    
+    return x
+
+
+
+def compress_nbits(x, bits, scale_method='max', scale_dims=(0,1)):
+    if bits == 8:
+        x, scale = compress_8bit(x, scale_method=scale_method, scale_dims=scale_dims)
+    elif bits == 4:
+        x, scale = compress_4bit(x, scale_method=scale_method, scale_dims=scale_dims)
+    elif bits == 2:
+        x, scale = compress_2bit(x, scale_method=scale_method, scale_dims=scale_dims)
+    
+    return x, scale
+
+
+def decompress_nbits(x, scale, bits):
+    if bits == 8:
+        y = decompress_8bit(x, scale)
+    elif bits == 4:
+        y = decompress_4bit(x, scale)
+    elif bits == 2:
+        y = decompress_2bit(x, scale)
+    
+    return y

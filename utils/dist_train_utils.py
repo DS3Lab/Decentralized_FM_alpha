@@ -1,13 +1,20 @@
 from comm.comm_utils import *
+import compress.flag
 
 
 def distributed_train_foo_iter(args, pipeline, device, train_data_loader):
-    for e in range(10):
+    pipeline.model.train() # Flag .training to True to enable Dropout
+    for e in range(args.n_epochs):
+        if e < args.warmup_epochs:
+            compress.flag.FLAG_DISABLE_COMPRESSION = True
+        else:
+            compress.flag.FLAG_DISABLE_COMPRESSION = False
         if get_pipeline_parallel_rank() == 0:
             total_time = 0
             for i, data in enumerate(train_data_loader):
                 input_ids = data['text'].to(device)
-                current_iter_time = pipeline.sgd_iter(input_ids, None)
+                data_ids = data['idx']
+                current_iter_time = pipeline.sgd_iter(input_ids, None, data_ids)
                 if i > 0:
                     total_time += current_iter_time
                 if i >= args.num_iters-1:
@@ -19,13 +26,14 @@ def distributed_train_foo_iter(args, pipeline, device, train_data_loader):
             for i, data in enumerate(train_data_loader):
                 input_ids = data['text'].to(device)
                 labels = data['label'].to(device)
-                pipeline.sgd_iter(input_ids, labels)
+                data_ids = data['idx']
+                pipeline.sgd_iter(input_ids, labels, data_ids)
                 if i >= args.num_iters-1:
                     break
         else:
-            i = 0
-            while True:
-                pipeline.sgd_iter(None, None)
+            for i, data in enumerate(train_data_loader):
+                data_ids = data['idx']
+                pipeline.sgd_iter(None, None, data_ids)
                 i += 1
                 if i >= args.num_iters:
                     break

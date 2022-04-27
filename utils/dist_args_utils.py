@@ -90,6 +90,10 @@ def add_acitvation_compression_arguments(parser):
                         help='-')
     parser.add_argument('--forward-bits', type=int, default=4, metavar='N',
                         help='-')
+    parser.add_argument('--forward-bits-act', type=int, default=4, metavar='N',
+                        help='only for <delta-lowbits>')
+    parser.add_argument('--forward-ratio', type=float, default=1.0, metavar='N',
+                        help='-')
     parser.add_argument('--forward-scale-method', type=str, default='max', metavar='N',
                         help='-')
     parser.add_argument('--forward-scale-dims', type=lambda x: (int(i) for i in x.lstrip('(').rstrip(')').split(',')), 
@@ -98,6 +102,8 @@ def add_acitvation_compression_arguments(parser):
     parser.add_argument('--backward-compress-method', type=str, default='none', metavar='N',
                         help='-')
     parser.add_argument('--backward-bits', type=int, default=8, metavar='N',
+                        help='-')
+    parser.add_argument('--backward-ratio', type=float, default=1.0, metavar='N',
                         help='-')
     parser.add_argument('--backward-scale-method', type=str, default='max', metavar='N',
                         help='-')
