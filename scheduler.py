@@ -203,7 +203,7 @@ def GCMA(nodes=None, population_size=None, trails=None):
                                for i in range(0, num_devices, partition_size)]
         data_parallel_cost = compute_data_parallel_cost(
             candidate_partition=candidate_partition)
-        pipeline_parallel_cost, pipeline_parallel_path = compute_pipeline_parallel_cost(
+        pipeline_parallel_cost, pipeline_parallel_path, pipeline_parallel_match = compute_pipeline_parallel_cost(
             candidate_partition)
         candidate_scores.append(data_parallel_cost +
                                 2 * pipeline_parallel_cost)
@@ -221,7 +221,7 @@ def GCMA(nodes=None, population_size=None, trails=None):
             offspring[partition_idx].append(v_idx)
         offspring_data_parallel_cost = compute_data_parallel_cost(
             candidate_partition=offspring)
-        offspring_pipeline_parallel_cost, offspring_parallel_path = compute_pipeline_parallel_cost(
+        offspring_pipeline_parallel_cost, offspring_pipeline_parallel_path, offspring_pipeline_parallel_match = compute_pipeline_parallel_cost(
             offspring)
         offspring_score = offspring_data_parallel_cost + \
             2 * offspring_pipeline_parallel_cost
@@ -349,9 +349,11 @@ def compute_pipeline_parallel_cost(candidate_partition=None):
             cost_matrix[idx//partition_size][idx % partition_size] = inf_weight
             row_ind, col_ind = linear_sum_assignment(cost_matrix)
             if cost_matrix[row_ind, col_ind].sum() >= inf_weight:
-                return cur_max_weight
+                return cur_max_weight, list(zip(row_ind, col_ind))
 
     cross_partition_cost = np.zeros(shape=(way, way))
+    dp_pipeline_parallel_match = [
+        [None for _ in range(way)] for _ in range(way)]
     for i in range(way):
         for j in range(i+1, way):
             #bipartite_matches = []
@@ -366,9 +368,11 @@ def compute_pipeline_parallel_cost(candidate_partition=None):
             #    all_transfer_times.append(max(cur_transfer_times))
             #cross_partition_cost[i, j] = min(all_transfer_times)
             #assert(min(all_transfer_times) == bipartite_matching(candidate_partition[i], candidate_partition[j]))
-            cross_partition_cost[i, j] = bipartite_matching(
+            cross_partition_cost[i, j], dp_pipeline_parallel_match[i][j] = bipartite_matching(
                 candidate_partition[i], candidate_partition[j])
-    cross_partition_cost = cross_partition_cost + cross_partition_cost.T
+            cross_partition_cost[j, i] = cross_partition_cost[i, j]
+            dp_pipeline_parallel_match[j][i] = [
+                (element_1, element_0) for element_0, element_1 in dp_pipeline_parallel_match[i][j]]
 
     pipeline_parallel_cost = []
     pipeline_parallel_path = []
@@ -392,12 +396,19 @@ def compute_pipeline_parallel_cost(candidate_partition=None):
     #        pipeline_parallel_path = path
     # assert(dp_pipeline_parallel_cost == pipeline_parallel_cost)
 
-    return dp_pipeline_parallel_cost, dp_pipeline_parallel_path
+    return dp_pipeline_parallel_cost, dp_pipeline_parallel_path, dp_pipeline_parallel_match
 
 
 if __name__ == "__main__":
-    simulate_cases = [config.simulate_0_datacenter, config.simulate_1_datacenter_spot_gpu, config.simulate_2_multi_universities,
-                      config.simulate_3_regional_geo_distributed, config.simulate_4_worldwide_geo_distributed, config.simulate_5_homogeneous_tc]
+    simulate_cases = [
+        # config.simulate_0_datacenter,
+        # config.simulate_1_datacenter_spot_gpu,
+        # config.simulate_2_multi_universities,
+        # config.simulate_3_regional_geo_distributed,
+        config.simulate_4_worldwide_geo_distributed,
+        # config.simulate_5_homogeneous_tc
+    ]
+
     import time
     for simulate_case in simulate_cases:
         peer_delay, peer_bandwidth = simulate_case()
@@ -414,14 +425,14 @@ if __name__ == "__main__":
         #        candidate_partition=cur_candidate_partition)
         #    cur_pipeline_parallel_cost, cur_pipeline_parallel_path = compute_pipeline_parallel_cost(
         #        cur_candidate_partition)
-        #    cur_total_cost = cur_data_parallel_cost + cur_pipeline_parallel_cost
+        #    cur_total_cost = cur_data_parallel_cost + 2 * cur_pipeline_parallel_cost
         #    all_cost_records.append(cur_total_cost)
         #    if min_total_cost >= cur_total_cost:
         #        min_total_cost = cur_total_cost
         #        candidate_partition = cur_candidate_partition
         #        pipeline_parallel_path = cur_pipeline_parallel_path
         #        data_parallel_cost = cur_data_parallel_cost
-        #        pipeline_parallel_cost = cur_pipeline_parallel_cost
+        #        pipeline_parallel_cost = 2 * cur_pipeline_parallel_cost
 
         candidate_partitions, all_cost_records = GCMA(
             nodes=list(range(num_devices)), population_size=100, trails=900)
@@ -430,7 +441,7 @@ if __name__ == "__main__":
                                for i in range(0, num_devices, partition_size)]
         data_parallel_cost = compute_data_parallel_cost(
             candidate_partition=candidate_partition)
-        pipeline_parallel_cost, pipeline_parallel_path = compute_pipeline_parallel_cost(
+        pipeline_parallel_cost, pipeline_parallel_path, pipeline_parallel_match = compute_pipeline_parallel_cost(
             candidate_partition)
         min_total_cost = data_parallel_cost + 2 * pipeline_parallel_cost
 
@@ -443,9 +454,34 @@ if __name__ == "__main__":
         print("data parallel cost: " + str(data_parallel_cost))
         print("pipeline parallel cost: " + str(2 * pipeline_parallel_cost))
         if len(config.regions):
+            output_pipelines = [[None for _ in range(way)]
+                                for _ in range(partition_size)]
             for pipeline_idx, partition_idx in enumerate(pipeline_parallel_path):
-                print("pipeline " + str(pipeline_idx) +
-                      ", partition " + str(partition_idx) + ": ", end="")
-                for region_id in candidate_partition[partition_idx]:
-                    print(config.regions[region_id], end=", ")
+                if pipeline_idx:
+                    bipartite_match = pipeline_parallel_match[pipeline_parallel_path[pipeline_idx - 1]
+                                                              ][pipeline_parallel_path[pipeline_idx]]
+                    for match in bipartite_match:
+                        for i in range(partition_size):
+                            if output_pipelines[i][pipeline_idx - 1] == match[0]:
+                                output_pipelines[i][pipeline_idx] = match[1]
+                else:
+                    bipartite_match = pipeline_parallel_match[pipeline_parallel_path[pipeline_idx]
+                                                              ][pipeline_parallel_path[pipeline_idx + 1]]
+                    for i, match in enumerate(bipartite_match):
+                        output_pipelines[i][0] = match[0]
+
+                print("stage " + str(pipeline_idx) + ": ", end="")
+                for i in range(partition_size):
+                    region_id = candidate_partition[partition_idx][output_pipelines[i][pipeline_idx]]
+                    print(config.regions[region_id] + (" " *
+                          (10 - len(config.regions[region_id]))), end=", ")
                 print()
+            # for pipeline_idx, partition_idx in enumerate(pipeline_parallel_path):
+            #    if pipeline_idx:
+            #        bipartite_match = pipeline_parallel_match[pipeline_parallel_path[pipeline_idx - 1]
+            #                                                  ][pipeline_parallel_path[pipeline_idx]]
+            #        print(bipartite_match)
+            #    print("stage " + str(pipeline_idx) + ": ", end="")
+            #    for region_id in candidate_partition[partition_idx]:
+            #        print(config.regions[region_id], end=", ")
+            #    print()
