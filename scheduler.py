@@ -20,8 +20,12 @@ layer_size_per_task = 3
 send_activation_size = 1  # gigabytes
 send_gradient_size = 288/1024  # gigabytes
 
-way = None
-partition_size = None
+assert(batch_size % batch_size_per_task == 0)
+assert(layer_size % layer_size_per_task == 0)
+assert(num_devices == batch_size * layer_size /
+       (batch_size_per_task * layer_size_per_task))
+way = int(layer_size / layer_size_per_task)
+partition_size = int(batch_size / batch_size_per_task)
 
 
 def GCMA(nodes=None, population_size=None, trails=None):
@@ -392,13 +396,6 @@ def compute_pipeline_parallel_cost(candidate_partition=None):
 
 
 if __name__ == "__main__":
-    assert(batch_size % batch_size_per_task == 0)
-    assert(layer_size % layer_size_per_task == 0)
-    assert(num_devices == batch_size * layer_size /
-           (batch_size_per_task * layer_size_per_task))
-    way = int(layer_size / layer_size_per_task)
-    partition_size = int(batch_size / batch_size_per_task)
-
     simulate_cases = [config.simulate_0_datacenter, config.simulate_1_datacenter_spot_gpu, config.simulate_2_multi_universities,
                       config.simulate_3_regional_geo_distributed, config.simulate_4_worldwide_geo_distributed, config.simulate_5_homogeneous_tc]
     import time
@@ -444,7 +441,7 @@ if __name__ == "__main__":
         print("pipeline parallel path: " + str(pipeline_parallel_path))
         print("total cost: " + str(min_total_cost))
         print("data parallel cost: " + str(data_parallel_cost))
-        print("pipeline parallel cost: " + str(pipeline_parallel_cost))
+        print("pipeline parallel cost: " + str(2 * pipeline_parallel_cost))
         if len(config.regions):
             for pipeline_idx, partition_idx in enumerate(pipeline_parallel_path):
                 print("pipeline " + str(pipeline_idx) +

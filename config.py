@@ -211,6 +211,8 @@ def simulate_4_worldwide_geo_distributed():
 
 def simulate_5_homogeneous_tc(delay=50, bandwidth=1):
     print("Simulate case 5: homogeneous traffic control")
+    global regions
+    regions = []
     delay = np.ones((nodes, nodes)) * delay
     bandwidth = np.ones((nodes, nodes)) * bandwidth
     print('delay(ms):', delay)
