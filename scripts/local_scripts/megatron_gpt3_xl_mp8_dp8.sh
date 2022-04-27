@@ -26,7 +26,7 @@ DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $
 MODEL_ARGS="--num-layers 24 --hidden-size 2048 --num-attention-heads 16 --micro-batch-size $MICRO_BATCH_SIZE --global-batch-size 1024 --seq-length 2048 --max-position-embeddings 2048"
 PARALLEL_ARGS="--distributed-backend nccl --tensor-model-parallel-size $TENSOR_PARALLEL_SIZE  --pipeline-model-parallel-size $PIPELINE_PARALLEL_SIZE --DDP-impl local --no-bias-dropout-fusion"
 NLP_ARGS="--tokenizer-type BertWordPieceLowerCase --vocab-file $VOCAB_FILE  --train-data-path $TRAIN_FILE  --valid-data-path $VALID_FILE  --test-data-path $TEST_FILE"
-HYPER_PARA_ARGS="--optimizer sgd --lr 0.0001 --train-iters 10"
+HYPER_PARA_ARGS="--optimizer sgd --lr 0.0001 --train-iters 1"
 OPTION_ARGS="--fp16 --checkpoint-activations"
 timestamp=$(date +%Y_%m_%d_%H_%M)
 
@@ -37,14 +37,15 @@ then
   python -m torch.distributed.launch $DISTRIBUTED_ARGS  ./dist_megatron_train_qqp.py $MODEL_ARGS $PARALLEL_ARGS $NLP_ARGS $HYPER_PARA_ARGS $OPTION_ARGS>> "${log_path}_default.log"
 elif [ $# -eq 9 ]
 then
-  DELAY_MS=$7
-  RATE_GBIT=$8
+  DELAY_MS=$8
+  RATE_GBIT=$9
   export NCCL_SOCKET_IFNAME=ens3
   export GLOO_SOCKET_IFNAME=ens3
   sh ./scripts/tc_scripts/both_delay_bandwidth.sh $DELAY_MS $RATE_GBIT
   python -m torch.distributed.launch $DISTRIBUTED_ARGS  ./dist_megatron_train_qqp.py $MODEL_ARGS $PARALLEL_ARGS $NLP_ARGS $HYPER_PARA_ARGS $OPTION_ARGS>> "${log_path}_d${DELAY_MS}b${RATE_GBIT}.log"
   sh ./scripts/tc_scripts/clear.sh
 else
+
   echo "Invalid argument number!"
 fi
 

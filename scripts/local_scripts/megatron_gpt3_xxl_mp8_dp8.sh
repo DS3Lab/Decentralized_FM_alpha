@@ -37,8 +37,8 @@ then
   python -m torch.distributed.launch $DISTRIBUTED_ARGS  ./dist_megatron_train_qqp.py $MODEL_ARGS $PARALLEL_ARGS $NLP_ARGS $HYPER_PARA_ARGS $OPTION_ARGS>> "${log_path}_default.log"
 elif [ $# -eq 9 ]
 then
-  DELAY_MS=$7
-  RATE_GBIT=$8
+  DELAY_MS=$8
+  RATE_GBIT=$9
   export NCCL_SOCKET_IFNAME=ens3
   export GLOO_SOCKET_IFNAME=ens3
   sh ./scripts/tc_scripts/both_delay_bandwidth.sh $DELAY_MS $RATE_GBIT

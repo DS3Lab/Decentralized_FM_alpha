@@ -103,12 +103,26 @@ Check the largest batch size for different number of layers:
 
 | Setting       | P-8 T-1 D-8 | P-1 T-8 D-8 | P-4 T-2 D-8 | P-2 T-4 D-8 | P-8 T-8 D-1 | Best PFlops  |
 |---------------|-------------|-------------|-------------|-------------|-------------|--------------|
-| Micro-batch 1 | 26.91 s     | 25.04 s     | 12.52 s     | 14.25 s     | 72.38 s     | 1.888 PFlops |
+| Micro-batch 1 | 16.91 s     | 25.04 s     | 12.52 s     | 14.25 s     | 72.38 s     | 1.888 PFlops |
 | Micro-batch 2 | 23.44 s     | 45.68 s     | 16.96 s     | 21.09 s     | -           | 1.393 PFlops |
 | Micro-batch 4 | 21.06 s     | 20.29 s     | 13.20 s     | 15.10 s     | -           | 1.791 PFlops |
 
-- Extend GPT3-XL to 40 layer
-- Number of Para: 1.3B
+##### Extend GPT3-XL to 32/40 layer
+
+- 32 layer:
+  - Number of Para: 
+  - Computation of GPT3-XL (in PFlop): 31.52
+    - Forward: 7.88
+    - Backward (with activation recompute X3): 23.64
+
+| Setting       | Pipe(P)-8 | Tensor(T)-8 | P-4 T-2 | P-2 T-4 | P-8 T-8 D-1 | Best PFlops |
+|---------------|-----------|-------------|---------|---------|-------------|-------------|
+| Micro-batch 1 | s         | s           | s       | s       | s           | PFlops      |
+| Micro-batch 2 | s         | s           | s       | s       | -           | PFlops      |
+| Micro-batch 4 | s         | s           | s       | s       | -           | PFlops      |
+
+- 40 layer:
+  - Number of Para: 
   - Computation of GPT3-XL (in PFlop): 39.4
     - Forward: 9.85
     - Backward (with activation recompute X3): 29.55
@@ -141,3 +155,51 @@ Check the largest batch size for different number of layers:
 | Micro-batch 1 | 119.52 s | 96.24 s   | 4.77 PFlops |
 | Micro-batch 2 | 182.32 s | 113.77 s  | 4.04 PFlops |
 | Micro-batch 4 | 115.21 s | 91.85 s   | 5.00 PFlops |
+
+
+### Latest result (2022/04/27)
+
+- GPT-XL and GPT-XXL
+  - Global batch size: 1024, sequence length: 2048, model size 2048, number of layers:24
+  - Micro batch-size: 1. 
+
+
+| Network setting                     | 3 layer | 4 layer | 5 layer |
+|-------------------------------------|---------|---------|---------|
+| default (about 0.1ms; up to 10Gbps) | 12.57 s | 15.44 s | 18.67 s |
+| delay 1ms  bandwidth 5Gbps          | 12.95 s | 17.13 s | 19.10 s |
+| delay 5ms  bandwidth 2Gbps          | 19.22 s | 22.16 s | 23.94 s |
+| delay 10ms  bandwidth 1Gbps         | 32.07 s | 34.24 s | 35.98 s |
+| delay 50ms  bandwidth 1Gbps         | 33.71 s | 35.82 s | 38.02 s |
+
+
+### Megatron in Slow network  (2022/04/27)
+
+- Micro-batch size 1
+- GPT-XL standard:
+
+| Setting                     | P-8 T-1 D-8 | P-1 T-8 D-8 | P-4 T-2 D-8 | P-2 T-4 D-8 | Best PFlops  |
+|-----------------------------|-------------|-------------|-------------|-------------|--------------|
+| 8 p3.16xlarge               | 16.91 s     | 25.04 s     | 12.52 s     | 14.25 s     | 1.888 PFlops |
+| 64 p3.2xlarge               | 23.13 s     | 274.18 s    | 47.738 s    | 118.48 s    | 1.022 PFlops |
+| delay 10ms  bandwidth 1Gbps | 46.36 s     | -           | -           | -           | 0.510 PFlops |
+| delay 50ms  bandwidth 1Gbps | 65.98 s     | -           | -           | -           | 0.358 PFlops |
+
+- GPT-XXL (32 layers):
+
+| Setting                     | P-8 T-1 D-8 | P-1 T-8 D-8 | P-4 T-2 D-8 | P-2 T-4 D-8 | Best PFlops  |
+|-----------------------------|-------------|-------------|-------------|-------------|--------------|
+| 8 p3.16xlarge               | s           | s           | s           | s           | PFlops       |
+| 64 p3.2xlarge               | 28.68 s     | 373.83 s    | 63.81 s     | 160.38 s    | 1.099 PFlops |
+| delay 10ms  bandwidth 1Gbps | 47.76 s     | -           | -           | -           | 0.659 PFlops |
+| delay 50ms  bandwidth 1Gbps | 72.43 s     | -           | -           | -           | 0.435 PFlops |
+
+
+- GPT-XXL (40 layers):
+
+| Setting                     | P-8 T-1 D-8 | P-1 T-8 D-8 | P-4 T-2 D-8 | P-2 T-4 D-8 | Best PFlops  |
+|-----------------------------|-------------|-------------|-------------|-------------|--------------|
+| 8 p3.16xlarge               | 28.02 s     | 40.46 s     | 18.88 s     | 22.60 s     | 2.091 PFlops |
+| 64 p3.2xlarge               | 31.49 s     | 458.58 s    | 82.91 s     | 591.65s     | 1.252 PFlops |
+| delay 10ms  bandwidth 1Gbps | 49.01 s     | -           | -           | -           | 0.804 PFlops |
+| delay 50ms  bandwidth 1Gbps | 78.16 s     | -           | -           | -           | 0.504 PFlops |
