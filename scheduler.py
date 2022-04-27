@@ -427,7 +427,7 @@ if __name__ == "__main__":
         #        pipeline_parallel_cost = cur_pipeline_parallel_cost
 
         candidate_partitions, all_cost_records = GCMA(
-            nodes=list(range(num_devices)), population_size=50, trails=450)
+            nodes=list(range(num_devices)), population_size=100, trails=900)
         candidate_partition_idx = np.argmin(all_cost_records)
         candidate_partition = [candidate_partitions[candidate_partition_idx][i: i + partition_size]
                                for i in range(0, num_devices, partition_size)]
@@ -442,7 +442,7 @@ if __name__ == "__main__":
               " candidates): " + str(end - start) + " seconds")
         print("candidate partition: " + str(candidate_partition))
         print("pipeline parallel path: " + str(pipeline_parallel_path))
-        print("total cost: " + str(data_parallel_cost + pipeline_parallel_cost))
+        print("total cost: " + str(min_total_cost))
         print("data parallel cost: " + str(data_parallel_cost))
         print("pipeline parallel cost: " + str(pipeline_parallel_cost))
         if len(config.regions):
