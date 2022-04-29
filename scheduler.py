@@ -79,23 +79,22 @@ def GCMA(nodes=None, population_size=None, trails=None):
 
     def cyclic_partitioning(offspring=None):
         def calculate_gain(cur_offspring=None, locked_v_idx=None):
-            gain = np.full(shape=(num_devices, way), fill_value=-np.inf)
+            gain = np.full(shape=(num_devices, way), fill_value=np.inf)
             for v_idx, partition_idx in enumerate(cur_offspring):
                 if locked_v_idx[v_idx] == 0:
-                    gain[v_idx] = 0
                     for target_idx, target_partition_idx in enumerate(cur_offspring):
-                        if target_partition_idx == partition_idx:
-                            gain[v_idx] += peer_delay[v_idx, target_idx]/1e3 + (
-                                send_activation_size + send_gradient_size) * 8 / peer_bandwidth[v_idx, target_idx]
-                        else:
-                            gain[v_idx][target_partition_idx] -= peer_delay[v_idx, target_idx]/1e3 + (
-                                send_activation_size + send_gradient_size) * 8 / peer_bandwidth[v_idx, target_idx]
+                        if v_idx != target_idx:
+                            partial_pipeline_parallel_cost = peer_delay[v_idx, target_idx] / \
+                                1e3 + send_gradient_size * 8 / \
+                                peer_bandwidth[v_idx, target_idx]
+                            if gain[v_idx][target_partition_idx] > partial_pipeline_parallel_cost:
+                                gain[v_idx][target_partition_idx] = partial_pipeline_parallel_cost
 
-            G_i = np.full(shape=(way), fill_value=-np.inf)
+            G_i = np.full(shape=(way), fill_value=np.inf)
             G_i_trace = [[None, None] for i in range(way)]
             for v_idx, partition_idx in enumerate(cur_offspring):
                 if locked_v_idx[v_idx] == 0:
-                    if gain[v_idx][partition_idx] > G_i[partition_idx]:
+                    if gain[v_idx][partition_idx] < G_i[partition_idx]:
                         G_i[partition_idx] = gain[v_idx][partition_idx]
                         G_i_trace[partition_idx][0] = v_idx
 
