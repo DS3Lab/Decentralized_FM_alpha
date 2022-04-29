@@ -11,6 +11,8 @@ import cupy
 
 import wandb
 
+from transformers import get_linear_schedule_with_warmup
+
 def get_parameter_names(model, forbidden_layer_types):
     """
     Returns the names of the model parameters that are not inside a forbidden layer.
@@ -26,9 +28,9 @@ def get_parameter_names(model, forbidden_layer_types):
     result += list(model._parameters.keys())
     return result
 
-def create_optimizer(model, adafactor=None, weight_decay=0.01, learning_rate=2e-5,
+def create_optimizer(model, weight_decay=0.01, learning_rate=2e-5,
                      adam_beta1=0.9, adam_beta2=0.999, adam_epsilon=1e-8):
-    from transformers.optimization import Adafactor, AdamW
+    from torch.optim import AdamW
     decay_parameters = get_parameter_names(model, [torch.nn.LayerNorm])
     decay_parameters = [name for name in decay_parameters if "bias" not in name]
     optimizer_grouped_parameters = [
@@ -41,16 +43,11 @@ def create_optimizer(model, adafactor=None, weight_decay=0.01, learning_rate=2e-
             "weight_decay": 0.0,
         },
     ]
-    optimizer_cls = Adafactor if adafactor else AdamW
-    if adafactor:
-        optimizer_cls = Adafactor
-        optimizer_kwargs = {"scale_parameter": False, "relative_step": False}
-    else:
-        optimizer_cls = AdamW
-        optimizer_kwargs = {
-            "betas": (adam_beta1, adam_beta2),
-            "eps": adam_epsilon,
-        }
+    optimizer_cls = AdamW
+    optimizer_kwargs = {
+        "betas": (adam_beta1, adam_beta2),
+        "eps": adam_epsilon,
+    }
     optimizer_kwargs["lr"] = learning_rate
     optimizer = optimizer_cls(optimizer_grouped_parameters, **optimizer_kwargs)
     return optimizer
@@ -100,6 +97,7 @@ class GpipeAsync:
             compress_method=args.forward_compress_method, 
             bits=args.forward_bits, 
             bits_act=args.forward_bits_act,
+            ratio_act=args.forward_ratio_act,
             scale_method=args.forward_scale_method, scale_dims=args.forward_scale_dims,
         )
         self.forward_compressor.build_buffer(
@@ -188,7 +186,7 @@ class GpipeAsync:
             self.model = GPTStageFirst(args, config, device)
         elif self.pp_rank == self.pipeline_group_size - 1:
             wandb.init(
-                project='test', 
+                project=f'test-{args.task_name}', 
                 entity='pipeline-activation-compression',
                 config=args,
             )
@@ -201,9 +199,13 @@ class GpipeAsync:
 #             tmp_optimizer = optim.AdamW(self.model.parameters(), lr=args.lr)
             self.optimizer = create_optimizer(self.model, learning_rate=args.lr)
             self.optimizer = get_fp16_optimizer(args, tmp_optimizer)
+            self.scheduler = get_linear_schedule_with_warmup(
+                self.optimizer, args.warmup_steps, args.total_steps, )
         else:
 #             self.optimizer = optim.AdamW(self.model.parameters(), lr=args.lr)
             self.optimizer = create_optimizer(self.model, learning_rate=args.lr)
+            self.scheduler = get_linear_schedule_with_warmup(
+                self.optimizer, args.warmup_steps, args.total_steps, )
 
         # Notice that if we use fp16, gradients are aggregated in fp16, this may not be the default in Megatron.
         if use_dp:
@@ -274,7 +276,7 @@ class GpipeAsync:
         output_micro_batches = []
         
         # TODO: should be placed at the end of last mini-batch
-        if self.forward_compress_method in {'delta', 'delta-lowbits'}:
+        if self.forward_compress_method in {'delta', 'delta-lowbits', 'delta-topk-lowbits'}:
             assert sample_ids is not None
             self.forward_compressor.read_from_cache(sample_ids)
 
@@ -340,7 +342,7 @@ class GpipeAsync:
         if self.enable_tidy_profiling:
             self.profiling_forward_stage()
             
-        if self.forward_compress_method in {'delta', 'delta-lowbits'}:
+        if self.forward_compress_method in {'delta', 'delta-lowbits', 'delta-topk-lowbits'}:
             assert sample_ids is not None
             self.forward_compressor.write_to_cache(sample_ids)
             
@@ -487,6 +489,7 @@ class GpipeAsync:
                 if self.enable_tidy_profiling:
                     self.optimizer_start_event.record()
                 self.optimizer.step()
+                self.scheduler.step()
                 if self.enable_tidy_profiling:
                     self.optimizer_end_event.record()
         if self.enable_tidy_profiling:
@@ -543,3 +546,64 @@ class GpipeAsync:
         # torch.cuda.empty_cache()
         # print(torch.cuda.memory_summary())
         return iter_time
+    
+    
+    
+    def infer_stage(self, input_data=None, sample_ids=None):
+        if self.pp_rank == 0:
+            assert(input_data is not None)
+            self.input_micro_batches = torch.chunk(input_data, self.micro_batch_num, dim=0)
+        if self.pp_rank == self.pipeline_group_size - 1:
+            if input_data is not None:
+                input_ids_micro_batches = torch.chunk(input_data, self.micro_batch_num, dim=0)
+            else:
+                input_ids_micro_batches = [None]*self.micro_batch_num
+                
+        output_micro_batches = []
+
+        for i in range(self.micro_batch_num):
+            if self.pp_rank == 0:  # Only send output to next node, do not receive
+                with torch.cuda.stream(self.torch_comp_stream):
+                    current_micro_output = self.model(self.input_micro_batches[i])
+                    self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
+                with torch.cuda.stream(self.torch_send_stream):
+                    cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
+                    self.torch_send_stream.wait_event(self.forward_comp_ready_events[i])
+                    self.comm.send(current_micro_output.data, dst=self.post_node_rank, stream=cupy_send_stream)
+            elif self.pp_rank == self.pipeline_group_size - 1:  # Only receive input from last node, do not send
+                with torch.cuda.stream(self.torch_recv_stream):
+                    cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
+                    self.comm.recv(self.input_micro_batches[i], src=self.pre_node_rank, stream=cupy_recv_stream)
+                    self.torch_recv_stream.record_event(self.forward_recv_ready_events[i])
+                with torch.cuda.stream(self.torch_comp_stream):
+                    self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
+                    current_micro_output = self.model(self.input_micro_batches[i], input_ids=input_ids_micro_batches[i])
+                    self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
+            else:  # receive, compute, and send
+                with torch.cuda.stream(self.torch_recv_stream):
+                    cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
+                    self.comm.recv(self.input_micro_batches[i], src=self.pre_node_rank, stream=cupy_recv_stream)
+                    self.torch_recv_stream.record_event(self.forward_recv_ready_events[i])
+                with torch.cuda.stream(self.torch_comp_stream):
+                    self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
+                    current_micro_output = self.model(self.input_micro_batches[i])
+                    self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
+                with torch.cuda.stream(self.torch_send_stream):
+                    cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
+                    self.torch_send_stream.wait_event(self.forward_comp_ready_events[i])
+                    self.comm.send(current_micro_output.data, dst=self.post_node_rank, stream=cupy_send_stream)
+                    
+            output_micro_batches.append(current_micro_output)
+            
+        return output_micro_batches
+    
+    
+    def infer_iter(self, input_=None, target=None, sample_ids=None, metric=None):
+        self.comm.barrier()
+        torch.cuda.synchronize()
+        outputs = self.infer_stage(input_, sample_ids)
+        if metric is not None:
+            metric.add_batch(predictions=outputs, references=target)
+        self.optimizer_step()
+        torch.cuda.synchronize()
+        self.comm.barrier()

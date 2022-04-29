@@ -1,6 +1,6 @@
 
 import torch
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 
 # from ..tasks.glue import QQP
 
@@ -65,7 +65,10 @@ def get_qqp_data_loader(args, tokenizer, data_split='train', num_workers=0):
         return tokenizer(examples['question1'], examples['question2'], 
                          truncation=True, padding='max_length', max_length=args.seq_length)
     
-    train_set = load_dataset('glue', 'qqp', split='train')
+    if os.path.isdir('./data/glue_qqp'):
+        train_set = load_from_disk('./data/glue_qqp')[data_split]
+    else:
+        train_set = load_dataset('glue', 'qqp', split=data_split)
     train_set = train_set.map(_encode, batched=True)
     train_set = train_set.map(lambda examples: {'text': examples['input_ids']}, batched=True)
     train_set.set_format(

@@ -6,6 +6,8 @@ import torch
 import torch.autograd.profiler as profiler
 from tasks.data_loaders.qqp import get_qqp_data_loader
 from tasks.data_loaders.mrpc import get_mrpc_data_loader
+from tasks.data_loaders.cola import get_cola_data_loader
+from tasks.data_loaders.sst2 import get_sst2_data_loader
 from modules.gpt_modules import GPTConfig
 from modules.tokenizer import build_tokenizer
 from pipeline_parallel.dist_1f1b_pipeline_async import Pipe1F1BAsync
@@ -15,6 +17,20 @@ from pipeline_parallel.dist_pp_utils import get_pp_module
 from utils.dist_args_utils import *
 from utils.dist_train_utils import *
 from comm.comm_utils import *
+import compress.flag
+
+def train_loop(args, pipe, device, train_data_loader, test_data_loader):
+    
+    for e in range(args.n_epochs):
+        if e < args.warmup_epochs:
+            compress.flag.FLAG_DISABLE_COMPRESSION = True
+        else:
+            compress.flag.FLAG_DISABLE_COMPRESSION = False
+            
+        distributed_train_foo_iter(args, pipe, device, train_data_loader)
+        
+#         if test_data_loader is not None:
+#             distributed_test_foo_iter(args, pipe, device, test_data_loader)
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
@@ -28,6 +44,10 @@ def main():
     add_acitvation_compression_arguments(parser)
     parser.add_argument('--model-name', type=str, default='gpt2', metavar='S',
                         help='model name or path')
+    parser.add_argument('--tokenizer-name', type=str, default='gpt2', metavar='S',
+                        help='tokenizer name or path')
+    parser.add_argument('--task-name', type=str, default='sst2', metavar='S',
+                        help='task name')
     parser.add_argument('--n-epochs', type=int, default=10, help='-')
     parser.add_argument('--warmup-epochs', type=int, default=1, help='-')
     parser.add_argument('--load-pretrained-model', 
@@ -55,19 +75,7 @@ def main():
     
     config = GPTConfig.from_pretrained(args.model_name)
     config.n_layer = args.num_layers  # num_layers per node
-    config.num_labels = 2 # TODO
     
-#     if get_pipeline_parallel_rank() == 0 or get_pipeline_parallel_rank() == args.pipeline_group_size-1:
-#         tokenizer = build_tokenizer(args)
-#         tokenizer.model_max_length = args.seq_length
-#         config.vocab_size = tokenizer.vocab_size
-#         config.bos_token_id = tokenizer.bos_token_id
-#         config.eos_token_id = tokenizer.eos_token_id
-#         config.pad_token_id = tokenizer.pad_token_id
-#         print("token vocab size:", tokenizer.vocab_size)
-#         train_data_loader = get_mrpc_data_loader(args, tokenizer)
-#     else:
-#         train_data_loader = None
     tokenizer = build_tokenizer(args)
     tokenizer.model_max_length = args.seq_length
     config.vocab_size = tokenizer.vocab_size
@@ -75,7 +83,28 @@ def main():
     config.eos_token_id = tokenizer.eos_token_id
     config.pad_token_id = tokenizer.pad_token_id
     print("token vocab size:", tokenizer.vocab_size)
-    train_data_loader = get_mrpc_data_loader(args, tokenizer)
+    
+    if args.task_name == 'sst2':
+        train_data_loader = get_sst2_data_loader(args, tokenizer, data_split='train')
+        test_data_loader = get_sst2_data_loader(args, tokenizer, data_split='validation')
+        config.num_labels = 2
+    elif args.task_name == 'mrpc':
+        train_data_loader = get_mrpc_data_loader(args, tokenizer, data_split='train')
+        test_data_loader = get_mrpc_data_loader(args, tokenizer, data_split='validation')
+        config.num_labels = 2
+    elif args.task_name == 'cola':
+        train_data_loader = get_cola_data_loader(args, tokenizer, data_split='train')
+        test_data_loader = get_cola_data_loader(args, tokenizer, data_split='validation')
+        config.num_labels = 2
+    elif args.task_name == 'qqp':
+        train_data_loader = get_qqp_data_loader(args, tokenizer, data_split='train')
+        test_data_loader = get_qqp_data_loader(args, tokenizer, data_split='validation')
+        config.num_labels = 2
+    else:
+        raise Exception('unknown task.')
+        
+    args.warmup_steps = len(train_data_loader)
+    args.total_steps = len(train_data_loader) * args.n_epochs
 
     use_dp = (args.world_size != args.pipeline_group_size)
     if use_dp:
@@ -110,7 +139,7 @@ def main():
             
 
     if args.profiling == 'no-profiling':
-        distributed_train_foo_iter(args, pipe, device, train_data_loader)
+        train_loop(args, pipe, device, train_data_loader, test_data_loader)
     else:
         prefix = './trace_json/gpt3_' + args.pp_mode
         if use_dp:
@@ -120,13 +149,13 @@ def main():
                      args.profiling + '_' + args.trace_postfix + '.json'
         if args.profiling == 'tidy_profiling':
             try:
-                distributed_train_foo_iter(args, pipe, device, train_data_loader)
+                train_loop(args, pipe, device, train_data_loader, test_data_loader)
             except Exception as e:
                 print(get_pipeline_parallel_rank(), e)
             pipe.export_profiling_result(filename=trace_file)
         elif args.profiling == 'pytorch_profiling':
             with profiler.profile(profile_memory=True, use_cuda=args.use_cuda) as prof:
-                distributed_train_foo_iter(args, pipe, device, train_data_loader)
+                train_loop(args, pipe, device, train_data_loader, test_data_loader)
             print(prof.key_averages().table())
             prof.export_chrome_trace(trace_file)
         else:

@@ -2,17 +2,17 @@
 import torch
 from datasets import load_dataset, load_from_disk
 
-def get_mrpc_data_loader(args, tokenizer, data_split='train', num_workers=0):
+def get_sst2_data_loader(args, tokenizer, data_split='train', num_workers=0):
     
     
     def _encode(examples):
-        return tokenizer(examples['sentence1'], examples['sentence2'], 
+        return tokenizer(examples['sentence'], 
                          truncation=True, padding='max_length', max_length=args.seq_length)
     
-    if os.path.isdir('./data/glue_mrpc'):
-        train_set = load_from_disk('./data/glue_mrpc')[data_split]
+    if os.path.isdir('./data/glue_sst2'):
+        train_set = load_from_disk('./data/glue_sst2')[data_split]
     else:
-        train_set = load_dataset('glue', 'mrpc', split=data_split)
+        train_set = load_dataset('glue', 'sst2', split=data_split)
     train_set = train_set.map(_encode, batched=True)
     train_set = train_set.map(lambda examples: {'text': examples['input_ids']}, batched=True)
     train_set.set_format(

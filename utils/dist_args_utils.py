@@ -94,6 +94,8 @@ def add_acitvation_compression_arguments(parser):
                         help='only for <delta-lowbits>')
     parser.add_argument('--forward-ratio', type=float, default=1.0, metavar='N',
                         help='-')
+    parser.add_argument('--forward-ratio-act', type=float, default=1.0, metavar='N',
+                        help='-')
     parser.add_argument('--forward-scale-method', type=str, default='max', metavar='N',
                         help='-')
     parser.add_argument('--forward-scale-dims', type=lambda x: (int(i) for i in x.lstrip('(').rstrip(')').split(',')), 
