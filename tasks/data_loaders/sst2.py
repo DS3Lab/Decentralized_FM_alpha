@@ -1,4 +1,5 @@
 
+import os
 import torch
 from datasets import load_dataset, load_from_disk
 
@@ -20,15 +21,26 @@ def get_sst2_data_loader(args, tokenizer, data_split='train', num_workers=0):
             'text', 'input_ids', 'attention_mask', 'label', 'idx',
         ])
     
-    generator = torch.Generator()
-    generator.manual_seed(args.seed)
-    train_sampler = torch.utils.data.RandomSampler(train_set, generator=generator)
-    train_data_loader = torch.utils.data.DataLoader(train_set,
-                                                    batch_size=args.batch_size,
-                                                    sampler=train_sampler,
-                                                    shuffle=False,
-                                                    num_workers=num_workers,
-                                                    drop_last=True,
-                                                    pin_memory=True,
-                                                    collate_fn=None)
+    if data_split == 'train':
+        generator = torch.Generator()
+        generator.manual_seed(args.seed)
+        train_sampler = torch.utils.data.RandomSampler(train_set, generator=generator)
+        train_data_loader = torch.utils.data.DataLoader(train_set,
+                                                        batch_size=args.batch_size,
+                                                        sampler=train_sampler,
+                                                        shuffle=False,
+                                                        num_workers=num_workers,
+                                                        drop_last=True,
+                                                        pin_memory=True,
+                                                        collate_fn=None)
+    else:
+        # test or valid data loader
+        # TODO: let drop_last be False
+        train_data_loader = torch.utils.data.DataLoader(train_set,
+                                                        batch_size=args.batch_size,
+                                                        shuffle=False,
+                                                        num_workers=num_workers,
+                                                        drop_last=True,
+                                                        pin_memory=True,
+                                                        collate_fn=None)
     return train_data_loader

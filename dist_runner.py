@@ -8,14 +8,17 @@ from tasks.data_loaders.qqp import get_qqp_data_loader
 from tasks.data_loaders.mrpc import get_mrpc_data_loader
 from tasks.data_loaders.cola import get_cola_data_loader
 from tasks.data_loaders.sst2 import get_sst2_data_loader
+from tasks.data_loaders.qnli import get_qnli_data_loader
 from modules.gpt_modules import GPTConfig
 from modules.tokenizer import build_tokenizer
 from pipeline_parallel.dist_1f1b_pipeline_async import Pipe1F1BAsync
 from pipeline_parallel.dist_gpipe_pipeline_async import GpipeAsync
 from pipeline_parallel.dist_pp_utils import get_pp_module
 
+import wandb
 from utils.dist_args_utils import *
 from utils.dist_train_utils import *
+from utils.dist_test_utils import *
 from comm.comm_utils import *
 import compress.flag
 
@@ -29,8 +32,11 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             
         distributed_train_foo_iter(args, pipe, device, train_data_loader)
         
-#         if test_data_loader is not None:
-#             distributed_test_foo_iter(args, pipe, device, test_data_loader)
+        if test_data_loader is not None:
+            distributed_test_foo_iter(args, pipe, device, test_data_loader)
+            
+        if get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
+            wandb.log({'epoch': e}, step=pipe.global_step)
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
@@ -100,6 +106,10 @@ def main():
         train_data_loader = get_qqp_data_loader(args, tokenizer, data_split='train')
         test_data_loader = get_qqp_data_loader(args, tokenizer, data_split='validation')
         config.num_labels = 2
+    elif args.task_name == 'qnli':
+        train_data_loader = get_qnli_data_loader(args, tokenizer, data_split='train')
+        test_data_loader = get_qnli_data_loader(args, tokenizer, data_split='validation')
+        config.num_labels = 2
     else:
         raise Exception('unknown task.')
         
@@ -135,8 +145,7 @@ def main():
             for i in range(len(pipe.model.model)):
                 pipe.model.model[i].load_state_dict(
                     torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
-                )
-            
+                )            
 
     if args.profiling == 'no-profiling':
         train_loop(args, pipe, device, train_data_loader, test_data_loader)

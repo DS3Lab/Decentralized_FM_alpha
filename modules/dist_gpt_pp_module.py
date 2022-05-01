@@ -1,6 +1,6 @@
 from torch import nn
 # from .gpt_modules import gpt_loss_func
-from .gpt_modules import GPTEmbeddings, GPTBlock, GPTClassificationHead
+from .gpt_modules import GPTEmbeddings, GPTBlock, GPTClassificationHead, GPTLMHead
 
 
 class GPTStageBase(nn.Module):
@@ -15,6 +15,7 @@ class GPTStageBase(nn.Module):
         self._feedforward_dim = args.embedding_dim * 4
         self._num_heads = args.num_heads  # the number of heads in the multi-head attention models
         self._num_layers = args.num_layers
+        self._task_type = getattr(args, 'task_type', 'classification')
         
         self.config = config
 
@@ -22,7 +23,11 @@ class GPTStageBase(nn.Module):
         return GPTEmbeddings(self.config)
 
     def _create_last_layer(self):
-        return GPTClassificationHead(self.config)
+        if self._task_type == 'classification':
+            return GPTClassificationHead(self.config)
+        elif self._task_type == 'language_model':
+            return GPTLMHead(self.config)
+        raise Exception('unknown data type')
 
     def _create_transformer_layer(self):
         return GPTBlock(self.config) # TODO: checkpoint

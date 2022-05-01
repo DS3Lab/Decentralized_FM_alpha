@@ -211,6 +211,8 @@ class GpipeAsync:
         if use_dp:
             self.dp_optim = get_dp_module(args, device, self.model, self.optimizer)
             
+        self.global_step = 0
+            
 
     def _compute_micro_batch_size(self):
         micro_batch_float_num = self.micro_batch_size * self.seq_length * self.embedding_dim
@@ -263,7 +265,7 @@ class GpipeAsync:
     def get_ts(self, event):
         return self.init_time_stamp + self.init_event.elapsed_time(event) * 1e+3
 
-    def forward_stage(self, input_data=None, sample_ids=None):
+    def forward_stage(self, input_data=None):
         # print("Forward stage start! rank-", self.rank)
         if self.pp_rank == 0:
             assert(input_data is not None)
@@ -274,11 +276,6 @@ class GpipeAsync:
             else:
                 input_ids_micro_batches = [None]*self.micro_batch_num
         output_micro_batches = []
-        
-        # TODO: should be placed at the end of last mini-batch
-        if self.forward_compress_method in {'delta', 'delta-lowbits', 'delta-topk-lowbits'}:
-            assert sample_ids is not None
-            self.forward_compressor.read_from_cache(sample_ids)
 
         for i in range(self.micro_batch_num):
             if self.pp_rank == 0:  # Only send output to next node, do not receive
@@ -341,10 +338,6 @@ class GpipeAsync:
             
         if self.enable_tidy_profiling:
             self.profiling_forward_stage()
-            
-        if self.forward_compress_method in {'delta', 'delta-lowbits', 'delta-topk-lowbits'}:
-            assert sample_ids is not None
-            self.forward_compressor.write_to_cache(sample_ids)
             
         return output_micro_batches
 
@@ -450,7 +443,12 @@ class GpipeAsync:
             self.profiling_backward_stage()
             
         if self.pp_rank == self.pipeline_group_size - 1:
-            wandb.log({'loss': sum(tr_loss)/len(tr_loss)})
+            wandb.log(
+                {
+                    'loss': sum(tr_loss)/len(tr_loss),
+                    'lr': self.scheduler.get_last_lr()[0],
+                }, step=self.global_step,
+            )
 
     def profiling_backward_stage(self):
         torch.cuda.synchronize()
@@ -510,7 +508,9 @@ class GpipeAsync:
         with open(filename, 'w') as outfile:
             json.dump(self.profiling_log, outfile)
 
-    def sgd_iter(self, input_=None, target=None, sample_ids=None):
+    def sgd_iter(self, input_=None, target=None, sample_ids=None, 
+                 loss_func=torch.nn.functional.cross_entropy):
+        
         self.comm.barrier()
         start_time = time.time()
         if self.enable_tidy_profiling:
@@ -521,7 +521,14 @@ class GpipeAsync:
         self.optimizer.zero_grad(set_to_none=True)
 
         for step in range(self.gradient_accumulate_step):
-            outputs = self.forward_stage(input_, sample_ids)
+            
+            # TODO: should be placed at the end of the last mini-batch
+            if self.forward_compress_method in {'delta', 'delta-lowbits', 'delta-topk-lowbits'}:
+                torch.cuda.synchronize()
+                assert sample_ids is not None
+                self.forward_compressor.read_from_cache(sample_ids)
+            
+            outputs = self.forward_stage(input_)
             forward_time = time.time()
             if step == 0:
                 forward_slot = forward_time-start_time
@@ -529,8 +536,14 @@ class GpipeAsync:
                 forward_slot = forward_time-backward_time
             print("Rank {} node forward pass {}/{} takes {:3.2f}s"
                   .format(self.global_rank, step, self.gradient_accumulate_step, forward_slot))
+            
+            if self.forward_compress_method in {'delta', 'delta-lowbits', 'delta-topk-lowbits'}:
+                torch.cuda.synchronize()
+                assert sample_ids is not None
+                self.forward_compressor.write_to_cache(sample_ids)
+            
             self.comm.barrier()  # This is an educated guess that such barrier would make it fair TC (probably required)
-            self.backward_stage(outputs, target)
+            self.backward_stage(outputs, target, loss_func=loss_func)
             backward_time = time.time()
             print("Rank {} node backward pass {}/{} takes {:3.2f}s"
                   .format(self.global_rank, step, self.gradient_accumulate_step, backward_time-forward_time))
@@ -545,6 +558,7 @@ class GpipeAsync:
         print("-------------------------------------------")
         # torch.cuda.empty_cache()
         # print(torch.cuda.memory_summary())
+        self.global_step += 1
         return iter_time
     
     
@@ -598,12 +612,14 @@ class GpipeAsync:
         return output_micro_batches
     
     
-    def infer_iter(self, input_=None, target=None, sample_ids=None, metric=None):
+    def infer_iter(self, input_=None, target=None, sample_ids=None, 
+                   metrics=None, pred_func=lambda x, y: x.argmax(-1)):
         self.comm.barrier()
         torch.cuda.synchronize()
-        outputs = self.infer_stage(input_, sample_ids)
-        if metric is not None:
-            metric.add_batch(predictions=outputs, references=target)
-        self.optimizer_step()
+        outputs = self.infer_stage(input_)
+        if metrics is not None:
+            outputs = pred_func(torch.cat(outputs, 0), target)
+            for metric in metrics:
+                metric.add_batch(predictions=outputs, references=target)
         torch.cuda.synchronize()
         self.comm.barrier()

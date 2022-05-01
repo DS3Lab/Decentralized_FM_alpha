@@ -144,11 +144,16 @@ class GPTModel(_GPT2Model):
             cross_attentions=None,
         )
     
-class GPTLMHead(nn.Sequential):
+class GPTLMHead(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.ln_f = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
+        
+    def forward(self, x, input_ids=None):
+        x = self.ln_f(x)
+        x = self.lm_head(x)
+        return x
     
 class GPTLMHeadModel(_GPT2LMHeadModel):
 

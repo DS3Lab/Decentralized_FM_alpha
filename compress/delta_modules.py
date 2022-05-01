@@ -14,6 +14,9 @@ from .utils import *
 from . import flag
 
 
+MAX_CACHE_SIZE = 400000
+
+
 class DeltaCompressor:
     def __init__(
         self, bits=4,
@@ -43,7 +46,7 @@ class DeltaCompressor:
         # Activation Cache
         self.tmp_f = tempfile.NamedTemporaryFile(dir='/tmp/')
         self.cache = np.memmap(
-            self.tmp_f, mode='w+', dtype=np.float16, shape=(100000, 2, seq_length, embedding_dim),
+            self.tmp_f, mode='w+', dtype=np.float16, shape=(MAX_CACHE_SIZE, 2, seq_length, embedding_dim),
         )
         
         # Communication Buffers
@@ -221,13 +224,13 @@ class DeltaLowBitsCompressor(DeltaCompressor):
         self.tmp_f = tempfile.NamedTemporaryFile(dir='/tmp/')
         self.cache_activ = np.memmap(
             self.tmp_f, mode='w+', dtype=np.uint8, shape=(
-                100000, 2, *self.compressed_activ_shape,
+                MAX_CACHE_SIZE, 2, *self.compressed_activ_shape,
             ),
         )
         self.tmp_f2 = tempfile.NamedTemporaryFile(dir='/tmp/')
         self.cache_scale = np.memmap(
             self.tmp_f2, mode='w+', dtype=np.float16, shape=(
-                100000, 2, *self.compressed_scale_shape,
+                MAX_CACHE_SIZE, 2, *self.compressed_scale_shape,
             ),
         )
         
@@ -479,19 +482,19 @@ class DeltaTopKLowBitsCompressor(DeltaCompressor):
         self.tmp_f = tempfile.NamedTemporaryFile(dir='/tmp/')
         self.cache_activ = np.memmap(
             self.tmp_f, mode='w+', dtype=np.uint8, shape=(
-                100000, 2, *self.compressed_activ_shape,
+                MAX_CACHE_SIZE, 2, *self.compressed_activ_shape,
             ),
         )
         self.tmp_f2 = tempfile.NamedTemporaryFile(dir='/tmp/')
         self.cache_masks = np.memmap(
             self.tmp_f2, mode='w+', dtype=np.uint8, shape=(
-                100000, 2, *self.compressed_masks_shape,
+                MAX_CACHE_SIZE, 2, *self.compressed_masks_shape,
             ),
         )
         self.tmp_f3 = tempfile.NamedTemporaryFile(dir='/tmp/')
         self.cache_scale = np.memmap(
             self.tmp_f3, mode='w+', dtype=np.float16, shape=(
-                100000, 2, *self.compressed_scale_shape,
+                MAX_CACHE_SIZE, 2, *self.compressed_scale_shape,
             ),
         )
         
