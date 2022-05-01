@@ -58,9 +58,14 @@
 
       bash aws_foo_load_lib.sh
 
+- Setup heterogeneous network (update the private IPs in generate_heterogeneous_tc.py):
+
+      bash aws_generate_heterogenous_tc.sh #HETER_CASE
+
 - Run Tasks (e.g.,):
 
       bash aws_run_gpt3_training.sh gpt3_small_pp3_dp4.sh
+      bash aws_run_gpt3_training.sh gpt3_small_pp3_dp4.sh #HETER_CASE
       bash aws_run_gpt3_training.sh gpt3_small_pp3_dp4.sh #DELAY #BANDWIDTH
 
 - Clear logs:
