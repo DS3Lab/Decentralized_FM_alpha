@@ -37,16 +37,16 @@ def generate_tc_scripts(args):
     assert args.nodes == len(private_ip)
     delay, bandwidth, _ = get_delay_bandwidth(args)
     with open("../scripts/tc_scripts/heterogeneous_setup_case"+str(args.case)+".sh", 'w') as script:
-        script.write("sudo tc qdisc add dev ens3 root handle 1: prio\n")
+        script.write("sudo tc qdisc add dev ens3 root handle 1: prio \n")
         # setup pair-wise delay and bandwidth qdisc
         for i in range(len(private_ip)):
             if i != args.rank:
                 limit_pkts = bandwidth[args.rank][i] * 22500 * delay[args.rank][i]
-                script.write("sudo tc qdisc add dev ens3 parent 1:1 classid: 1:{}: netem delay {}ms rate {}Gbit limit {}\n"
+                script.write("sudo tc qdisc add dev ens3 parent 1:1 handle: 2:{}: netem delay {}ms rate {}Gbit limit {}\n"
                              .format(i+1, delay[args.rank][i], bandwidth[args.rank][i], limit_pkts))
         for i in range(len(private_ip)):
             if i != args.rank:
-                script.write("sudo tc filter add dev ens3 parent 1:0 protocol ip prio 1 u32 match ip src {}/32 flowid 1:{}\n"
+                script.write("sudo tc filter add dev ens3 parent 1:1 protocol ip prio 1 u32 match ip src {}/32 flowid 2:{}\n"
                              .format(private_ip[i], i+1))
 
 
