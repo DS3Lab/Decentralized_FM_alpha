@@ -58,7 +58,7 @@
 
       bash aws_foo_load_lib.sh
 
-- Setup heterogeneous network (update the private IPs in generate_heterogeneous_tc.py):
+- Setup heterogeneous network (update the private IPs in generate_heterogeneous_tc.py, sync the code to AWS!):
 
       bash aws_generate_heterogenous_tc.sh #HETER_CASE
 
