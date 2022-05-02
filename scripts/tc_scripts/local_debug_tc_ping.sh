@@ -13,5 +13,5 @@ private_ips=(
 
 for ip in "${private_ips[@]}"
 do
-  ping -c 5 ip
+  ping -c 5 $ip
 done
