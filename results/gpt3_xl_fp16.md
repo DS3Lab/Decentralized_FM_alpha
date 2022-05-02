@@ -115,11 +115,11 @@ Check the largest batch size for different number of layers:
     - Forward: 7.88
     - Backward (with activation recompute X3): 23.64
 
-| Setting       | Pipe(P)-8 | Tensor(T)-8 | P-4 T-2 | P-2 T-4 | P-8 T-8 D-1 | Best PFlops |
-|---------------|-----------|-------------|---------|---------|-------------|-------------|
-| Micro-batch 1 | s         | s           | s       | s       | s           | PFlops      |
-| Micro-batch 2 | s         | s           | s       | s       | -           | PFlops      |
-| Micro-batch 4 | s         | s           | s       | s       | -           | PFlops      |
+| Setting       | Pipe(P)-8 | Tensor(T)-8 | P-4 T-2 | P-2 T-4 | P-8 T-8 D-1 | Best PFlops  |
+|---------------|-----------|-------------|---------|---------|-------------|--------------|
+| Micro-batch 1 | 26.40 s   | 32.59 s     | 15.38 s | 18.44 s | 83.26 s     | 2.049 PFlops |
+| Micro-batch 2 | 24.80 s   | 71.36 s     | 19.43 s | 28.88 s | -           | 1.622 PFlops |
+| Micro-batch 4 | 22.07 s   | 27.98 s     | 15.64 s | 17.78 s | -           | 2.015 PFlops |
 
 - 40 layer:
   - Number of Para: 
@@ -189,7 +189,7 @@ Check the largest batch size for different number of layers:
 
 | Setting                     | P-8 T-1 D-8 | P-1 T-8 D-8 | P-4 T-2 D-8 | P-2 T-4 D-8 | Best PFlops  |
 |-----------------------------|-------------|-------------|-------------|-------------|--------------|
-| 8 p3.16xlarge               | s           | s           | s           | s           | PFlops       |
+| 8 p3.16xlarge               | 26.40 s     | 32.59 s     | 15.38 s     | 18.44 s     | 2.049 PFlops |
 | 64 p3.2xlarge               | 28.68 s     | 373.83 s    | 63.81 s     | 160.38 s    | 1.099 PFlops |
 | delay 10ms  bandwidth 1Gbps | 47.76 s     | -           | -           | -           | 0.659 PFlops |
 | delay 50ms  bandwidth 1Gbps | 72.43 s     | -           | -           | -           | 0.435 PFlops |

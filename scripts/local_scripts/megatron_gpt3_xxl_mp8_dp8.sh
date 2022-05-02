@@ -23,7 +23,7 @@ VALID_FILE=glue_dataset/data/QQP/dev.tsv
 TEST_FILE=glue_dataset/data/QQP/test.tsv
 
 DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT"
-MODEL_ARGS="--num-layers 40 --hidden-size 2048 --num-attention-heads 16 --micro-batch-size $MICRO_BATCH_SIZE --global-batch-size 1024 --seq-length 2048 --max-position-embeddings 2048"
+MODEL_ARGS="--num-layers 32 --hidden-size 2048 --num-attention-heads 16 --micro-batch-size $MICRO_BATCH_SIZE --global-batch-size 1024 --seq-length 2048 --max-position-embeddings 2048"
 PARALLEL_ARGS="--distributed-backend nccl --tensor-model-parallel-size $TENSOR_PARALLEL_SIZE  --pipeline-model-parallel-size $PIPELINE_PARALLEL_SIZE --DDP-impl local --no-bias-dropout-fusion"
 NLP_ARGS="--tokenizer-type BertWordPieceLowerCase --vocab-file $VOCAB_FILE  --train-data-path $TRAIN_FILE  --valid-data-path $VALID_FILE  --test-data-path $TEST_FILE"
 HYPER_PARA_ARGS="--optimizer sgd --lr 0.0001 --train-iters 1"
