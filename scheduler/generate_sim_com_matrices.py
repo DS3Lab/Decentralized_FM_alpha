@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.linalg
-import random
+import sys
+np.set_printoptions(threshold=sys.maxsize)
 
 
 delay_bandwidth_dict = {
@@ -69,25 +70,19 @@ def simulate_0_datacenter(nodes=64):
     return delay, bandwidth, regions
 
 
-def simulate_1_datacenter_spot_gpu(nodes=64):
+def simulate_1_datacenter_spot_gpu(nodes=64, group=(8, 4)):
     print("Simulate case 1: spot datacenter.")
     delay = np.zeros((nodes, nodes))
     bandwidth = np.ones((nodes, nodes)) * 10
-    random.seed = 2022
-    spot_pair_num = nodes//4
-    # pair of instances on the same machine.
-    spot_pair = [(i, i+1)
-                 for i in random.sample(range(0, nodes-1, 2), spot_pair_num)]
-    regions = ["individual"] * nodes
-    for pair_idx, (i, j) in enumerate(spot_pair):
-        regions[i] = "pair_" + str(pair_idx)
-        regions[j] = "pair_" + str(pair_idx)
-    for (i, j) in spot_pair:
-        bandwidth[i][j] = 100
-        bandwidth[j][i] = 100
+    instance_num = group[0]
+    gpu_per_instances = group[1]
+    bandwidth_blocks = [np.ones((gpu_per_instances, gpu_per_instances)) * (90 if i < instance_num else 0)
+                        for i in range(nodes//gpu_per_instances)]
+    bandwidth = bandwidth + scipy.linalg.block_diag(*bandwidth_blocks)
+
     print('delay(ms):', delay)
     print('bandwidth(Gbps):', bandwidth)
-    return delay, bandwidth, regions
+    return delay, bandwidth, None
 
 
 def simulate_2_multi_universities(nodes=64):
@@ -215,3 +210,13 @@ def simulate_6_debug(nodes=8):
     print('delay(ms):', delay)
     print('bandwidth(Gbps):', bandwidth)
     return delay, bandwidth, None
+
+
+def main():
+    simulate_1_datacenter_spot_gpu()
+
+
+if __name__ == '__main__':
+    main()
+
+
