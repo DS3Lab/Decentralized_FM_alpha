@@ -59,7 +59,7 @@ def generate_tc_scripts(args):
         for i in range(len(private_ip)):
             if i != args.rank:
                 current_key = (delay[args.rank][i], bandwidth[args.rank][i])
-                script.write("sudo tc filter add dev ens3 parent 1:0 protocol ip prio 1 u32 match ip src {}/32 flowid 1:{}\n"
+                script.write("sudo tc filter add dev ens3 parent 1:0 protocol ip prio 1 u32 match ip dst {}/32 flowid 1:{}\n"
                              .format(private_ip[i], tc_setting_dict[current_key]))
 
 
