@@ -468,7 +468,7 @@ class DeltaTopKLowBitsCompressor(DeltaCompressor):
         self.micro_batch_size = micro_batch_size
         self.activ_shape = (micro_batch_size, seq_length, embedding_dim)
         self.k_act = int(seq_length * embedding_dim * self.ratio_act)
-        self.k_act = self.k_act + (self.bits_act - self.k_act % self.bits_act)
+        self.k_act = self.k_act + ((8//self.bits_act) - self.k_act % (8//self.bits_act))
         self.k_act = max(self.k_act, 1)
         scale_shape = [micro_batch_size, seq_length, embedding_dim]
         for i in self.scale_dims:
@@ -665,3 +665,164 @@ class DeltaTopKLowBitsCompressor(DeltaCompressor):
         m_cp.get(out=self.np_dec_masks_buffers[i_micro_batch])
         s_cp.get(out=self.np_dec_scale_buffers[i_micro_batch])
         return x
+    
+    
+    
+def _compress_topk_nbits_batch(x, k, bits, scale_method='max'):
+    batch_size = x.size(0)
+    
+    # 1. sparsify x (keep batch dims)
+    x_flat = x.view(-1)
+    _, indexes = torch.topk(torch.abs(x_flat.data), k=k, sorted=False)
+    masks = torch.zeros_like(x_flat, dtype=torch.bool)
+    masks[indexes] = 1
+    masks = masks.view(x.shape)
+    x = x * masks
+    
+    # 2. quantize x        
+    uint_x, scales = _compress_nbits(x, bits, scale_method=scale_method, scale_dims=(0,1,))
+    topk_uint_x = uint_x[masks].view(k)
+    if bits == 8:
+        pass
+    elif bits == 4:
+        x0, x1 = topk_uint_x.chunk(2, -1)
+        topk_uint_x = (x0 << 4) + x1
+    elif bits == 2:
+        x0, x1, x2, x3 = topk_uint_x.chunk(4, -1)
+        topk_uint_x = (x0 << 6) + (x1 << 4) + (x2 << 2) + x3
+    else:
+        raise Exception('not support bits')
+    masks = cupy_to_tensor(
+        cupy.packbits(tensor_to_cupy(masks))
+    ).view(-1)
+    return topk_uint_x, masks, scales
+    
+def _decompress_topk_nbits_batch(topk_uint_x, masks, scales, k, bits, original_shape):
+    masks = cupy_to_tensor(
+        cupy.unpackbits(tensor_to_cupy(masks))
+    )
+    masks = masks.view(original_shape)
+    if bits == 8:
+        pass
+    elif bits == 4:
+        bitmask = 15
+        x0 = (topk_uint_x >> 4)
+        x1 = (topk_uint_x & bitmask)
+        topk_uint_x = torch.cat([x0, x1], -1)
+    elif bits == 2:
+        bitmask = 3
+        x0 = (topk_uint_x >> 6)
+        x1 = (topk_uint_x >> 4) & bitmask
+        x2 = (topk_uint_x >> 2) & bitmask
+        x3 = topk_uint_x & bitmask
+        topk_uint_x = torch.cat([x0, x1, x2, x3], -1)
+    else:
+        raise Exception('not support bits')
+    uint_x = torch.zeros(original_shape, dtype=torch.uint8, device=topk_uint_x.device) + (1<<bits-1)
+    uint_x[masks] = topk_uint_x.view(-1)
+    x = _decompress_nbits(uint_x, scales, bits)
+    return x
+    
+class TopKDeltaCompressor(DeltaCompressor):
+    def __init__(
+        self, bits=4, ratio=0.1,
+        scale_method='max', scale_dims=(0,1), 
+        *args, **kargs,
+    ):
+        '''
+        bits in [1, 8]
+        ratio in [0, 1]
+        scale_method in {'max', 'l2'}
+        '''
+        self.bits = bits
+        self.ratio = ratio
+        self.scale_method = scale_method
+        self.scale_dims = scale_dims
+        assert scale_dims == (0,1)
+        self.executor = concurrent.futures.ThreadPoolExecutor()
+        self.future_read = None
+        self.future_write = None
+        
+        
+    def build_buffer(self, batch_size, micro_batch_size, seq_length, embedding_dim, device, dtype=None):
+        self.batch_size = batch_size
+        self.micro_batch_size = micro_batch_size
+        self.activ_shape = (micro_batch_size, seq_length, embedding_dim)
+        self.k_delta = int(micro_batch_size * seq_length * embedding_dim * self.ratio)
+        self.k_delta = self.k_delta + ((8//self.bits) - self.k_delta % (8//self.bits))
+        self.k_delta = max(self.k_delta, 1)
+        scale_shape = [micro_batch_size, seq_length, embedding_dim]
+        for i in self.scale_dims:
+            scale_shape[i] = 1
+        self.scale_shape = scale_shape
+        
+        # Activation Cache
+        self.tmp_f = tempfile.NamedTemporaryFile(dir='/tmp/')
+        self.cache = np.memmap(
+            self.tmp_f, mode='w+', dtype=np.float16, shape=(MAX_CACHE_SIZE, 2, seq_length, embedding_dim),
+        )
+        
+        # Communication Buffers
+        self.compressed_delta_shape = (self.k_delta*self.bits//8,)
+        self.compressed_masks_shape = (micro_batch_size, seq_length*embedding_dim//8,)
+        self.compressed_scale_shape = (1,1,embedding_dim,)
+        self.buffers = [
+            (
+                torch.zeros(self.compressed_delta_shape, requires_grad=False, device=device, dtype=torch.uint8),
+                torch.zeros(self.compressed_masks_shape, requires_grad=False, device=device, dtype=torch.uint8),
+                torch.zeros(self.compressed_scale_shape, requires_grad=False, device=device, dtype=torch.float16),
+            ) for _ in range(batch_size//micro_batch_size)
+        ]
+        
+        # Communication Buffers during Warmup (w/o compression)
+        self.warmup_buffers = [
+            torch.zeros((micro_batch_size, seq_length, embedding_dim), 
+                        requires_grad=False, device=device, dtype=dtype,
+                       ) for _ in range(batch_size//micro_batch_size)
+        ]
+        
+        # CPU RAM Buffers
+        self.np_dec_buffers = [
+            pin_memory(np.zeros(self.activ_shape, dtype=np.float16)) for _ in range(batch_size//micro_batch_size)
+        ]
+        self.np_com_buffers = [
+            pin_memory(np.zeros(self.activ_shape, dtype=np.float16)) for _ in range(batch_size//micro_batch_size)
+        ]
+        
+        # GPU RAM Buffers
+        self.cp_dec_buffers = [
+            cupy.empty(self.activ_shape, dtype=np.float16) for _ in range(batch_size//micro_batch_size)
+        ]
+        self.cp_com_buffers = [
+            cupy.empty(self.activ_shape, dtype=np.float16) for _ in range(batch_size//micro_batch_size)
+        ]
+        
+    def compress(self, x, i_micro_batch):
+        # get cache
+        self.cp_com_buffers[i_micro_batch].set(self.np_com_buffers[i_micro_batch])
+        last_x = cupy_to_tensor(self.cp_com_buffers[i_micro_batch])
+        delta = x - last_x
+        # compresss delta
+        compressed_delta = _compress_topk_nbits_batch(
+            delta, bits=self.bits, k=self.k_delta, scale_method=self.scale_method)
+        # update cache
+        delta = _decompress_topk_nbits_batch(
+            *compressed_delta, bits=self.bits, k=self.k_delta, original_shape=self.activ_shape)
+        x = last_x + delta
+        x_cp = tensor_to_cupy(x.half())
+        x_cp.get(out=self.np_com_buffers[i_micro_batch])
+        return compressed_delta
+        
+    def decompress(self, delta, i_micro_batch):
+        # get cache
+        self.cp_dec_buffers[i_micro_batch].set(self.np_dec_buffers[i_micro_batch])
+        last_x = cupy_to_tensor(self.cp_dec_buffers[i_micro_batch])
+        # decompress delta
+        delta = _decompress_topk_nbits_batch(
+            *delta, bits=self.bits, k=self.k_delta, original_shape=self.activ_shape)
+        # update cache
+        x = last_x + delta
+        x_cp = tensor_to_cupy(x.half())
+        x_cp.get(out=self.np_dec_buffers[i_micro_batch])
+        return x
+        

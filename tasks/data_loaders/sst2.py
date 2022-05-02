@@ -16,10 +16,16 @@ def get_sst2_data_loader(args, tokenizer, data_split='train', num_workers=0):
         train_set = load_dataset('glue', 'sst2', split=data_split)
     train_set = train_set.map(_encode, batched=True)
     train_set = train_set.map(lambda examples: {'text': examples['input_ids']}, batched=True)
-    train_set.set_format(
-        type='torch', columns=[
-            'text', 'input_ids', 'attention_mask', 'label', 'idx',
-        ])
+    if 'token_type_ids' in train_set.features:
+        train_set.set_format(
+            type='torch', columns=[
+                'text', 'input_ids', 'token_type_ids', 'attention_mask', 'label', 'idx',
+            ])
+    else:
+        train_set.set_format(
+            type='torch', columns=[
+                'text', 'input_ids', 'attention_mask', 'label', 'idx',
+            ])
     
     if data_split == 'train':
         generator = torch.Generator()

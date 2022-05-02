@@ -72,3 +72,36 @@ def distributed_test_lm_iter(args, pipeline, device, test_data_loader):
     else:
         for i, data in enumerate(test_data_loader):
             pipeline.infer_iter(None, None, None)
+            
+            
+            
+def distributed_test_bert_iter(args, pipeline, device, test_data_loader):
+    pipeline.model.eval() # Flag .training to True to enable Dropout
+    if get_pipeline_parallel_rank() == 0:
+        for i, data in enumerate(test_data_loader):
+            inputs_ids = data['text'].to(device)
+            aux_inputs = {
+                'token_type_ids': data['token_type_ids'].to(device),
+                'attention_mask': data['attention_mask'].to(device),
+            }
+            current_iter_time = pipeline.infer_iter(inputs_ids, aux_input_data=aux_inputs)
+    elif get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
+        metrics = get_metric(args)
+        for i, data in enumerate(test_data_loader):
+            aux_inputs = {
+                'attention_mask': data['attention_mask'].to(device),
+            }
+            input_ids = data['text'].to(device)
+            labels = data['label'].to(device)
+            pipeline.infer_iter(None, labels, aux_input_data=aux_inputs, metrics=metrics)
+        
+        wandb.log(
+            {metric.name: metric.compute() for metric in metrics}, 
+            step=pipeline.global_step,
+        )
+    else:
+        for i, data in enumerate(test_data_loader):
+            aux_inputs = {
+                'attention_mask': data['attention_mask'].to(device),
+            }
+            pipeline.infer_iter(aux_input_data=aux_inputs)
