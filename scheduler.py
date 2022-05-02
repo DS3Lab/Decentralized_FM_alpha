@@ -13,6 +13,7 @@ layer_size = 24
 num_devices = config.nodes
 peer_delay = None
 peer_bandwidth = None
+regions = None
 
 # assigned task
 batch_size_per_task = 0.625e5
@@ -56,10 +57,10 @@ def GCMA(nodes=None, population_size=None, trails=None):
 
         return parent1_str, parent2_str
 
-    def five_point_crossover(parent1_str=None, parent2_str=None):
+    def three_point_crossover(parent1_str=None, parent2_str=None):
         points = list(range(num_devices))
         random.shuffle(points)
-        points = points[:5]
+        points = points[:3]
 
         for point in points:
             parent2_str[point] = parent1_str[point]
@@ -212,7 +213,7 @@ def GCMA(nodes=None, population_size=None, trails=None):
         parent1_idx, parent2_idx = np.random.randint(population_size, size=2)
         parent1_str, parent2_str = normalization(
             candidate_partitions[parent1_idx], candidate_partitions[parent2_idx])
-        offspring_str = five_point_crossover(parent1_str, parent2_str)
+        offspring_str = three_point_crossover(parent1_str, parent2_str)
         offspring_str = cyclic_partitioning(offspring_str)
 
         offspring = [[] for _ in range(way)]
@@ -410,7 +411,7 @@ if __name__ == "__main__":
 
     import time
     for simulate_case in simulate_cases:
-        peer_delay, peer_bandwidth = simulate_case()
+        peer_delay, peer_bandwidth, regions = simulate_case()
         start = time.perf_counter()
         min_total_cost = float('inf')
         candidate_partition = None
@@ -475,11 +476,11 @@ if __name__ == "__main__":
                 output_pipelines_in_idx[stage_idx,
                                         i] = candidate_partition[partition_idx][output_pipelines[stage_idx][i]]
 
-            if len(config.regions):
+            if regions != None:
                 print("stage " + str(stage_idx) + ": ", end="")
                 for i in range(partition_size):
                     region_id = output_pipelines_in_idx[stage_idx, i]
-                    print(config.regions[region_id] + (" " *
-                                                       (10 - len(config.regions[region_id]))), end=", ")
+                    print(regions[region_id] + (" " *
+                          (10 - len(regions[region_id]))), end=", ")
                 print()
         print(output_pipelines_in_idx)

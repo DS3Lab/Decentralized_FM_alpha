@@ -47,11 +47,18 @@ def random_candidates(nodes=None, population_size=None):
 
 
 if __name__ == "__main__":
-    simulate_cases = [config.simulate_0_datacenter, config.simulate_1_datacenter_spot_gpu, config.simulate_2_multi_universities,
-                      config.simulate_3_regional_geo_distributed, config.simulate_4_worldwide_geo_distributed, config.simulate_5_homogeneous_tc]
+    simulate_cases = [
+        config.simulate_0_datacenter,
+        config.simulate_1_datacenter_spot_gpu,
+        config.simulate_2_multi_universities,
+        config.simulate_3_regional_geo_distributed,
+        config.simulate_4_worldwide_geo_distributed,
+        config.simulate_5_homogeneous_tc
+    ]
+
     import time
     for simulate_case in simulate_cases:
-        scheduler.peer_delay, scheduler.peer_bandwidth = simulate_case()
+        scheduler.peer_delay, scheduler.peer_bandwidth, scheduler.regions = simulate_case()
         start = time.perf_counter()
 
         candidate_partitions, candidate_total_cost, candidate_data_parallel_cost, candidate_pipeline_parallel_cost = random_candidates(
