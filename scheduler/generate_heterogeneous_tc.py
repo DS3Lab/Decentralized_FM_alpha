@@ -47,7 +47,8 @@ def generate_tc_scripts(args):
                     handle_i += 1
         assert len(tc_setting_dict) <= 16
         # setup delay and bandwidth subclass qdisc
-        script.write("sudo tc qdisc add dev ens3 root handle 1: prio bands {}\n".format(len(tc_setting_dict)))
+        script.write("sudo tc qdisc add dev ens3 root handle 1: prio bands {}\n"
+                     .format(min(3,len(tc_setting_dict))))
         for key in tc_setting_dict.keys():
             current_delay, current_bandwidth = key
             handle_index = tc_setting_dict[key]
