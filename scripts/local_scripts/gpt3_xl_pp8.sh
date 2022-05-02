@@ -20,6 +20,7 @@ then
   python dist_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF>> "./logs/${timestamp}_gpt3_xl_pp8_default.log"
 elif [ $# -eq 4 ]
 then
+  case=$4
   export NCCL_SOCKET_IFNAME=ens3
   export GLOO_SOCKET_IFNAME=ens3
   sh ./scripts/tc_scripts/heterogeneous_setup_case"$case".sh

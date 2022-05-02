@@ -11,4 +11,4 @@ ips=(
 )
 
 # private IP of Rank-0 instances.
-master_ip="172.31.20.114"
+master_ip="172.31.16.228"
