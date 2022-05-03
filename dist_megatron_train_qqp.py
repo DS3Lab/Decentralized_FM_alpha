@@ -315,7 +315,9 @@ def train_qqp(train_dataset_provider,
         megatron_train_step(forward_step_func, train_data_iterator, model, optimizer, lr_scheduler, profile=False)
         timers('benchmark-iter-'+str(i)).stop()
     print_datetime('Benchmark iter stop')
-    timers.log(['first-train-iter'].extend(['benchmark-iter-'+str(i) for i in range(args.train_iters)]))
+    time_log = ['first-train-iter']
+    time_log.extend(['benchmark-iter-'+str(i) for i in range(args.train_iters)])
+    timers.log(time_log)
 
 
 if __name__ == '__main__':
