@@ -180,8 +180,8 @@ Check the largest batch size for different number of layers:
 
 | Setting                     | P-8 T-1 D-8 | P-1 T-8 D-8 | P-4 T-2 D-8 | P-2 T-4 D-8 | Best PFlops  |
 |-----------------------------|-------------|-------------|-------------|-------------|--------------|
-| 8 p3.16xlarge               | 16.91 s     | 25.04 s     | 12.52 s     | 14.25 s     | 1.888 PFlops |
-| 64 p3.2xlarge               | 23.13 s     | 274.18 s    | 47.738 s    | 118.48 s    | 1.022 PFlops |
+| 8 p3.16xlarge               | 24.34 s     | 25.04 s     | 12.52 s     | 14.25 s     | 1.888 PFlops |
+| 64 p3.2xlarge               | 26.13 s     | 274.18 s    | 47.738 s    | 118.48 s    | 1.022 PFlops |
 | delay 10ms  bandwidth 1Gbps | 46.36 s     | -           | -           | -           | 0.510 PFlops |
 | delay 50ms  bandwidth 1Gbps | 65.98 s     | -           | -           | -           | 0.358 PFlops |
 

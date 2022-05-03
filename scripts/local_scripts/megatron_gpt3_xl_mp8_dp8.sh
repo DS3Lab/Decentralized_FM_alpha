@@ -16,8 +16,9 @@ NNODES=$6
 NODE_RANK=$7
 WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
 
-num_layers=24
-global_batch_size=2048
+# change this for different experiments
+num_layers=40
+global_batch_size=4096
 
 VOCAB_FILE=glue_dataset/data/bert-large-cased-vocab.txt
 TRAIN_FILE=glue_dataset/data/QQP/train.tsv
@@ -28,11 +29,11 @@ DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $
 MODEL_ARGS="--num-layers $num_layers --hidden-size 2048 --num-attention-heads 16 --micro-batch-size $MICRO_BATCH_SIZE --global-batch-size $global_batch_size --seq-length 2048 --max-position-embeddings 2048"
 PARALLEL_ARGS="--distributed-backend nccl --tensor-model-parallel-size $TENSOR_PARALLEL_SIZE  --pipeline-model-parallel-size $PIPELINE_PARALLEL_SIZE --DDP-impl local --no-bias-dropout-fusion"
 NLP_ARGS="--tokenizer-type BertWordPieceLowerCase --vocab-file $VOCAB_FILE  --train-data-path $TRAIN_FILE  --valid-data-path $VALID_FILE  --test-data-path $TEST_FILE"
-HYPER_PARA_ARGS="--optimizer sgd --lr 0.0001 --train-iters 5"
+HYPER_PARA_ARGS="--optimizer sgd --lr 0.0001 --train-iters 3"
 OPTION_ARGS="--fp16 --checkpoint-activations"
 timestamp=$(date +%Y_%m_%d_%H_%M)
 
-log_path="./logs/${timestamp}_megatron_gpt3_xl_w${NNODES}_t${TENSOR_PARALLEL_SIZE}_p${PIPELINE_PARALLEL_SIZE}"
+log_path="./logs/${timestamp}_megatron_gpt3_xl_w${NNODES}_t${TENSOR_PARALLEL_SIZE}_p${PIPELINE_PARALLEL_SIZE}_l${num_layers}_b${global_batch_size}"
 
 if [ $# -eq 7 ]
 then

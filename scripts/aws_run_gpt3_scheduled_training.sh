@@ -13,17 +13,17 @@ do
   if [ $# -eq 1 ]
   then
     echo "Running in default network."
-    ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"$ip" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" &
+    ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"$ip" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" 0 &
   elif [ $# -eq 2 ]
   then
     case=$2
     echo "Running in heterogeneous network: Case-$case"
-    ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"$ip" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" "$case" &
+    ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"$ip" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" 0 "$case" &
   elif [ $# -eq 3 ]
   then
     delay_ms=$2
     rate_gbit=$3
-    ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"$ip" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" "$delay_ms" "$rate_gbit" &
+    ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"$ip" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" 0 "$delay_ms" "$rate_gbit" &
   else
     echo "Error! Not valid arguments."
   fi

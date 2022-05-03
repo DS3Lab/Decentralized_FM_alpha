@@ -1,17 +1,22 @@
 source ./ip_list.sh
 
-world_size=${#ips[@]}
+nodes_per_node=(8 8 8 8 8 8 8 8)
+world_size=64
 
 script=$1
 
-
-for rank in "${!ips[@]}"
+declare -i rank=0
+for node_rank in "${!ips[@]}"
 do
-  echo "Issue command $script in Rank-$rank node: ${ips[$rank]}"
+  echo "Issue command $script in Rank-$rank node: ${ips[node_rank]}"
   if [ $# -eq 1 ]
   then
     echo "Running in default network."
-    ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" 0 &
+    for (( i; i<${nodes_per_node[$node_rank]}; i++))
+    do
+      ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" 0 &
+      rank+=1
+    done
   elif [ $# -eq 2 ]
   then
     case=$2
