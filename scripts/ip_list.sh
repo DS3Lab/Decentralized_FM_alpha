@@ -10,5 +10,11 @@ ips=(
 "54.185.192.9"
 )
 
+
 # private IP of Rank-0 instances.
 master_ip="172.31.18.114"
+
+# This is need to training scheduled examples.
+rank_map=(
+
+)

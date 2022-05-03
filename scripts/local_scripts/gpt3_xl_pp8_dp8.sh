@@ -3,13 +3,18 @@ source activate pytorch_p38
 ip=$1
 world_size=$2
 rank=$3
-
 timestamp=$(date +%Y_%m_%d_%H_%M)
 
 #central_ps, sharded_ps, allreduce
 dp_mode=central_ps
-DIST_CONF="--pp-mode gpipe --dp-mode $dp_mode --gradient-accumulate-step 2 --world-size $world_size --pipeline-group-size 8 --data-group-size 8 --rank "$rank""
-MODEL_CONF="--embedding-dim 2048 --num-heads 16 --num-layers 3 --batch-size 64 --micro-batch-size 1"
+
+# Change the script here for different settings.
+ga_step=2
+num_layers=3
+batch_size=64
+
+DIST_CONF="--pp-mode gpipe --dp-mode $dp_mode --gradient-accumulate-step $ga_step --world-size $world_size --pipeline-group-size 8 --data-group-size 8 --rank "$rank""
+MODEL_CONF="--embedding-dim 2048 --num-heads 16 --num-layers $num_layers --batch-size $batch_size --micro-batch-size 1"
 
 if [ "$world_size" -ne 64 ]
 then
@@ -20,6 +25,14 @@ fi
 if [ $# -eq 3 ]
 then
   python dist_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF >> "./logs/${timestamp}_gpt3_xl_pp8_dp8_default.log"
+elif [ $# -eq 4 ]
+then
+  case=$4
+  export NCCL_SOCKET_IFNAME=ens3
+  export GLOO_SOCKET_IFNAME=ens3
+  sh ./scripts/tc_scripts/heterogeneous_setup_case"$case".sh
+  python dist_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF >> "./logs/${timestamp}_gpt3_xl_pp8_dp8_heter${case}.log"
+  sh ./scripts/tc_scripts/clear.sh
 elif [ $# -eq 5 ]
 then
   DELAY_MS=$4

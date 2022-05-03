@@ -35,6 +35,14 @@ log_path="./logs/${timestamp}_megatron_gpt3_xl_w${NNODES}_t${TENSOR_PARALLEL_SIZ
 if [ $# -eq 7 ]
 then
   python -m torch.distributed.launch $DISTRIBUTED_ARGS  ./dist_megatron_train_qqp.py $MODEL_ARGS $PARALLEL_ARGS $NLP_ARGS $HYPER_PARA_ARGS $OPTION_ARGS>> "${log_path}_default.log"
+elif [ $# -eq 8 ]
+then
+  case=$4
+  export NCCL_SOCKET_IFNAME=ens3
+  export GLOO_SOCKET_IFNAME=ens3
+  sh ./scripts/tc_scripts/heterogeneous_setup_case"$case".sh
+  python -m torch.distributed.launch $DISTRIBUTED_ARGS  ./dist_megatron_train_qqp.py $MODEL_ARGS $PARALLEL_ARGS $NLP_ARGS $HYPER_PARA_ARGS $OPTION_ARGS>> "${log_path}_heter${case}.log"
+  sh ./scripts/tc_scripts/clear.sh
 elif [ $# -eq 9 ]
 then
   DELAY_MS=$8
