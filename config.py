@@ -92,10 +92,10 @@ def simulate_1_datacenter_spot_gpu(nodes=64, group=(8, 4)):
 
 
 def simulate_2_multi_universities(nodes=64):
-    print("Simulate case 2: multi universities. 0~30 in Ohio, 31~63 in Virginia.")
+    print("Simulate case 2: multi universities. 0~15 in Ohio, 16~63 in Virginia.")
     delay = np.zeros((nodes, nodes))
     bandwidth = np.ones((nodes, nodes)) * 10
-    split = nodes//2 - 1
+    split = nodes//4
     regions = []
     for i in range(nodes):
         if i < split:

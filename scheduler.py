@@ -260,6 +260,25 @@ def all_candidate_partitions(nodes=None):
     return candidate_partitions
 
 
+def get_pipelines(candidate_partition=None, candidate_pipeline_parallel_path=None,
+                  candidate_pipeline_parallel_match=None):
+    candidate_pipeline = np.zeros(shape=(way, partition_size)).astype(int)
+    for stage_idx, partition_idx in enumerate(candidate_pipeline_parallel_path):
+        if stage_idx:
+            last_partition_idx = candidate_pipeline_parallel_path[stage_idx - 1]
+            bipartite_match = candidate_pipeline_parallel_match[last_partition_idx][partition_idx]
+            for match in bipartite_match:
+                for i in range(partition_size):
+                    if candidate_pipeline[stage_idx - 1][i] == candidate_partition[last_partition_idx][match[0]]:
+                        candidate_pipeline[stage_idx][i] = candidate_partition[partition_idx][match[1]]
+        else:
+            next_partition_idx = candidate_pipeline_parallel_path[stage_idx + 1]
+            bipartite_match = candidate_pipeline_parallel_match[partition_idx][next_partition_idx]
+            for i, match in enumerate(bipartite_match):
+                candidate_pipeline[0][i] = candidate_partition[0][i]
+    return candidate_pipeline
+
+
 def compute_data_parallel_cost(candidate_partition=None):
     data_parallel_cost = float('-inf')
     for partition in candidate_partition:
@@ -454,33 +473,14 @@ if __name__ == "__main__":
         print("data parallel cost: " + str(data_parallel_cost))
         print("pipeline parallel cost: " + str(2 * pipeline_parallel_cost))
 
-        output_pipelines = [[None for _ in range(
-            partition_size)] for _ in range(way)]
-        output_pipelines_in_idx = np.zeros(
-            shape=(way, partition_size)).astype(int)
-        for stage_idx, partition_idx in enumerate(pipeline_parallel_path):
-            if stage_idx:
-                bipartite_match = pipeline_parallel_match[pipeline_parallel_path[stage_idx - 1]
-                                                          ][pipeline_parallel_path[stage_idx]]
-                for match in bipartite_match:
-                    for i in range(partition_size):
-                        if output_pipelines[stage_idx - 1][i] == match[0]:
-                            output_pipelines[stage_idx][i] = match[1]
-            else:
-                bipartite_match = pipeline_parallel_match[pipeline_parallel_path[stage_idx]
-                                                          ][pipeline_parallel_path[stage_idx + 1]]
-                for i, match in enumerate(bipartite_match):
-                    output_pipelines[0][i] = match[0]
-
-            for i in range(partition_size):
-                output_pipelines_in_idx[stage_idx,
-                                        i] = candidate_partition[partition_idx][output_pipelines[stage_idx][i]]
-
+        candidate_pipeline = get_pipelines(
+            candidate_partition, pipeline_parallel_path, pipeline_parallel_match)
+        for stage_idx in range(way):
             if regions != None:
                 print("stage " + str(stage_idx) + ": ", end="")
                 for i in range(partition_size):
-                    region_id = output_pipelines_in_idx[stage_idx, i]
+                    region_id = candidate_pipeline[stage_idx, i]
                     print(regions[region_id] + (" " *
                           (10 - len(regions[region_id]))), end=", ")
                 print()
-        print(output_pipelines_in_idx)
+        print(candidate_pipeline)
