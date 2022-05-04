@@ -13,8 +13,3 @@ ips=(
 
 # private IP of Rank-0 instances.
 master_ip="172.31.33.246"
-
-# This is need to training scheduled examples.
-rank_map=(
-
-)

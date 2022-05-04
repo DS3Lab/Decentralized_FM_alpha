@@ -21,11 +21,17 @@ Report:
 
 Shared settings (GPT-XL):
 - Switching total layers: 24, 32, 40
-- Switching batch sizes: 1024, 1536, 2048
+- Switching batch sizes: 1024, 2048, 4096
 - Sequence length: 2048
 - Micro-batch size: 1
 - fp16
+- The PFlop for each setting:
 
+|            | Layer 24 | Layer 32 | Layer 40 |
+|------------|----------|----------|----------|
+| Batch 1024 | 23.64    | 31.52    | 39.41    |
+| Batch 2048 | 47.28    | 63.04    | 78.82    |
+| Batch 4096 | 94.56    | 126.08   | 157.64   |
 
 ## Case 1 
 

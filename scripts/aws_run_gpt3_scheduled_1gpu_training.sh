@@ -4,6 +4,10 @@ world_size=${#ips[@]}
 
 script=$1
 
+# This is need to training scheduled examples. Use generate_random_assignment.py to generate them (copy the result printout here).
+rank_map=(
+
+)
 
 for i in "${!ips[@]}"
 do
