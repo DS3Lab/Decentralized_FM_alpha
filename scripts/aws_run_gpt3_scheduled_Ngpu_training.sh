@@ -26,7 +26,7 @@ do
     echo "Running in default network."
     for (( i=0; i<${nodes_per_node[$node_rank]}; i++))
     do
-      ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "${rank_map[node_rank][i]}" "$i" &
+      ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[node_rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "${rank_map[node_rank][i]}" "$i" &
     done
   elif [ $# -eq 2 ]
   then
@@ -34,7 +34,7 @@ do
     echo "Running in heterogeneous network: Case-$case"
     for (( i=0; i<${nodes_per_node[$node_rank]}; i++))
     do
-      ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "${rank_map[node_rank][i]}" "$i" "$case" &
+      ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[node_rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "${rank_map[node_rank][i]}" "$i" "$case" &
     done
   elif [ $# -eq 3 ]
   then
@@ -43,7 +43,7 @@ do
     echo "Running homogeneous TC setting."
     for (( i=0; i<${nodes_per_node[$node_rank]}; i++))
     do
-      ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "${rank_map[node_rank][i]}" "$i" "$delay_ms" "$rate_gbit" &
+      ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[node_rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "${rank_map[node_rank][i]}" "$i" "$delay_ms" "$rate_gbit" &
     done
   else
     echo "Error! Not valid arguments."

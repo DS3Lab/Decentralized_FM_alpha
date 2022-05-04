@@ -14,7 +14,7 @@ do
     echo "Running in default network."
     for (( i=0; i<${nodes_per_node[$node_rank]}; i++))
     do
-      ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" "$i" &
+      ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[node_rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" "$i" &
       rank+=1
     done
   elif [ $# -eq 2 ]
@@ -23,7 +23,7 @@ do
     echo "Running in heterogeneous network: Case-$case"
     for (( i=0; i<${nodes_per_node[$node_rank]}; i++))
     do
-      ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" "$i" "$case" &
+      ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[node_rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" "$i" "$case" &
       rank+=1
     done
   elif [ $# -eq 3 ]
@@ -33,7 +33,7 @@ do
     echo "Running homogeneous TC setting."
     for (( i=0; i<${nodes_per_node[$node_rank]}; i++))
     do
-      ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" "$i" "$delay_ms" "$rate_gbit" &
+      ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[node_rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" "$i" "$delay_ms" "$rate_gbit" &
       rank+=1
     done
   else

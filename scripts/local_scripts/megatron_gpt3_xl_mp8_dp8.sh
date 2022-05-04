@@ -33,7 +33,7 @@ HYPER_PARA_ARGS="--optimizer sgd --lr 0.0001 --train-iters 3"
 OPTION_ARGS="--fp16 --checkpoint-activations"
 timestamp=$(date +%Y_%m_%d_%H_%M)
 
-log_path="./logs/${timestamp}_megatron_gpt3_xl_w${NNODES}_t${TENSOR_PARALLEL_SIZE}_p${PIPELINE_PARALLEL_SIZE}_l${num_layers}_b${global_batch_size}"
+log_path="./logs/${timestamp}_megatron_gpt3_xl_w${NNODES}_t${TENSOR_PARALLEL_SIZE}_p${PIPELINE_PARALLEL_SIZE}_l${num_layers}_b${global_batch_size}_rank${rank}"
 
 if [ $# -eq 7 ]
 then

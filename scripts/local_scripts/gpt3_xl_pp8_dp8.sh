@@ -10,9 +10,9 @@ timestamp=$(date +%Y_%m_%d_%H_%M)
 dp_mode=central_ps
 
 # Change the script here for different settings.
-ga_step=2
-num_layers=3
-batch_size=64
+ga_step=8
+num_layers=5
+batch_size=62
 
 let "global_batch_size = $ga_step*$batch_size*8"
 
@@ -25,7 +25,7 @@ then
   exit 1
 fi
 
-log_path="./logs/${timestamp}_gpt3_xl_pp8_dp8_l${num_layers}_b${global_batch_size}"
+log_path="./logs/${timestamp}_gpt3_xl_pp8_dp8_l${num_layers}_b${global_batch_size}_rank${rank}"
 
 if [ $# -eq 4 ]
 then
