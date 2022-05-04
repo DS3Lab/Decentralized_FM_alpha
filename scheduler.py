@@ -266,7 +266,7 @@ def get_pipelines(candidate_partition=None, candidate_pipeline_parallel_path=Non
 
     for stage_idx, partition_idx in enumerate(candidate_pipeline_parallel_path):
         for i in range(partition_size):
-            candidate_pipeline[stage_idx][i] = candidate_partition[stage_idx][candidate_pipeline[stage_idx][i]]
+            candidate_pipeline[stage_idx][i] = candidate_partition[partition_idx][candidate_pipeline[stage_idx][i]]
     assert(np.sum(candidate_pipeline) == np.sum(range(num_devices)))
     return candidate_pipeline
 
