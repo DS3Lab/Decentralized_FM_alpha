@@ -178,29 +178,16 @@ def GCMA(nodes=None, population_size=None, trails=None):
 
     candidate_scores = []
     candidate_partitions = []
-    pre_clustering = False
     for i in range(population_size):
         cur_nodes = nodes.copy()
         random.seed = i
         random.shuffle(cur_nodes)
-        if pre_clustering:
-            clusters = []
-            for _ in range(way):
-                clusters.append([cur_nodes.pop(0)])
-                cost_array = []
-                for cur_node in cur_nodes:
-                    cost_array.append(peer_delay[clusters[-1][0], cur_node]/1e3 + (
-                        send_activation_size + send_gradient_size) * 8 / peer_bandwidth[clusters[-1][0], cur_node])
-                while len(clusters[-1]) < partition_size:
-                    min_cost_idx = np.argmin(cost_array)
-                    clusters[-1].append(cur_nodes.pop(min_cost_idx))
-                    cost_array.pop(min_cost_idx)
-            cur_nodes = list(itertools.chain.from_iterable(clusters))
         candidate_partitions.append(cur_nodes)
 
     for candidate_partition in candidate_partitions:
         candidate_partition = [candidate_partition[i: i + partition_size]
                                for i in range(0, num_devices, partition_size)]
+        candidate_partition = sort_pipelines(candidate_partition)
         data_parallel_cost = compute_data_parallel_cost(
             candidate_partition=candidate_partition)
         pipeline_parallel_cost, pipeline_parallel_path, pipeline_parallel_match = compute_pipeline_parallel_cost(
@@ -269,14 +256,52 @@ def get_pipelines(candidate_partition=None, candidate_pipeline_parallel_path=Non
             bipartite_match = candidate_pipeline_parallel_match[last_partition_idx][partition_idx]
             for match in bipartite_match:
                 for i in range(partition_size):
-                    if candidate_pipeline[stage_idx - 1][i] == candidate_partition[last_partition_idx][match[0]]:
-                        candidate_pipeline[stage_idx][i] = candidate_partition[partition_idx][match[1]]
+                    if candidate_pipeline[stage_idx - 1][i] == match[0]:
+                        candidate_pipeline[stage_idx][i] = match[1]
         else:
             next_partition_idx = candidate_pipeline_parallel_path[stage_idx + 1]
             bipartite_match = candidate_pipeline_parallel_match[partition_idx][next_partition_idx]
             for i, match in enumerate(bipartite_match):
-                candidate_pipeline[0][i] = candidate_partition[0][i]
+                candidate_pipeline[0][i] = match[0]
+
+    for stage_idx, partition_idx in enumerate(candidate_pipeline_parallel_path):
+        for i in range(partition_size):
+            candidate_pipeline[stage_idx][i] = candidate_partition[stage_idx][candidate_pipeline[stage_idx][i]]
+    assert(np.sum(candidate_pipeline) == np.sum(range(num_devices)))
     return candidate_pipeline
+
+
+def sort_pipelines(candidate_pipeline=None):
+    sorted_pipelines = [[] for _ in range(way)]
+    for pipeline_idx in range(partition_size):
+        cost_matrix = np.full(shape=(way, way), fill_value=np.inf)
+        for i in range(way):
+            for j in range(i+1, way):
+                cost_matrix[i, j] = peer_delay[candidate_pipeline[i][pipeline_idx], candidate_pipeline[j][pipeline_idx]]/1e3 + \
+                    send_gradient_size * 8 / \
+                    peer_bandwidth[candidate_pipeline[i][pipeline_idx],
+                                   candidate_pipeline[j][pipeline_idx]]
+                cost_matrix[j, i] = cost_matrix[i, j]
+
+        cur_pipeline = []
+        while len(cur_pipeline) < way:
+            min_idx = np.argmin(cost_matrix)
+            p = min_idx // way
+            q = min_idx - p * way
+            if p not in cur_pipeline:
+                cur_pipeline.append(p)
+            cost_matrix[p] = np.inf
+            cost_matrix[:, p] = np.inf
+            if p == cur_pipeline[-1]:
+                cur_pipeline.append(q)
+                cost_matrix[:, q] = np.inf
+        assert(np.sum(cur_pipeline) == np.sum(list(range(way))))
+
+        for i in range(way):
+            sorted_pipelines[i].append(
+                candidate_pipeline[cur_pipeline[i]][pipeline_idx])
+    assert(np.sum(sorted_pipelines) == np.sum(list(range(num_devices))))
+    return sorted_pipelines
 
 
 def compute_data_parallel_cost(candidate_partition=None):
