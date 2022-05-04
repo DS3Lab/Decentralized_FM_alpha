@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import torch.autograd.profiler as profiler
 from tasks.data_loaders.wikitext import get_wikitext_train_data_loader, get_wikitext_test_data_loader
+from tasks.data_loaders.wiki103 import get_wiki103_train_data_loader, get_wiki103_test_data_loader
 from modules.gpt_modules import GPTConfig
 from modules.tokenizer import build_tokenizer
 from pipeline_parallel.dist_1f1b_pipeline_async import Pipe1F1BAsync
@@ -91,6 +92,9 @@ def main():
     if args.task_name == 'wikitext':
         train_data_loader = get_wikitext_train_data_loader(args, tokenizer)
         test_data_loader = get_wikitext_test_data_loader(args, tokenizer)
+    elif args.task_name == 'wiki103':
+        train_data_loader = get_wiki103_train_data_loader(args, tokenizer)
+        test_data_loader = get_wiki103_test_data_loader(args, tokenizer)
     else:
         raise Exception('unknown task.')
         

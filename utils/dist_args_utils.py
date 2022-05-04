@@ -98,7 +98,7 @@ def add_acitvation_compression_arguments(parser):
                         help='-')
     parser.add_argument('--forward-scale-method', type=str, default='max', metavar='N',
                         help='-')
-    parser.add_argument('--forward-scale-dims', type=lambda x: (int(i) for i in x.lstrip('(').rstrip(')').split(',')), 
+    parser.add_argument('--forward-scale-dims', type=lambda x: tuple(int(i) for i in x.lstrip('(').rstrip(')').split(',') if i.strip() != ''), 
                         default=(0,1), metavar='N',
                         help='-')
     parser.add_argument('--backward-compress-method', type=str, default='none', metavar='N',
@@ -109,7 +109,7 @@ def add_acitvation_compression_arguments(parser):
                         help='-')
     parser.add_argument('--backward-scale-method', type=str, default='max', metavar='N',
                         help='-')
-    parser.add_argument('--backward-scale-dims', type=lambda x: (int(i) for i in x.lstrip('(').rstrip(')').split(',')), 
+    parser.add_argument('--backward-scale-dims', type=lambda x: tuple(int(i) for i in x.lstrip('(').rstrip(')').split(',') if i.strip() != ''), 
                         default=(0,1), metavar='N',
                         help='-')
     

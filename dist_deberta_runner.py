@@ -81,6 +81,8 @@ def main():
     
     config = DebertaV2Config.from_pretrained(args.model_name)
     config.num_hidden_layers = args.num_layers  # num_layers per node
+#     config.hidden_dropout_prob = 0.0
+#     config.attention_probs_dropout_prob = 0.0
     
     tokenizer = build_tokenizer(args)
     tokenizer.model_max_length = args.seq_length
@@ -139,7 +141,7 @@ def main():
                 )
             if hasattr(pipe.model.encoder, 'conv') and pipe.model.encoder.conv is not None:
                 pipe.model.encoder.conv.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_ln.pt')
+                    torch.load(f'{args.model_name}/pytorch_conv.pt')
                 )
         elif get_pipeline_parallel_rank() == args.pipeline_group_size-1:
             _i = get_pipeline_parallel_rank() * args.num_layers
@@ -156,11 +158,11 @@ def main():
                     torch.load(f'{args.model_name}/pytorch_ln.pt')
                 )
             if hasattr(pipe.model.encoder, 'conv') and pipe.model.encoder.conv is not None:
+                raise Exception('should not have conv')
                 pipe.model.encoder.conv.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_ln.pt')
+                    torch.load(f'{args.model_name}/pytorch_conv.pt')
                 )
         else:
-            _i = get_pipeline_parallel_rank() * args.num_layers
             _i = get_pipeline_parallel_rank() * args.num_layers
             for i in range(len(pipe.model.encoder.layer)):
                 pipe.model.encoder.layer[i].load_state_dict(
@@ -175,9 +177,11 @@ def main():
                     torch.load(f'{args.model_name}/pytorch_ln.pt')
                 )
             if hasattr(pipe.model.encoder, 'conv') and pipe.model.encoder.conv is not None:
+                raise Exception('should not have conv')
                 pipe.model.encoder.conv.load_state_dict(
                     torch.load(f'{args.model_name}/pytorch_conv.pt')
-                )          
+                )      
+
 
     if args.profiling == 'no-profiling':
         train_loop(args, pipe, device, train_data_loader, test_data_loader)

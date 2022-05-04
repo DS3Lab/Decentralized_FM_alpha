@@ -296,7 +296,7 @@ class GpipeAsync:
                     self.profile_mark_forward_comp_start(i)
                     current_micro_output = self.model(
                         self.input_micro_batches[i], 
-                        **{k: v[0] for k, v in aux_input_data.items()}
+                        **{k: v[i] for k, v in aux_input_data.items()}
                     )
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
@@ -324,7 +324,7 @@ class GpipeAsync:
                     self.profile_mark_forward_comp_start(i)
                     current_micro_output = self.model(
                         self.input_micro_batches[i], input_ids=input_ids_micro_batches[i], 
-                        **{k: v[0] for k, v in aux_input_data.items()}
+                        **{k: v[i] for k, v in aux_input_data.items()}
                     )
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
             else:  # receive, compute, and send
@@ -342,7 +342,7 @@ class GpipeAsync:
                     self.profile_mark_forward_comp_start(i)
                     current_micro_output = self.model(
                         self.input_micro_batches[i], 
-                        **{k: v[0] for k, v in aux_input_data.items()}
+                        **{k: v[i] for k, v in aux_input_data.items()}
                     )
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
@@ -609,7 +609,7 @@ class GpipeAsync:
                 with torch.cuda.stream(self.torch_comp_stream):
                     current_micro_output = self.model(
                         self.input_micro_batches[i], 
-                        **{k: v[0] for k, v in aux_input_data.items()},
+                        **{k: v[i] for k, v in aux_input_data.items()},
                     )
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
@@ -625,7 +625,7 @@ class GpipeAsync:
                     self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
                     current_micro_output = self.model(
                         self.input_micro_batches[i], input_ids=input_ids_micro_batches[i],
-                        **{k: v[0] for k, v in aux_input_data.items()},
+                        **{k: v[i] for k, v in aux_input_data.items()},
                     )
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
             else:  # receive, compute, and send
@@ -637,7 +637,7 @@ class GpipeAsync:
                     self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
                     current_micro_output = self.model(
                         self.input_micro_batches[i],
-                        **{k: v[0] for k, v in aux_input_data.items()},
+                        **{k: v[i] for k, v in aux_input_data.items()},
                     )
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
@@ -654,7 +654,8 @@ class GpipeAsync:
                    metrics=None, aux_input_data=None, pred_func=lambda x, y: x.argmax(-1)):
         self.comm.barrier()
         torch.cuda.synchronize()
-        outputs = self.infer_stage(input_, aux_input_data=aux_input_data)
+        with torch.no_grad():
+            outputs = self.infer_stage(input_, aux_input_data=aux_input_data)
         if metrics is not None:
             outputs = pred_func(torch.cat(outputs, 0), target)
             for metric in metrics:

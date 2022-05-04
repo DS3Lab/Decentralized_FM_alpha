@@ -13,7 +13,7 @@ from transformers.models.deberta_v2.modeling_deberta_v2 import DebertaV2Encoder 
 from transformers.models.deberta_v2.configuration_deberta_v2 import DebertaV2Config
 from transformers.models.deberta_v2.modeling_deberta_v2 import StableDropout, ContextPooler 
     
-
+    
 class DebertaV2Layers(_DebertaV2Encoder):
     def __init__(self, config, first_block=False):
         super(_DebertaV2Encoder, self).__init__()
@@ -112,7 +112,9 @@ class DebertaClassificationHead(nn.Module):
         super().__init__()
         self.config = config
         self.pooler = ContextPooler(config)
-        self.classifier = nn.Linear(self.pooler.output_dim, getattr(config, "num_labels", 2))
+        self.classifier = nn.Linear(
+            self.pooler.output_dim, getattr(config, "num_labels", 2),
+        )
         
         drop_out = getattr(config, "cls_dropout", None)
         drop_out = self.config.hidden_dropout_prob if drop_out is None else drop_out
