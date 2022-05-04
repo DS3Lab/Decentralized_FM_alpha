@@ -16,7 +16,7 @@ batch_size=62
 
 let "global_batch_size = $ga_step*$batch_size*8"
 
-DIST_CONF="--pp-mode gpipe --dp-mode $dp_mode --gradient-accumulate-step $ga_step --world-size $world_size --pipeline-group-size 8 --data-group-size 8 --rank $rank --cuda-id $cuda_id"
+DIST_CONF="--rank $rank --cuda-id $cuda_id --pp-mode gpipe --dp-mode $dp_mode --gradient-accumulate-step $ga_step --world-size $world_size --pipeline-group-size 8 --data-group-size 8"
 MODEL_CONF="--embedding-dim 2048 --num-heads 16 --num-layers $num_layers --batch-size $batch_size --micro-batch-size 1"
 
 if [ "$world_size" -ne 64 ]

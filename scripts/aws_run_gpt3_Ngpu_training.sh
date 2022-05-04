@@ -8,7 +8,7 @@ script=$1
 declare -i rank=0
 for node_rank in "${!ips[@]}"
 do
-  echo "Issue command $script in Rank-$rank node: ${ips[node_rank]}"
+  echo "Issue command $script in Rank-${node_rank} node: ${ips[node_rank]}"
   if [ $# -eq 1 ]
   then
     echo "Running in default network."

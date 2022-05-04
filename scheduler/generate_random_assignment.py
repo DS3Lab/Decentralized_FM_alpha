@@ -13,12 +13,10 @@ def random_assignment_0_datacenter(nodes=64):
     for i in range(instances):
         print(gpu_per_instances, end='' if i==instances-1 else ' ')
     print(')')
-    print('rank_map=(')
-    for i in range(instances):
-        print('(', end='')
-        for j in range(gpu_per_instances):
-            print(result[i*gpu_per_instances+j], end='' if j==gpu_per_instances-1 else ' ')
-        print(')')
+    print('rank_map=(', end='')
+    for i in range(len(result)):
+        val = result[i]
+        print(val, end='' if i==nodes-1 else ' ')
     print(')')
 
 
