@@ -3,7 +3,7 @@
 ## Scenarios
 
 - Case 1 data center on demand: 8 X p3.16xlarge(8 V100)
-- Case 2 data center spot: 8 * p3.8xlarge(4 V100) + 32 p3.2xlarge
+- Case 2 data center spot: 8 * p3.8xlarge(4 V100) + 32 p3.2xlarge (1 V100)
 - Case 3 
 
 ## Compare Group
@@ -33,8 +33,7 @@ Shared settings (GPT-XL):
 | Batch 2048 | 47.28    | 63.04    | 78.82    |
 | Batch 4096 | 94.56    | 126.08   | 157.64   |
 
-## Case 1 
-
+## Case 1
 
 - Notes:
   - Use aws_run_gpt3_Ngpu_training.sh for ours w scheduler; 
@@ -71,4 +70,19 @@ Shared settings (GPT-XL):
 | L40 B4096 | 1.413       | 2.161        | 2.930            | 1.776             |
 
 
+## Case 2
+
+- One iteration runtime (in seconds):
+
+| Setting   | Megatron-P8 | Megatron-T8 | Megatron-P4T2 | Megatron-P2T4 | Ours w scheduler | Ours wo Scheduler |
+|-----------|-------------|-------------|---------------|---------------|------------------|-------------------|
+| L24 B1024 |             |             |               |               | 12.33            |                   |
+| L24 B2048 |             |             |               |               | 22.92            |                   |
+| L24 B4096 |             |             |               |               | 45.24            |                   |
+| L32 B1024 |             |             |               |               | 15.73            |                   |
+| L32 B2048 |             |             |               |               | 28.97            |                   |
+| L32 B4096 |             |             |               |               | 55.99            |                   |
+| L40 B1024 |             |             |               |               | 18.43            |                   |
+| L40 B2048 |             |             |               |               | 34.39            |                   |
+| L40 B4096 |             |             |               |               | 67.23            |                   |
 
