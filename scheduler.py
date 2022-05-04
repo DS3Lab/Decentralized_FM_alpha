@@ -106,6 +106,7 @@ def GCMA(nodes=None, population_size=None, trails=None):
                 if v_idx != None:
                     for target_partition_idx, target_gain in enumerate(gain[v_idx]):
                         if target_partition_idx != partition_idx:
+                            target_gain -= gain[v_idx][cur_offspring[v_idx]]
                             if target_gain > G_ij[partition_idx, target_partition_idx]:
                                 G_ij[partition_idx,
                                      target_partition_idx] = target_gain
@@ -187,7 +188,6 @@ def GCMA(nodes=None, population_size=None, trails=None):
     for candidate_partition in candidate_partitions:
         candidate_partition = [candidate_partition[i: i + partition_size]
                                for i in range(0, num_devices, partition_size)]
-        candidate_partition = sort_pipelines(candidate_partition)
         data_parallel_cost = compute_data_parallel_cost(
             candidate_partition=candidate_partition)
         pipeline_parallel_cost, pipeline_parallel_path, pipeline_parallel_match = compute_pipeline_parallel_cost(
