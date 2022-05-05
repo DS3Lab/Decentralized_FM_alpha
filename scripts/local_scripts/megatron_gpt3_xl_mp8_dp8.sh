@@ -17,8 +17,8 @@ NODE_RANK=$7
 WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
 
 # change this for different experiments
-num_layers=40
-global_batch_size=4096
+num_layers=24
+global_batch_size=1024
 
 VOCAB_FILE=glue_dataset/data/bert-large-cased-vocab.txt
 TRAIN_FILE=glue_dataset/data/QQP/train.tsv
@@ -33,7 +33,7 @@ HYPER_PARA_ARGS="--optimizer sgd --lr 0.0001 --train-iters 3"
 OPTION_ARGS="--fp16 --checkpoint-activations"
 timestamp=$(date +%Y_%m_%d_%H_%M)
 
-log_path="./logs/${timestamp}_megatron_gpt3_xl_w${NNODES}_t${TENSOR_PARALLEL_SIZE}_p${PIPELINE_PARALLEL_SIZE}_l${num_layers}_b${global_batch_size}_rank${rank}"
+log_path="./logs/${timestamp}_megatron_gpt3_xl_w${NNODES}_t${TENSOR_PARALLEL_SIZE}_p${PIPELINE_PARALLEL_SIZE}_l${num_layers}_b${global_batch_size}"
 
 if [ $# -eq 7 ]
 then

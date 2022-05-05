@@ -2,8 +2,14 @@
 
 ## Scenarios
 
-- Case 1 data center on demand: 8 X p3.16xlarge(8 V100)
-- Case 2 data center spot: 8 * p3.8xlarge(4 V100) + 32 p3.2xlarge (1 V100)
+- Case 1 data center on demand: 
+  - 8 X p3.16xlarge (8 V100)
+  - Intra-instance bandwidth 100 Gbps
+  - Inter-instance bandwidth 25 Gbps
+- Case 2 data center spot: 
+  - 8 * p3.8xlarge(4 V100) + 32 p3.2xlarge (1 V100)
+  - Intra-instance bandwidth 100 Gbps
+  - Inter-instance bandwidth 10 Gbps
 - Case 3 
 
 ## Compare Group
@@ -76,13 +82,26 @@ Shared settings (GPT-XL):
 
 | Setting   | Megatron-P8 | Megatron-T8 | Megatron-P4T2 | Megatron-P2T4 | Ours w scheduler | Ours wo Scheduler |
 |-----------|-------------|-------------|---------------|---------------|------------------|-------------------|
-| L24 B1024 |             |             |               |               | 12.33            |                   |
-| L24 B2048 |             |             |               |               | 22.92            |                   |
-| L24 B4096 |             |             |               |               | 45.24            |                   |
-| L32 B1024 |             |             |               |               | 15.73            |                   |
-| L32 B2048 |             |             |               |               | 28.97            |                   |
-| L32 B4096 |             |             |               |               | 55.99            |                   |
-| L40 B1024 |             |             |               |               | 18.43            |                   |
-| L40 B2048 |             |             |               |               | 34.39            |                   |
-| L40 B4096 |             |             |               |               | 67.23            |                   |
+| L24 B1024 | 21.31       | 265.42      | 48.48         | 118.99        | 12.33            | 15.30             |
+| L24 B2048 | 42.37       | -           | -             | -             | 22.92            | 28.12             |
+| L24 B4096 | 83.57       | -           | -             | -             | 45.24            | 53.72             |
+| L32 B1024 | 23.18       | -           | -             | -             | 15.73            | 18.73             |
+| L32 B2048 | 43.68       | -           | -             | -             | 28.97            | 33.48             |
+| L32 B4096 | 85.54       | -           | -             | -             | 55.99            | 64.44             |
+| L40 B1024 | 25.29       | -           | -             | -             | 18.43            | 21.67             |
+| L40 B2048 | 49.41       | -           | -             | -             | 34.39            | 40.03             |
+| L40 B4096 | 96.16       | -           | -             | -             | 67.23            | 77.20             |
 
+- Hardware Efficiency (by PFlops):
+
+| Setting    | Megatron-PP(Opt) | Ours w scheduler | Ours wo Scheduler |
+|------------|------------------|------------------|-------------------|
+| L24 B1028  | 1.109            | 	1.917           | 	1.545            |
+| L24 B2048  | 1.116            | 	2.063           | 	1.681            |
+| L24 B4096  | 1.132            | 	2.090           | 	1.760            |
+| L32 B1024  | 1.360            | 	2.004           | 	1.683            |
+| L32 B2048  | 1.443            | 	2.176           | 	1.883            |
+| L32 B4096  | 1.474            | 	2.252           | 	1.957            |
+| L40 B1024  | 1.558            | 	2.138           | 	1.819            |
+| L40 B2048  | 1.595            | 	2.292           | 	1.969            |
+| L40 B4096  | 1.639            | 	2.345           | 	2.042            |
