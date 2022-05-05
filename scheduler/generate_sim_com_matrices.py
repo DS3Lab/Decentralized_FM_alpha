@@ -56,11 +56,11 @@ delay_bandwidth_dict = {
 def simulate_0_datacenter(nodes=64):
     print("Simulate case 0: on-demand datacenter.")
     delay = np.zeros((nodes, nodes))
-    bandwidth = np.ones((nodes, nodes)) * 25
+    bandwidth = np.ones((nodes, nodes)) * 3.125
     gpu_per_instances = min(nodes//2, 8)
     instances = nodes // gpu_per_instances
     bandwidth_blocks = [
-        np.ones((gpu_per_instances, gpu_per_instances))*75 for _ in range(instances)]
+        np.ones((gpu_per_instances, gpu_per_instances))*96.875 for _ in range(instances)]
     bandwidth = bandwidth + scipy.linalg.block_diag(*bandwidth_blocks)
     regions = []
     for i in range(nodes):
@@ -73,10 +73,10 @@ def simulate_0_datacenter(nodes=64):
 def simulate_1_datacenter_spot_gpu(nodes=64, group=(8, 4)):
     print("Simulate case 1: spot datacenter.")
     delay = np.zeros((nodes, nodes))
-    bandwidth = np.ones((nodes, nodes)) * 10
+    bandwidth = np.ones((nodes, nodes)) * 1.25
     instance_num = group[0]
     gpu_per_instances = group[1]
-    bandwidth_blocks = [np.ones((gpu_per_instances, gpu_per_instances)) * (90 if i < instance_num else 0)
+    bandwidth_blocks = [np.ones((gpu_per_instances, gpu_per_instances)) * (98.75 if i < instance_num else 0)
                         for i in range(nodes//gpu_per_instances)]
     bandwidth = bandwidth + scipy.linalg.block_diag(*bandwidth_blocks)
 
@@ -86,10 +86,10 @@ def simulate_1_datacenter_spot_gpu(nodes=64, group=(8, 4)):
 
 
 def simulate_2_multi_universities(nodes=64):
-    print("Simulate case 2: multi universities. 0~30 in Ohio, 31~63 in Virginia.")
+    print("Simulate case 2: multi universities. 0~31 in Ohio, 32~63 in Virginia.")
     delay = np.zeros((nodes, nodes))
     bandwidth = np.ones((nodes, nodes)) * 10
-    split = nodes//2 - 1
+    split = nodes//2
     regions = []
     for i in range(nodes):
         if i < split:

@@ -13,7 +13,6 @@ def random_assignment(nodes=64):
     print(')')
 
 
-
 def random_assignment_0_datacenter(nodes=64):
     print("Generate random_assignment_0_datacenter")
     np.random.seed(2022)
@@ -66,11 +65,13 @@ def optimal_assignment_1_datacenter_spot(gpu_per_instances=4, multi_gpu_instance
 
 
 def random_assignment_2_multi_universities(nodes):
+    print("Generate random_assignment_2_multi_universities")
     random_assignment(nodes)
 
 
 def optimal_assignment_2_multi_university(nodes):
     # no need to
+    print("Generate optimal_assignment_2_multi_university")
     print("No special alignment.")
 
 

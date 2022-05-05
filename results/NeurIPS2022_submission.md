@@ -10,7 +10,19 @@
   - 8 * p3.8xlarge(4 V100) + 32 p3.2xlarge (1 V100)
   - Intra-instance bandwidth 100 Gbps
   - Inter-instance bandwidth 10 Gbps
-- Case 3 
+- Case 3 Multiple universities: 
+  - 2 universities (each has 32 V100 GPUs)
+  - With in each university bandwidth: 10 Gbps 
+  - Connection between regions: 1.2 Gbps
+- Case 4 Regional distributed: 
+  - 4 regions in Europe 
+  - Within each region 2 Gbps 
+  - across different region 0.8 ~ 1.1 Gbps
+- Case 5 World-wide distributed: 
+  - 8 regions around the work 
+  - Within each region 1 Gbps
+  - Across different region 0.3 ~ 1.1 Gbps
+
 
 ## Compare Group
 
@@ -39,7 +51,7 @@ Shared settings (GPT-XL):
 | Batch 2048 | 47.28    | 63.04    | 78.82    |
 | Batch 4096 | 94.56    | 126.08   | 157.64   |
 
-## Case 1
+## Case 1 Data Center on Demand
 
 - Notes:
   - Use aws_run_gpt3_Ngpu_training.sh for ours w scheduler; 
@@ -76,7 +88,12 @@ Shared settings (GPT-XL):
 | L40 B4096 | 1.413       | 2.161        | 2.930            | 1.776             |
 
 
-## Case 2
+## Case 2 Data Center Spot
+
+- Notes:
+  - Use aws_run_megatron_heter_gpu_training.sh to run Megatron 
+  - Use aws_run_gpt3_Ngpu_training.sh for ours w scheduler; 
+  - Use aws_run_gpt3_scheduled_Ngpu_training.sh for ours wo scheduler;
 
 - One iteration runtime (in seconds):
 
@@ -96,12 +113,111 @@ Shared settings (GPT-XL):
 
 | Setting    | Megatron-PP(Opt) | Ours w scheduler | Ours wo Scheduler |
 |------------|------------------|------------------|-------------------|
-| L24 B1028  | 1.109            | 	1.917           | 	1.545            |
-| L24 B2048  | 1.116            | 	2.063           | 	1.681            |
-| L24 B4096  | 1.132            | 	2.090           | 	1.760            |
-| L32 B1024  | 1.360            | 	2.004           | 	1.683            |
-| L32 B2048  | 1.443            | 	2.176           | 	1.883            |
-| L32 B4096  | 1.474            | 	2.252           | 	1.957            |
-| L40 B1024  | 1.558            | 	2.138           | 	1.819            |
-| L40 B2048  | 1.595            | 	2.292           | 	1.969            |
-| L40 B4096  | 1.639            | 	2.345           | 	2.042            |
+| L24 B1028  | 1.109            | 1.917            | 1.545             |
+| L24 B2048  | 1.116            | 2.063            | 1.681             |
+| L24 B4096  | 1.132            | 2.090            | 1.760             |
+| L32 B1024  | 1.360            | 2.004            | 1.683             |
+| L32 B2048  | 1.443            | 2.176            | 1.883             |
+| L32 B4096  | 1.474            | 2.252            | 1.957             |
+| L40 B1024  | 1.558            | 2.138            | 1.819             |
+| L40 B2048  | 1.595            | 2.292            | 1.969             |
+| L40 B4096  | 1.639            | 2.345            | 2.042             |
+
+
+## Case 3 Multiple Universities
+
+- Notes:
+  - Generate tc scripts: aws_generate_heter_tc.sh 2
+  - Use aws_run_gpt3_1gpu_training.sh for ours w scheduler; 
+  - Use aws_run_gpt3_scheduled_1gpu_training.sh for ours wo scheduler;
+  - Use aws_run_megatron_training.sh for different Megatron Settings.
+
+- One iteration runtime
+
+| Setting   | Megatron-P8 | Megatron-T8 | Megatron-P4T2 | Megatron-P2T4 | Ours w scheduler | Ours wo Scheduler |
+|-----------|-------------|-------------|---------------|---------------|------------------|-------------------|
+| L24 B1024 |             |             |               |               |                  |                   |
+| L24 B2048 |             | -           | -             | -             |                  |                   |
+| L24 B4096 |             | -           | -             | -             |                  |                   |
+| L32 B1024 |             | -           | -             | -             |                  |                   |
+| L32 B2048 |             | -           | -             | -             |                  |                   |
+| L32 B4096 |             | -           | -             | -             |                  |                   |
+| L40 B1024 |             | -           | -             | -             |                  |                   |
+| L40 B2048 |             | -           | -             | -             |                  |                   |
+| L40 B4096 |             | -           | -             | -             |                  |                   |
+
+- Hardware Efficiency (by PFlops):
+
+| Setting    | Megatron-PP(Opt) | Ours w scheduler | Ours wo Scheduler |
+|------------|------------------|------------------|-------------------|
+| L24 B1028  |                  |                  |                   |
+| L24 B2048  |                  |                  |                   |
+| L24 B4096  |                  |                  |                   |
+| L32 B1024  |                  |                  |                   |
+| L32 B2048  |                  |                  |                   |
+| L32 B4096  |                  |                  |                   |
+| L40 B1024  |                  |                  |                   |
+| L40 B2048  |                  |                  |                   |
+| L40 B4096  |                  |                  |                   |
+
+
+## Case 4 Regional Distributed
+
+- One iteration runtime 
+
+| Setting   | Megatron-P8 | Megatron-T8 | Megatron-P4T2 | Megatron-P2T4 | Ours w scheduler | Ours wo Scheduler |
+|-----------|-------------|-------------|---------------|---------------|------------------|-------------------|
+| L24 B1024 |             |             |               |               |                  |                   |
+| L24 B2048 |             | -           | -             | -             |                  |                   |
+| L24 B4096 |             | -           | -             | -             |                  |                   |
+| L32 B1024 |             | -           | -             | -             |                  |                   |
+| L32 B2048 |             | -           | -             | -             |                  |                   |
+| L32 B4096 |             | -           | -             | -             |                  |                   |
+| L40 B1024 |             | -           | -             | -             |                  |                   |
+| L40 B2048 |             | -           | -             | -             |                  |                   |
+| L40 B4096 |             | -           | -             | -             |                  |                   |
+
+- Hardware Efficiency (by PFlops):
+
+| Setting    | Megatron-PP(Opt) | Ours w scheduler | Ours wo Scheduler |
+|------------|------------------|------------------|-------------------|
+| L24 B1028  |                  |                  |                   |
+| L24 B2048  |                  |                  |                   |
+| L24 B4096  |                  |                  |                   |
+| L32 B1024  |                  |                  |                   |
+| L32 B2048  |                  |                  |                   |
+| L32 B4096  |                  |                  |                   |
+| L40 B1024  |                  |                  |                   |
+| L40 B2048  |                  |                  |                   |
+| L40 B4096  |                  |                  |                   |
+
+
+## Case 5 World-wide Distributed 
+
+- One iteration runtime 
+
+| Setting   | Megatron-P8 | Megatron-T8 | Megatron-P4T2 | Megatron-P2T4 | Ours w scheduler | Ours wo Scheduler |
+|-----------|-------------|-------------|---------------|---------------|------------------|-------------------|
+| L24 B1024 |             |             |               |               |                  |                   |
+| L24 B2048 |             | -           | -             | -             |                  |                   |
+| L24 B4096 |             | -           | -             | -             |                  |                   |
+| L32 B1024 |             | -           | -             | -             |                  |                   |
+| L32 B2048 |             | -           | -             | -             |                  |                   |
+| L32 B4096 |             | -           | -             | -             |                  |                   |
+| L40 B1024 |             | -           | -             | -             |                  |                   |
+| L40 B2048 |             | -           | -             | -             |                  |                   |
+| L40 B4096 |             | -           | -             | -             |                  |                   |
+
+- Hardware Efficiency (by PFlops):
+
+| Setting    | Megatron-PP(Opt) | Ours w scheduler | Ours wo Scheduler |
+|------------|------------------|------------------|-------------------|
+| L24 B1028  |                  |                  |                   |
+| L24 B2048  |                  |                  |                   |
+| L24 B4096  |                  |                  |                   |
+| L32 B1024  |                  |                  |                   |
+| L32 B2048  |                  |                  |                   |
+| L32 B4096  |                  |                  |                   |
+| L40 B1024  |                  |                  |                   |
+| L40 B2048  |                  |                  |                   |
+| L40 B4096  |                  |                  |                   |
