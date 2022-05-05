@@ -1,24 +1,29 @@
 import numpy as np
 
 
+def random_assignment(nodes=64):
+    arr = np.arange(1, nodes)
+    np.random.shuffle(arr)
+    result = arr.tolist()
+    result.insert(0, 0)
+    print('rank_map=(', end='')
+    for i in range(len(result)):
+        val = result[i]
+        print(val, end='' if i == nodes - 1 else ' ')
+    print(')')
+
+
+
 def random_assignment_0_datacenter(nodes=64):
     print("Generate random_assignment_0_datacenter")
     np.random.seed(2022)
     gpu_per_instances = min(nodes // 2, 8)
     instances = nodes // gpu_per_instances
-    arr = np.arange(1, nodes)
-    np.random.shuffle(arr)
-    result = arr.tolist()
-    result.insert(0, 0)
     print('nodes_per_node=(', end='')
     for i in range(instances):
         print(gpu_per_instances, end='' if i==instances-1 else ' ')
     print(')')
-    print('rank_map=(', end='')
-    for i in range(len(result)):
-        val = result[i]
-        print(val, end='' if i==nodes-1 else ' ')
-    print(')')
+    random_assignment(nodes)
 
 
 def random_assignment_1_datacenter_spot(gpu_per_instances=4, multi_gpu_instances=8, single_gpu_instances=32):
@@ -35,20 +40,11 @@ def random_assignment_1_datacenter_spot(gpu_per_instances=4, multi_gpu_instances
         print(gpus[i], end='' if i == instances - 1 else ' ')
     print(')')
     world_size = gpu_per_instances*multi_gpu_instances+single_gpu_instances
-    arr = np.arange(1, world_size)
-    np.random.shuffle(arr)
-    result = arr.tolist()
-    result.insert(0, 0)
-    print('rank_map=(', end='')
-    for i in range(len(result)):
-        val = result[i]
-        print(val, end='' if i==world_size-1 else ' ')
-    print(')')
+    random_assignment(world_size)
 
 
 def optimal_assignment_1_datacenter_spot(gpu_per_instances=4, multi_gpu_instances=8, single_gpu_instances=32):
     print("Generate optimal_assignment_1_datacenter_spot")
-
     gpus = []
     for i in range(multi_gpu_instances):
         for j in range(single_gpu_instances//multi_gpu_instances):
@@ -67,6 +63,16 @@ def optimal_assignment_1_datacenter_spot(gpu_per_instances=4, multi_gpu_instance
         val = result[i]
         print(val, end='' if i==world_size-1 else ' ')
     print(')')
+
+
+def random_assignment_2_multi_universities(nodes):
+    random_assignment(nodes)
+
+
+def optimal_assignment_2_multi_university(nodes):
+    # no need to
+    print("No special alignment.")
+
 
 def main():
     print("------------------------------------")
