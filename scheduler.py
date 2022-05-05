@@ -80,14 +80,17 @@ def GCMA(nodes=None, population_size=None, trails=None):
 
     def cyclic_partitioning(offspring=None):
         def calculate_gain(cur_offspring=None, locked_v_idx=None):
-            gain = np.full(shape=(num_devices, way), fill_value=np.inf)
+            gain = np.zeros(shape=(num_devices, way))
             for v_idx, partition_idx in enumerate(cur_offspring):
                 if locked_v_idx[v_idx] == 0:
+                    gain[v_idx][partition_idx] = np.inf
                     for target_idx, target_partition_idx in enumerate(cur_offspring):
-                        if v_idx != target_idx:
-                            partial_pipeline_parallel_cost = peer_delay[v_idx, target_idx] / \
-                                1e3 + send_gradient_size * 8 / \
-                                peer_bandwidth[v_idx, target_idx]
+                        partial_pipeline_parallel_cost = peer_delay[v_idx, target_idx] / \
+                            1e3 + send_gradient_size * 8 / \
+                            peer_bandwidth[v_idx, target_idx]
+                        if partition_idx != target_partition_idx:
+                            gain[v_idx][target_partition_idx] += partial_pipeline_parallel_cost / partition_size
+                        elif v_idx != target_idx:
                             if gain[v_idx][target_partition_idx] > partial_pipeline_parallel_cost:
                                 gain[v_idx][target_partition_idx] = partial_pipeline_parallel_cost
 
@@ -106,7 +109,7 @@ def GCMA(nodes=None, population_size=None, trails=None):
                 if v_idx != None:
                     for target_partition_idx, target_gain in enumerate(gain[v_idx]):
                         if target_partition_idx != partition_idx:
-                            target_gain -= gain[v_idx][cur_offspring[v_idx]]
+                            target_gain -= gain[v_idx][partition_idx]
                             if target_gain > G_ij[partition_idx, target_partition_idx]:
                                 G_ij[partition_idx,
                                      target_partition_idx] = target_gain
@@ -214,7 +217,7 @@ def GCMA(nodes=None, population_size=None, trails=None):
             2 * offspring_pipeline_parallel_cost
         offspring = list(itertools.chain.from_iterable(offspring))
 
-        if offspring_score > candidate_scores[parent1_idx] and offspring_score > candidate_scores[parent2_idx]:
+        if offspring_score > max(candidate_scores[parent1_idx], offspring_score > candidate_scores[parent2_idx]):
             candidate_partitions.append(offspring)
             candidate_scores.append(offspring_score)
         else:
@@ -269,39 +272,6 @@ def get_pipelines(candidate_partition=None, candidate_pipeline_parallel_path=Non
             candidate_pipeline[stage_idx][i] = candidate_partition[partition_idx][candidate_pipeline[stage_idx][i]]
     assert(np.sum(candidate_pipeline) == np.sum(range(num_devices)))
     return candidate_pipeline
-
-
-def sort_pipelines(candidate_pipeline=None):
-    sorted_pipelines = [[] for _ in range(way)]
-    for pipeline_idx in range(partition_size):
-        cost_matrix = np.full(shape=(way, way), fill_value=np.inf)
-        for i in range(way):
-            for j in range(i+1, way):
-                cost_matrix[i, j] = peer_delay[candidate_pipeline[i][pipeline_idx], candidate_pipeline[j][pipeline_idx]]/1e3 + \
-                    send_gradient_size * 8 / \
-                    peer_bandwidth[candidate_pipeline[i][pipeline_idx],
-                                   candidate_pipeline[j][pipeline_idx]]
-                cost_matrix[j, i] = cost_matrix[i, j]
-
-        cur_pipeline = []
-        while len(cur_pipeline) < way:
-            min_idx = np.argmin(cost_matrix)
-            p = min_idx // way
-            q = min_idx - p * way
-            if p not in cur_pipeline:
-                cur_pipeline.append(p)
-            cost_matrix[p] = np.inf
-            cost_matrix[:, p] = np.inf
-            if p == cur_pipeline[-1]:
-                cur_pipeline.append(q)
-                cost_matrix[:, q] = np.inf
-        assert(np.sum(cur_pipeline) == np.sum(list(range(way))))
-
-        for i in range(way):
-            sorted_pipelines[i].append(
-                candidate_pipeline[cur_pipeline[i]][pipeline_idx])
-    assert(np.sum(sorted_pipelines) == np.sum(list(range(num_devices))))
-    return sorted_pipelines
 
 
 def compute_data_parallel_cost(candidate_partition=None):
@@ -479,7 +449,7 @@ if __name__ == "__main__":
         #        pipeline_parallel_cost = 2 * cur_pipeline_parallel_cost
 
         candidate_partitions, all_cost_records = GCMA(
-            nodes=list(range(num_devices)), population_size=100, trails=900)
+            nodes=list(range(num_devices)), population_size=100, trails=4900)
         candidate_partition_idx = np.argmin(all_cost_records)
         candidate_partition = [candidate_partitions[candidate_partition_idx][i: i + partition_size]
                                for i in range(0, num_devices, partition_size)]
