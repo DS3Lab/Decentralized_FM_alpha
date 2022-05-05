@@ -11,9 +11,9 @@ dp_mode=central_ps
 
 # Change the script here for different settings.
 ############################################################
-ga_step=8
-num_layers=5
-batch_size=62
+ga_step=2
+num_layers=4
+batch_size=64
 ############################################################
 
 let "global_batch_size = $ga_step*$batch_size*8"
