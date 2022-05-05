@@ -87,8 +87,8 @@ def simulate_1_datacenter_spot_gpu(nodes=64, group=(8, 4)):
 
 def simulate_2_multi_universities(nodes=64):
     print("Simulate case 2: multi universities. 0~31 in Ohio, 32~63 in Virginia.")
-    delay = np.zeros((nodes, nodes))
-    bandwidth = np.ones((nodes, nodes)) * 10
+    delay = np.ones((nodes, nodes))
+    bandwidth = np.ones((nodes, nodes)) * 5
     split = nodes//2
     regions = []
     for i in range(nodes):
@@ -108,16 +108,19 @@ def simulate_2_multi_universities(nodes=64):
 
 # Assume within region is 2 GB, 5 ms.
 def simulate_3_regional_geo_distributed(nodes=64):
-    print("Simulate case 3: regional geo distributed: 0~16 in Virgina; 17~33 in Oregon, 34~63 in Ohio")
+    print("Simulate case 3: regional geo distributed: 0~15 in Virgina; 17~33 in Oregon, 34~63 in Ohio")
 
     def in_virgina(index: int):
-        return index <= nodes//4
+        return index < nodes//4
 
     def in_oregon(index: int):
-        return nodes//2+1 >= index > nodes//4
+        return nodes//4 <= index < nodes//2
+
+    def in_california(index: int):
+        return nodes//2 <= index < nodes*3//4
 
     def in_ohio(index: int):
-        return index > nodes//2+1
+        return index >= nodes*3//4
 
     regions = []
     for i in range(nodes):
@@ -125,10 +128,12 @@ def simulate_3_regional_geo_distributed(nodes=64):
             regions.append("Virginia")
         elif in_oregon(i):
             regions.append("Oregon")
+        elif in_california(i):
+            regions.append("California")
         elif in_ohio(i):
             regions.append("Ohio")
 
-    delay = np.ones((nodes, nodes)) * 5
+    delay = np.ones((nodes, nodes)) * 10
     bandwidth = np.ones((nodes, nodes)) * 2
     for i in range(nodes):
         for j in range(i, nodes):
@@ -147,6 +152,21 @@ def simulate_3_regional_geo_distributed(nodes=64):
                 delay[j][i] = 49
                 bandwidth[i][j] = 1.10
                 bandwidth[j][i] = 1.10
+            elif in_california(i) and in_virgina(i):
+                delay[i][j] = 59
+                delay[j][i] = 59
+                bandwidth[i][j] = 1.05
+                bandwidth[j][i] = 1.05
+            elif in_california(i) and in_oregon(i):
+                delay[i][j] = 12
+                delay[j][i] = 12
+                bandwidth[i][j] = 1.25
+                bandwidth[j][i] = 1.25
+            elif in_california(i) and in_ohio(i):
+                delay[i][j] = 52
+                delay[j][i] = 52
+                bandwidth[i][j] = 1.02
+                bandwidth[j][i] = 1.02
     print('delay(ms):', delay)
     print('bandwidth(Gbps):', bandwidth)
     return delay, bandwidth, regions
@@ -155,8 +175,7 @@ def simulate_3_regional_geo_distributed(nodes=64):
 # Assume within region is 2 GB, 5 ms.
 def simulate_4_worldwide_geo_distributed(nodes=64):
     print("Simulate case 4: worldwide geo distributed")
-    cities = ["Oregon", "Virginia", "Ohio", "Tokyo", "Seoul",
-              "Singapore", "Sydney", "London", "Frankfurt", "Ireland"]
+    cities = ["Oregon", "Virginia", "Ohio", "Tokyo", "Seoul", "London", "Frankfurt", "Ireland"]
     regions = []
     for i in np.random.randint(low=0, high=len(cities), size=nodes):
         regions.append(cities[i])

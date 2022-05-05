@@ -12,16 +12,16 @@
   - Inter-instance bandwidth 10 Gbps
 - Case 3 Multiple universities: 
   - 2 universities (each has 32 V100 GPUs)
-  - With in each university bandwidth: 10 Gbps 
+  - With in each university bandwidth: 5 Gbps 
   - Connection between regions: 1.2 Gbps
 - Case 4 Regional distributed: 
   - 4 regions in Europe 
   - Within each region 2 Gbps 
-  - across different region 0.8 ~ 1.1 Gbps
+  - across different region 8 ~ 1.2 Gbps
 - Case 5 World-wide distributed: 
   - 8 regions around the work 
-  - Within each region 1 Gbps
-  - Across different region 0.3 ~ 1.1 Gbps
+  - Within each region 2 Gbps
+  - Across different region 0.3 ~ 1.2 Gbps
 
 
 ## Compare Group
