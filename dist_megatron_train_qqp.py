@@ -39,6 +39,8 @@ from megatron.training import setup_model_and_optimizer, print_datetime
 from megatron.schedules import get_forward_backward_func
 from tasks.glue.qqp import QQPDataset
 from megatron.data.data_samplers import MegatronPretrainingSampler
+import warnings
+warnings.filterwarnings("ignore")
 
 
 def get_qqp_args(parser):

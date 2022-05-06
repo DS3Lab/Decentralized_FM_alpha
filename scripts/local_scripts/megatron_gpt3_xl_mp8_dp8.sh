@@ -2,23 +2,23 @@
 cd ~/GPT-home-private
 source activate pytorch_p38
 
-MICRO_BATCH_SIZE=$1
-PIPELINE_PARALLEL_SIZE=$2
-TENSOR_PARALLEL_SIZE=$3
+MICRO_BATCH_SIZE=1
+PIPELINE_PARALLEL_SIZE=$1
+TENSOR_PARALLEL_SIZE=$2
 
 
-# Change for multinode config
+# Change for multi-node config
 # MASTER_ADDR=localhost
-MASTER_ADDR=$4
+MASTER_ADDR=$3
 MASTER_PORT=6000
-GPUS_PER_NODE=$5
-NNODES=$6
-NODE_RANK=$7
+GPUS_PER_NODE=$4
+NNODES=$5
+NODE_RANK=$6
 WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
 
 # change this for different experiments
-num_layers=24
-global_batch_size=1024
+num_layers=$7
+global_batch_size=$8
 
 VOCAB_FILE=glue_dataset/data/bert-large-cased-vocab.txt
 TRAIN_FILE=glue_dataset/data/QQP/train.tsv
@@ -35,21 +35,21 @@ timestamp=$(date +%Y_%m_%d_%H_%M)
 
 log_path="./logs/${timestamp}_megatron_gpt3_xl_w${NNODES}_t${TENSOR_PARALLEL_SIZE}_p${PIPELINE_PARALLEL_SIZE}_l${num_layers}_b${global_batch_size}"
 
-if [ $# -eq 7 ]
+if [ $# -eq 8 ]
 then
   python -m torch.distributed.launch $DISTRIBUTED_ARGS  ./dist_megatron_train_qqp.py $MODEL_ARGS $PARALLEL_ARGS $NLP_ARGS $HYPER_PARA_ARGS $OPTION_ARGS>> "${log_path}_default.log"
-elif [ $# -eq 8 ]
+elif [ $# -eq 9 ]
 then
-  case=$4
+  case=$9
   export NCCL_SOCKET_IFNAME=ens3
   export GLOO_SOCKET_IFNAME=ens3
   sh ./scripts/tc_scripts/heterogeneous_setup_case"$case".sh
   python -m torch.distributed.launch $DISTRIBUTED_ARGS  ./dist_megatron_train_qqp.py $MODEL_ARGS $PARALLEL_ARGS $NLP_ARGS $HYPER_PARA_ARGS $OPTION_ARGS>> "${log_path}_heter${case}.log"
   sh ./scripts/tc_scripts/clear.sh
-elif [ $# -eq 9 ]
+elif [ $# -eq 10 ]
 then
-  DELAY_MS=$8
-  RATE_GBIT=$9
+  DELAY_MS=$9
+  RATE_GBIT=${10}
   export NCCL_SOCKET_IFNAME=ens3
   export GLOO_SOCKET_IFNAME=ens3
   sh ./scripts/tc_scripts/both_delay_bandwidth.sh $DELAY_MS $RATE_GBIT

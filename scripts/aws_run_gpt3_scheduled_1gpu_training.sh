@@ -27,7 +27,6 @@ do
   then
     case=$5
     echo "Running in heterogeneous network: Case-$case"
-
     ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"$ip" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" 0 "$ga_step" "$num_layers" "$batch_size" "$log_mode" "$case" &
   elif [ $# -eq 6 ]
   then
