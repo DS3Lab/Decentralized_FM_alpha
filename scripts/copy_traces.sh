@@ -38,6 +38,7 @@ then
       scp -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}":~/GPT-home-private/trace_json/"$profix"_"$rank"_"$postfix".json ../trace_json/"$profix" &
     done
   done
+  wait
 fi
 
 if [ $# -eq 2 ]
@@ -49,4 +50,5 @@ then
   do
     scp -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}":~/GPT-home-private/trace_json/"$profix"_"$rank"_"$postfix".json ../trace_json/"$profix" &
   done
+  wait
 fi

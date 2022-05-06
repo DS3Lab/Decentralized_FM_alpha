@@ -11,3 +11,5 @@ do
     sleep 10s
   done
 done
+
+bash copy_rank_last_logs.sh

@@ -13,3 +13,4 @@ then
 else
   echo "Error! Not valid arguments. (Please specify which simulation case!)"
 fi
+wait

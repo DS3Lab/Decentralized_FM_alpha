@@ -16,11 +16,11 @@
   - Connection between regions: 1.2 Gbps
 - Case 4 Regional distributed: 
   - 4 regions in Europe 
-  - Within each region 2 Gbps 
-  - across different region 8 ~ 1.2 Gbps
+  - Within each region: 2 Gbps 
+  - across different region 8: 1.0 ~ 1.2 Gbps
 - Case 5 World-wide distributed: 
   - 8 regions around the work 
-  - Within each region 2 Gbps
+  - Within each region: 2 Gbps
   - Across different region 0.3 ~ 1.2 Gbps
 
 
@@ -150,15 +150,15 @@ Shared settings (GPT-XL):
 
 | Setting    | Megatron-PP(Opt) | Ours w scheduler | Ours wo Scheduler |
 |------------|------------------|------------------|-------------------|
-| L24 B1028  |                  |                  |                   |
-| L24 B2048  |                  |                  |                   |
-| L24 B4096  |                  |                  |                   |
-| L32 B1024  |                  |                  |                   |
-| L32 B2048  |                  |                  |                   |
-| L32 B4096  |                  |                  |                   |
-| L40 B1024  |                  |                  |                   |
-| L40 B2048  |                  |                  |                   |
-| L40 B4096  |                  |                  |                   |
+| L24 B1028  |                  | 1.240            | 0.850             |
+| L24 B2048  |                  | 1.447            | 0.945             |
+| L24 B4096  |                  | 1.735            | 1.013             |
+| L32 B1024  |                  | 1.410            | 1.064             |
+| L32 B2048  |                  | 1.686            | 1.231             |
+| L32 B4096  |                  | 1.956            | 1.328             |
+| L40 B1024  |                  | 1.459            | 1.208             |
+| L40 B2048  |                  | 1.755            | 1.409             |
+| L40 B4096  |                  | 2.015            | 1.540             |
 
 
 ## Case 4 Regional Distributed
@@ -179,17 +179,17 @@ Shared settings (GPT-XL):
 
 - Hardware Efficiency (by PFlops):
 
-| Setting    | Megatron-PP(Opt) | Ours w scheduler | Ours wo Scheduler |
-|------------|------------------|------------------|-------------------|
-| L24 B1028  |                  |                  |                   |
-| L24 B2048  |                  |                  |                   |
-| L24 B4096  |                  |                  |                   |
-| L32 B1024  |                  |                  |                   |
-| L32 B2048  |                  |                  |                   |
-| L32 B4096  |                  |                  |                   |
-| L40 B1024  |                  |                  |                   |
-| L40 B2048  |                  |                  |                   |
-| L40 B4096  |                  |                  |                   |
+| Setting   | Megatron-PP(Opt) | Ours w scheduler | Ours wo Scheduler |
+|-----------|------------------|------------------|-------------------|
+| L24 B1024 |                  | 1.063            | 0.739             |
+| L24 B2048 |                  | 1.222            | 0.828             | 
+| L24 B4096 |                  | 1.313            | 0.891             |
+| L32 B1024 |                  | 1.201            | 0.933             |
+| L32 B2048 |                  | 1.381            | 1.079             |
+| L32 B4096 |                  | 1.465            | 1.158             |
+| L40 B1024 |                  | 1.244            | 1.048             |
+| L40 B2048 |                  | 1.523            | 1.240             |
+| L40 B4096 |                  | 1.651            | 1.360             |
 
 
 ## Case 5 World-wide Distributed 
@@ -198,9 +198,9 @@ Shared settings (GPT-XL):
 
 | Setting   | Megatron-P8 | Megatron-T8 | Megatron-P4T2 | Megatron-P2T4 | Ours w scheduler | Ours wo Scheduler |
 |-----------|-------------|-------------|---------------|---------------|------------------|-------------------|
-| L24 B1024 |             |             |               |               |                  |                   |
-| L24 B2048 |             | -           | -             | -             |                  |                   |
-| L24 B4096 |             | -           | -             | -             |                  |                   |
+| L24 B1024 |             |             |               |               | 43.78            | 92.29             |
+| L24 B2048 |             | -           | -             | -             | 62.27            | 165.89            |
+| L24 B4096 |             | -           | -             | -             | 104.06           |                   |
 | L32 B1024 |             | -           | -             | -             |                  |                   |
 | L32 B2048 |             | -           | -             | -             |                  |                   |
 | L32 B4096 |             | -           | -             | -             |                  |                   |
@@ -212,9 +212,9 @@ Shared settings (GPT-XL):
 
 | Setting    | Megatron-PP(Opt) | Ours w scheduler | Ours wo Scheduler |
 |------------|------------------|------------------|-------------------|
-| L24 B1028  |                  |                  |                   |
-| L24 B2048  |                  |                  |                   |
-| L24 B4096  |                  |                  |                   |
+| L24 B1028  |                  | 0.540            | 0.256             |
+| L24 B2048  |                  | 0.759            | 0.285             |
+| L24 B4096  |                  | 0.909            |                   |
 | L32 B1024  |                  |                  |                   |
 | L32 B2048  |                  |                  |                   |
 | L32 B4096  |                  |                  |                   |

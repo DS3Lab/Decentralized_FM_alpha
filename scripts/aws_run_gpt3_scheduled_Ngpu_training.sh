@@ -48,3 +48,4 @@ do
     echo "Error! Not valid arguments."
   fi
 done
+wait
