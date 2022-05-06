@@ -11,7 +11,7 @@ rank_map=(0 2 32 33 4 10 7 45 36 8 51 26 11 5 53 1 40 23 37 14 13 43 54 21 57 35
 for i in "${!ips[@]}"
 do
   rank=${rank_map[$i]}
-  ip=${ips[rank]}
+  ip=${ips[i]}
   echo "Issue command $script in Rank-$rank node: ${ips[$rank]}"
   if [ $# -eq 1 ]
   then
