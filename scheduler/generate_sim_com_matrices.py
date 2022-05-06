@@ -177,13 +177,17 @@ def simulate_4_worldwide_geo_distributed(nodes=64):
     print("Simulate case 4: worldwide geo distributed")
     cities = ["Oregon", "Virginia", "Ohio", "Tokyo", "Seoul", "London", "Frankfurt", "Ireland"]
     regions = []
-    for i in np.random.randint(low=0, high=len(cities), size=nodes):
-        regions.append(cities[i])
+    # for i in np.random.randint(low=0, high=len(cities), size=nodes):
+    #    regions.append(cities[i])
+    instances_per_region = nodes//len(cities)
+    for i in range(len(cities)):
+        for _ in range(instances_per_region):
+            regions.append(cities[i])
     assert len(regions) == nodes
 
     def get_delay_bandwidth(region1: str, region2: str):
         if region1 == region2:
-            return 5, 2
+            return 10, 2
         else:
             if region1+'-'+region2 in delay_bandwidth_dict:
                 return delay_bandwidth_dict[region1+'-'+region2]
@@ -193,7 +197,7 @@ def simulate_4_worldwide_geo_distributed(nodes=64):
                 print(region1, region2)
                 assert False
 
-    delay = np.ones((nodes, nodes)) * 5
+    delay = np.ones((nodes, nodes)) * 10
     bandwidth = np.ones((nodes, nodes)) * 2
 
     for i in range(nodes):
@@ -232,7 +236,7 @@ def simulate_6_debug(nodes=8):
 
 
 def main():
-    simulate_3_regional_geo_distributed()
+    simulate_4_worldwide_geo_distributed()
 
 
 if __name__ == '__main__':
