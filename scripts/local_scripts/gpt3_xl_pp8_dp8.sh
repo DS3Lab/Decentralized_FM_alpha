@@ -11,9 +11,9 @@ dp_mode=central_ps
 
 # Change the script here for different settings.
 ############################################################
-ga_step=8
-num_layers=3
-batch_size=64
+ga_step=$5
+num_layers=$6
+batch_size=$7
 ############################################################
 
 let "global_batch_size = $ga_step*$batch_size*8"
@@ -27,23 +27,24 @@ then
   exit 1
 fi
 
-log_path="./logs/${timestamp}_gpt3_xl_pp8_dp8_l${num_layers}_b${global_batch_size}_rank${rank}"
+log_mode=$8
+log_path="./logs/${timestamp}_gpt3_xl_pp8_dp8_l${num_layers}_b${global_batch_size}_rank${rank}_${log_mode}"
 
-if [ $# -eq 4 ]
+if [ $# -eq 8 ]
 then
   python dist_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF >> "${log_path}_default.log"
-elif [ $# -eq 5 ]
+elif [ $# -eq 9 ]
 then
-  case=$5
+  case=$9
   export NCCL_SOCKET_IFNAME=ens3
   export GLOO_SOCKET_IFNAME=ens3
   sh ./scripts/tc_scripts/heterogeneous_setup_case"$case".sh
   python dist_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF >> "${log_path}_heter${case}.log"
   sh ./scripts/tc_scripts/clear.sh
-elif [ $# -eq 6 ]
+elif [ $# -eq 10 ]
 then
-  DELAY_MS=$5
-  RATE_GBIT=$6
+  DELAY_MS=$9
+  RATE_GBIT=${10}
   export NCCL_SOCKET_IFNAME=ens3
   export GLOO_SOCKET_IFNAME=ens3
   sh ./scripts/tc_scripts/both_delay_bandwidth.sh $DELAY_MS $RATE_GBIT

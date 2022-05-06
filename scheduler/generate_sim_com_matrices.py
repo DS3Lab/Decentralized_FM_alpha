@@ -152,17 +152,17 @@ def simulate_3_regional_geo_distributed(nodes=64):
                 delay[j][i] = 49
                 bandwidth[i][j] = 1.10
                 bandwidth[j][i] = 1.10
-            elif in_california(i) and in_virgina(i):
+            elif in_california(i) and in_virgina(j):
                 delay[i][j] = 59
                 delay[j][i] = 59
                 bandwidth[i][j] = 1.05
                 bandwidth[j][i] = 1.05
-            elif in_california(i) and in_oregon(i):
+            elif in_california(i) and in_oregon(j):
                 delay[i][j] = 12
                 delay[j][i] = 12
                 bandwidth[i][j] = 1.25
                 bandwidth[j][i] = 1.25
-            elif in_california(i) and in_ohio(i):
+            elif in_california(i) and in_ohio(j):
                 delay[i][j] = 52
                 delay[j][i] = 52
                 bandwidth[i][j] = 1.02
@@ -232,7 +232,7 @@ def simulate_6_debug(nodes=8):
 
 
 def main():
-    simulate_1_datacenter_spot_gpu()
+    simulate_3_regional_geo_distributed()
 
 
 if __name__ == '__main__':
