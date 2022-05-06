@@ -142,26 +142,26 @@ def simulate_3_regional_geo_distributed(nodes=64):
                 delay[j][i] = 67
                 bandwidth[i][j] = 1.15
                 bandwidth[j][i] = 1.15
+            elif in_virgina(i) and in_california(j):
+                delay[i][j] = 59
+                delay[j][i] = 59
+                bandwidth[i][j] = 1.05
+                bandwidth[j][i] = 1.05
             elif in_virgina(i) and in_ohio(j):
                 delay[i][j] = 11
                 delay[j][i] = 11
                 bandwidth[i][j] = 1.12
                 bandwidth[j][i] = 1.12
+            elif in_oregon(i) and in_california(j):
+                delay[i][j] = 12
+                delay[j][i] = 12
+                bandwidth[i][j] = 1.25
+                bandwidth[j][i] = 1.25
             elif in_oregon(i) and in_ohio(j):
                 delay[i][j] = 49
                 delay[j][i] = 49
                 bandwidth[i][j] = 1.10
                 bandwidth[j][i] = 1.10
-            elif in_california(i) and in_virgina(j):
-                delay[i][j] = 59
-                delay[j][i] = 59
-                bandwidth[i][j] = 1.05
-                bandwidth[j][i] = 1.05
-            elif in_california(i) and in_oregon(j):
-                delay[i][j] = 12
-                delay[j][i] = 12
-                bandwidth[i][j] = 1.25
-                bandwidth[j][i] = 1.25
             elif in_california(i) and in_ohio(j):
                 delay[i][j] = 52
                 delay[j][i] = 52
