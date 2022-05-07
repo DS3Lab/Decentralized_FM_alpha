@@ -8,7 +8,9 @@ do
   do
     echo "$batch, $layer"
     bash aws_run_megatron_training.sh megatron_gpt3_xl_mp8_dp8.sh 8 1 1 "$layer" "$batch" "$case"
-    sleep 10s
+    sleep 5s
+    bash copy_rank_last_logs.sh
+    sleep 3s
   done
 done
 
@@ -21,4 +23,3 @@ done
 # bash aws_run_megatron_training.sh megatron_gpt3_xl_mp8_dp8.sh 2 4 1 24 1024 "$case"
 # sleep 10s
 
-bash copy_rank_last_logs.sh

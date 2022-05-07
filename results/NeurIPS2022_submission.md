@@ -127,8 +127,8 @@ Shared settings (GPT-XL):
 ## Case 3 Multiple Universities
 
 - Notes:
-  - Generate tc scripts: aws_generate_heter_tc.sh 2
-  - Use aws_run_gpt3_1gpu_training.sh for ours w scheduler; 
+  - Generate tc scripts: aws_generate_heter_tc.sh 2 (case indexed from 0)
+  - Use aws_run_gpt3_1gpu_training.sh for ours w scheduler(manually optimized); 
   - Use aws_run_gpt3_scheduled_1gpu_training.sh for ours wo scheduler;
   - Use aws_run_megatron_training.sh for different Megatron Settings.
 
@@ -163,6 +163,12 @@ Shared settings (GPT-XL):
 
 ## Case 4 Regional Distributed
 
+- Notes:
+  - Generate tc scripts: aws_generate_heter_tc.sh 3 (case indexed from 0)
+  - Use aws_run_gpt3_1gpu_training.sh for ours w scheduler(manually optimized); 
+  - Use aws_run_gpt3_scheduled_1gpu_training.sh for ours wo scheduler;
+  - Use aws_run_megatron_training.sh for different Megatron Settings.
+
 - One iteration runtime 
 
 | Setting   | Megatron-P8 | Megatron-T8 | Megatron-P4T2 | Megatron-P2T4 | Ours w scheduler | Ours wo Scheduler |
@@ -194,30 +200,36 @@ Shared settings (GPT-XL):
 
 ## Case 5 World-wide Distributed 
 
+- Notes:
+  - Generate tc scripts: aws_generate_heter_tc.sh 4 (case indexed from 0)
+  - Use aws_run_gpt3_1gpu_training.sh for ours w scheduler(manually optimized); 
+  - Use aws_run_gpt3_scheduled_1gpu_training.sh for ours wo scheduler;
+  - Use aws_run_megatron_training.sh for different Megatron Settings.
+
 - One iteration runtime 
 
 | Setting   | Megatron-P8 | Megatron-T8 | Megatron-P4T2 | Megatron-P2T4 | Ours w scheduler | Ours wo Scheduler |
-|-----------|------------|-------------|---------------|---------------|------------------|-------------------|
-| L24 B1024 | 81.03      | -           | -             | -             | 43.78            | 92.29             |
-| L24 B2048 |            | -           | -             | -             | 62.27            | 165.89            |
-| L24 B4096 |            | -           | -             | -             | 104.06           | 313.63            |
-| L32 B1024 |            | -           | -             | -             | 51.06            | 99.10             |
-| L32 B2048 |            | -           | -             | -             | 71.96            | 172.54            |
-| L32 B4096 |            | -           | -             | -             | 114.01           | 320.63            |
-| L40 B1024 |            | -           | -             | -             | 58.24            | 106.71            |
-| L40 B2048 |            | -           | -             | -             | 80.68            | 181.16            |
-| L40 B4096 |            | -           | -             | -             | 124.07           | 331.25            |
+|-----------|-------------|-------------|---------------|---------------|------------------|-------------------|
+| L24 B1024 | 83.04       | -           | -             | -             | 43.78            | 92.29             |
+| L24 B2048 | 156.93      | -           | -             | -             | 62.27            | 165.89            |
+| L24 B4096 | 307.79      | -           | -             | -             | 104.06           | 313.63            |
+| L32 B1024 | 85.97       | -           | -             | -             | 51.06            | 99.10             |
+| L32 B2048 | 165.14      | -           | -             | -             | 71.96            | 172.54            |
+| L32 B4096 | 327.65      | -           | -             | -             | 114.01           | 320.63            |
+| L40 B1024 | 89.35       | -           | -             | -             | 58.24            | 106.71            |
+| L40 B2048 | 171.95      | -           | -             | -             | 80.68            | 181.16            |
+| L40 B4096 | 337.69      | -           | -             | -             | 124.07           | 331.25            |
 
 - Hardware Efficiency (by PFlops):
 
 | Setting    | Megatron-PP(Opt) | Ours w scheduler | Ours wo Scheduler |
 |------------|------------------|------------------|-------------------|
-| L24 B1028  |                  | 0.540            | 0.256             |
-| L24 B2048  |                  | 0.759            | 0.285             |
-| L24 B4096  |                  | 0.909            | 0.302             |
-| L32 B1024  |                  | 0.617            | 0.318             |
-| L32 B2048  |                  | 0.876            | 0.365             |
-| L32 B4096  |                  | 1.106            | 0.393             |
-| L40 B1024  |                  | 0.677            | 0.369             |
-| L40 B2048  |                  | 0.977            | 0.435             |
-| L40 B4096  |                  | 1.271            | 0.476             |
+| L24 B1028  | 0.285            | 0.540            | 0.256             |
+| L24 B2048  | 0.301            | 0.759            | 0.285             |
+| L24 B4096  | 0.307            | 0.909            | 0.302             |
+| L32 B1024  | 0.367            | 0.617            | 0.318             |
+| L32 B2048  | 0.385            | 0.876            | 0.365             |
+| L32 B4096  | 0.385            | 1.106            | 0.393             |
+| L40 B1024  | 0.441            | 0.677            | 0.369             |
+| L40 B2048  | 0.458            | 0.977            | 0.435             |
+| L40 B4096  | 0.467            | 1.271            | 0.476             |
