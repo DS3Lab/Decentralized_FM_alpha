@@ -17,25 +17,25 @@ rank_map=(0 2 32 33 4 10 7 45 36 8 51 26 11 5 53 1 40 23 37 14 13 43 54 21 57 35
 for i in "${!ips[@]}"
 do
   rank=${rank_map[$i]}
-  ip=${ips[i]}
-  echo "Issue command $script in Rank-$rank node: ${ips[$rank]}"
+  ip=${ips[$i]}
+  echo "Issue command $script in Rank-$rank node: ${ips[$i]}"
   if [ $rank -eq 63 ]
   then
     echo "========Last rank IP ${ip}==========="
   fi
   if [ $# -eq 6 ]
   then
-    ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}" "bash -s" < ./local_scripts/"${script}"  "$PIPELINE_PARALLEL_SIZE" "$TENSOR_PARALLEL_SIZE" "$master_ip" "$GPUS_PER_NODE" "$world_size" "$rank" "$num_layers" "$global_batch_size"&
+    ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ip}" "bash -s" < ./local_scripts/"${script}"  "$PIPELINE_PARALLEL_SIZE" "$TENSOR_PARALLEL_SIZE" "$master_ip" "$GPUS_PER_NODE" "$world_size" "$rank" "$num_layers" "$global_batch_size"&
   elif [ $# -eq 7 ]
   then
     case=$7
     echo "Running in heterogeneous network: Case-$case"
-    ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}" "bash -s" < ./local_scripts/"${script}"  "$PIPELINE_PARALLEL_SIZE" "$TENSOR_PARALLEL_SIZE" "$master_ip" "$GPUS_PER_NODE" "$world_size" "$rank"  "$num_layers" "$global_batch_size" "$case" &
+    ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ip}" "bash -s" < ./local_scripts/"${script}"  "$PIPELINE_PARALLEL_SIZE" "$TENSOR_PARALLEL_SIZE" "$master_ip" "$GPUS_PER_NODE" "$world_size" "$rank"  "$num_layers" "$global_batch_size" "$case" &
   elif [ $# -eq 8 ]
   then
     delay_ms=$7
     rate_gbit=$8
-    ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}" "bash -s" < ./local_scripts/"${script}"  "$PIPELINE_PARALLEL_SIZE" "$TENSOR_PARALLEL_SIZE" "$master_ip" "$GPUS_PER_NODE" "$world_size" "$rank"  "$num_layers" "$global_batch_size" "$delay_ms" "$rate_gbit" &
+    ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ip}" "bash -s" < ./local_scripts/"${script}"  "$PIPELINE_PARALLEL_SIZE" "$TENSOR_PARALLEL_SIZE" "$master_ip" "$GPUS_PER_NODE" "$world_size" "$rank"  "$num_layers" "$global_batch_size" "$delay_ms" "$rate_gbit" &
   else
     echo "Error! Not valid arguments."
   fi

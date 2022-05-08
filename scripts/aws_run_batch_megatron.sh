@@ -7,9 +7,10 @@ do
   for batch in "${batches[@]}"
   do
     echo "$batch, $layer"
-    bash aws_run_megatron_training.sh megatron_gpt3_xl_mp8_dp8.sh 8 1 1 "$layer" "$batch" "$case"
+    # bash aws_run_megatron_training.sh megatron_gpt3_xl_mp8_dp8.sh 8 1 1 "$layer" "$batch" "$case"
+    bash aws_run_megatron_scheduled_training.sh megatron_gpt3_xl_mp8_dp8.sh 8 1 1 "$layer" "$batch" "$case"
     sleep 5s
-    bash copy_rank_last_logs.sh
+    bash copy_rank_last_logs.sh 54.218.215.178
     sleep 3s
   done
 done

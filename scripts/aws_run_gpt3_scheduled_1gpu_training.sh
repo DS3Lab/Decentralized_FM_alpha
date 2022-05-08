@@ -17,8 +17,8 @@ log_mode='random_map'
 for i in "${!ips[@]}"
 do
   rank=${rank_map[$i]}
-  ip=${ips[i]}
-  echo "Issue command $script in Rank-$rank node: ${ips[$rank]}"
+  ip=${ips[$i]}
+  echo "Issue command $script in Rank-$rank node: ${ips[$i]}"
   if [ $# -eq 4 ]
   then
     echo "Running in default network."
