@@ -29,9 +29,9 @@ def main():
                         help='input batch size for training (default: 100)')
     parser.add_argument('--seq-length', type=int, default=2048, metavar='N',
                         help='-')
-    parser.add_argument('--embedding-dim', type=int, default=2048, metavar='N',
+    parser.add_argument('--embedding-dim', type=int, default=12288, metavar='N',
                         help='-')
-    parser.add_argument('--num-layers', type=int, default=32, metavar='N',
+    parser.add_argument('--num-layers', type=int, default=1, metavar='N',
                         help='-')
     parser.add_argument('--num-heads', type=int, default=16, metavar='N',
                         help='-')
