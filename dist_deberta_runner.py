@@ -56,6 +56,7 @@ def main():
                         help='task name')
     parser.add_argument('--n-epochs', type=int, default=10, help='-')
     parser.add_argument('--warmup-epochs', type=int, default=1, help='-')
+    parser.add_argument('--warmup-steps', type=int, default=None, help='-')
     parser.add_argument('--load-pretrained-model', 
                         type=lambda x: x.lower()=='true', default=True, metavar='S',
                         help='load pretrained model or not.')
@@ -110,8 +111,9 @@ def main():
         config.num_labels = 2
     else:
         raise Exception('unknown task.')
-        
-    args.warmup_steps = len(train_data_loader)
+    
+    if args.warmup_steps is None:
+        args.warmup_steps = len(train_data_loader)
     args.total_steps = len(train_data_loader) * args.n_epochs
 
     use_dp = (args.world_size != args.pipeline_group_size)

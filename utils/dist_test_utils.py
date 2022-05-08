@@ -14,7 +14,7 @@ def get_metric(args):
         metrics.append(metric)
         metric = datasets.load_metric('./metrics/f1')
         metrics.append(metric)
-    if args.task_name in {'wikitext', 'wikitext103'}:
+    if args.task_name in {'wikitext', 'wiki103', 'arxiv21'}:
         metric = datasets.load_metric('./metrics/perplexity_custom')
         metrics.append(metric)
     return metrics
@@ -44,11 +44,9 @@ def distributed_test_foo_iter(args, pipeline, device, test_data_loader):
             
 def _lm_pred_func(x, y):
     loss_fct = torch.nn.CrossEntropyLoss(reduction='none')
-    logits = torch.tensor(x)
-    references = torch.tensor(y)
-    logits = logits[:, :-1, :].contiguous()
-    labels = references[:, 1:].contiguous()
-    loss = loss_fct(logits.transpose(-1, -2), labels).mean(1)
+    logits = x[:, :-1, :].contiguous()
+    labels = y[:, 1:].contiguous()
+    loss = loss_fct(logits.transpose(-1, -2), labels).mean(1).detach().cpu()
     return loss
             
 def distributed_test_lm_iter(args, pipeline, device, test_data_loader):
@@ -60,9 +58,8 @@ def distributed_test_lm_iter(args, pipeline, device, test_data_loader):
     elif get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
         metrics = get_metric(args)
         for i, data in enumerate(test_data_loader):
-            input_ids = data['text'].to(device)
             labels = data['text'].to(device)
-            pipeline.infer_iter(input_ids, labels, None, 
+            pipeline.infer_iter(None, labels, None, 
                                 metrics=metrics, pred_func=_lm_pred_func)
         
         wandb.log(

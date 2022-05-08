@@ -10,7 +10,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Convert HF checkpoints')
     parser.add_argument('--model-name', type=str, default='gpt2', 
                         help='model-name')
-    parser.add_argument('--save-dir', type=str, default='checkpoints', 
+    parser.add_argument('--save-dir', type=str, default='./', 
                         help='model-name')
     args = parser.parse_args()
     
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     save_path = os.path.join(args.save_dir, args.model_name)
     
     model = GPT2LMHeadModel.from_pretrained(args.model_name)
-    model.save_pretrained(save_path)
+#     model.save_pretrained(save_path)
 
     torch.save({
         'wpe.weight': model.transformer.wpe.state_dict()['weight'],

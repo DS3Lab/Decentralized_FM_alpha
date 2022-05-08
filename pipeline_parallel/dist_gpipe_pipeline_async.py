@@ -41,7 +41,7 @@ def create_optimizer(model, weight_decay=0.01, learning_rate=2e-5,
         {
             "params": [p for n, p in model.named_parameters() if n not in decay_parameters],
             "weight_decay": 0.0,
-        },
+        }
     ]
     optimizer_cls = AdamW
     optimizer_kwargs = {
@@ -93,39 +93,6 @@ class GpipeAsync:
         self.vocab_size = config.vocab_size
         self.num_classes = config.num_labels
         
-        # Compression
-        self.forward_compress_method = args.forward_compress_method
-        self.forward_compressor = get_compressor(
-            compress_method=args.forward_compress_method, 
-            bits=args.forward_bits, 
-            ratio=args.forward_ratio,
-            bits_act=args.forward_bits_act,
-            ratio_act=args.forward_ratio_act,
-            scale_method=args.forward_scale_method, 
-            scale_dims=args.forward_scale_dims,
-        )
-        self.forward_compressor.build_buffer(
-            batch_size=args.batch_size,
-            micro_batch_size=args.micro_batch_size,
-            seq_length=args.seq_length,
-            embedding_dim=args.embedding_dim,
-            device=device, dtype=self.dtype,
-        )
-        
-        self.backward_compressor = get_compressor(
-            compress_method=args.backward_compress_method, 
-            bits=args.backward_bits, 
-            ratio=args.backward_ratio,
-            scale_method=args.backward_scale_method, 
-            scale_dims=args.backward_scale_dims,
-        )
-        self.backward_compressor.build_buffer(
-            batch_size=args.batch_size,
-            micro_batch_size=args.micro_batch_size,
-            seq_length=args.seq_length,
-            embedding_dim=args.embedding_dim,
-            device=device, dtype=self.dtype,
-        )
 
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
         self.device = device
@@ -199,6 +166,42 @@ class GpipeAsync:
             self.model = _StageLast(args, config, device)
         else:
             self.model = _StageMiddle(args, config, device)
+            
+            
+        # Compression
+        self.forward_compress_method = args.forward_compress_method
+        self.forward_compressor = get_compressor(
+            compress_method=args.forward_compress_method, 
+            bits=args.forward_bits, 
+            ratio=args.forward_ratio,
+            bits_act=args.forward_bits_act,
+            ratio_act=args.forward_ratio_act,
+            scale_method=args.forward_scale_method, 
+            scale_dims=args.forward_scale_dims,
+        )
+        self.forward_compressor.build_buffer(
+            batch_size=args.batch_size,
+            micro_batch_size=args.micro_batch_size,
+            seq_length=args.seq_length,
+            embedding_dim=args.embedding_dim,
+            device=device, dtype=self.dtype,
+        )
+        
+        self.backward_compressor = get_compressor(
+            compress_method=args.backward_compress_method, 
+            bits=args.backward_bits, 
+            ratio=args.backward_ratio,
+            scale_method=args.backward_scale_method, 
+            scale_dims=args.backward_scale_dims,
+        )
+        self.backward_compressor.build_buffer(
+            batch_size=args.batch_size,
+            micro_batch_size=args.micro_batch_size,
+            seq_length=args.seq_length,
+            embedding_dim=args.embedding_dim,
+            device=device, dtype=self.dtype,
+        )
+        
 
         if self.use_fp16:
             self.model.half()
@@ -585,7 +588,8 @@ class GpipeAsync:
     
     
     
-    def infer_stage(self, input_data=None, aux_input_data=None):
+    def infer_stage(self, input_data=None, aux_input_data=None, 
+                    labels=None, pred_func=None):
         
         if aux_input_data is not None:
             for k in aux_input_data:
@@ -601,6 +605,10 @@ class GpipeAsync:
                 input_ids_micro_batches = torch.chunk(input_data, self.micro_batch_num, dim=0)
             else:
                 input_ids_micro_batches = [None]*self.micro_batch_num
+            if labels is not None:
+                labels = torch.chunk(labels, self.micro_batch_num, dim=0)
+            else:
+                labels = [None]*self.micro_batch_num
                 
         output_micro_batches = []
 
@@ -627,6 +635,7 @@ class GpipeAsync:
                         self.input_micro_batches[i], input_ids=input_ids_micro_batches[i],
                         **{k: v[i] for k, v in aux_input_data.items()},
                     )
+                    current_micro_output = pred_func(current_micro_output, labels[i])
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
             else:  # receive, compute, and send
                 with torch.cuda.stream(self.torch_recv_stream):
@@ -655,10 +664,13 @@ class GpipeAsync:
         self.comm.barrier()
         torch.cuda.synchronize()
         with torch.no_grad():
-            outputs = self.infer_stage(input_, aux_input_data=aux_input_data)
-        if metrics is not None:
-            outputs = pred_func(torch.cat(outputs, 0), target)
-            for metric in metrics:
-                metric.add_batch(predictions=outputs, references=target)
+            outputs = self.infer_stage(input_, 
+                                       aux_input_data=aux_input_data,
+                                       labels=target, pred_func=pred_func)
+            if metrics is not None:
+                outputs = torch.cat(outputs, 0)
+                for metric in metrics:
+                    metric.add_batch(predictions=outputs, references=target)
         torch.cuda.synchronize()
         self.comm.barrier()
+
