@@ -212,6 +212,46 @@ def simulate_4_worldwide_geo_distributed(nodes=64):
     return delay, bandwidth, regions
 
 
+def simulate_4_2_worldwide_geo_distributed(nodes=64):
+    print("Simulate case 4: worldwide geo distributed")
+    cities = ["Oregon", "Virginia", "Ohio", "Tokyo", "Seoul", "London", "Frankfurt", "Ireland"]
+    regions = []
+    np.random.seed(2022)
+    for i in np.random.randint(low=0, high=len(cities), size=nodes):
+        regions.append(cities[i])
+    instances_per_region = nodes//len(cities)
+    # for i in range(len(cities)):
+    #    for _ in range(instances_per_region):
+    #        regions.append(cities[i])
+    assert len(regions) == nodes
+
+    def get_delay_bandwidth(region1: str, region2: str):
+        if region1 == region2:
+            return 10, 2
+        else:
+            if region1+'-'+region2 in delay_bandwidth_dict:
+                return delay_bandwidth_dict[region1+'-'+region2]
+            elif region2+'-'+region1 in delay_bandwidth_dict:
+                return delay_bandwidth_dict[region2+'-'+region1]
+            else:
+                print(region1, region2)
+                assert False
+
+    delay = np.ones((nodes, nodes)) * 10
+    bandwidth = np.ones((nodes, nodes)) * 2
+
+    for i in range(nodes):
+        for j in range(i, nodes):
+            d_val, b_val = get_delay_bandwidth(regions[i], regions[j])
+            delay[i][j] = d_val
+            delay[j][i] = d_val
+            bandwidth[i][j] = b_val
+            bandwidth[j][i] = b_val
+    print('delay(ms):', delay)
+    print('bandwidth(Gbps):', bandwidth)
+    return delay, bandwidth, regions
+
+
 def simulate_5_homogeneous_tc(nodes=64, delay=50, bandwidth=1):
     print("Simulate case 5: homogeneous traffic control")
     delay = np.ones((nodes, nodes)) * delay
@@ -236,7 +276,7 @@ def simulate_6_debug(nodes=8):
 
 
 def main():
-    simulate_4_worldwide_geo_distributed()
+    simulate_4_2_worldwide_geo_distributed()
 
 
 if __name__ == '__main__':
