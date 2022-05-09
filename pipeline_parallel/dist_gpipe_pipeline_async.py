@@ -551,7 +551,10 @@ class GpipeAsync:
             if 'delta' in self.forward_compress_method:
                 torch.cuda.synchronize()
                 assert sample_ids is not None
-                self.forward_compressor.read_from_cache(sample_ids)
+                if not isinstance(sample_ids, tuple):
+                    self.forward_compressor.read_from_cache(sample_ids)
+                elif sample_ids[0] is None:
+                    self.forward_compressor.read_from_cache(sample_ids[1])
             
             outputs = self.forward_stage(input_, aux_input_data=aux_input_data)
             forward_time = time.time()
@@ -565,7 +568,14 @@ class GpipeAsync:
             if 'delta' in self.forward_compress_method:
                 torch.cuda.synchronize()
                 assert sample_ids is not None
-                self.forward_compressor.write_to_cache(sample_ids)
+                if not isinstance(sample_ids, tuple):
+                    self.forward_compressor.write_to_cache(sample_ids)
+                else:
+                    if sample_ids[2] is not None:
+                        # in the same batch, idxs will not overlap
+                        self.forward_compressor.write_and_read_cache(sample_ids[1], sample_ids[2])
+                    else:
+                        self.forward_compressor.write_to_cache(sample_ids[1])
             
             self.comm.barrier()  # This is an educated guess that such barrier would make it fair TC (probably required)
             self.backward_stage(outputs, target, loss_func=loss_func)
