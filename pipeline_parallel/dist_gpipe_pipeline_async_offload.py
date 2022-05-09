@@ -274,7 +274,8 @@ class GpipeAsyncOffload:
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
                     self.torch_send_stream.wait_event(self.forward_comp_ready_events[i])
                     self.profile_mark_forward_send_start(i)
-                    self.comm.send(current_micro_output.data, dst=self.post_node_rank, stream=cupy_send_stream)
+                    self.comm.send(self.output_micro_batches[i%self.pp_buffer_size].data, dst=self.post_node_rank,
+                                   stream=cupy_send_stream)
                     self.torch_send_stream.record_event(self.forward_send_ready_events[i])
                 with torch.cuda.stream(self.gpu_to_cpu_stream):
                     self.profile_mark_forward_offload_start(i)
