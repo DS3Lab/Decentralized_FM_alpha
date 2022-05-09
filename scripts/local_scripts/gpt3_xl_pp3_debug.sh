@@ -21,7 +21,7 @@ let "global_batch_size = $ga_step*$batch_size*8"
 DIST_CONF="--rank $rank --cuda-id $cuda_id --pp-mode gpipe_ao --dp-mode $dp_mode --gradient-accumulate-step $ga_step --world-size $world_size --pipeline-group-size 3 --data-group-size 1"
 MODEL_CONF="--embedding-dim 2048 --num-heads 16 --num-layers $num_layers --batch-size $batch_size --micro-batch-size 1"
 
-if [ "$world_size" -ne 64 ]
+if [ "$world_size" -ne 3 ]
 then
   echo "Not correct number of nodes"
   exit 1
