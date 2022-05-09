@@ -110,6 +110,8 @@ class GpipeAsyncOffload:
                 torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
                             requires_grad=True, device=self.device, dtype=self.dtype)
                 for _ in range(self.pp_buffer_size)]
+            self.input_micro_batches_cupy = [
+                cupy.asarray(self.input_micro_batches[i].data) for i in range(self.pp_buffer_size)]
         if self.pp_rank == self.pipeline_group_size - 1:
             self.output_micro_batches_grad = None
         else:
@@ -121,10 +123,14 @@ class GpipeAsyncOffload:
                 torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
                             requires_grad=True, device=self.device, dtype=self.dtype)
                 for _ in range(self.pp_buffer_size)]
+            self.output_micro_batches_cupy = [
+                cupy.asarray(self.output_micro_batches[i].data) for i in range(self.pp_buffer_size)]
             self.output_micro_batches_grad = [
                 torch.zeros((self.micro_batch_size, self.seq_length, self.embedding_dim),
                             requires_grad=False, device=self.device, dtype=self.dtype)
                 for _ in range(self.pp_buffer_size)]
+            self.output_micro_batches_grad_cupy = [
+                cupy.asarray(self.output_micro_batches_grad[i].data) for i in range(self.pp_buffer_size)]
 
         if self.pp_rank == 0:
             self.model = GPTStageFirst(args, vocab_size, num_classes, device)
@@ -223,8 +229,8 @@ class GpipeAsyncOffload:
                     cupy_gpu_to_cpu_stream = cupy.cuda.ExternalStream(self.gpu_to_cpu_stream.cuda_stream)
                     self.gpu_to_cpu_stream.wait_event(self.forward_send_ready_events[i])
                     with cupy_gpu_to_cpu_stream:
-                        copy_torch_gpu_tensor2numpy_cpu_array(self.output_micro_batches[i % self.pp_buffer_size].data,
-                                                               self.output_micro_batches_offload[i])
+                        self.output_micro_batches_cupy[i % self.pp_buffer_size].get(
+                            out=self.output_micro_batches_offload[i])
                     self.gpu_to_cpu_stream.record_event(self.forward_offload_ready_events[i])
             elif self.pp_rank == self.pipeline_group_size - 1:  # Only receive input from last node, do not send
                 with torch.cuda.stream(self.torch_recv_stream):
@@ -246,8 +252,8 @@ class GpipeAsyncOffload:
                     cupy_gpu_to_cpu_stream = cupy.cuda.ExternalStream(self.gpu_to_cpu_stream.cuda_stream)
                     self.gpu_to_cpu_stream.wait_event(self.forward_comp_ready_events[i])
                     with cupy_gpu_to_cpu_stream:
-                        copy_torch_gpu_tensor2numpy_cpu_array(self.input_micro_batches[i % self.pp_buffer_size],
-                                                              self.input_micro_batch_offload[i])
+                        self.input_micro_batches_cupy[i % self.pp_buffer_size].get(
+                            out=self.input_micro_batch_offload[i])
                     self.gpu_to_cpu_stream.record_event(self.forward_offload_ready_events[i])
             else:  # receive, compute, and send
                 with torch.cuda.stream(self.torch_recv_stream):
@@ -261,7 +267,8 @@ class GpipeAsyncOffload:
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
                     self.profile_mark_forward_comp_start(i)
-                    current_micro_output = self.model(self.input_micro_batches[i % self.pp_buffer_size])
+                    self.output_micro_batches[i%self.pp_buffer_size].data = \
+                        self.model(self.input_micro_batches[i % self.pp_buffer_size])
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
@@ -274,10 +281,10 @@ class GpipeAsyncOffload:
                     cupy_gpu_to_cpu_stream = cupy.cuda.ExternalStream(self.gpu_to_cpu_stream.cuda_stream)
                     self.gpu_to_cpu_stream.wait_event(self.forward_send_ready_events[i])
                     with cupy_gpu_to_cpu_stream:
-                        copy_torch_gpu_tensor2numpy_cpu_array(current_micro_output.data,
-                                                               self.output_micro_batches_offload[i])
-                        copy_torch_gpu_tensor2numpy_cpu_array(self.input_micro_batches[i % self.pp_buffer_size],
-                                                               self.input_micro_batch_offload[i])
+                        self.output_micro_batches_cupy[i%self.pp_buffer_size].get(
+                            out=self.input_micro_batch_offload[i])
+                        self.input_micro_batches_cupy[i % self.pp_buffer_size].get(
+                            out=self.input_micro_batch_offload[i])
                     self.gpu_to_cpu_stream.record_event(self.forward_offload_ready_events[i])
         if self.enable_tidy_profiling:
             self.profiling_forward_stage()
@@ -330,8 +337,7 @@ class GpipeAsyncOffload:
                         self.cpu_to_gpu_stream.wait_event(self.backward_send_ready_events[i-self.pp_buffer_size])
                     cupy_cpu_to_gpu_stream = cupy.cuda.ExternalStream(self.cpu_to_gpu_stream.cuda_stream)
                     with cupy_cpu_to_gpu_stream:
-                        copy_numpy_cpu_array2torch_gpu_tensor(self.input_micro_batch_offload[i],
-                                                              self.input_micro_batches[i % self.pp_buffer_size].data)
+                        self.input_micro_batches[i % self.pp_buffer_size].data.set(self.input_micro_batch_offload[i])
                     self.cpu_to_gpu_stream.record_event(self.backward_load_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.backward_load_ready_events[i])
@@ -353,8 +359,8 @@ class GpipeAsyncOffload:
                         self.cpu_to_gpu_stream.wait_event(self.backward_comp_ready_events[i - self.pp_buffer_size])
                     cupy_cpu_to_gpu_stream = cupy.cuda.ExternalStream(self.cpu_to_gpu_stream.cuda_stream)
                     with cupy_cpu_to_gpu_stream:
-                        copy_numpy_cpu_array2torch_gpu_tensor(self.output_micro_batches_offload[i],
-                                                               self.output_micro_batches[i % self.pp_buffer_size].data)
+                        self.output_micro_batches_cupy[i % self.pp_buffer_size].set(
+                            self.output_micro_batches_offload[i])
                     self.cpu_to_gpu_stream.record_event(self.backward_load_ready_events[i])
                 with torch.cuda.stream(self.torch_recv_stream):
                     if i >= self.pp_buffer_size:
@@ -378,10 +384,10 @@ class GpipeAsyncOffload:
                         self.cpu_to_gpu_stream.wait_event(self.backward_send_ready_events[i - self.pp_buffer_size])
                     cupy_cpu_to_gpu_stream = cupy.cuda.ExternalStream(self.cpu_to_gpu_stream.cuda_stream)
                     with cupy_cpu_to_gpu_stream:
-                        copy_numpy_cpu_array2torch_gpu_tensor(self.output_micro_batches_offload[i],
-                                                               self.output_micro_batches[i % self.pp_buffer_size].data)
-                        copy_numpy_cpu_array2torch_gpu_tensor(self.input_micro_batches_offload[i],
-                                                               self.input_micro_batches[i % self.pp_buffer_size].data)
+                        self.output_micro_batches_cupy[i % self.pp_buffer_size].set(
+                            self.output_micro_batches_offload[i])
+                        self.input_micro_batches_cupy[i % self.pp_buffer_size].set(
+                            self.input_micro_batch_offload[i])
                     self.cpu_to_gpu_stream.record_event(self.backward_load_ready_events[i])
                 with torch.cuda.stream(self.torch_recv_stream):
                     if i >= self.pp_buffer_size:
