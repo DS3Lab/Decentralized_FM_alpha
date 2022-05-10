@@ -193,7 +193,7 @@ def simulate_4_worldwide_geo_distributed(nodes=64):
 
     def get_delay_bandwidth(region1: str, region2: str):
         if region1 == region2:
-            return 5, 2
+            return 10, 2
         else:
             if region1+'-'+region2 in delay_bandwidth_dict:
                 return delay_bandwidth_dict[region1+'-'+region2]
@@ -203,7 +203,7 @@ def simulate_4_worldwide_geo_distributed(nodes=64):
                 print(region1, region2)
                 assert False
 
-    delay = np.ones((nodes, nodes)) * 5
+    delay = np.ones((nodes, nodes)) * 10
     bandwidth = np.ones((nodes, nodes)) * 2
 
     for i in range(nodes):
