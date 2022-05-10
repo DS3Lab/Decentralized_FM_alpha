@@ -203,10 +203,10 @@ class GpipeAsync:
         if self.use_fp16:
             self.model.half()
 #             tmp_optimizer = optim.AdamW(self.model.parameters(), lr=args.lr)
-            self.optimizer = create_optimizer(self.model, learning_rate=args.lr)
-            self.optimizer = get_fp16_optimizer(args, tmp_optimizer)
+            tmp_optimizer = create_optimizer(self.model, learning_rate=args.lr)
+            self.optimizer = get_fp16_optimizer(args, tmp_optimizer, device)
             self.scheduler = get_linear_schedule_with_warmup(
-                self.optimizer, args.warmup_steps, args.total_steps, )
+                tmp_optimizer, args.warmup_steps, args.total_steps, )
         else:
 #             self.optimizer = optim.AdamW(self.model.parameters(), lr=args.lr)
             self.optimizer = create_optimizer(self.model, learning_rate=args.lr)
@@ -585,7 +585,8 @@ class GpipeAsync:
     
     
     
-    def infer_stage(self, input_data=None, aux_input_data=None):
+    def infer_stage(self, input_data=None, aux_input_data=None, 
+                    labels=None, pred_func=None):
         
         if aux_input_data is not None:
             for k in aux_input_data:
@@ -601,6 +602,7 @@ class GpipeAsync:
                 input_ids_micro_batches = torch.chunk(input_data, self.micro_batch_num, dim=0)
             else:
                 input_ids_micro_batches = [None]*self.micro_batch_num
+            labels = torch.chunk(labels, self.micro_batch_num, dim=0)
                 
         output_micro_batches = []
 
@@ -627,6 +629,7 @@ class GpipeAsync:
                         self.input_micro_batches[i], input_ids=input_ids_micro_batches[i],
                         **{k: v[i] for k, v in aux_input_data.items()},
                     )
+                    current_micro_output = pred_func(current_micro_output, labels[i])
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
             else:  # receive, compute, and send
                 with torch.cuda.stream(self.torch_recv_stream):
@@ -655,10 +658,12 @@ class GpipeAsync:
         self.comm.barrier()
         torch.cuda.synchronize()
         with torch.no_grad():
-            outputs = self.infer_stage(input_, aux_input_data=aux_input_data)
-        if metrics is not None:
-            outputs = pred_func(torch.cat(outputs, 0), target)
-            for metric in metrics:
-                metric.add_batch(predictions=outputs, references=target)
+            outputs = self.infer_stage(input_, 
+                                       aux_input_data=aux_input_data,
+                                       labels=target, pred_func=pred_func)
+            if metrics is not None:
+                outputs = torch.cat(outputs, 0)
+                for metric in metrics:
+                    metric.add_batch(predictions=outputs, references=target)
         torch.cuda.synchronize()
         self.comm.barrier()
