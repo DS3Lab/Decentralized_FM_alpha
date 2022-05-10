@@ -20,23 +20,25 @@ sns.set_theme()
 
 bounds = list(np.arange(0, 25, 0.5))
 bounds.extend(list(np.arange(25, 301, 5)))
-delay_cmap = plt.get_cmap('coolwarm', len(bounds))
+delay_cmap = plt.get_cmap('RdYlGn_r', len(bounds))
 delay_norm = mcolors.BoundaryNorm(bounds, len(bounds))
 
 bounds = list(np.arange(0, 1.5, 0.05))
 bounds.extend(list(np.arange(2, 10, 1)))
 bounds.extend(list(np.arange(10, 110, 10)))
-bandwidth_cmap = plt.get_cmap('coolwarm', len(bounds))
+bandwidth_cmap = plt.get_cmap('RdYlGn', len(bounds))
 bandwidth_norm = mcolors.BoundaryNorm(bounds, len(bounds))
 
 for i, simulate_case in enumerate(simulate_cases):
     peer_delay, peer_bandwidth, regions = simulate_case()
     ax = sns.heatmap(ax=axes[i, 0], data=pd.DataFrame(peer_delay, index=list(range(config.nodes)), columns=list(range(config.nodes))), vmin=0, vmax=300, cmap=delay_cmap,
-                     norm=delay_norm, cbar=True if i == 4 else False, cbar_kws={'location': 'bottom', 'ticks': [0, 20, 50, 100, 200, 300]}, xticklabels=8, yticklabels=8, linewidths=0.001, square=True)
+                     norm=delay_norm, cbar=True if i == 4 else False, cbar_kws={'location': 'bottom', 'ticks': [0, 10, 20, 100, 200, 300]}, xticklabels=8, yticklabels=8, linewidths=0.001, square=True)
     ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
 
     ax = sns.heatmap(ax=axes[i, 1], data=pd.DataFrame(peer_bandwidth, index=list(range(config.nodes)), columns=list(range(config.nodes))), vmin=0, vmax=100, cmap=bandwidth_cmap,
                      norm=bandwidth_norm, cbar=True if i == 4 else False, cbar_kws={'location': 'bottom', 'ticks': [0.0, 0.5, 1.0, 2.0, 10, 100]}, xticklabels=8, yticklabels=8, linewidths=0.001, square=True)
-
+    if i == 4:
+        cbar = ax.collections[0].colorbar
+        cbar.set_ticklabels([0, 0.5, 1, 2, 10, 100])
 
 plt.savefig("scheduling_heatmap.eps", dpi=1000)
