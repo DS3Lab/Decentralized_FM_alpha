@@ -15,7 +15,7 @@ simulate_cases = [
 ]
 
 fig, axes = plt.subplots(nrows=5, ncols=2, sharex=True,
-                         sharey=True, figsize=(6, 12), gridspec_kw={"height_ratios": [1, 1, 1, 1, 1.45]})
+                         sharey=True, figsize=(5, 15), gridspec_kw={"height_ratios": [1, 1, 1, 1, 1.45]})
 sns.set_theme()
 
 bounds = list(np.arange(0, 25, 0.5))
@@ -39,4 +39,4 @@ for i, simulate_case in enumerate(simulate_cases):
                      norm=bandwidth_norm, cbar=True if i == 4 else False, cbar_kws={'location': 'bottom', 'ticks': [0.0, 0.5, 1.0, 2.0, 10, 100]}, xticklabels=8, yticklabels=8, linewidths=0.001, square=True)
 
 
-plt.savefig("scheduling_heatmap.eps", dpi=300)
+plt.savefig("scheduling_heatmap.eps", dpi=1000)
