@@ -15,7 +15,7 @@ from .utils import *
 from . import flag
 
 
-MAX_CACHE_SIZE = 10000
+MAX_CACHE_SIZE = 5000
 
 
 class DeltaCompressor:
