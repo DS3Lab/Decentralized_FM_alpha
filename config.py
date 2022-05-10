@@ -181,8 +181,10 @@ def simulate_3_regional_geo_distributed(nodes=64):
 # Assume within region is 2 GB, 5 ms.
 def simulate_4_worldwide_geo_distributed(nodes=64):
     print("Simulate case 4: worldwide geo distributed")
-    cities = ["Oregon", "Virginia", "Ohio", "Tokyo", "Seoul",
-              "Singapore", "Sydney", "London", "Frankfurt", "Ireland"]
+    # cities = ["Oregon", "Virginia", "Ohio", "Tokyo", "Seoul",
+    #          "Singapore", "Sydney", "London", "Frankfurt", "Ireland"]
+    cities = ["Oregon", "Virginia", "Ohio", "Tokyo",
+              "Seoul", "London", "Frankfurt", "Ireland"]
     regions = []
     np.random.seed(2022)
     for i in np.random.randint(low=0, high=len(cities), size=nodes):
