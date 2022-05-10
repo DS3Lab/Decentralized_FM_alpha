@@ -7,6 +7,7 @@ import cupy
 from torch.utils.dlpack import to_dlpack, from_dlpack
 import concurrent.futures
 import tempfile
+import time
 
 from .fixpoint import *
 from .sparsification import *
@@ -14,7 +15,7 @@ from .utils import *
 from . import flag
 
 
-MAX_CACHE_SIZE = 400000
+MAX_CACHE_SIZE = 110000
 
 
 class DeltaCompressor:
@@ -48,6 +49,8 @@ class DeltaCompressor:
         self.cache = np.memmap(
             self.tmp_f, mode='w+', dtype=np.float16, shape=(MAX_CACHE_SIZE, 2, seq_length, embedding_dim),
         )
+        # Info: ensure it has content, so the profiling will be accurate
+#         self.cache.fill(1e-6)
         
         # Communication Buffers
         _x = torch.randn(self.activ_shape).to(device)
@@ -83,6 +86,7 @@ class DeltaCompressor:
         ]
         
     def _read_from_cache(self, sample_ids):
+#         time.sleep(1)
         activations = self.cache[sample_ids]
         a_dec, a_com = activations[:, 0], activations[:, 1]
         for i in range(self.batch_size//self.micro_batch_size):
@@ -113,7 +117,13 @@ class DeltaCompressor:
     def write_to_cache(self, sample_ids):
         self._wait_read()
         self._wait_write()
-        self.future_read = self.executor.submit(self._write_to_cache, sample_ids)
+        self.future_write = self.executor.submit(self._write_to_cache, sample_ids)
+        
+    def write_and_read_cache(self, write_ids, read_ids):
+        self._wait_read()
+        self._wait_write()
+        self.future_write = self.executor.submit(self._write_to_cache, write_ids)
+        self.future_read = self.executor.submit(self._read_from_cache, read_ids)
         
     def compress(self, x, i_micro_batch):
         # get cache

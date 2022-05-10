@@ -41,7 +41,7 @@ def create_optimizer(model, weight_decay=0.01, learning_rate=2e-5,
         {
             "params": [p for n, p in model.named_parameters() if n not in decay_parameters],
             "weight_decay": 0.0,
-        },
+        }
     ]
     optimizer_cls = AdamW
     optimizer_kwargs = {
@@ -93,39 +93,6 @@ class GpipeAsync:
         self.vocab_size = config.vocab_size
         self.num_classes = config.num_labels
         
-        # Compression
-        self.forward_compress_method = args.forward_compress_method
-        self.forward_compressor = get_compressor(
-            compress_method=args.forward_compress_method, 
-            bits=args.forward_bits, 
-            ratio=args.forward_ratio,
-            bits_act=args.forward_bits_act,
-            ratio_act=args.forward_ratio_act,
-            scale_method=args.forward_scale_method, 
-            scale_dims=args.forward_scale_dims,
-        )
-        self.forward_compressor.build_buffer(
-            batch_size=args.batch_size,
-            micro_batch_size=args.micro_batch_size,
-            seq_length=args.seq_length,
-            embedding_dim=args.embedding_dim,
-            device=device, dtype=self.dtype,
-        )
-        
-        self.backward_compressor = get_compressor(
-            compress_method=args.backward_compress_method, 
-            bits=args.backward_bits, 
-            ratio=args.backward_ratio,
-            scale_method=args.backward_scale_method, 
-            scale_dims=args.backward_scale_dims,
-        )
-        self.backward_compressor.build_buffer(
-            batch_size=args.batch_size,
-            micro_batch_size=args.micro_batch_size,
-            seq_length=args.seq_length,
-            embedding_dim=args.embedding_dim,
-            device=device, dtype=self.dtype,
-        )
 
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
         self.device = device
@@ -199,6 +166,42 @@ class GpipeAsync:
             self.model = _StageLast(args, config, device)
         else:
             self.model = _StageMiddle(args, config, device)
+            
+            
+        # Compression
+        self.forward_compress_method = args.forward_compress_method
+        self.forward_compressor = get_compressor(
+            compress_method=args.forward_compress_method, 
+            bits=args.forward_bits, 
+            ratio=args.forward_ratio,
+            bits_act=args.forward_bits_act,
+            ratio_act=args.forward_ratio_act,
+            scale_method=args.forward_scale_method, 
+            scale_dims=args.forward_scale_dims,
+        )
+        self.forward_compressor.build_buffer(
+            batch_size=args.batch_size,
+            micro_batch_size=args.micro_batch_size,
+            seq_length=args.seq_length,
+            embedding_dim=args.embedding_dim,
+            device=device, dtype=self.dtype,
+        )
+        
+        self.backward_compressor = get_compressor(
+            compress_method=args.backward_compress_method, 
+            bits=args.backward_bits, 
+            ratio=args.backward_ratio,
+            scale_method=args.backward_scale_method, 
+            scale_dims=args.backward_scale_dims,
+        )
+        self.backward_compressor.build_buffer(
+            batch_size=args.batch_size,
+            micro_batch_size=args.micro_batch_size,
+            seq_length=args.seq_length,
+            embedding_dim=args.embedding_dim,
+            device=device, dtype=self.dtype,
+        )
+        
 
         if self.use_fp16:
             self.model.half()
@@ -548,7 +551,10 @@ class GpipeAsync:
             if 'delta' in self.forward_compress_method:
                 torch.cuda.synchronize()
                 assert sample_ids is not None
-                self.forward_compressor.read_from_cache(sample_ids)
+                if not isinstance(sample_ids, tuple):
+                    self.forward_compressor.read_from_cache(sample_ids)
+                elif sample_ids[0] is None:
+                    self.forward_compressor.read_from_cache(sample_ids[1])
             
             outputs = self.forward_stage(input_, aux_input_data=aux_input_data)
             forward_time = time.time()
@@ -562,7 +568,14 @@ class GpipeAsync:
             if 'delta' in self.forward_compress_method:
                 torch.cuda.synchronize()
                 assert sample_ids is not None
-                self.forward_compressor.write_to_cache(sample_ids)
+                if not isinstance(sample_ids, tuple):
+                    self.forward_compressor.write_to_cache(sample_ids)
+                else:
+                    if sample_ids[2] is not None:
+                        # in the same batch, idxs will not overlap
+                        self.forward_compressor.write_and_read_cache(sample_ids[1], sample_ids[2])
+                    else:
+                        self.forward_compressor.write_to_cache(sample_ids[1])
             
             self.comm.barrier()  # This is an educated guess that such barrier would make it fair TC (probably required)
             self.backward_stage(outputs, target, loss_func=loss_func)
@@ -602,7 +615,10 @@ class GpipeAsync:
                 input_ids_micro_batches = torch.chunk(input_data, self.micro_batch_num, dim=0)
             else:
                 input_ids_micro_batches = [None]*self.micro_batch_num
-            labels = torch.chunk(labels, self.micro_batch_num, dim=0)
+            if labels is not None:
+                labels = torch.chunk(labels, self.micro_batch_num, dim=0)
+            else:
+                labels = [None]*self.micro_batch_num
                 
         output_micro_batches = []
 
@@ -667,3 +683,4 @@ class GpipeAsync:
                     metric.add_batch(predictions=outputs, references=target)
         torch.cuda.synchronize()
         self.comm.barrier()
+
