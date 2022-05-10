@@ -470,12 +470,20 @@ if __name__ == "__main__":
 
         candidate_pipeline = get_pipelines(
             candidate_partition, pipeline_parallel_path, pipeline_parallel_match)
-        for stage_idx in range(way):
-            if regions != None:
-                print("stage " + str(stage_idx) + ": ", end="")
-                for i in range(partition_size):
-                    region_id = candidate_pipeline[stage_idx, i]
-                    print(regions[region_id] + (" " *
-                          (10 - len(regions[region_id]))), end=", ")
+
+        ip_rank_map = [0] * num_devices
+        for pipeline_idx in range(partition_size):
+            for stage_idx in range(way):
+                ip_rank_map[candidate_pipeline[stage_idx,
+                                               pipeline_idx]] = pipeline_idx * way + stage_idx
+        assert(np.sum(ip_rank_map) == np.sum(range(num_devices)))
+
+        if regions != None:
+            for pipeline_idx in range(partition_size):
+                print("pipeline " + str(pipeline_idx) + ": ", end="")
+                for stage_idx in range(way):
+                    ip = ip_rank_map.index(pipeline_idx * way + stage_idx)
+                    print(regions[ip] +
+                          (" " * (10 - len(regions[ip]))), end=", ")
                 print()
-        print(candidate_pipeline)
+        print(ip_rank_map)
