@@ -30,8 +30,8 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             
         distributed_train_lm_iter(args, pipe, device, train_data_loader)
         
-        if test_data_loader is not None:
-            distributed_test_lm_iter(args, pipe, device, test_data_loader)
+        # if test_data_loader is not None:
+        #     distributed_test_lm_iter(args, pipe, device, test_data_loader)
             
         if get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
             wandb.log({'epoch': e}, step=pipe.global_step)
