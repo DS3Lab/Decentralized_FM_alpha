@@ -214,7 +214,8 @@ def simulate_4_worldwide_geo_distributed(nodes=64):
 
 def simulate_4_2_worldwide_geo_distributed(nodes=64):
     print("Simulate case 4: worldwide geo distributed")
-    cities = ["Oregon", "Virginia", "Ohio",  "Tokyo", "Seoul", "Singapore", "Sydney", "London", "Frankfurt", "Ireland"]
+    # cities = ["Oregon", "Virginia", "Ohio",  "Tokyo", "Seoul", "Singapore", "Sydney", "London", "Frankfurt", "Ireland"]
+    cities = ["Oregon", "Virginia", "Ohio", "Tokyo", "Seoul", "London", "Frankfurt", "Ireland"]
     regions = []
     print(np.__version__)
     np.random.seed(2022)
