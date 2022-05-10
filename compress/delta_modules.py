@@ -15,7 +15,7 @@ from .utils import *
 from . import flag
 
 
-MAX_CACHE_SIZE = 110000
+MAX_CACHE_SIZE = 10000
 
 
 class DeltaCompressor:
@@ -50,7 +50,7 @@ class DeltaCompressor:
             self.tmp_f, mode='w+', dtype=np.float16, shape=(MAX_CACHE_SIZE, 2, seq_length, embedding_dim),
         )
         # Info: ensure it has content, so the profiling will be accurate
-#         self.cache.fill(1e-6)
+        self.cache.fill(1e-6)
         
         # Communication Buffers
         _x = torch.randn(self.activ_shape).to(device)
