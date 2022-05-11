@@ -81,7 +81,15 @@ def main():
     init_communicators(args)
     
     config = GPTConfig.from_pretrained(args.model_name)
-    config.n_layer = args.num_layers  # num_layers per node
+    
+    if get_pipeline_parallel_rank() == args.pipeline_group_size-1:
+        args.num_layers -= 1
+        config.n_layer = args.num_layers  # num_layers per node
+    elif get_pipeline_parallel_rank() == args.pipeline_group_size-2:
+        args.num_layers += 1
+        config.n_layer = args.num_layers  # num_layers per node
+    else:
+        config.n_layer = args.num_layers  # num_layers per node
     
     tokenizer = build_tokenizer(args)
     tokenizer.model_max_length = args.seq_length
