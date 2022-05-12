@@ -12,7 +12,7 @@ def benchmark_transformer_layer(args, device):
     for _ in range(args.num_layers):
         module_list.append(GPTTransformerLayer(args.embedding_dim, args.num_heads,
                                                4 * args.embedding_dim, use_checkpoint=args.use_checkpoint))
-    layers = nn.Sequential(*module_list).to(device)
+    layers = nn.Sequential(*module_list).to(device).half()
     print(layers)
     # summary(one_layer, (args.seq_length, args.embedding_size), batch_dim=0)
 
@@ -31,7 +31,7 @@ def benchmark_transformer_layer(args, device):
             if i != 0:
                 start_time = time.time()
                 start_event.record()
-            fake_batch = torch.zeros(batch_shape, requires_grad=True).to(device)
+            fake_batch = torch.zeros(size=batch_shape, requires_grad=True, dtype=torch.float16, device=device)
             output = layers(fake_batch)
             if i != 0 :
                 end_event.record()

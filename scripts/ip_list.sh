@@ -68,3 +68,4 @@ ips=(
 
 # private IP of Rank-0 instances.
 master_ip="172.31.47.149"
+#master_ip="172.31.47.82"
