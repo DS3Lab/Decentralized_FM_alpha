@@ -28,13 +28,13 @@ bandwidth_norm = mcolors.BoundaryNorm(bounds, len(bounds))
 
 
 def plot_colorbar(subfig=None):
-    cax = subfig.add_axes([0.11, 0.048, 0.38, 0.01])
+    cax = subfig.add_axes([0.11, 0.056, 0.38, 0.01])
     cbar = mpl.colorbar.ColorbarBase(ax=cax, norm=delay_norm, cmap=delay_cmap,
                                      orientation='horizontal', ticklocation='top', ticks=[0, 10, 20, 100, 200, 300])
     cbar.set_ticklabels([0, 10, 20, 100, 200, 300])
     cbar.outline.set_visible(False)
 
-    cax = subfig.add_axes([0.54, 0.048, 0.38, 0.01])
+    cax = subfig.add_axes([0.54, 0.056, 0.38, 0.01])
     cbar = mpl.colorbar.ColorbarBase(ax=cax, norm=bandwidth_norm, cmap=bandwidth_cmap,
                                      orientation='horizontal', ticklocation='top', ticks=[0.0, 0.5, 1.0, 2.0, 10, 100])
     cbar.set_ticklabels([0, 0.5, 1, 2, 10, 100])
@@ -53,8 +53,9 @@ def plot_heatmap(subfig=None):
                          norm=bandwidth_norm, cbar=False, xticklabels=8, yticklabels=8, linewidths=0.001, square=True)
 
 
-fig = plt.figure(figsize=(10, 15))
+fig = plt.figure(figsize=(10, 17))
 subfigs = fig.subfigures(nrows=1, ncols=2, width_ratios=[1.4, 1])
+plt.subplots_adjust(hspace=0.4)
 plot_colorbar(subfig=subfigs[0])
 plot_heatmap(subfig=subfigs[0])
 plot_performance(subfig=subfigs[1])
