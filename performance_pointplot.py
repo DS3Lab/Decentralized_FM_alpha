@@ -1,4 +1,3 @@
-from cProfile import label
 import enum
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -179,28 +178,24 @@ case_4_df = pd.DataFrame(data=[[4, 23.64, 0.141, 'Megatron'],
                          columns=['case', 'pflop', 'pflops', 'system'])
 
 cases_df = [case_0_df, case_1_df, case_2_df, case_3_df, case_4_df]
-fig, axes = plt.subplots(nrows=5, sharex=True, figsize=(5, 15))
-sns.set_theme()
-for i, df in enumerate(cases_df):
-    for j in df.index:
-        df.loc[j, 'pflops'] = df.loc[j, 'pflops'] / \
-            megatron_opt_df.loc[j % 9, 'pflops']
 
-    ax = sns.pointplot(ax=axes[i], data=df, x='pflop', y="pflops", hue="system", hue_order=[
-                       "Megatron", "Ours (w/o Scheduler)", "Ours (w/ Scheduler)"])
-    ax.set(ylim=(0, 1.6))
-    ax.set_ylabel('Relative PFLOPS')
-    ax.axhline(y=1.0, linestyle="--", color='dimgray')
 
-    if i == 4:
-        ax.set(xticklabels=['L24\nB1k', 'L24\nB2k', 'L24\nB4k',
-                            'L32\nB1k', 'L32\nB2k', 'L32\nB4k',
-                            'L40\nB1k', 'L40\nB2k', 'L40\nB4k', ])
-        ax.set_xlabel('Model Architecture')
-        ax.get_legend().set_title(None)
-        ax.legend(loc='lower center', bbox_to_anchor=(
-            0.48, -0.5), ncol=3, prop={'size': 9}, facecolor='white')
-    else:
-        ax.set_xlabel(None)
-        ax.get_legend().remove()
-plt.savefig("performance_pointplot.eps", dpi=1000)
+def plot_performance(subfig=None):
+    axes = subfig.subplots(nrows=5, ncols=1, sharex=True)
+    for i, df in enumerate(cases_df):
+        ax = sns.pointplot(ax=axes[i], data=df, x='pflop', y="pflops", hue="system", hue_order=[
+            "Megatron", "Ours (w/o Scheduler)", "Ours (w/ Scheduler)"])
+        ax.set(ylim=(0, 3.1))
+        ax.set_ylabel('PFLOPS')
+
+        if i == 4:
+            ax.set(xticklabels=['L24\nB1k', 'L24\nB2k', 'L24\nB4k',
+                                'L32\nB1k', 'L32\nB2k', 'L32\nB4k',
+                                'L40\nB1k', 'L40\nB2k', 'L40\nB4k', ])
+            ax.set_xlabel('Model Architecture')
+            ax.get_legend().set_title(None)
+            ax.legend(loc='lower center', handletextpad=0.1, columnspacing=0.1, bbox_to_anchor=(
+                0.48, -0.5), ncol=3, prop={'size': 9}, facecolor='white')
+        else:
+            ax.set_xlabel(None)
+            ax.get_legend().remove()
