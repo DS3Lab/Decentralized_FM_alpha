@@ -59,4 +59,12 @@ plt.subplots_adjust(hspace=0.4)
 plot_colorbar(subfig=subfigs[0])
 plot_heatmap(subfig=subfigs[0])
 plot_performance(subfig=subfigs[1])
+plt.plot([0, 1], [0.751, 0.751], color='black', linestyle='--', linewidth=2,
+         transform=plt.gcf().transFigure, clip_on=False)
+plt.plot([0, 1], [0.589, 0.589], color='black', linestyle='--', linewidth=2,
+         transform=plt.gcf().transFigure, clip_on=False)
+plt.plot([0, 1], [0.427, 0.427], color='black', linestyle='--', linewidth=2,
+         transform=plt.gcf().transFigure, clip_on=False)
+plt.plot([0, 1], [0.265, 0.265], color='black', linestyle='--', linewidth=2,
+         transform=plt.gcf().transFigure, clip_on=False)
 plt.savefig("combination_plot.eps", dpi=1000)
