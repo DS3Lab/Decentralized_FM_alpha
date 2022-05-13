@@ -305,7 +305,7 @@ class GpipeSync:
                 
                 # with torch.cuda.stream(self.torch_send_stream):
                 cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
-                # self.torch_send_stream.wait_event(self.forward_comp_ready_events[i])
+                self.torch_send_stream.wait_event(self.forward_comp_ready_events[i])
                 self.profile_mark_forward_send_start(i)
                 # compress
                 self.forward_compressor.compress_send(
@@ -325,7 +325,7 @@ class GpipeSync:
                 self.torch_recv_stream.record_event(self.forward_recv_ready_events[i])
                 
                 # with torch.cuda.stream(self.torch_comp_stream):
-                # self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
+                self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
                 self.profile_mark_forward_comp_start(i)
                 current_micro_output = self.model(
                     self.input_micro_batches[i], input_ids=input_ids_micro_batches[i], 
@@ -343,7 +343,7 @@ class GpipeSync:
                 self.torch_recv_stream.record_event(self.forward_recv_ready_events[i])
                 
                 # with torch.cuda.stream(self.torch_comp_stream):
-                # self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
+                self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
                 self.profile_mark_forward_comp_start(i)
                 current_micro_output = self.model(
                     self.input_micro_batches[i], 
@@ -353,7 +353,7 @@ class GpipeSync:
                 
                 # with torch.cuda.stream(self.torch_send_stream):
                 cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
-                # self.torch_send_stream.wait_event(self.forward_comp_ready_events[i])
+                self.torch_send_stream.wait_event(self.forward_comp_ready_events[i])
                 self.profile_mark_forward_send_start(i)
                 # compress
                 self.forward_compressor.compress_send(
@@ -418,7 +418,7 @@ class GpipeSync:
                 
                 # with torch.cuda.stream(self.torch_send_stream):
                 cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
-                # self.torch_send_stream.wait_event(self.backward_comp_ready_events[i])
+                self.torch_send_stream.wait_event(self.backward_comp_ready_events[i])
                 self.profile_mark_backward_send_start(i)
                 # compress
                 self.backward_compressor.compress_send(
@@ -439,7 +439,7 @@ class GpipeSync:
                 self.torch_recv_stream.record_event(self.backward_recv_ready_events[i])
     
                 # with torch.cuda.stream(self.torch_comp_stream):
-                # self.torch_comp_stream.wait_event(self.backward_recv_ready_events[i])
+                self.torch_comp_stream.wait_event(self.backward_recv_ready_events[i])
                 self.profile_mark_backward_comp_start(i)
                 cached_output_micro_batches[i].backward(gradient=self.output_micro_batches_grad[i])
                 self.torch_comp_stream.record_event(self.backward_comp_ready_events[i])
@@ -455,14 +455,14 @@ class GpipeSync:
                 self.torch_recv_stream.record_event(self.backward_recv_ready_events[i])
     
                 # with torch.cuda.stream(self.torch_comp_stream):
-                # self.torch_comp_stream.wait_event(self.backward_recv_ready_events[i])
+                self.torch_comp_stream.wait_event(self.backward_recv_ready_events[i])
                 self.profile_mark_backward_comp_start(i)
                 cached_output_micro_batches[i].backward(gradient=self.output_micro_batches_grad[i])
                 self.torch_comp_stream.record_event(self.backward_comp_ready_events[i])
                     
                 # with torch.cuda.stream(self.torch_send_stream):
                 cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
-                # self.torch_send_stream.wait_event(self.backward_comp_ready_events[i])
+                self.torch_send_stream.wait_event(self.backward_comp_ready_events[i])
                 self.profile_mark_backward_send_start(i)
                 # compress
                 self.backward_compressor.compress_send(
