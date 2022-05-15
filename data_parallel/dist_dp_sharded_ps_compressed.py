@@ -234,7 +234,7 @@ class ShardedPSDPCompressed:
         chunk_size = self.flatten_para.data.numel() // self.dp_group_size
         bits = self.dp_bits
         _data = torch.zeros(chunk_size, device=self.flatten_para.device, dtype=self.flatten_para.dtype)
-        _data_compressed = compress_flexible_nbits(_data, bits=bits, scale_dims=tuple())
+#         _data_compressed = compress_flexible_nbits(_data, bits=bits, scale_dims=tuple())
         grad_buffer_non_compressed = [
             torch.zeros_like(_data) for i in range(self.dp_group_size)
         ]
@@ -253,7 +253,9 @@ class ShardedPSDPCompressed:
         chunk_size = self.flatten_exp_avgs.data.numel() // self.dp_group_size
         bits = self.dp_bits
         _data = torch.zeros(chunk_size, device=self.flatten_exp_avgs.device, dtype=self.flatten_exp_avgs.dtype)
-        _data_compressed = compress_flexible_nbits(_data, bits=bits, scale_dims=tuple())
+#         _data_compressed = compress_flexible_nbits(_data, bits=bits, scale_dims=tuple())
+        _data_compressed = compress_flexible_nbits_by_bucket(
+            _data, bits=bits, bucket_size=512)
         grad_buffer = [
             (torch.zeros_like(_data_compressed[0]),
              torch.zeros_like(_data_compressed[1])) for i in range(self.dp_group_size)

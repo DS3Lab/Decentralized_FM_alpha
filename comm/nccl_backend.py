@@ -236,8 +236,9 @@ class NCCLCommunicator:
             
             # update worker errors
             for i in range(self.comm_group_size):
-                worker_errors[i].set_(tensor_chunks[i] - decompress_flexible_nbits(
-                    *tensor_chunks_compressed[i], bits=bits, original_shape=original_shape))
+                worker_errors[i].set_(tensor_chunks[i] - decompress_flexible_nbits_by_bucket(
+                    *tensor_chunks_compressed[i], bits=bits, 
+                    original_shape=original_shape, bucket_size=512))
             
             cupy.cuda.nccl.groupStart()
             for i in range(self.comm_group_size):
@@ -259,11 +260,11 @@ class NCCLCommunicator:
                     _type_torch_to_cupy(to_recv.dtype), i, stream.ptr)
             cupy.cuda.nccl.groupEnd()
 
-            tensor_server = decompress_flexible_nbits(
-                *buffer[0], bits=bits, original_shape=original_shape,)
+            tensor_server = decompress_flexible_nbits_by_bucket(
+                *buffer[0], bits=bits, original_shape=original_shape, bucket_size=512)
             for i in range(1, self.comm_group_size):
-                tensor_server += decompress_flexible_nbits(
-                    *buffer[i], bits=bits, original_shape=original_shape,)
+                tensor_server += decompress_flexible_nbits_by_bucket(
+                    *buffer[i], bits=bits, original_shape=original_shape, bucket_size=512)
             tensor_server.mul_(1 / self.comm_group_size)
                 
             # server error compensation
@@ -273,8 +274,9 @@ class NCCLCommunicator:
             tensor_server_compressed = compress_flexible_nbits_by_bucket(tensor_server, bits=bits, bucket_size=512)
             
             # update server error
-            server_error.set_(tensor_server - decompress_flexible_nbits(
-                    *tensor_server_compressed, bits=bits, original_shape=original_shape))
+            server_error.set_(tensor_server - decompress_flexible_nbits_by_bucket(
+                    *tensor_server_compressed, bits=bits, 
+                    original_shape=original_shape, bucket_size=512))
             
             cupy.cuda.nccl.groupStart()
             for i in range(self.comm_group_size):
@@ -295,7 +297,7 @@ class NCCLCommunicator:
                     _type_torch_to_cupy(to_recv.dtype), i, stream.ptr)
             cupy.cuda.nccl.groupEnd()
 
-            recv_tensors = [decompress_flexible_nbits(*_data, bits=bits, original_shape=original_shape) for _data in buffer]
+            recv_tensors = [decompress_flexible_nbits_by_bucket(*_data, bits=bits, original_shape=original_shape, bucket_size=512) for _data in buffer]
             tensor.data.copy_(torch.cat(recv_tensors, 0))
 
 

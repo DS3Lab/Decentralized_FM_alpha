@@ -162,12 +162,14 @@ def _compress_nbits_by_bucket(x, bits, scale_method='max', bucket_size=512):
     
     fbits = bits - 1
     
+    x = x.view(bucket_size, -1)
+    
     if scale_method == 'max':
         # issue: sensitive to outlier points
-        scale = x.view(bucket_size, -1).abs().amax([0], keepdims=True)
+        scale = x.abs().amax([0], keepdims=True)
     elif scale_method == 'l2':
         # ~95% confidence interval for normal distribution
-        scale = x.view(bucket_size, -1).pow(2).mean([0], keepdims=True).sqrt() * 2 
+        scale = x.pow(2).mean([0], keepdims=True).sqrt() * 2 
     else:
         raise Exception('unkonwn scale method.')
     # fp16 should be enough
@@ -196,3 +198,15 @@ def compress_flexible_nbits_by_bucket(x, bits, scale_method='max', bucket_size=5
     x = pack_low_bit_tensor(x, bits)
     
     return x, scale
+
+
+def decompress_flexible_nbits_by_bucket(x, scale, bits, original_shape, bucket_size=512):
+    # support any bits, but need to know original_shape
+    # CUDA only
+    
+    x = unpack_low_bit_tensor(x, bits, original_shape)
+    x = x.view(bucket_size, -1)
+    x = _decompress_nbits(x, scale, bits=bits)
+    x = x.view(original_shape)
+    
+    return x

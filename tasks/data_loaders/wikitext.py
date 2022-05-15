@@ -59,12 +59,14 @@ def get_wikitext_train_data_loader(args, tokenizer, num_workers=0):
     input_ids = torch.cat(input_ids_list, 0)
     
     use_dp = (args.world_size != args.pipeline_group_size)
-    dp_rank = get_data_parallel_rank()
     if use_dp:
+        dp_rank = get_data_parallel_rank()
         n_samples = len(input_ids)
         n_samples_per_rank = n_samples // args.data_group_size
         i_begin, i_end = dp_rank * n_samples_per_rank, (dp_rank+1) * n_samples_per_rank
         input_ids = input_ids[i_begin: i_end]
+    else:
+        dp_rank = 0
     
     train_set = Dataset.from_dict({
         'input_ids': input_ids,
