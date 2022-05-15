@@ -432,12 +432,13 @@ if __name__ == "__main__":
         data_parallel_cost = None
         pipeline_parallel_cost = None
         pipeline_parallel_path = None
+        pipeline_parallel_match = None
 
         # all_cost_records = []
         # for cur_candidate_partition in all_candidate_partitions(list(range(num_devices))):
         #    cur_data_parallel_cost = compute_data_parallel_cost(
         #        candidate_partition=cur_candidate_partition)
-        #    cur_pipeline_parallel_cost, cur_pipeline_parallel_path = compute_pipeline_parallel_cost(
+        #    cur_pipeline_parallel_cost, cur_pipeline_parallel_path, cur_pipeline_parallel_match = compute_pipeline_parallel_cost(
         #        cur_candidate_partition)
         #    cur_total_cost = cur_data_parallel_cost + 2 * cur_pipeline_parallel_cost
         #    all_cost_records.append(cur_total_cost)
@@ -447,6 +448,7 @@ if __name__ == "__main__":
         #        pipeline_parallel_path = cur_pipeline_parallel_path
         #        data_parallel_cost = cur_data_parallel_cost
         #        pipeline_parallel_cost = 2 * cur_pipeline_parallel_cost
+        #        pipeline_parallel_match = cur_pipeline_parallel_match
 
         candidate_partitions, all_cost_records = GCMA(
             nodes=list(range(num_devices)), population_size=100, trails=4900)
