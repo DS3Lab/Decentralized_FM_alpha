@@ -507,6 +507,7 @@ class GpipeAsync:
             with torch.cuda.stream(self.torch_comp_stream):
                 self.torch_comp_stream.record_event(self.dp_optim.backward_ready_event)
             self.dp_optim.optimizer_step()
+            self.scheduler.step()
         else:
             with torch.cuda.stream(self.torch_comp_stream):
                 if self.enable_tidy_profiling:
@@ -543,7 +544,8 @@ class GpipeAsync:
             self.init_time_stamp = time.time() * 1e+6
             self.init_event.record()
         self.zero_input_grad()
-        self.optimizer.zero_grad(set_to_none=True)
+#         self.optimizer.zero_grad(set_to_none=True)
+        self.optimizer.zero_grad(set_to_none=False)
 
         for step in range(self.gradient_accumulate_step):
             

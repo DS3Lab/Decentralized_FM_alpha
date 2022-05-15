@@ -30,7 +30,7 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             
         distributed_train_lm_iter(args, pipe, device, train_data_loader)
         
-        if test_data_loader is not None:
+        if test_data_loader is not None and args.do_evaluation:
             distributed_test_lm_iter(args, pipe, device, test_data_loader)
             
         if get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
@@ -66,6 +66,9 @@ def main():
                         help='enable which profiling? default: tidy mode')
     parser.add_argument('--trace-postfix', type=str, default='default', metavar='S',
                         help='postfix of the tracing file name.')
+    parser.add_argument('--do-evaluation', 
+                        type=lambda x: x.lower()=='true', default=True, metavar='S',
+                        help='do evaluation or not.')
     args = parser.parse_args()
     
     torch.manual_seed(args.seed)
@@ -113,6 +116,9 @@ def main():
     else:
         print("Running ", args.pp_mode, " without data parallel.")
 
+    torch.manual_seed(args.seed)
+    random.seed(args.seed)
+    np.random.seed(args.seed)
     pipe = get_pp_module(args, config, device, use_dp)
     
     if args.load_pretrained_model:

@@ -98,6 +98,7 @@ class DeltaCompressor:
         com_activations = np.concatenate(self.np_com_buffers, 0)
         activations = np.stack([dec_activations, com_activations], 1)
         self.cache[sample_ids] = activations
+        self.cache.flush()
         
     def _wait_read(self):
         if self.future_read is not None:

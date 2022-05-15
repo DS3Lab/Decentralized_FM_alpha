@@ -3,6 +3,7 @@ import re
 import torch
 from datasets import Dataset
 from datasets import load_dataset, load_from_disk
+from comm.comm_utils import *
 
 
 def wikitext_detokenize(string):
@@ -57,6 +58,14 @@ def get_wikitext_train_data_loader(args, tokenizer, num_workers=0):
         input_ids_list.append(input_ids)
     input_ids = torch.cat(input_ids_list, 0)
     
+    use_dp = (args.world_size != args.pipeline_group_size)
+    dp_rank = get_data_parallel_rank()
+    if use_dp:
+        n_samples = len(input_ids)
+        n_samples_per_rank = n_samples // args.data_group_size
+        i_begin, i_end = dp_rank * n_samples_per_rank, (dp_rank+1) * n_samples_per_rank
+        input_ids = input_ids[i_begin: i_end]
+    
     train_set = Dataset.from_dict({
         'input_ids': input_ids,
         'attention_mask': torch.ones_like(input_ids),
@@ -70,7 +79,7 @@ def get_wikitext_train_data_loader(args, tokenizer, num_workers=0):
         ])
     
     generator = torch.Generator()
-    generator.manual_seed(args.seed)
+    generator.manual_seed(args.seed + dp_rank)
     train_sampler = torch.utils.data.RandomSampler(train_set, generator=generator)
     train_data_loader = torch.utils.data.DataLoader(train_set,
                                                     batch_size=args.batch_size,

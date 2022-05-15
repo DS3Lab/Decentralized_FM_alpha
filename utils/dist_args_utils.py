@@ -112,6 +112,8 @@ def add_acitvation_compression_arguments(parser):
     parser.add_argument('--backward-scale-dims', type=lambda x: tuple(int(i) for i in x.lstrip('(').rstrip(')').split(',') if i.strip() != ''), 
                         default=(0,1), metavar='N',
                         help='-')
+    parser.add_argument('--dp-bits', type=int, default=8, metavar='N',
+                        help='-')
     
 
 def get_model_arguments_str(args):

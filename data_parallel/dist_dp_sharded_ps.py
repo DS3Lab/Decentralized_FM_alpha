@@ -1,3 +1,6 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import torch.cuda
 from comm.comm_utils import *
 from .flatten_utils import flatten_params
@@ -25,6 +28,7 @@ class ShardedPSDP:
               .format(num_paras, element_size, num_paras * element_size // 1024 // 1024))
 
         assert self.flatten
+#         self.para = list(self.module.parameters())
         self.flatten_para = flatten_params(self.module.parameters(), self.dp_group_size)
         print("Flattened parameter number: {}, element size: {}."
               .format(self.flatten_para.data.numel(), self.flatten_para.data.element_size()))

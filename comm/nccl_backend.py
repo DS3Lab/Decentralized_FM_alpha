@@ -3,7 +3,7 @@ import numpy as np
 import cupy
 import torch.distributed as dist
 from typing import List
-
+from compress.fixpoint import *
 
 def _type_torch_to_cupy(torch_type: torch.dtype):
     # print(torch_type)
@@ -201,11 +201,99 @@ class NCCLCommunicator:
         cupy.cuda.nccl.groupEnd()
         for i in range(1, self.comm_group_size):
             buffer[0] += buffer[i]
+        buffer[0].mul_(1 / self.comm_group_size)
         cupy.cuda.nccl.groupStart()
         for i in range(self.comm_group_size):
             self.comm.send(buffer[0].data_ptr(), chunk_size, t_type, i, stream.ptr)
             self.comm.recv(tensor.data_ptr()+i*chunk_size*element_size, chunk_size, t_type, i, stream.ptr)
         cupy.cuda.nccl.groupEnd()
+        
+        
+    def all_reduce_opt_compressed(self,
+                       tensor: torch.Tensor,
+                       buffer: List[torch.Tensor],
+                       worker_errors: List[torch.Tensor],
+                       server_error: torch.Tensor,
+                       stream=cupy.cuda.Stream.null,
+                       bits=8,):
+        with stream:
+            # First do all-to-all
+            assert torch.numel(tensor.data) % self.comm_group_size == 0
+
+            tensor_chunks = tensor.data.chunk(self.comm_group_size, 0)
+            # all chunks have the same shape
+            original_shape = tensor_chunks[0].shape
+            
+            # worker error compensation
+            for i in range(self.comm_group_size):
+                tensor_chunks[i].add_(worker_errors[i])
+            
+            # decompress
+            tensor_chunks_compressed = [compress_flexible_nbits(
+                _data, bits=bits, scale_dims=tuple()) for _data in tensor_chunks]
+            
+            # update worker errors
+            for i in range(self.comm_group_size):
+                worker_errors[i].set_(tensor_chunks[i] - decompress_flexible_nbits(
+                    *tensor_chunks_compressed[i], bits=bits, original_shape=original_shape))
+            
+            cupy.cuda.nccl.groupStart()
+            for i in range(self.comm_group_size):
+                to_send = tensor_chunks_compressed[i][0]
+                self.comm.send(
+                    to_send.data_ptr(), to_send.numel(), 
+                    _type_torch_to_cupy(to_send.dtype), i, stream.ptr)
+                to_send = tensor_chunks_compressed[i][1]
+                self.comm.send(
+                    to_send.data_ptr(), to_send.numel(), 
+                    _type_torch_to_cupy(to_send.dtype), i, stream.ptr)
+                to_recv = buffer[i][0]
+                self.comm.recv(
+                    to_recv.data_ptr(), to_recv.numel(),
+                    _type_torch_to_cupy(to_recv.dtype), i, stream.ptr)
+                to_recv = buffer[i][1]
+                self.comm.recv(
+                    to_recv.data_ptr(), to_recv.numel(),
+                    _type_torch_to_cupy(to_recv.dtype), i, stream.ptr)
+            cupy.cuda.nccl.groupEnd()
+
+            tensor_server = decompress_flexible_nbits(
+                *buffer[0], bits=bits, original_shape=original_shape,)
+            for i in range(1, self.comm_group_size):
+                tensor_server += decompress_flexible_nbits(
+                    *buffer[i], bits=bits, original_shape=original_shape,)
+            tensor_server.mul_(1 / self.comm_group_size)
+                
+            # server error compensation
+            tensor_server.add_(server_error)
+            
+            tensor_server_compressed = compress_flexible_nbits(tensor_server, bits=bits, scale_dims=tuple())
+            
+            # update server error
+            server_error.set_(tensor_server - decompress_flexible_nbits(
+                    *tensor_server_compressed, bits=bits, original_shape=original_shape))
+            
+            cupy.cuda.nccl.groupStart()
+            for i in range(self.comm_group_size):
+                self.comm.send(
+                    tensor_server_compressed[0].data_ptr(), tensor_server_compressed[0].numel(), 
+                    _type_torch_to_cupy(tensor_server_compressed[0].dtype), i, stream.ptr)
+                self.comm.send(
+                    tensor_server_compressed[1].data_ptr(), tensor_server_compressed[1].numel(), 
+                    _type_torch_to_cupy(tensor_server_compressed[1].dtype), i, stream.ptr)
+
+                to_recv = buffer[i][0]
+                self.comm.recv(
+                    to_recv.data_ptr(), to_recv.numel(),
+                    _type_torch_to_cupy(to_recv.dtype), i, stream.ptr)
+                to_recv = buffer[i][1]
+                self.comm.recv(
+                    to_recv.data_ptr(), to_recv.numel(),
+                    _type_torch_to_cupy(to_recv.dtype), i, stream.ptr)
+            cupy.cuda.nccl.groupEnd()
+
+            recv_tensors = [decompress_flexible_nbits(*_data, bits=bits, original_shape=original_shape) for _data in buffer]
+            tensor.data.copy_(torch.cat(recv_tensors, 0))
 
 
 def default_init(args):
