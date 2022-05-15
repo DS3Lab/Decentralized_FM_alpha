@@ -447,7 +447,7 @@ if __name__ == "__main__":
         #        candidate_partition = cur_candidate_partition
         #        pipeline_parallel_path = cur_pipeline_parallel_path
         #        data_parallel_cost = cur_data_parallel_cost
-        #        pipeline_parallel_cost = 2 * cur_pipeline_parallel_cost
+        #        pipeline_parallel_cost = cur_pipeline_parallel_cost
         #        pipeline_parallel_match = cur_pipeline_parallel_match
 
         candidate_partitions, all_cost_records = GCMA(
