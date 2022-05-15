@@ -229,8 +229,10 @@ class NCCLCommunicator:
                 tensor_chunks[i].add_(worker_errors[i])
             
             # decompress
-            tensor_chunks_compressed = [compress_flexible_nbits(
-                _data, bits=bits, scale_dims=tuple()) for _data in tensor_chunks]
+#             tensor_chunks_compressed = [compress_flexible_nbits(
+#                 _data, bits=bits, scale_dims=tuple()) for _data in tensor_chunks]
+            tensor_chunks_compressed = [compress_flexible_nbits_by_bucket(
+                _data, bits=bits, bucket_size=512) for _data in tensor_chunks]
             
             # update worker errors
             for i in range(self.comm_group_size):
@@ -267,7 +269,8 @@ class NCCLCommunicator:
             # server error compensation
             tensor_server.add_(server_error)
             
-            tensor_server_compressed = compress_flexible_nbits(tensor_server, bits=bits, scale_dims=tuple())
+#             tensor_server_compressed = compress_flexible_nbits(tensor_server, bits=bits, scale_dims=tuple())
+            tensor_server_compressed = compress_flexible_nbits_by_bucket(tensor_server, bits=bits, bucket_size=512)
             
             # update server error
             server_error.set_(tensor_server - decompress_flexible_nbits(

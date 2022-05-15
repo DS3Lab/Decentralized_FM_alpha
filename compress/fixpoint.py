@@ -154,3 +154,45 @@ def decompress_nbits(x, scale, bits):
         y = decompress_2bit(x, scale)
     
     return y
+
+
+
+
+def _compress_nbits_by_bucket(x, bits, scale_method='max', bucket_size=512):
+    
+    fbits = bits - 1
+    
+    if scale_method == 'max':
+        # issue: sensitive to outlier points
+        scale = x.view(bucket_size, -1).abs().amax([0], keepdims=True)
+    elif scale_method == 'l2':
+        # ~95% confidence interval for normal distribution
+        scale = x.view(bucket_size, -1).pow(2).mean([0], keepdims=True).sqrt() * 2 
+    else:
+        raise Exception('unkonwn scale method.')
+    # fp16 should be enough
+    scale = scale.half()
+    x = x / (scale + 1e-6)
+    
+    x = x.ldexp(torch.tensor(fbits))
+    clip_min = -(1<<fbits)
+    clip_max = (1<<fbits)-1
+
+    x = x.round()
+    x = x.clip(clip_min, clip_max)
+    
+    x = x - clip_min
+    x = x.type(torch.uint8)
+    
+    return x, scale
+
+
+def compress_flexible_nbits_by_bucket(x, bits, scale_method='max', bucket_size=512):
+    # support any bits
+    # CUDA only
+    
+    x, scale = _compress_nbits_by_bucket(x, bits=bits, scale_method=scale_method, bucket_size=bucket_size)
+    
+    x = pack_low_bit_tensor(x, bits)
+    
+    return x, scale

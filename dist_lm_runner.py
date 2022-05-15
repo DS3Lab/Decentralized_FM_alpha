@@ -84,7 +84,15 @@ def main():
     init_communicators(args)
     
     config = GPTConfig.from_pretrained(args.model_name)
-    config.n_layer = args.num_layers  # num_layers per node
+    
+    if get_pipeline_parallel_rank() == args.pipeline_group_size-1:
+        args.num_layers -= 1
+        config.n_layer = args.num_layers  # num_layers per node
+    elif get_pipeline_parallel_rank() == args.pipeline_group_size-2:
+        args.num_layers += 1
+        config.n_layer = args.num_layers  # num_layers per node
+    else:
+        config.n_layer = args.num_layers  # num_layers per node
     
     tokenizer = build_tokenizer(args)
     tokenizer.model_max_length = args.seq_length
@@ -119,6 +127,7 @@ def main():
     torch.manual_seed(args.seed)
     random.seed(args.seed)
     np.random.seed(args.seed)
+    
     pipe = get_pp_module(args, config, device, use_dp)
     
     if args.load_pretrained_model:
@@ -127,25 +136,61 @@ def main():
                 torch.load(f'{args.model_name}/pytorch_embs.pt')
             )
             for i in range(len(pipe.model.model)-1):
+                print(i)
                 pipe.model.model[i+1].load_state_dict(
                     torch.load(f'{args.model_name}/pytorch_{i}.pt')
                 )
         elif get_pipeline_parallel_rank() == args.pipeline_group_size-1:
-            _i = get_pipeline_parallel_rank() * args.num_layers
+            _i = get_pipeline_parallel_rank() * (args.num_layers+1) + 1
             # skip last classification layer
             for i in range(len(pipe.model.model)-1):
+                print(_i + i)
                 pipe.model.model[i].load_state_dict(
                     torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
                 )
             pipe.model.model[-1].load_state_dict(
                 torch.load(f'{args.model_name}/pytorch_lm_head.pt')
             )
+        elif get_pipeline_parallel_rank() == args.pipeline_group_size-2:
+            _i = get_pipeline_parallel_rank() * (args.num_layers-1)
+            for i in range(len(pipe.model.model)):
+                print(_i + i)
+                pipe.model.model[i].load_state_dict(
+                    torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
+                ) 
         else:
             _i = get_pipeline_parallel_rank() * args.num_layers
             for i in range(len(pipe.model.model)):
+                print(_i + i)
                 pipe.model.model[i].load_state_dict(
                     torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
-                )            
+                )      
+
+#     if args.load_pretrained_model:
+#         if get_pipeline_parallel_rank() == 0:
+#             pipe.model.model[0].load_state_dict(
+#                 torch.load(f'{args.model_name}/pytorch_embs.pt')
+#             )
+#             for i in range(len(pipe.model.model)-1):
+#                 pipe.model.model[i+1].load_state_dict(
+#                     torch.load(f'{args.model_name}/pytorch_{i}.pt')
+#                 )
+#         elif get_pipeline_parallel_rank() == args.pipeline_group_size-1:
+#             _i = get_pipeline_parallel_rank() * args.num_layers
+#             # skip last classification layer
+#             for i in range(len(pipe.model.model)-1):
+#                 pipe.model.model[i].load_state_dict(
+#                     torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
+#                 )
+#             pipe.model.model[-1].load_state_dict(
+#                 torch.load(f'{args.model_name}/pytorch_lm_head.pt')
+#             )
+#         else:
+#             _i = get_pipeline_parallel_rank() * args.num_layers
+#             for i in range(len(pipe.model.model)):
+#                 pipe.model.model[i].load_state_dict(
+#                     torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
+#                 )    
 
     if args.profiling == 'no-profiling':
         train_loop(args, pipe, device, train_data_loader, test_data_loader)

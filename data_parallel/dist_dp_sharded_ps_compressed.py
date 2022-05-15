@@ -202,7 +202,7 @@ class ShardedPSDPCompressed:
               .format(self.flatten_para.grad.numel(), self.flatten_para.grad.element_size()))
         
         exp_avgs = get_exp_avgs(self.optimizer)
-        self.flatten_exp_avgs = flatten_tensors(exp_avgs, self.dp_group_size)
+        self.flatten_exp_avgs = flatten_tensors(exp_avgs, self.dp_group_size*512)
 
         self.grad_buffer_non_compressed = self._declare_grad_buffer()
         

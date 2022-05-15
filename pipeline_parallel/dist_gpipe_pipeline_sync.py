@@ -52,7 +52,7 @@ def create_optimizer(model, weight_decay=0.01, learning_rate=2e-5,
     optimizer = optimizer_cls(optimizer_grouped_parameters, **optimizer_kwargs)
     return optimizer
 
-class GpipeAsync:
+class GpipeSync:
     r"""
     Async implementation of Gpipe.
     The current implementation leave the computation on the PyTorch default stream and the communication on a different
@@ -507,7 +507,6 @@ class GpipeAsync:
             with torch.cuda.stream(self.torch_comp_stream):
                 self.torch_comp_stream.record_event(self.dp_optim.backward_ready_event)
             self.dp_optim.optimizer_step()
-            self.scheduler.step()
         else:
             with torch.cuda.stream(self.torch_comp_stream):
                 if self.enable_tidy_profiling:
@@ -544,8 +543,7 @@ class GpipeAsync:
             self.init_time_stamp = time.time() * 1e+6
             self.init_event.record()
         self.zero_input_grad()
-#         self.optimizer.zero_grad(set_to_none=True)
-        self.optimizer.zero_grad(set_to_none=False)
+        self.optimizer.zero_grad(set_to_none=True)
 
         for step in range(self.gradient_accumulate_step):
             

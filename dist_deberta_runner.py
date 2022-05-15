@@ -125,6 +125,10 @@ def main():
     else:
         print("Running ", args.pp_mode, " without data parallel.")
 
+    torch.manual_seed(args.seed)
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+        
     pipe = get_deberta_pp_module(args, config, device, use_dp)
     
     if args.load_pretrained_model:
