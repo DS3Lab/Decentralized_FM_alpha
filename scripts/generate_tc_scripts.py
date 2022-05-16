@@ -84,7 +84,7 @@ def simulate_8_clusters(nodes=64, bw=1):
 def generate_tc_scripts(args):
     assert args.nodes == len(private_ip)
     delay, bandwidth, _ = simulate_8_clusters(args.nodes, args.bandwidth)
-    with open("./tc_scripts/heterogeneous_setup.sh", 'w') as script:
+    with open("./scripts/tc_scripts/heterogeneous_setup.sh", 'w') as script:
         tc_setting_dict = {}
         handle_i = 1
         for i in range(len(private_ip)):
