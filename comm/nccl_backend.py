@@ -196,24 +196,24 @@ class NCCLCommunicator:
         t_type = _type_torch_to_cupy(tensor.dtype)
         element_size = tensor.data.element_size()
         
-        self.dp_comm_stream.record_event(self.gather_start_event)
+        caller.dp_comm_stream.record_event(caller.gather_start_event)
         cupy.cuda.nccl.groupStart()
         for i in range(self.comm_group_size):
             self.comm.send(tensor.data_ptr()+i*chunk_size*element_size, chunk_size, t_type, i, stream.ptr)
             self.comm.recv(buffer[i].data_ptr(), chunk_size, t_type, i, stream.ptr)
         cupy.cuda.nccl.groupEnd()
-        self.dp_comm_stream.record_event(self.gather_end_event)
+        caller.dp_comm_stream.record_event(caller.gather_end_event)
         
         for i in range(1, self.comm_group_size):
             buffer[0] += buffer[i]
         buffer[0].mul_(1 / self.comm_group_size)
         
-        self.dp_comm_stream.record_event(self.sync_start_event)
+        caller.dp_comm_stream.record_event(caller.sync_start_event)
         cupy.cuda.nccl.groupStart()
         for i in range(self.comm_group_size):
             self.comm.send(buffer[0].data_ptr(), chunk_size, t_type, i, stream.ptr)
             self.comm.recv(tensor.data_ptr()+i*chunk_size*element_size, chunk_size, t_type, i, stream.ptr)
-        self.dp_comm_stream.record_event(self.sync_end_event)
+        caller.dp_comm_stream.record_event(caller.sync_end_event)
         
         cupy.cuda.nccl.groupEnd()
         
