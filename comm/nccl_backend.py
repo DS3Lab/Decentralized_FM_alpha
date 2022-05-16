@@ -223,7 +223,7 @@ class NCCLCommunicator:
                        worker_errors: List[torch.Tensor],
                        server_error: torch.Tensor,
                        stream=cupy.cuda.Stream.null,
-                       bits=8,):
+                       bits=8, caller=None):
         with stream:
             # First do all-to-all
             assert torch.numel(tensor.data) % self.comm_group_size == 0
@@ -248,6 +248,7 @@ class NCCLCommunicator:
                     *tensor_chunks_compressed[i], bits=bits, 
                     original_shape=original_shape, bucket_size=512))
             
+            caller.dp_comm_stream.record_event(caller.gather_start_event)
             cupy.cuda.nccl.groupStart()
             for i in range(self.comm_group_size):
                 to_send = tensor_chunks_compressed[i][0]
@@ -267,6 +268,7 @@ class NCCLCommunicator:
                     to_recv.data_ptr(), to_recv.numel(),
                     _type_torch_to_cupy(to_recv.dtype), i, stream.ptr)
             cupy.cuda.nccl.groupEnd()
+            caller.dp_comm_stream.record_event(caller.gather_end_event)
 
             tensor_server = decompress_flexible_nbits_by_bucket(
                 *buffer[0], bits=bits, original_shape=original_shape, bucket_size=512)
@@ -286,6 +288,7 @@ class NCCLCommunicator:
                     *tensor_server_compressed, bits=bits, 
                     original_shape=original_shape, bucket_size=512))
             
+            caller.dp_comm_stream.record_event(caller.sync_start_event)
             cupy.cuda.nccl.groupStart()
             for i in range(self.comm_group_size):
                 self.comm.send(
@@ -304,6 +307,7 @@ class NCCLCommunicator:
                     to_recv.data_ptr(), to_recv.numel(),
                     _type_torch_to_cupy(to_recv.dtype), i, stream.ptr)
             cupy.cuda.nccl.groupEnd()
+            caller.dp_comm_stream.record_event(caller.sync_end_event)
 
             recv_tensors = [decompress_flexible_nbits_by_bucket(*_data, bits=bits, original_shape=original_shape, bucket_size=512) for _data in buffer]
             tensor.data.copy_(torch.cat(recv_tensors, 0))

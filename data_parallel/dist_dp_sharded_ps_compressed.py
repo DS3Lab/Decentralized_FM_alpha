@@ -319,7 +319,7 @@ class ShardedPSDPCompressed:
                 self.dp_comm.all_reduce_opt_compressed(
                     self.flatten_exp_avgs.data, self.exp_avg_buffer, 
                     self.exp_avg_worker_errors, self.exp_avg_server_error, 
-                    stream=cupy_dp_stream, bits=self.dp_bits)
+                    stream=cupy_dp_stream, bits=self.dp_bits, caller=self)
             self.profile_mark_allreduce_end()
             self.dp_comm_stream.record_event(self.sync_gradients_ready_event)
 
