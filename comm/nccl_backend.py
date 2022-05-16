@@ -213,9 +213,8 @@ class NCCLCommunicator:
         for i in range(self.comm_group_size):
             self.comm.send(buffer[0].data_ptr(), chunk_size, t_type, i, stream.ptr)
             self.comm.recv(tensor.data_ptr()+i*chunk_size*element_size, chunk_size, t_type, i, stream.ptr)
-        caller.dp_comm_stream.record_event(caller.sync_end_event)
-        
         cupy.cuda.nccl.groupEnd()
+        caller.dp_comm_stream.record_event(caller.sync_end_event)
         
         
     def all_reduce_opt_compressed(self,

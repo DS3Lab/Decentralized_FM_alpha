@@ -362,14 +362,15 @@ class ShardedPSDPCompressed:
         
         
         allreduce_slot = self.gather_start_event.elapsed_time(self.gather_end_event)*1e+3
-        allreduce_log = {"name": "gather grads", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-comm",
+        allreduce_log = {"name": "gather grads", "ph": "X", "pid": self.global_rank, "tid": "9. optimizer-comm",
                          "ts": self.get_ts(self.gather_start_event),
                          "dur": allreduce_slot, "cname": "cq_build_passed",
                          "args": {'para': 'flattened_grad', 'size': self.flatten_para.grad.numel()}}
         # print(allreduce_log)
         profiling_log.append(allreduce_log)
+        
         allreduce_slot = self.sync_start_event.elapsed_time(self.sync_end_event)*1e+3
-        allreduce_log = {"name": "distribute grads", "ph": "X", "pid": self.global_rank, "tid": "7. optimizer-comm",
+        allreduce_log = {"name": "distribute grads", "ph": "X", "pid": self.global_rank, "tid": "10. optimizer-comm",
                          "ts": self.get_ts(self.sync_start_event),
                          "dur": allreduce_slot, "cname": "cq_build_passed",
                          "args": {'para': 'flattened_grad', 'size': self.flatten_para.grad.numel()}}
