@@ -202,7 +202,7 @@ class ShardedPSDPCompressed:
               .format(self.flatten_para.grad.numel(), self.flatten_para.grad.element_size()))
         
         exp_avgs = get_exp_avgs(self.optimizer)
-        self.flatten_exp_avgs = flatten_tensors(exp_avgs, self.dp_group_size*512)
+        self.flatten_exp_avgs = flatten_tensors(exp_avgs, self.dp_group_size*512*4)
 
         self.grad_buffer_non_compressed = self._declare_grad_buffer()
         
@@ -223,6 +223,11 @@ class ShardedPSDPCompressed:
             self.sync_start_event = torch.cuda.Event(enable_timing=True, blocking=False)
             self.gather_end_event = torch.cuda.Event(enable_timing=True, blocking=False)
             self.sync_end_event = torch.cuda.Event(enable_timing=True, blocking=False)
+            
+            self.worker_compress_start_event = torch.cuda.Event(enable_timing=True, blocking=False)
+            self.server_compress_start_event = torch.cuda.Event(enable_timing=True, blocking=False)
+            self.worker_compress_end_event = torch.cuda.Event(enable_timing=True, blocking=False)
+            self.server_compress_end_event = torch.cuda.Event(enable_timing=True, blocking=False)
 
     def _compute_total_para_num(self):
         total_count = 0
@@ -372,6 +377,22 @@ class ShardedPSDPCompressed:
         allreduce_slot = self.sync_start_event.elapsed_time(self.sync_end_event)*1e+3
         allreduce_log = {"name": "distribute grads", "ph": "X", "pid": self.global_rank, "tid": "10. optimizer-comm",
                          "ts": self.get_ts(self.sync_start_event),
+                         "dur": allreduce_slot, "cname": "cq_build_passed",
+                         "args": {'para': 'flattened_grad', 'size': self.flatten_para.grad.numel()}}
+        # print(allreduce_log)
+        profiling_log.append(allreduce_log)
+        
+        allreduce_slot = self.worker_compress_start_event.elapsed_time(self.worker_compress_end_event)*1e+3
+        allreduce_log = {"name": "worker compress", "ph": "X", "pid": self.global_rank, "tid": "11. optimizer-comm",
+                         "ts": self.get_ts(self.worker_compress_start_event),
+                         "dur": allreduce_slot, "cname": "cq_build_passed",
+                         "args": {'para': 'flattened_grad', 'size': self.flatten_para.grad.numel()}}
+        # print(allreduce_log)
+        profiling_log.append(allreduce_log)
+        
+        allreduce_slot = self.server_compress_start_event.elapsed_time(self.server_compress_end_event)*1e+3
+        allreduce_log = {"name": "server compress", "ph": "X", "pid": self.global_rank, "tid": "12. optimizer-comm",
+                         "ts": self.get_ts(self.server_compress_start_event),
                          "dur": allreduce_slot, "cname": "cq_build_passed",
                          "args": {'para': 'flattened_grad', 'size': self.flatten_para.grad.numel()}}
         # print(allreduce_log)

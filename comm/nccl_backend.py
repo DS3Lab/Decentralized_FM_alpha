@@ -196,25 +196,25 @@ class NCCLCommunicator:
         t_type = _type_torch_to_cupy(tensor.dtype)
         element_size = tensor.data.element_size()
         
-        caller.dp_comm_stream.record_event(caller.gather_start_event)
+#         caller.dp_comm_stream.record_event(caller.gather_start_event)
         cupy.cuda.nccl.groupStart()
         for i in range(self.comm_group_size):
             self.comm.send(tensor.data_ptr()+i*chunk_size*element_size, chunk_size, t_type, i, stream.ptr)
             self.comm.recv(buffer[i].data_ptr(), chunk_size, t_type, i, stream.ptr)
         cupy.cuda.nccl.groupEnd()
-        caller.dp_comm_stream.record_event(caller.gather_end_event)
+#         caller.dp_comm_stream.record_event(caller.gather_end_event)
         
         for i in range(1, self.comm_group_size):
             buffer[0] += buffer[i]
         buffer[0].mul_(1 / self.comm_group_size)
         
-        caller.dp_comm_stream.record_event(caller.sync_start_event)
+#         caller.dp_comm_stream.record_event(caller.sync_start_event)
         cupy.cuda.nccl.groupStart()
         for i in range(self.comm_group_size):
             self.comm.send(buffer[0].data_ptr(), chunk_size, t_type, i, stream.ptr)
             self.comm.recv(tensor.data_ptr()+i*chunk_size*element_size, chunk_size, t_type, i, stream.ptr)
         cupy.cuda.nccl.groupEnd()
-        caller.dp_comm_stream.record_event(caller.sync_end_event)
+#         caller.dp_comm_stream.record_event(caller.sync_end_event)
         
         
     def all_reduce_opt_compressed(self,
@@ -232,6 +232,7 @@ class NCCLCommunicator:
             # all chunks have the same shape
             original_shape = tensor_chunks[0].shape
             
+#             caller.dp_comm_stream.record_event(caller.worker_compress_start_event)
             # worker error compensation
             for i in range(self.comm_group_size):
                 tensor_chunks[i].add_(worker_errors[i])
@@ -247,8 +248,9 @@ class NCCLCommunicator:
                 worker_errors[i].set_(tensor_chunks[i] - decompress_flexible_nbits_by_bucket(
                     *tensor_chunks_compressed[i], bits=bits, 
                     original_shape=original_shape, bucket_size=512))
+#             caller.dp_comm_stream.record_event(caller.worker_compress_end_event)
             
-            caller.dp_comm_stream.record_event(caller.gather_start_event)
+#             caller.dp_comm_stream.record_event(caller.gather_start_event)
             cupy.cuda.nccl.groupStart()
             for i in range(self.comm_group_size):
                 to_send = tensor_chunks_compressed[i][0]
@@ -268,8 +270,9 @@ class NCCLCommunicator:
                     to_recv.data_ptr(), to_recv.numel(),
                     _type_torch_to_cupy(to_recv.dtype), i, stream.ptr)
             cupy.cuda.nccl.groupEnd()
-            caller.dp_comm_stream.record_event(caller.gather_end_event)
+#             caller.dp_comm_stream.record_event(caller.gather_end_event)
 
+#             caller.dp_comm_stream.record_event(caller.server_compress_start_event)
             tensor_server = decompress_flexible_nbits_by_bucket(
                 *buffer[0], bits=bits, original_shape=original_shape, bucket_size=512)
             for i in range(1, self.comm_group_size):
@@ -287,8 +290,9 @@ class NCCLCommunicator:
             server_error.set_(tensor_server - decompress_flexible_nbits_by_bucket(
                     *tensor_server_compressed, bits=bits, 
                     original_shape=original_shape, bucket_size=512))
+#             caller.dp_comm_stream.record_event(caller.server_compress_end_event)
             
-            caller.dp_comm_stream.record_event(caller.sync_start_event)
+#             caller.dp_comm_stream.record_event(caller.sync_start_event)
             cupy.cuda.nccl.groupStart()
             for i in range(self.comm_group_size):
                 self.comm.send(
@@ -307,7 +311,7 @@ class NCCLCommunicator:
                     to_recv.data_ptr(), to_recv.numel(),
                     _type_torch_to_cupy(to_recv.dtype), i, stream.ptr)
             cupy.cuda.nccl.groupEnd()
-            caller.dp_comm_stream.record_event(caller.sync_end_event)
+#             caller.dp_comm_stream.record_event(caller.sync_end_event)
 
             recv_tensors = [decompress_flexible_nbits_by_bucket(*_data, bits=bits, original_shape=original_shape, bucket_size=512) for _data in buffer]
             tensor.data.copy_(torch.cat(recv_tensors, 0))
