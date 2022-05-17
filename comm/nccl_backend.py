@@ -216,7 +216,7 @@ class NCCLCommunicator:
         cupy.cuda.nccl.groupEnd()
 #         caller.dp_comm_stream.record_event(caller.sync_end_event)
         
-        
+#     @torch.no_grad()
     def all_reduce_opt_compressed(self,
                        tensor: torch.Tensor,
                        buffer: List[torch.Tensor],
@@ -245,9 +245,10 @@ class NCCLCommunicator:
             
             # update worker errors
             for i in range(self.comm_group_size):
-                worker_errors[i].set_(tensor_chunks[i] - decompress_flexible_nbits_by_bucket(
+                worker_errors[i].set_((tensor_chunks[i] - decompress_flexible_nbits_by_bucket(
                     *tensor_chunks_compressed[i], bits=bits, 
-                    original_shape=original_shape, bucket_size=512))
+                    original_shape=original_shape, bucket_size=512)).type(worker_errors[i].dtype))
+            del tensor_chunks
 #             caller.dp_comm_stream.record_event(caller.worker_compress_end_event)
             
 #             caller.dp_comm_stream.record_event(caller.gather_start_event)
@@ -287,9 +288,9 @@ class NCCLCommunicator:
             tensor_server_compressed = compress_flexible_nbits_by_bucket(tensor_server, bits=bits, bucket_size=512)
             
             # update server error
-            server_error.set_(tensor_server - decompress_flexible_nbits_by_bucket(
+            server_error.set_((tensor_server - decompress_flexible_nbits_by_bucket(
                     *tensor_server_compressed, bits=bits, 
-                    original_shape=original_shape, bucket_size=512))
+                    original_shape=original_shape, bucket_size=512)).type(server_error.dtype))
 #             caller.dp_comm_stream.record_event(caller.server_compress_end_event)
             
 #             caller.dp_comm_stream.record_event(caller.sync_start_event)
@@ -313,8 +314,11 @@ class NCCLCommunicator:
             cupy.cuda.nccl.groupEnd()
 #             caller.dp_comm_stream.record_event(caller.sync_end_event)
 
-            recv_tensors = [decompress_flexible_nbits_by_bucket(*_data, bits=bits, original_shape=original_shape, bucket_size=512) for _data in buffer]
-            tensor.data.copy_(torch.cat(recv_tensors, 0))
+#             recv_tensors = [decompress_flexible_nbits_by_bucket(*_data, bits=bits, original_shape=original_shape, bucket_size=512) for _data in buffer]
+#             tensor.data.copy_(torch.cat(recv_tensors, 0))
+            for i, _data in enumerate(buffer):
+                tensor.data[i*original_shape[0]:(i+1)*original_shape[0]] = \
+                    decompress_flexible_nbits_by_bucket(*_data, bits=bits, original_shape=original_shape, bucket_size=512)
 
 
 def default_init(args):

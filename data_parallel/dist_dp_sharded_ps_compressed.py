@@ -270,9 +270,9 @@ class ShardedPSDPCompressed:
              torch.zeros_like(_data_compressed[1])) for i in range(self.dp_group_size)
         ]
         worker_errors = [
-            torch.zeros_like(_data) for i in range(self.dp_group_size)
+            torch.zeros_like(_data).half() for i in range(self.dp_group_size)
         ]
-        server_error = torch.zeros_like(_data)
+        server_error = torch.zeros_like(_data).half()
         return grad_buffer, worker_errors, server_error
 
     def profile_mark_sync_grad_start(self):
