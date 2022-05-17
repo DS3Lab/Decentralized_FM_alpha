@@ -88,7 +88,7 @@ def main():
 #     config.hidden_dropout_prob = 0.0
 #     config.attention_probs_dropout_prob = 0.0
     if get_pipeline_parallel_rank() == 0:
-        args.num_layers -= 4
+        args.num_layers -= 5
         config.n_layer = args.num_layers  # num_layers per node
     elif get_pipeline_parallel_rank() == 1:
         args.num_layers += 1
@@ -100,6 +100,9 @@ def main():
         args.num_layers += 1
         config.n_layer = args.num_layers  # num_layers per node
     elif get_pipeline_parallel_rank() == 4:
+        args.num_layers += 1
+        config.n_layer = args.num_layers  # num_layers per node
+    elif get_pipeline_parallel_rank() == 5:
         args.num_layers += 1
         config.n_layer = args.num_layers  # num_layers per node
     else:
@@ -154,6 +157,7 @@ def main():
                 torch.load(f'{args.model_name}/pytorch_embs.pt')
             )
             for i in range(len(pipe.model.encoder.layer)):
+                print(i)
                 pipe.model.encoder.layer[i].load_state_dict(
                     torch.load(f'{args.model_name}/pytorch_{i}.pt')
                 )
@@ -172,6 +176,7 @@ def main():
         elif get_pipeline_parallel_rank() == args.pipeline_group_size-1:
             _i = get_pipeline_parallel_rank() * args.num_layers
             for i in range(len(pipe.model.encoder.layer)):
+                print(_i+i)
                 pipe.model.encoder.layer[i].load_state_dict(
                     torch.load(f'{args.model_name}/pytorch_{_i+i}.pt')
                 )
@@ -189,8 +194,9 @@ def main():
                     torch.load(f'{args.model_name}/pytorch_conv.pt')
                 )
         elif get_pipeline_parallel_rank() == 1:
-            _i = get_pipeline_parallel_rank() * (args.num_layers-1) - 4
+            _i = get_pipeline_parallel_rank() * (args.num_layers-1) - 5
             for i in range(len(pipe.model.encoder.layer)):
+                print(_i+i)
                 pipe.model.encoder.layer[i].load_state_dict(
                     torch.load(f'{args.model_name}/pytorch_{_i+i}.pt')
                 )
@@ -208,8 +214,9 @@ def main():
                     torch.load(f'{args.model_name}/pytorch_conv.pt')
                 ) 
         elif get_pipeline_parallel_rank() == 2:
-            _i = get_pipeline_parallel_rank() * (args.num_layers-1) - 3
+            _i = get_pipeline_parallel_rank() * (args.num_layers-1) - 4
             for i in range(len(pipe.model.encoder.layer)):
+                print(_i+i)
                 pipe.model.encoder.layer[i].load_state_dict(
                     torch.load(f'{args.model_name}/pytorch_{_i+i}.pt')
                 )
@@ -227,8 +234,9 @@ def main():
                     torch.load(f'{args.model_name}/pytorch_conv.pt')
                 ) 
         elif get_pipeline_parallel_rank() == 3:
-            _i = get_pipeline_parallel_rank() * (args.num_layers-1) - 2
+            _i = get_pipeline_parallel_rank() * (args.num_layers-1) - 3
             for i in range(len(pipe.model.encoder.layer)):
+                print(_i+i)
                 pipe.model.encoder.layer[i].load_state_dict(
                     torch.load(f'{args.model_name}/pytorch_{_i+i}.pt')
                 )
@@ -246,8 +254,29 @@ def main():
                     torch.load(f'{args.model_name}/pytorch_conv.pt')
                 ) 
         elif get_pipeline_parallel_rank() == 4:
+            _i = get_pipeline_parallel_rank() * (args.num_layers-1) - 2
+            for i in range(len(pipe.model.encoder.layer)):
+                print(_i+i)
+                pipe.model.encoder.layer[i].load_state_dict(
+                    torch.load(f'{args.model_name}/pytorch_{_i+i}.pt')
+                )
+            if hasattr(pipe.model.encoder, 'rel_embeddings'):
+                pipe.model.encoder.rel_embeddings.load_state_dict(
+                    torch.load(f'{args.model_name}/pytorch_rel_embs.pt')
+                )
+            if hasattr(pipe.model.encoder, 'LayerNorm'):
+                pipe.model.encoder.LayerNorm.load_state_dict(
+                    torch.load(f'{args.model_name}/pytorch_ln.pt')
+                )
+            if hasattr(pipe.model.encoder, 'conv') and pipe.model.encoder.conv is not None:
+                raise Exception('should not have conv')
+                pipe.model.encoder.conv.load_state_dict(
+                    torch.load(f'{args.model_name}/pytorch_conv.pt')
+                ) 
+        elif get_pipeline_parallel_rank() == 5:
             _i = get_pipeline_parallel_rank() * (args.num_layers-1) - 1
             for i in range(len(pipe.model.encoder.layer)):
+                print(_i+i)
                 pipe.model.encoder.layer[i].load_state_dict(
                     torch.load(f'{args.model_name}/pytorch_{_i+i}.pt')
                 )
@@ -267,6 +296,7 @@ def main():
         else:
             _i = get_pipeline_parallel_rank() * args.num_layers
             for i in range(len(pipe.model.encoder.layer)):
+                print(_i+i)
                 pipe.model.encoder.layer[i].load_state_dict(
                     torch.load(f'{args.model_name}/pytorch_{_i+i}.pt')
                 )
