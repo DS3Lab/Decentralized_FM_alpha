@@ -89,24 +89,24 @@ def main():
 #     config.attention_probs_dropout_prob = 0.0
     if get_pipeline_parallel_rank() == 0:
         args.num_layers -= 5
-        config.n_layer = args.num_layers  # num_layers per node
+        config.num_hidden_layers = args.num_layers  # num_layers per node
     elif get_pipeline_parallel_rank() == 1:
         args.num_layers += 1
-        config.n_layer = args.num_layers  # num_layers per node
+        config.num_hidden_layers = args.num_layers  # num_layers per node
     elif get_pipeline_parallel_rank() == 2:
         args.num_layers += 1
-        config.n_layer = args.num_layers  # num_layers per node
+        config.num_hidden_layers = args.num_layers  # num_layers per node
     elif get_pipeline_parallel_rank() == 3:
         args.num_layers += 1
-        config.n_layer = args.num_layers  # num_layers per node
+        config.num_hidden_layers = args.num_layers  # num_layers per node
     elif get_pipeline_parallel_rank() == 4:
         args.num_layers += 1
-        config.n_layer = args.num_layers  # num_layers per node
+        config.num_hidden_layers = args.num_layers  # num_layers per node
     elif get_pipeline_parallel_rank() == 5:
         args.num_layers += 1
-        config.n_layer = args.num_layers  # num_layers per node
+        config.num_hidden_layers = args.num_layers  # num_layers per node
     else:
-        config.n_layer = args.num_layers  # num_layers per node
+        config.num_hidden_layers = args.num_layers  # num_layers per node
     
     tokenizer = build_tokenizer(args)
     tokenizer.model_max_length = args.seq_length
