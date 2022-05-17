@@ -80,6 +80,10 @@ def GCMA(nodes=None, population_size=None, trails=None):
 
     def cyclic_partitioning(offspring=None):
         def calculate_gain(cur_offspring=None, locked_v_idx=None):
+            partition_sizes = [0] * way
+            for partition_idx in cur_offspring:
+                partition_sizes[partition_idx] += 1
+
             gain = np.zeros(shape=(num_devices, way))
             for v_idx, partition_idx in enumerate(cur_offspring):
                 if locked_v_idx[v_idx] == 0:
@@ -89,7 +93,8 @@ def GCMA(nodes=None, population_size=None, trails=None):
                             1e3 + send_gradient_size * 8 / \
                             peer_bandwidth[v_idx, target_idx]
                         if partition_idx != target_partition_idx:
-                            gain[v_idx][target_partition_idx] += partial_pipeline_parallel_cost / partition_size
+                            gain[v_idx][target_partition_idx] += partial_pipeline_parallel_cost / \
+                                partition_sizes[target_partition_idx]
                         elif v_idx != target_idx:
                             if gain[v_idx][target_partition_idx] > partial_pipeline_parallel_cost:
                                 gain[v_idx][target_partition_idx] = partial_pipeline_parallel_cost
@@ -232,7 +237,7 @@ def GCMA(nodes=None, population_size=None, trails=None):
             candidate_scores[replaced_idx] = offspring_score
             candidate_scores.append(replaced_score)
         candidate_min_scores.append(np.min(candidate_scores))
-
+        print(i, np.min(candidate_scores))
     assert(len(candidate_partitions) == len(candidate_scores))
     assert(len(candidate_min_scores) == len(candidate_scores))
     return candidate_partitions, candidate_scores, candidate_min_scores
