@@ -53,7 +53,7 @@ def plot_heatmap(subfig=None):
                          norm=bandwidth_norm, cbar=False, xticklabels=8, yticklabels=8, linewidths=0.001, square=True)
 
 
-fig = plt.figure(figsize=(10, 17))
+fig = plt.figure(figsize=(12, 20))
 subfigs = fig.subfigures(nrows=1, ncols=2, width_ratios=[1.4, 1])
 plt.subplots_adjust(hspace=0.4)
 plot_colorbar(subfig=subfigs[0])
@@ -67,4 +67,4 @@ plt.plot([0, 1], [0.427, 0.427], color='black', linestyle='--', linewidth=2,
          transform=plt.gcf().transFigure, clip_on=False)
 plt.plot([0, 1], [0.265, 0.265], color='black', linestyle='--', linewidth=2,
          transform=plt.gcf().transFigure, clip_on=False)
-plt.savefig("combination_plot.eps", dpi=1000)
+plt.savefig("combination_plot.pdf", dpi=1000)
