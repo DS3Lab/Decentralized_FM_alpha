@@ -80,43 +80,30 @@ def GCMA(nodes=None, population_size=None, trails=None):
 
     def cyclic_partitioning(offspring=None):
         def calculate_gain(cur_offspring=None, locked_v_idx=None):
-            gain = np.zeros(shape=(num_devices, way))
-            for v_idx, partition_idx in enumerate(cur_offspring):
-                if locked_v_idx[v_idx] == 0:
-                    gain[v_idx][partition_idx] = np.inf
-                    for target_idx, target_partition_idx in enumerate(cur_offspring):
-                        partial_pipeline_parallel_cost = peer_delay[v_idx, target_idx] / \
-                            1e3 + send_gradient_size * 8 / \
-                            peer_bandwidth[v_idx, target_idx]
-                        if partition_idx != target_partition_idx:
-                            gain[v_idx][target_partition_idx] += partial_pipeline_parallel_cost / partition_size
-                        elif v_idx != target_idx:
-                            if gain[v_idx][target_partition_idx] > partial_pipeline_parallel_cost:
-                                gain[v_idx][target_partition_idx] = partial_pipeline_parallel_cost
+            partition_sizes = [0] * way
+            for partition_idx in cur_offspring:
+                partition_sizes[partition_idx] += 1
 
-            G_i = np.full(shape=(way), fill_value=np.inf)
-            G_i_trace = [[None, None] for i in range(way)]
+            gain = np.full(shape=(num_devices, way), fill_value=-np.inf)
             for v_idx, partition_idx in enumerate(cur_offspring):
                 if locked_v_idx[v_idx] == 0:
-                    if gain[v_idx][partition_idx] < G_i[partition_idx]:
-                        G_i[partition_idx] = gain[v_idx][partition_idx]
-                        G_i_trace[partition_idx][0] = v_idx
+                    for target_idx, target_partition_idx in enumerate(cur_offspring):
+                        if target_partition_idx != partition_idx:
+                            gain[v_idx][target_partition_idx] = partition_sizes[target_partition_idx] - (
+                                partition_sizes[partition_idx] - 1)
 
             G_i = np.full(shape=(way), fill_value=-np.inf)
             G_ij = np.full(shape=(way, way), fill_value=-np.inf)
-            for partition_idx, trace in enumerate(G_i_trace):
-                v_idx = trace[0]
-                if v_idx != None:
+            G_i_trace = [[None, None] for i in range(way)]
+            for v_idx, partition_idx in enumerate(cur_offspring):
+                if locked_v_idx[v_idx] == 0:
                     for target_partition_idx, target_gain in enumerate(gain[v_idx]):
-                        if target_partition_idx != partition_idx:
-                            target_gain -= gain[v_idx][partition_idx]
-                            if target_gain > G_ij[partition_idx, target_partition_idx]:
-                                G_ij[partition_idx,
-                                     target_partition_idx] = target_gain
-                            if target_gain > G_i[partition_idx]:
-                                G_i[partition_idx] = target_gain
-                                G_i_trace[partition_idx] = [
-                                    v_idx, target_partition_idx]
+                        if target_gain > G_ij[partition_idx, target_partition_idx]:
+                            G_ij[partition_idx, target_partition_idx] = target_gain
+                        if target_gain > G_i[partition_idx]:
+                            G_i[partition_idx] = target_gain
+                            G_i_trace[partition_idx] = [
+                                v_idx, target_partition_idx]
 
             return G_ij, G_i, G_i_trace
 
@@ -495,5 +482,5 @@ if __name__ == "__main__":
                 print()
         print(ip_rank_map)
 
-        with open('our_scheduler_' + str(case_idx) + '.npy', 'wb') as f:
+        with open('hybrid_scheduler_' + str(case_idx) + '.npy', 'wb') as f:
             np.save(f, np.array(min_cost_records))
