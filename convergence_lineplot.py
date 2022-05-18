@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-fig, axes = plt.subplots(nrows=1, ncols=5, figsize=(15, 3), tight_layout=True)
+fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(9, 5), tight_layout=True)
 
 for case_idx in range(5):
     with open('random_scheduler_' + str(case_idx) + '.npy', 'rb') as f:
@@ -26,34 +26,43 @@ for case_idx in range(5):
         data.append([i, our_scheduler_results[i], 'Ours'])
 
     df = pd.DataFrame(data, columns=['trial', 'cost', 'scheduler'])
-    ax = sns.lineplot(ax=axes[case_idx], hue_order=['Ours', 'Hybrid', 'Random'], linewidth=3,
+    ax = sns.lineplot(ax=axes[case_idx // 3, case_idx % 3], hue_order=['Ours', 'Hybrid', 'Random'], linewidth=3,
                       palette=['tab:green', 'tab:orange', 'tab:blue'],
                       data=df, x="trial", y="cost", hue='scheduler')
     ax.lines[2].set_linestyle("--")
-
-    if case_idx == 0:
-        ax.set(ylim=(0, 20))
-    elif case_idx == 4:
-        ax.set(ylim=(0, 120))
-    else:
-        ax.set(ylim=(0, 50))
-
-    ax.set_xlabel('Trials')
     ax.set_xticks([0, 1000, 2000, 3000, 4000, 5000])
+
     if case_idx == 0:
+        ax.set_xlabel('(a) Trials')
+        ax.set(ylim=(0, 20))
+        ax.set_ylabel('Cost (ms)')
+    elif case_idx == 1:
+        ax.set_xlabel('(b) Trials')
+        ax.set(ylim=(0, 50))
+        ax.set_ylabel(None)
+    elif case_idx == 2:
+        ax.set_xlabel('(c) Trials')
+        ax.set(ylim=(0, 50))
+        ax.set_ylabel(None)
+    elif case_idx == 3:
+        ax.set_xlabel('(d) Trials')
+        ax.set(ylim=(0, 50))
         ax.set_ylabel('Cost (ms)')
     else:
+        ax.set_xlabel('(e) Trials')
+        ax.set(ylim=(0, 120))
         ax.set_ylabel(None)
 
-    if case_idx == 2:
+
+    if case_idx == 1:
         ax.get_legend().set_title(None)
         handles, labels = ax.get_legend_handles_labels()
         handles[2].set_linestyle('--')
         handles = [handles[2], handles[1], handles[0]]
         labels = [labels[2], labels[1], labels[0]]
-        ax.legend(handles, labels, ncol=3, handletextpad=0.1, columnspacing=0.5,
-                  loc='upper center', bbox_to_anchor=(0.5, 1.2))
+        ax.legend(handles, labels, ncol=3, handletextpad=0.1, columnspacing=1,
+                  loc='upper center', bbox_to_anchor=(0.5, 1.3))
     else:
         ax.get_legend().remove()
-
+axes[1, 2].remove()
 plt.savefig("convergence.eps", dpi=1000)
