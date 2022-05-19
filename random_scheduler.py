@@ -10,7 +10,7 @@ def compute_random_pipeline_parallel_cost(candidate_partition=None):
         cross_partition_cost = float('-inf')
         for j in range(scheduler.partition_size):
             cur_cost = scheduler.peer_delay[candidate_partition[i][j], candidate_partition[i+1][j]]/1e3 + \
-                scheduler.send_gradient_size * 8 / \
+                config.send_activation_size * 8 / \
                 scheduler.peer_bandwidth[candidate_partition[i]
                                          [j], candidate_partition[i+1][j]]
             if cross_partition_cost < cur_cost:
@@ -54,42 +54,33 @@ if __name__ == "__main__":
         config.simulate_2_multi_universities,
         config.simulate_3_regional_geo_distributed,
         config.simulate_4_worldwide_geo_distributed,
-        config.simulate_5_homogeneous_tc
     ]
 
     import time
-    for case_idx, simulate_case in enumerate(simulate_cases):
-        scheduler.peer_delay, scheduler.peer_bandwidth, scheduler.regions = simulate_case()
-        start = time.perf_counter()
+    for repetition in range(3):
+        np.random.seed = repetition
+        for case_idx, simulate_case in enumerate(simulate_cases):
+            scheduler.peer_delay, scheduler.peer_bandwidth, scheduler.regions = simulate_case()
+            start = time.perf_counter()
 
-        candidate_partitions, candidate_total_cost, candidate_min_total_cost, candidate_data_parallel_cost, candidate_pipeline_parallel_cost = random_candidates(
-            nodes=list(range(scheduler.num_devices)), population_size=5000)
-        candidate_partition_idx = np.argmin(candidate_total_cost)
-        candidate_partition = candidate_partitions[candidate_partition_idx]
-        pipeline_parallel_path = list(range(scheduler.way))
-        data_parallel_cost = candidate_data_parallel_cost[candidate_partition_idx]
-        pipeline_parallel_cost = candidate_pipeline_parallel_cost[candidate_partition_idx]
-        min_total_cost = candidate_total_cost[candidate_partition_idx]
-        average_total_cost = np.average(candidate_total_cost)
+            candidate_partitions, candidate_total_cost, candidate_min_total_cost, candidate_data_parallel_cost, candidate_pipeline_parallel_cost = random_candidates(
+                nodes=list(range(scheduler.num_devices)), population_size=5000)
+            candidate_partition_idx = np.argmin(candidate_total_cost)
+            candidate_partition = candidate_partitions[candidate_partition_idx]
+            pipeline_parallel_path = list(range(scheduler.way))
+            data_parallel_cost = candidate_data_parallel_cost[candidate_partition_idx]
+            pipeline_parallel_cost = candidate_pipeline_parallel_cost[candidate_partition_idx]
+            min_total_cost = candidate_total_cost[candidate_partition_idx]
+            average_total_cost = np.average(candidate_total_cost)
 
-        with open('random_scheduler_' + str(case_idx) + '.npy', 'wb') as f:
-            np.save(f, np.array(candidate_min_total_cost))
-        end = time.perf_counter()
-        print("run time(" + str(len(candidate_partitions)) +
-              " candidates): " + str(end - start) + " seconds")
-        print("candidate partition: " + str(candidate_partition))
-        print("pipeline parallel path: " + str(pipeline_parallel_path))
-        print("min total cost: " + str(min_total_cost))
-        print("average total cost: " + str(average_total_cost))
-        print("data parallel cost: " + str(data_parallel_cost))
-        print("pipeline parallel cost: " + str(pipeline_parallel_cost))
-'''
-        import matplotlib.pyplot as plt
-        plt.scatter(x=range(len(candidate_total_cost)),
-                    y=candidate_total_cost, s=2)
-        plt.title(simulate_case.__name__+"_random")
-        plt.xlabel('candidate id')
-        plt.ylabel('cost')
-        plt.savefig(simulate_case.__name__+"_random")
-        plt.clf()
-'''
+            with open('data/random_scheduler_' + str(case_idx) + '_' + str(repetition) + '.npy', 'wb') as f:
+                np.save(f, np.array(candidate_min_total_cost))
+            end = time.perf_counter()
+            print("run time(" + str(len(candidate_partitions)) +
+                  " candidates): " + str(end - start) + " seconds")
+            print("candidate partition: " + str(candidate_partition))
+            print("pipeline parallel path: " + str(pipeline_parallel_path))
+            print("min total cost: " + str(min_total_cost))
+            print("average total cost: " + str(average_total_cost))
+            print("data parallel cost: " + str(data_parallel_cost))
+            print("pipeline parallel cost: " + str(pipeline_parallel_cost))
