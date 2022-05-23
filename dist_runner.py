@@ -1,8 +1,7 @@
 import argparse
-import torch
 import torch.autograd.profiler as profiler
-from glue_dataset.qqp import get_glue_qqp_train_data_loader
-from glue_dataset.tokenizer import build_tokenizer
+from task_datasets.qqp import get_glue_qqp_train_data_loader
+from task_datasets.tokenizer import build_tokenizer
 from pipeline_parallel.dist_pp_utils import get_pp_module
 from utils.dist_args_utils import *
 from utils.dist_train_utils import *
@@ -14,7 +13,7 @@ def main():
     add_device_arguments(parser)
     add_torch_distributed_arguments(parser)
     add_model_arguments(parser)
-    add_task_arguments(parser)
+    add_qqp_task_arguments(parser)
     add_training_hyper_parameter_arguments(parser)
     add_mixed_precision_arguments(parser)
     add_parallel_schema_arguments(parser)

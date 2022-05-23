@@ -1,26 +1,16 @@
 import torch
 import argparse
-from glue_dataset.qqp import get_glue_qqp_train_data_loader
-from glue_dataset.tokenizer import build_tokenizer
-from modules.gpt_modules import GPTGlueModel, get_position_id
+from task_datasets.qqp import get_glue_qqp_train_data_loader
+from task_datasets.tokenizer import build_tokenizer
+from modules.gpt_modules import GlueSeqClassificationModel, GlueSeq2SeqClassificationModel
 from deepspeed.profiling.flops_profiler import FlopsProfiler
 from optimizer.optimizer import get_fp16_optimizer
+from utils.dist_args_utils import add_qqp_task_arguments
 
 
 def main():
     parser = argparse.ArgumentParser(description='Test Glue-qqp dataset')
-    parser.add_argument('--train-data', nargs='+', default=['./glue_dataset/data/QQP/train.tsv'], metavar='S',
-                        help='path to the training data')
-    parser.add_argument('--valid-data', nargs='+', default=['./glue_dataset/data/QQP/test.tsv'], metavar='S',
-                        help='path to the training data')
-    parser.add_argument('--tokenizer-type', type=str, default='BertWordPieceLowerCase', metavar='S',
-                        help='which tokenizer to use.')
-    parser.add_argument('--vocab-file', type=str, default='./glue_dataset/data/bert-large-cased-vocab.txt', metavar='S',
-                        help='which tokenizer to use.')
-    parser.add_argument('--vocab-extra-ids', type=int, default=0, metavar='N',
-                        help='-')
-    parser.add_argument('--make-vocab-size-divisible-by', type=int, default=128, metavar='N',
-                        help='-')
+    add_qqp_task_arguments(parser)
     parser.add_argument('--use-cuda', default=True, type=lambda x: (str(x).lower() == 'true'),
                         help='if this is set to True, will use cuda to train')
     parser.add_argument('--cuda-id', type=int, default=0, metavar='N',
@@ -29,9 +19,9 @@ def main():
                         help='input batch size for training (default: 100)')
     parser.add_argument('--seq-length', type=int, default=2048, metavar='N',
                         help='-')
-    parser.add_argument('--embedding-dim', type=int, default=12288, metavar='N',
+    parser.add_argument('--embedding-dim', type=int, default=2048, metavar='N',
                         help='-')
-    parser.add_argument('--num-layers', type=int, default=1, metavar='N',
+    parser.add_argument('--num-layers', type=int, default=3, metavar='N',
                         help='-')
     parser.add_argument('--num-heads', type=int, default=16, metavar='N',
                         help='-')
@@ -43,6 +33,8 @@ def main():
                         help='Run model in fp16 mode.')
     parser.add_argument('--use-offload', default=False, type=lambda x: (str(x).lower() == 'true'),
                         help='if this is set to True, we will offload the fp32 model to CPU RAM.')
+    parser.add_argument('--task', type=str, default='Seq2SeqClassification', metavar='S',
+                        help='What task to run?')
     args = parser.parse_args()
     if args.use_cuda:
         assert (torch.cuda.is_available())
@@ -55,7 +47,12 @@ def main():
     print("token vocab size:", tokenizer.vocab_size)
     data_loader = get_glue_qqp_train_data_loader(args, tokenizer)
     num_classes = 2
-    model = GPTGlueModel(args, tokenizer.vocab_size, num_classes, use_checkpoint=True).to(device)
+    if args.task == 'SeqClassification':
+        model = GlueSeqClassificationModel(args, tokenizer.vocab_size, num_classes, use_checkpoint=True).to(device)
+    elif args.task == 'Seq2SeqClassification':
+        model = GlueSeq2SeqClassificationModel(args, tokenizer.vocab_size, num_classes, use_checkpoint=True).to(device)
+    else:
+        assert False
     print("Model info:")
     for name, param in model.named_parameters():
         print(name, ":", param.size())
@@ -79,14 +76,23 @@ def main():
 
         input_ids = data['text'].to(device)
         # position_ids = get_position_id(args.seq_length, args.batch_size, device)
-        labels = data['label'].to(device)
+        if args.task == 'SeqClassification':
+            labels = data['label'].to(device)
 
-        optimizer.zero_grad(set_to_none=True)
+        elif args.task == 'Seq2SeqClassification':
+            labels = data['text'].to(device)
+            shift_labels = labels[..., 1:].contiguous()
+
+        optimizer.zero_grad(set_to_none=False)
         # output = model(input_ids, position_ids)
         output = model(input_ids)
         print(output.shape)
         # loss = loss_func(output, labels)
-        loss = torch.nn.functional.cross_entropy(output, labels)
+        if args.task == 'SeqClassification':
+            loss = torch.nn.functional.cross_entropy(output, labels)
+        elif args.task == 'Seq2SeqClassification':
+            shift_logits = output[..., :-1, :].contiguous()
+            loss = torch.nn.functional.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
 
         if i == 1:
             prof.stop_profile()

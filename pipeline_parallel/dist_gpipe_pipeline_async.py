@@ -247,6 +247,15 @@ class GpipeAsync:
                 # print(send_log)
                 self.profiling_log.append(send_log)
 
+    def _loss_compute(self, input_, target):
+        if self.model.task == 'SeqClassification':
+            return torch.nn.functional.cross_entropy(input=input_, target=target)
+        elif self.model.task  == 'Seq2SeqClassification':
+            shift_logits = input_[..., :-1, :].contiguous()
+            shift_labels = target[..., 1:].contiguous()
+            return torch.nn.functional.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)),
+                                                     shift_labels.view(-1))
+
     def backward_stage(self, cached_output_micro_batches: List[torch.Tensor], target=None,
                        loss_func=torch.nn.functional.cross_entropy):
         # print("Backward stage start! rank-", self.rank)
@@ -259,7 +268,7 @@ class GpipeAsync:
             if self.pp_rank == self.pipeline_group_size - 1:  # only send grad back to last node, do not receive
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.profile_mark_backward_comp_start(i)
-                    loss = loss_func(input=cached_output_micro_batches[i], target=target_as_micro_batches[i])
+                    loss = self._loss_compute(input_=cached_output_micro_batches[i], target=target_as_micro_batches[i])
                     loss.backward()
                     self.torch_comp_stream.record_event(self.backward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
@@ -362,7 +371,7 @@ class GpipeAsync:
             self.init_time_stamp = time.time() * 1e+6
             self.init_event.record()
         self.zero_input_grad()
-        self.optimizer.zero_grad(set_to_none=True)
+        self.optimizer.zero_grad(set_to_none=False)
 
         for step in range(self.gradient_accumulate_step):
             outputs = self.forward_stage(input_)

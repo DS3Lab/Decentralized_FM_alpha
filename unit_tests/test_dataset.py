@@ -1,7 +1,7 @@
 import torch
 import argparse
-from glue_dataset.qqp import QQPDataset
-from glue_dataset.tokenizer import build_tokenizer
+from task_datasets import QQPDataset
+from task_datasets import build_tokenizer
 
 
 def train_data_loader(args, tokenizer):
@@ -21,9 +21,9 @@ def train_data_loader(args, tokenizer):
 
 def main():
     parser = argparse.ArgumentParser(description='Test Glue-qqp dataset')
-    parser.add_argument('--train-data', nargs='+', default=['./glue_dataset/data/QQP/train.tsv'], metavar='S',
+    parser.add_argument('--train-data', nargs='+', default=['./task_datasets/data/QQP/train.tsv'], metavar='S',
                         help='path to the training data')
-    parser.add_argument('--valid-data', nargs='+', default=['./glue_dataset/data/QQP/test.tsv'], metavar='S',
+    parser.add_argument('--valid-data', nargs='+', default=['./task_datasets/data/QQP/test.tsv'], metavar='S',
                         help='path to the training data')
     parser.add_argument('--seq-length', type=int, default=2048, metavar='N',
                         help='-')
@@ -31,7 +31,7 @@ def main():
                         help='-')
     parser.add_argument('--tokenizer-type', type=str, default='BertWordPieceLowerCase', metavar='S',
                         help='which tokenizer to use.')
-    parser.add_argument('--vocab-file', type=str, default='./glue_dataset/data/bert-large-cased-vocab.txt', metavar='S',
+    parser.add_argument('--vocab-file', type=str, default='./task_datasets/data/bert-large-cased-vocab.txt', metavar='S',
                         help='which tokenizer to use.')
     parser.add_argument('--vocab-extra-ids', type=int, default=0, metavar='N',
                         help='-')

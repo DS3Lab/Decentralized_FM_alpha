@@ -1,12 +1,13 @@
 from torch import nn
 from .gpt_modules import GPTEmbedding, GPTTransformerLayer
-from .task_modules import GlueClassification
+from .task_modules import SeqClassification, Seq2SeqClassification
 
 
 class GPTStageBase(nn.Module):
     def __init__(self, args, vocab_size, num_classes):
         super(GPTStageBase, self).__init__()
         self._to_cpu = (args.dist_backend == "gloo")
+        self.task = args.task
         self._vocab_size = vocab_size
         self._embedding_dim = args.embedding_dim  # embedding dimension
         self._seq_length = args.seq_length
@@ -20,7 +21,10 @@ class GPTStageBase(nn.Module):
         return GPTEmbedding(self._vocab_size, self._embedding_dim, self._seq_length)
 
     def _create_last_layer(self):
-        return GlueClassification(self._embedding_dim, self._num_classes)
+        if self.task == 'SeqClassification':
+            return SeqClassification(self._embedding_dim, self._num_classes)
+        elif self.task == 'Seq2SeqClassification':
+            return Seq2SeqClassification(self._vocab_size, self._embedding_dim)
 
     def _create_transformer_layer(self):
         return GPTTransformerLayer(self._embedding_dim, self._num_heads, self._feedforward_dim,

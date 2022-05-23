@@ -2,7 +2,7 @@ import math
 from torch import nn
 from torch.nn import functional
 from torch.utils.checkpoint import checkpoint
-from .task_modules import GlueClassification
+from .task_modules import SeqClassification, Seq2SeqClassification
 from utils.dist_debug_utils import *
 
 
@@ -131,9 +131,9 @@ class GPTEmbedding(torch.nn.Module):
         return embeddings
 
 
-class GPTGlueModel(torch.nn.Module):
+class GlueSeqClassificationModel(torch.nn.Module):
     def __init__(self, args, vocab_size, num_classes, use_checkpoint=True):
-        super(GPTGlueModel, self).__init__()
+        super(GlueSeqClassificationModel, self).__init__()
         self.use_checkpoint = use_checkpoint
         self.embedding = GPTEmbedding(vocab_size, args.embedding_dim, args.seq_length)
 
@@ -142,7 +142,26 @@ class GPTGlueModel(torch.nn.Module):
             module_list.append(GPTTransformerLayer(args.embedding_dim, args.num_heads, args.embedding_dim*4,
                                                    use_checkpoint=use_checkpoint))
         self.transformers = torch.nn.Sequential(*module_list)
-        self.classifier = GlueClassification(args.embedding_dim, num_classes)
+        self.classifier = SeqClassification(args.embedding_dim, num_classes)
+
+    def forward(self, input_ids, position_ids=None):
+        input_emb = self.embedding(input_ids, position_ids)
+        output_emb = self.transformers(input_emb)
+        return self.classifier(output_emb)
+
+
+class GlueSeq2SeqClassificationModel(torch.nn.Module):
+    def __init__(self, args, vocab_size, num_classes, use_checkpoint=True):
+        super(GlueSeq2SeqClassificationModel, self).__init__()
+        self.use_checkpoint = use_checkpoint
+        self.embedding = GPTEmbedding(vocab_size, args.embedding_dim, args.seq_length)
+
+        module_list = []
+        for _ in range(args.num_layers):
+            module_list.append(GPTTransformerLayer(args.embedding_dim, args.num_heads, args.embedding_dim*4,
+                                                   use_checkpoint=use_checkpoint))
+        self.transformers = torch.nn.Sequential(*module_list)
+        self.classifier = Seq2SeqClassification(vocab_size, args.embedding_dim)
 
     def forward(self, input_ids, position_ids=None):
         input_emb = self.embedding(input_ids, position_ids)

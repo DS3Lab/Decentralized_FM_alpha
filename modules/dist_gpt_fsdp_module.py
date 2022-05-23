@@ -1,6 +1,6 @@
 import torch
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
-from .task_modules import GlueClassification
+from .task_modules import SeqClassification
 from .gpt_modules import MultiHeadAttention, TwoLayerMLP, GPTEmbedding
 from fairscale.nn.checkpoint import checkpoint_wrapper
 
@@ -51,7 +51,7 @@ class GPTGlueFsdpModel(torch.nn.Module):
             module_list.append(GPTTransformerFsdpLayer(args.embedding_dim, args.num_heads,
                                                        args.embedding_dim * 4, use_checkpoint, explicit_fsdp=False))
         self.transformers = torch.nn.Sequential(*module_list)
-        self.classifier = GlueClassification(args.embedding_dim, num_classes)
+        self.classifier = SeqClassification(args.embedding_dim, num_classes)
 
     def forward(self, input_ids, position_ids):
         input_emb = self.embedding(input_ids, position_ids)
@@ -82,7 +82,7 @@ class GPTFsdpStageBase(torch.nn.Module):
             return emb
 
     def _create_last_layer(self):
-        classifier = GlueClassification(self._embedding_dim, self._num_classes)
+        classifier = SeqClassification(self._embedding_dim, self._num_classes)
         if self._explicit_fsdp:
             return FSDP(classifier, reshard_after_forward=True, move_params_to_cpu=False, mixed_precision=False,
                         flatten_parameters=False)

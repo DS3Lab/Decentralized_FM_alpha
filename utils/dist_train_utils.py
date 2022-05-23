@@ -16,7 +16,13 @@ def distributed_train_foo_iter(args, pipeline, device, train_data_loader):
               " iterations, averaged (exclude the first iter) run time:", averaged_time)
     elif get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
         for i, data in enumerate(train_data_loader):
-            labels = data['label'].to(device)
+            if args.task == 'Seq2SeqClassification':
+                labels = data['label'].to(device)
+            elif args.task  == 'Seq2SeqClassification':
+                labels = data['text'].to(device)
+            else:
+                print("Not supported task!")
+                assert False
             pipeline.sgd_iter(None, labels)
             if i >= args.num_iters-1:
                 break

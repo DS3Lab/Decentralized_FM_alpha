@@ -6,14 +6,11 @@ from torch.distributed import rpc
 
 from torch.distributed.pipeline.sync import Pipe
 # from torch.distributed.fsdp import FullyShardedDataParallel
-from fairscale.nn.checkpoint import checkpoint_wrapper
-from glue_dataset.qqp import get_glue_qqp_train_data_loader
-from glue_dataset.tokenizer import build_tokenizer
+from task_datasets.qqp import get_glue_qqp_train_data_loader
+from task_datasets.tokenizer import build_tokenizer
 from utils.dist_args_utils import *
 from utils.dist_debug_utils import *
-from modules.gpt_modules import get_position_id
 from modules.dist_gpt_fsdp_module import GPTFsdpStageLast, GPTFsdpStageMiddle, GPTFsdpStageFirst
-from fairscale.nn import auto_wrap, default_auto_wrap_policy, enable_wrap
 
 
 def main():
@@ -21,7 +18,7 @@ def main():
     add_device_arguments(parser)
     add_torch_distributed_arguments(parser)
     add_model_arguments(parser)
-    add_task_arguments(parser)
+    add_qqp_task_arguments(parser)
     add_training_hyper_parameter_arguments(parser)
 
     parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')

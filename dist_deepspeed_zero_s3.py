@@ -4,17 +4,16 @@ import deepspeed
 import argparse
 import time
 import torch
-import torch.distributed as dist
-from glue_dataset.qqp import QQPDataset
-from glue_dataset.tokenizer import build_tokenizer
+from task_datasets.qqp import QQPDataset
+from task_datasets.tokenizer import build_tokenizer
 from utils.dist_args_utils import *
-from modules.gpt_modules import GPTGlueModel, get_position_id
+from modules.gpt_modules import GlueSeqClassificationModel, get_position_id
 
 
 def main():
     parser = argparse.ArgumentParser(description='ZeRO-GPT3')
     add_model_arguments(parser)
-    add_task_arguments(parser)
+    add_qqp_task_arguments(parser)
     # add_torch_distributed_arguments(parser)
     add_training_hyper_parameter_arguments(parser)
     parser.add_argument('--local_rank', type=int, default=0, metavar='N', help='rank of the node')
@@ -37,7 +36,7 @@ def main():
     train_dataset = QQPDataset('training', args.train_data, tokenizer, args.seq_length)
 
     num_classes = 2
-    model = GPTGlueModel(args, tokenizer.vocab_size, num_classes)
+    model = GlueSeqClassificationModel(args, tokenizer.vocab_size, num_classes)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 
     model_engine, optimizer, train_dataloader, _ = deepspeed.initialize(args=args, model=model,  optimizer=optimizer,
