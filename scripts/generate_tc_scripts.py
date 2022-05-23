@@ -3,38 +3,38 @@ import argparse
 
 # No space for IPs!!!!
 private_ip = [
-"172.31.44.8",
-"172.31.40.139",
-"172.31.42.140",
-"172.31.43.140",
-"172.31.38.255",
-"172.31.33.3",
-"172.31.37.133",
-"172.31.36.6",
-"172.31.39.185",
-"172.31.40.251",
-"172.31.43.252",
-"172.31.33.254",
-"172.31.32.51",
-"172.31.44.246",
-"172.31.40.119",
-"172.31.42.55",
-"172.31.34.24",
-"172.31.32.218",
-"172.31.44.156",
-"172.31.45.159",
-"172.31.37.146",
-"172.31.44.212",
-"172.31.37.20",
-"172.31.40.214",
-"172.31.45.228",
-"172.31.32.103",
-"172.31.41.105",
-"172.31.34.44",
-"172.31.45.224",
-"172.31.39.162",
-"172.31.37.99",
-"172.31.16.133",
+"172.31.29.65",
+"172.31.28.64",
+"172.31.16.254",
+"172.31.17.189",
+"172.31.18.124",
+"172.31.30.59",
+"172.31.26.186",
+"172.31.23.249",
+"172.31.21.78",
+"172.31.19.142",
+"172.31.27.205",
+"172.31.29.203",
+"172.31.16.137",
+"172.31.24.8",
+"172.31.28.197",
+"172.31.30.4",
+"172.31.16.25",
+"172.31.22.150",
+"172.31.28.211",
+"172.31.16.146",
+"172.31.25.146",
+"172.31.24.18",
+"172.31.29.208",
+"172.31.20.207",
+"172.31.29.31",
+"172.31.25.118",
+"172.31.24.245",
+"172.31.25.181",
+"172.31.22.240",
+"172.31.30.39",
+"172.31.19.38",
+"172.31.22.100",
 ]
 
 def simulate_8_clusters(nodes=32, bw=1):
@@ -68,9 +68,10 @@ def generate_tc_scripts(args):
         for key in tc_setting_dict.keys():
             current_delay, current_bandwidth = key
             handle_index = tc_setting_dict[key]
-            limit_pkts = current_delay * 22500 * current_bandwidth
-            script.write("sudo tc qdisc add dev ens3 parent 1:{} handle {}: netem delay {}ms rate {}Gbit limit {}\n"
-                         .format(handle_index, handle_index*10, current_delay, current_bandwidth, limit_pkts))
+            # limit_pkts = current_delay * 22500 * current_bandwidth
+            limit_pkts = int(current_bandwidth * 1500 * 10 * 1.5)
+            script.write("sudo tc qdisc add dev ens3 parent 1:{} handle {}: netem rate {}Gbit limit {}\n"
+                         .format(handle_index, handle_index*10, current_bandwidth, limit_pkts))
         # setup filter
         for i in range(len(private_ip)):
             if i != args.rank:
