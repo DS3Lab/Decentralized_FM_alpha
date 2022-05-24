@@ -22,7 +22,8 @@ class Seq2SeqClassification(torch.nn.Module):
         super(Seq2SeqClassification, self).__init__()
         self.use_checkpoint = use_checkpoint
         self.ln_f = torch.nn.LayerNorm(model_dim, eps=layer_norm_eps)
-        self.lm_head = torch.nn.Linear(model_dim, vocab_size, bias=False)
+        # self.lm_head = torch.nn.Linear(model_dim, vocab_size, bias=False)
+        self.lm_head = torch.nn.AdaptiveLogSoftmaxWithLoss(model_dim, vocab_size, [1500, 3000, 6000])
         #self.lm_head = torch.nn.Linear(model_dim, project_dim, bias=False)
         #self.pred_layer = torch.nn.Linear(project_dim, vocab_size, bias=False)
 

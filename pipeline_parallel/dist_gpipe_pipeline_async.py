@@ -254,8 +254,7 @@ class GpipeAsync:
         elif self.model.task == 'Seq2SeqClassification':
             shift_logits = input_[..., :-1, :].contiguous()
             shift_labels = target[..., 1:].contiguous()
-            return torch.nn.functional.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)),
-                                                     shift_labels.view(-1))
+            return torch.nn.functional.nll_loss(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
 
     def backward_stage(self, cached_output_micro_batches: List[torch.Tensor], target=None,
                        loss_func=torch.nn.functional.cross_entropy):
@@ -278,8 +277,8 @@ class GpipeAsync:
                     self.profile_mark_backward_send_start(i)
                     self.comm.send(self.input_micro_batches[i].grad, dst=self.pre_node_rank, stream=cupy_send_stream)
                     self.profile_mark_backward_send_end(i)
-                self.input_micro_batches[i].grad = None
-                torch.cuda.synchronize()  # Notice this for memory optimization
+                # self.input_micro_batches[i].grad = None
+                # torch.cuda.synchronize()  # Notice this for memory optimization
             elif self.pp_rank == 0:  # only receive grad from previous node, do not send
                 with torch.cuda.stream(self.torch_recv_stream):
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
