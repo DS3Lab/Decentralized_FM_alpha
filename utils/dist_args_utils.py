@@ -25,13 +25,13 @@ def add_torch_distributed_arguments(parser):
 
 
 def add_qqp_task_arguments(parser):
-    parser.add_argument('--train-data', nargs='+', default=['./task_datasets/task_datasets/data/QQP/train.tsv'], metavar='S',
+    parser.add_argument('--train-data', nargs='+', default=['./task_datasets/data/QQP/train.tsv'], metavar='S',
                         help='path to the training data')
-    parser.add_argument('--valid-data', nargs='+', default=['./task_datasets/task_datasets/data/QQP/test.tsv'], metavar='S',
+    parser.add_argument('--valid-data', nargs='+', default=['./task_datasets/data/QQP/test.tsv'], metavar='S',
                         help='path to the training data')
     parser.add_argument('--tokenizer-type', type=str, default='BertWordPieceLowerCase', metavar='S',
                         help='which tokenizer to use.')
-    parser.add_argument('--vocab-file', type=str, default='./task_datasets/task_datasets/data/bert-large-cased-vocab.txt', metavar='S',
+    parser.add_argument('--vocab-file', type=str, default='./task_datasets/data/bert-large-cased-vocab.txt', metavar='S',
                         help='which tokenizer to use.')
     parser.add_argument('--vocab-extra-ids', type=int, default=0, metavar='N',
                         help='-')
