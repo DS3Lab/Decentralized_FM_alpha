@@ -1,5 +1,5 @@
 import numpy as np
-
+seed=2024
 
 def random_assignment(nodes=64):
     arr = np.arange(1, nodes)
@@ -15,7 +15,7 @@ def random_assignment(nodes=64):
 
 def random_assignment_0_datacenter(nodes=64):
     print("Generate random_assignment_0_datacenter")
-    np.random.seed(2022)
+    np.random.seed(seed)
     gpu_per_instances = min(nodes // 2, 8)
     instances = nodes // gpu_per_instances
     print('nodes_per_node=(', end='')
@@ -27,7 +27,7 @@ def random_assignment_0_datacenter(nodes=64):
 
 def random_assignment_1_datacenter_spot(gpu_per_instances=4, multi_gpu_instances=8, single_gpu_instances=32):
     print("Generate random_assignment_1_datacenter_spot")
-    np.random.seed(2022)
+    np.random.seed(seed)
     gpus = []
     for i in range(multi_gpu_instances):
         for j in range(single_gpu_instances // multi_gpu_instances):

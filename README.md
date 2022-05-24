@@ -60,7 +60,7 @@
 
 - Setup heterogeneous network (update the private IPs in generate_heterogeneous_tc.py, sync the code to AWS!):
 
-      bash aws_generate_heterogenous_tc.sh #HETER_CASE
+      bash aws_generate_heter_tc.sh #HETER_CASE (2/3/4)
 
 - Run Tasks (e.g.,):
 
