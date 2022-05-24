@@ -62,11 +62,20 @@
 
       bash aws_generate_heter_tc.sh #HETER_CASE (2/3/4)
 
+- Run Schedulers (under scheduler/heuristic_evolutionary_solver directory) to get assignments and estimated cost
+- Update correspond aws_run_gpt3_*_training.sh with the above output:
+
+      python random_scheduler.py
+      python scheduler_baseline.py
+      python scheduler.py
+      python convergence_lineplot.py
+
 - Run Tasks (e.g.,):
 
       bash aws_run_gpt3_training.sh gpt3_small_pp3_dp4.sh
       bash aws_run_gpt3_training.sh gpt3_small_pp3_dp4.sh #HETER_CASE
       bash aws_run_gpt3_training.sh gpt3_small_pp3_dp4.sh #DELAY #BANDWIDTH
+
 
 - Clear logs:
 
@@ -80,4 +89,3 @@
 
       bash copy_traces.sh #PREFIX
       bash generate_traces.sh #PREFIX
-
