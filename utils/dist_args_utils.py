@@ -48,8 +48,8 @@ def add_model_arguments(parser):
                         help='-')
     parser.add_argument('--num-heads', type=int, default=16, metavar='N',
                         help='-')
-    parser.add_argument('--task', type=str, default='Seq2SeqClassification', metavar='S',
-                        help='What task to run?')
+    parser.add_argument('--task', type=str, default='SeqClassification', metavar='S',
+                        help='What task to run? SeqClassification or Seq2SeqClassification')
 
 
 def add_training_hyper_parameter_arguments(parser):

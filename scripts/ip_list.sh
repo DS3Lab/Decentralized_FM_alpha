@@ -1,8 +1,8 @@
 # public IPs of AWS instances.
 ips=(
-"34.210.222.249"
-"54.185.204.98"
-"18.237.70.253"
+"35.87.206.65"
+"52.42.191.60"
+"54.190.53.91"
 )
 
 # private IP of Rank-0 instances.
