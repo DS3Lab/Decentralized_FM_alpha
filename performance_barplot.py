@@ -227,11 +227,16 @@ cases_df = [case_0_df, case_1_df, case_2_df, case_3_df, case_4_df]
 def plot_performance(subfig=None):
     axes = subfig.subplots(nrows=5, ncols=1, sharex=True)
     for i, df in enumerate(cases_df):
-        ax = sns.pointplot(ax=axes[i], data=df, x='pflop', y="pflops", hue="system", hue_order=[
-            "Megatron", "Ours (w/o Scheduler)", "Ours (w/ Scheduler)"])
-        ax.set(ylim=(0, 3.1))
+        ax = sns.barplot(ax=axes[i], data=df, x='pflop', y='runtime', hue="system", hue_order=[
+            "Megatron", "Ours (w/o Scheduler)", "Ours (w/ Scheduler)"], alpha=0.9, ci="sd", errwidth=1, capsize=0.1)
+        ax.set_ylabel('Runtime (s)')
         ax.set_xlabel(None)
-        ax.set_ylabel('PFLOPS')
+        if i == 0 or i == 1 or i == 2:
+            ax.set(ylim=(0, 150))
+        elif i == 3:
+            ax.set(ylim=(0, 300))
+        elif i == 4:
+            ax.set(ylim=(0, 700))
 
         if i == 4:
             axes[i].set_xlabel('Model Architectures')
