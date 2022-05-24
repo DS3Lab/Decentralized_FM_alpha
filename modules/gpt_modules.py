@@ -151,7 +151,7 @@ class GlueSeqClassificationModel(torch.nn.Module):
 
 
 class GlueSeq2SeqClassificationModel(torch.nn.Module):
-    def __init__(self, args, vocab_size, num_classes, use_checkpoint=True):
+    def __init__(self, args, vocab_size, use_checkpoint=True):
         super(GlueSeq2SeqClassificationModel, self).__init__()
         self.use_checkpoint = use_checkpoint
         self.embedding = GPTEmbedding(vocab_size, args.embedding_dim, args.seq_length)

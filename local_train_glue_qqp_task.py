@@ -50,7 +50,7 @@ def main():
     if args.task == 'SeqClassification':
         model = GlueSeqClassificationModel(args, tokenizer.vocab_size, num_classes, use_checkpoint=True).to(device)
     elif args.task == 'Seq2SeqClassification':
-        model = GlueSeq2SeqClassificationModel(args, tokenizer.vocab_size, num_classes, use_checkpoint=True).to(device)
+        model = GlueSeq2SeqClassificationModel(args, tokenizer.vocab_size, use_checkpoint=True).to(device)
     else:
         assert False
     print("Model info:")
