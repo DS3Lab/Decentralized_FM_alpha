@@ -18,16 +18,24 @@ class SeqClassification(torch.nn.Module):
 
 
 class Seq2SeqClassification(torch.nn.Module):
-    def __init__(self, vocab_size, model_dim, layer_norm_eps=1e-5, use_checkpoint=True):
+    def __init__(self, vocab_size, model_dim, layer_norm_eps=1e-5, use_checkpoint=True, project_dim=32):
         super(Seq2SeqClassification, self).__init__()
         self.use_checkpoint = use_checkpoint
         self.ln_f = torch.nn.LayerNorm(model_dim, eps=layer_norm_eps)
-        self.lm_head = torch.nn.Linear(model_dim, vocab_size, bias=False)
+        self.lm_head = torch.nn.Linear(model_dim, project_dim, bias=False)
+        self.pred_layer = torch.nn.Linear(project_dim, vocab_size, bias=False)
 
     def forward(self, x, input_ids=None):
+
         x = self.ln_f(x)
+
         if self.use_checkpoint:
             x = checkpoint(self.lm_head, x)
         else:
             x = self.lm_head(x)
+
+        if self.use_checkpoint:
+            x = checkpoint(self.pred_layer, x)
+        else:
+            x = self.pred_layer(x)
         return x
