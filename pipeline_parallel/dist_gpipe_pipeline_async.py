@@ -271,7 +271,6 @@ class GpipeAsync:
                     self.profile_mark_backward_comp_start(i)
                     loss = self._loss_compute(input_=cached_output_micro_batches[i], target=target_as_micro_batches[i])
                     loss.backward()
-                    torch.cuda.synchronize()  # Notice this for memory optimization
                     self.torch_comp_stream.record_event(self.backward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
@@ -279,6 +278,7 @@ class GpipeAsync:
                     self.profile_mark_backward_send_start(i)
                     self.comm.send(self.input_micro_batches[i].grad, dst=self.pre_node_rank, stream=cupy_send_stream)
                     self.profile_mark_backward_send_end(i)
+                torch.cuda.synchronize()  # Notice this for memory optimization
             elif self.pp_rank == 0:  # only receive grad from previous node, do not send
                 with torch.cuda.stream(self.torch_recv_stream):
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
