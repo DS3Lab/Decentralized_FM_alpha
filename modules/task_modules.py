@@ -18,7 +18,7 @@ class SeqClassification(torch.nn.Module):
 
 
 class Seq2SeqClassification(torch.nn.Module):
-    def __init__(self, vocab_size, model_dim, layer_norm_eps=1e-5, use_checkpoint=True, project_dim=32):
+    def __init__(self, vocab_size, model_dim, layer_norm_eps=1e-5, use_checkpoint=True, project_dim=8):
         super(Seq2SeqClassification, self).__init__()
         self.use_checkpoint = use_checkpoint
         self.ln_f = torch.nn.LayerNorm(model_dim, eps=layer_norm_eps)
