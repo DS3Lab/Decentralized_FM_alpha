@@ -86,7 +86,7 @@ class Fp16Optimizer:
             for i, param in enumerate(param_group['params']):
                 if param.requires_grad:
                     # float16 params:
-                    assert param.type() == 'torch.cuda.HalfTensor'
+                    # assert param.type() == 'torch.cuda.HalfTensor'
                     float16_params_this_group.append(param)
                     # Create a copy
                     if self.offload:

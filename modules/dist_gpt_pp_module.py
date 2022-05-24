@@ -69,6 +69,7 @@ class GPTStageLast(GPTStageBase):
         # module_list.append(self._create_last_layer())
         self.model = nn.Sequential(*module_list).to(device)
         self.task_layer = self._create_last_layer()
+        print(self.parameters())
 
     def forward(self, x, target=None):
         if self.task == 'SeqClassification':
