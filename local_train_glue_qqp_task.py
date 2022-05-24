@@ -92,6 +92,7 @@ def main():
             loss = torch.nn.functional.cross_entropy(output, labels)
         elif args.task == 'Seq2SeqClassification':
             shift_logits = output[..., :-1, :].contiguous()
+            # loss = torch.nn.functional.nll_loss(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
             loss = torch.nn.functional.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
 
         if i == 1:

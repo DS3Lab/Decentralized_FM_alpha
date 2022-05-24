@@ -271,6 +271,7 @@ class GpipeAsync:
                     self.profile_mark_backward_comp_start(i)
                     loss = self._loss_compute(input_=cached_output_micro_batches[i], target=target_as_micro_batches[i])
                     loss.backward()
+                    torch.cuda.synchronize()  # Notice this for memory optimization
                     self.torch_comp_stream.record_event(self.backward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
