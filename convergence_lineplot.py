@@ -39,17 +39,17 @@ for case_idx in range(5):
     ax.set_xlabel(None)
     ax.set_ylabel(None)
     if case_idx == 0:
-        ax.set(ylim=(0, 25))
-        ax.set_yticks([0, 5, 10, 15, 20, 25])
-        ax.set_yticklabels([0, 5, 10, 15, 20, 25], fontsize=15)
+        ax.set(ylim=(0, 20))
+        ax.set_yticks([0, 5, 10, 15, 20])
+        ax.set_yticklabels([0, 5, 10, 15, 20], fontsize=15)
     elif case_idx == 1:
-        ax.set(ylim=(0, 60))
-        ax.set_yticks([0, 20, 40, 60])
-        ax.set_yticklabels([0, 20, 40, 60], fontsize=15)
+        ax.set(ylim=(0, 40))
+        ax.set_yticks([0, 10, 20, 30, 40])
+        ax.set_yticklabels([0, 10, 20, 30, 40], fontsize=15)
     elif case_idx == 2:
-        ax.set(ylim=(0, 60))
-        ax.set_yticks([0, 20, 40, 60])
-        ax.set_yticklabels([0, 20, 40, 60], fontsize=15)
+        ax.set(ylim=(0, 40))
+        ax.set_yticks([0, 10, 20, 30, 40])
+        ax.set_yticklabels([00, 10, 20, 30, 40], fontsize=15)
     elif case_idx == 3:
         ax.set(ylim=(0, 60))
         ax.set_yticks([0, 20, 40, 60])
