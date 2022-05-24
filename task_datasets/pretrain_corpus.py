@@ -48,3 +48,30 @@ def get_bookcorpus_train_data_loader(args, tokenizer, num_workers=0):
                                                     pin_memory=True,
                                                     collate_fn=None)
     return train_data_loader
+
+
+def get_openwebtext_train_data_loader(args, tokenizer, num_workers=0):
+    dataset = load_dataset('openwebtext', split='train')
+    stream_dataset = StreamDataset(dataset, tokenizer, args.seq_length)
+
+    train_data_loader = torch.utils.data.DataLoader(stream_dataset,
+                                                    batch_size=args.batch_size,
+                                                    shuffle=False,
+                                                    num_workers=num_workers,
+                                                    pin_memory=True,
+                                                    collate_fn=None)
+    return train_data_loader
+
+
+def get_wikipedia_train_data_loader(args, tokenizer, num_workers=0):
+    dataset = load_dataset('wikipedia', split='train')
+    stream_dataset = StreamDataset(dataset, tokenizer, args.seq_length)
+
+    train_data_loader = torch.utils.data.DataLoader(stream_dataset,
+                                                    batch_size=args.batch_size,
+                                                    shuffle=False,
+                                                    num_workers=num_workers,
+                                                    pin_memory=True,
+                                                    collate_fn=None)
+    return train_data_loader
+
