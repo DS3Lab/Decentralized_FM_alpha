@@ -21,7 +21,7 @@ class GpipeAsyncOffload:
     """
 
     def __init__(self, args, vocab_size, num_classes, device, use_dp=False, pp_buffer_size=4):
-        print("=======Initialize Gpipe.")
+        print("=======Initialize GpipeAO.")
         if args.fp16:
             self.use_fp16 = True
             print("=======Gpipe use FP16")
