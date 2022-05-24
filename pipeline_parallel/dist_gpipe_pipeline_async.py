@@ -276,7 +276,7 @@ class GpipeAsync:
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.profile_mark_backward_comp_start(i)
                     if self.model.task == 'Seq2SeqClassification':
-                        target_as_micro_batches[i].backward()
+                        cached_output_micro_batches[i].backward()
                     else:
                         loss = torch.nn.functional.cross_entropy(input=cached_output_micro_batches[i],
                                                                  target=target_as_micro_batches[i])
