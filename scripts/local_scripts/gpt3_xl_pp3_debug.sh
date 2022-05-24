@@ -28,7 +28,7 @@ then
 fi
 
 log_mode=$8
-log_path="./logs/${timestamp}_gipe_gpt3_xl_pp3_l${num_layers}_b${global_batch_size}_rank${rank}_${log_mode}"
+log_path="./logs/${timestamp}_gpipe_gpt3_xl_pp3_l${num_layers}_b${global_batch_size}_rank${rank}_${log_mode}"
 
 if [ $# -eq 8 ]
 then

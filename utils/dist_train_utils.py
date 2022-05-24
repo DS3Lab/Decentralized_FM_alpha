@@ -14,11 +14,11 @@ def distributed_train_foo_iter(args, pipeline, device, train_data_loader):
         averaged_time = total_time / (args.num_iters - 1)
         print("Finished running ", args.num_iters,
               " iterations, averaged (exclude the first iter) run time:", averaged_time)
-    elif get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
+    elif get_pipeline_parallel_rank() == args.pipeline_group_size - 1:
         for i, data in enumerate(train_data_loader):
             if args.task == 'Seq2SeqClassification':
                 labels = data['label'].to(device)
-            elif args.task  == 'Seq2SeqClassification':
+            elif args.task == 'Seq2SeqClassification':
                 labels = data['text'].to(device)
             else:
                 print("Not supported task!")

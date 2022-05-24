@@ -248,6 +248,7 @@ class GpipeAsync:
                 self.profiling_log.append(send_log)
 
     def _loss_compute(self, input_, target):
+        print(input_.shape, target.shape)
         if self.model.task == 'SeqClassification':
             return torch.nn.functional.cross_entropy(input=input_, target=target)
         elif self.model.task  == 'Seq2SeqClassification':
