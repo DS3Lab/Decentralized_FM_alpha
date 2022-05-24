@@ -251,7 +251,7 @@ class GpipeAsync:
         print(input_.shape, target.shape)
         if self.model.task == 'SeqClassification':
             return torch.nn.functional.cross_entropy(input=input_, target=target)
-        elif self.model.task  == 'Seq2SeqClassification':
+        elif self.model.task == 'Seq2SeqClassification':
             shift_logits = input_[..., :-1, :].contiguous()
             shift_labels = target[..., 1:].contiguous()
             return torch.nn.functional.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)),
