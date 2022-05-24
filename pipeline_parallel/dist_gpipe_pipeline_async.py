@@ -169,11 +169,15 @@ class GpipeAsync:
     def get_ts(self, event):
         return self.init_time_stamp + self.init_event.elapsed_time(event) * 1e+3
 
-    def forward_stage(self, input_data=None):
+    def forward_stage(self, input_data=None, target_data=None):
         # print("Forward stage start! rank-", self.rank)
         if self.pp_rank == 0:
             assert(input_data is not None)
             self.input_micro_batches = torch.chunk(input_data, self.micro_batch_num, dim=0)
+        elif self.pp_rank == self.pipeline_group_size - 1:
+            if self.model.task == 'Seq2SeqClassification':
+                assert target_data is not None
+                target_data_micro_batches = torch.chunk(target_data, self.micro_batch_num, dim=0)
         output_micro_batches = []
 
         for i in range(self.micro_batch_num):
@@ -197,7 +201,10 @@ class GpipeAsync:
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
                     self.profile_mark_forward_comp_start(i)
-                    current_micro_output = self.model(self.input_micro_batches[i])
+                    if self.model.task == 'Seq2SeqClassification':
+                        current_micro_output = self.model(self.input_micro_batches[i], target_data_micro_batches[i])
+                    else:
+                        current_micro_output = self.model(self.input_micro_batches[i])
                     self.torch_comp_stream.record_event(self.forward_comp_ready_events[i])
             else:  # receive, compute, and send
                 with torch.cuda.stream(self.torch_recv_stream):
@@ -252,12 +259,12 @@ class GpipeAsync:
         if self.model.task == 'SeqClassification':
             return torch.nn.functional.cross_entropy(input=input_, target=target)
         elif self.model.task == 'Seq2SeqClassification':
-            shift_logits = input_[..., :-1, :].contiguous()
-            shift_labels = target[..., 1:].contiguous()
-            return torch.nn.functional.nll_loss(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+            # shift_logits = input_[..., :-1, :].contiguous()
+            # shift_labels = target[..., 1:].contiguous()
+            # return torch.nn.functional.nll_loss(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+            return self.model(input_)
 
-    def backward_stage(self, cached_output_micro_batches: List[torch.Tensor], target=None,
-                       loss_func=torch.nn.functional.cross_entropy):
+    def backward_stage(self, cached_output_micro_batches: List[torch.Tensor], target=None):
         # print("Backward stage start! rank-", self.rank)
         if self.pp_rank == self.pipeline_group_size - 1:
             assert(target is not None)
@@ -268,8 +275,12 @@ class GpipeAsync:
             if self.pp_rank == self.pipeline_group_size - 1:  # only send grad back to last node, do not receive
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.profile_mark_backward_comp_start(i)
-                    loss = self._loss_compute(input_=cached_output_micro_batches[i], target=target_as_micro_batches[i])
-                    loss.backward()
+                    if self.model.task == 'Seq2SeqClassification':
+                        target_as_micro_batches[i].backward()
+                    else:
+                        loss = torch.nn.functional.cross_entropy(input=cached_output_micro_batches[i],
+                                                                 target=target_as_micro_batches[i])
+                        loss.backward()
                     self.torch_comp_stream.record_event(self.backward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
@@ -376,7 +387,7 @@ class GpipeAsync:
         self.optimizer.zero_grad(set_to_none=False)
 
         for step in range(self.gradient_accumulate_step):
-            outputs = self.forward_stage(input_)
+            outputs = self.forward_stage(input_, target)
             forward_time = time.time()
             if step == 0:
                 forward_slot = forward_time-start_time

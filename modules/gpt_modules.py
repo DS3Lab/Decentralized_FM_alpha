@@ -163,7 +163,7 @@ class GlueSeq2SeqClassificationModel(torch.nn.Module):
         self.transformers = torch.nn.Sequential(*module_list)
         self.classifier = Seq2SeqClassification(vocab_size, args.embedding_dim)
 
-    def forward(self, input_ids, position_ids=None):
+    def forward(self, input_ids, target_ids, position_ids=None):
         input_emb = self.embedding(input_ids, position_ids)
         output_emb = self.transformers(input_emb)
-        return self.classifier(output_emb)
+        return self.classifier(output_emb, target_ids)

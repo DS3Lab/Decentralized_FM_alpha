@@ -15,7 +15,7 @@ def main():
                         help='if this is set to True, will use cuda to train')
     parser.add_argument('--cuda-id', type=int, default=0, metavar='N',
                         help='cuda index, if the instance has multiple GPUs.')
-    parser.add_argument('--batch-size', type=int, default=3, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=1, metavar='N',
                         help='input batch size for training (default: 100)')
     parser.add_argument('--seq-length', type=int, default=2048, metavar='N',
                         help='-')
@@ -81,19 +81,21 @@ def main():
 
         elif args.task == 'Seq2SeqClassification':
             labels = data['text'].to(device)
-            shift_labels = labels[..., 1:].contiguous()
+            # shift_labels = labels[..., 1:].contiguous()
 
         optimizer.zero_grad(set_to_none=False)
         # output = model(input_ids, position_ids)
-        output = model(input_ids)
-        print(output.shape)
+
         # loss = loss_func(output, labels)
         if args.task == 'SeqClassification':
+            output = model(input_ids)
+            print(output.shape)
             loss = torch.nn.functional.cross_entropy(output, labels)
         elif args.task == 'Seq2SeqClassification':
-            shift_logits = output[..., :-1, :].contiguous()
+            loss = model(input_ids, labels)
+            # shift_logits = output[..., :-1, :].contiguous()
             # loss = torch.nn.functional.nll_loss(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
-            loss = torch.nn.functional.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+            # loss = torch.nn.functional.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
 
         if i == 1:
             prof.stop_profile()
