@@ -434,8 +434,7 @@ case_3_df = pd.DataFrame(data=[[3, 23.64, 0.421, 56.20, 2022, 'Megatron'],
                                [3, 94.56, 0.488, 193.72, 2022, 'Megatron'],
                                [3, 94.56, 0.488, 197.92, 2023, 'Megatron'],
                                [3, 94.56, 0.488, 195.62, 2024, 'Megatron'],
-                               [3, 31.52, 0.523, 60.31, 2022, 'Megatron'],                               [
-                                   3, 31.52, 0.523, 60.31, 2022, 'Megatron'],
+                               [3, 31.52, 0.523, 60.31, 2022, 'Megatron'],
                                [3, 31.52, 0.523, 64.82, 2023, 'Megatron'],
                                [3, 31.52, 0.523, 63.51, 2024, 'Megatron'],
                                [3, 63.04, 0.580, 108.64, 2022, 'Megatron'],
@@ -716,7 +715,7 @@ def plot_performance(subfig=None):
     for i, df in enumerate(cases_df):
         ax = sns.barplot(ax=axes[i], data=df, x='pflop', y='runtime', hue="system", hue_order=[
             "Megatron", "Ours (w/o Scheduler)", "Ours (w/ Scheduler)"], alpha=0.8, ci="sd", errwidth=0.6, capsize=0.2)
-        ax.set_ylabel('Runtime (s)')
+        ax.set_ylabel('Runtime per iteration (s)')
         ax.set_xlabel(None)
         if i == 0 or i == 1 or i == 2:
             ax.set(ylim=(0, 150))
