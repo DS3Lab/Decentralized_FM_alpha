@@ -15,10 +15,10 @@ batch_size=$7
 ############################################################
 
 
-DIST_CONF="--rank $rank --cuda-id $cuda_id --pp-mode gpipe --gradient-accumulate-step $ga_step --world-size $world_size --pipeline-group-size 32 --data-group-size 1"
+DIST_CONF="--rank $rank --cuda-id $cuda_id --pp-mode gpipe --gradient-accumulate-step $ga_step --world-size $world_size --pipeline-group-size 4 --data-group-size 1"
 MODEL_CONF="--embedding-dim 12288 --num-heads 96 --num-layers $num_layers --batch-size $batch_size --micro-batch-size 1"
 
-if [ "$world_size" -ne 3 ]
+if [ "$world_size" -ne 4 ]
 then
   echo "Not correct number of nodes"
   exit 1
