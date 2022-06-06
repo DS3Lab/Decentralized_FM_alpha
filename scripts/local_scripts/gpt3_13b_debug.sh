@@ -35,11 +35,12 @@ then
 elif [ $# -eq 9 ]
 then
   RATE_GBIT=$9
-  export NCCL_SOCKET_IFNAME=ens3
-  export GLOO_SOCKET_IFNAME=ens3
-  sh ./scripts/tc_scripts/bandwidth.sh $RATE_GBIT
+  # ens3 for p3. instance; ens5 for g4dn. instances;
+  export NCCL_SOCKET_IFNAME=ens5
+  export GLOO_SOCKET_IFNAME=ens5
+  sh ./scripts/tc_scripts/bandwidth.sh $RATE_GBIT ens5
   python dist_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF --trace-postfix "b${RATE_GBIT}" >> "${log_path}_b${RATE_GBIT}.log"
-  sh ./scripts/tc_scripts/clear.sh
+  sh ./scripts/tc_scripts/clear.sh ens5
 elif [ $# -eq 10 ]
 then
   DELAY_MS=$9
