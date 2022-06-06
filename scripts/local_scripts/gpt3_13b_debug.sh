@@ -14,18 +14,20 @@ num_layers=$6
 batch_size=$7
 ############################################################
 
+pp_degree=10
+dp_degree=1
 
-DIST_CONF="--rank $rank --cuda-id $cuda_id --pp-mode gpipe --gradient-accumulate-step $ga_step --world-size $world_size --pipeline-group-size 4 --data-group-size 1"
+DIST_CONF="--rank $rank --cuda-id $cuda_id --pp-mode gpipe --gradient-accumulate-step $ga_step --world-size $world_size --pipeline-group-size $pp_degree --data-group-size $dp_degree"
 MODEL_CONF="--embedding-dim 5120 --num-heads 40 --num-layers $num_layers --batch-size $batch_size --micro-batch-size 1"
 
-if [ "$world_size" -ne 4 ]
+if [ "$world_size" -ne 10 ]
 then
   echo "Not correct number of nodes"
   exit 1
 fi
 
 log_mode=$8
-log_path="./logs/${timestamp}_gpipe_gpt3_13b_pp32_l${num_layers}_b${global_batch_size}_rank${rank}_${log_mode}"
+log_path="./logs/${timestamp}_gpipe_gpt3_13b_pp${pp_degree}_dp${dp_degree}_l${num_layers}_b${global_batch_size}_rank${rank}_${log_mode}"
 
 if [ $# -eq 8 ]
 then
