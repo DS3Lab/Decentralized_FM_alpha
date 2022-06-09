@@ -53,7 +53,7 @@ delay_bandwidth_dict = {
 }
 
 
-def simulate_0_datacenter(nodes=64):
+def simulate_1_datacenter(nodes=64):
     print("Simulate case 0: on-demand datacenter.")
     delay = np.zeros((nodes, nodes))
     bandwidth = np.ones((nodes, nodes)) * 3.125
@@ -70,7 +70,7 @@ def simulate_0_datacenter(nodes=64):
     return delay, bandwidth, regions
 
 
-def simulate_1_datacenter_spot_gpu(nodes=64, group=(8, 4)):
+def simulate_2_datacenter_spot_gpu(nodes=64, group=(8, 4)):
     print("Simulate case 1: spot datacenter.")
     delay = np.zeros((nodes, nodes))
     bandwidth = np.ones((nodes, nodes)) * 1.25
@@ -85,7 +85,7 @@ def simulate_1_datacenter_spot_gpu(nodes=64, group=(8, 4)):
     return delay, bandwidth, None
 
 
-def simulate_2_multi_universities(nodes=64):
+def simulate_3_multi_universities(nodes=64):
     print("Simulate case 2: multi universities. 0~31 in Ohio, 32~63 in Virginia.")
     delay = np.ones((nodes, nodes))
     bandwidth = np.ones((nodes, nodes)) * 5
@@ -107,7 +107,7 @@ def simulate_2_multi_universities(nodes=64):
 
 
 # Assume within region is 2 GB, 5 ms.
-def simulate_3_regional_geo_distributed(nodes=64):
+def simulate_4_regional_geo_distributed(nodes=64):
     print("Simulate case 3: regional geo distributed: 0~15 in Virgina; 17~33 in Oregon, 34~63 in Ohio")
 
     def in_virgina(index: int):
@@ -173,8 +173,8 @@ def simulate_3_regional_geo_distributed(nodes=64):
 
 
 # Assume within region is 2 GB, 5 ms.
-def simulate_4_worldwide_geo_distributed(nodes=64):
-    print("Simulate case 4: worldwide geo distributed")
+def simulate_5_worldwide_geo_distributed(nodes=64):
+    print("Simulate case 4: worldwide geo distributed (balanced)")
     cities = ["Oregon", "Virginia", "Ohio", "Tokyo", "Seoul", "London", "Frankfurt", "Ireland"]
     regions = []
     # for i in np.random.randint(low=0, high=len(cities), size=nodes):
@@ -212,8 +212,8 @@ def simulate_4_worldwide_geo_distributed(nodes=64):
     return delay, bandwidth, regions
 
 
-def simulate_4_2_worldwide_geo_distributed(nodes=64):
-    print("Simulate case 4: worldwide geo distributed")
+def simulate_5_2_worldwide_geo_distributed(nodes=64):
+    print("Simulate case 5-2: worldwide geo distributed (not balanced)")
     # cities = ["Oregon", "Virginia", "Ohio",  "Tokyo", "Seoul", "Singapore", "Sydney", "London", "Frankfurt", "Ireland"]
     cities = ["Oregon", "Virginia", "Ohio", "Tokyo", "Seoul", "London", "Frankfurt", "Ireland"]
     regions = []
@@ -260,8 +260,8 @@ def simulate_4_2_worldwide_geo_distributed(nodes=64):
     return delay, bandwidth, regions
 
 
-def simulate_5_homogeneous_tc(nodes=64, delay=50, bandwidth=1):
-    print("Simulate case 5: homogeneous traffic control")
+def simulate_6_1_debug_homogeneous_tc(nodes=64, delay=50, bandwidth=1):
+    print("Simulate case 6-1: homogeneous traffic control")
     delay = np.ones((nodes, nodes)) * delay
     bandwidth = np.ones((nodes, nodes)) * bandwidth
     print('delay(ms):', delay)
@@ -269,8 +269,8 @@ def simulate_5_homogeneous_tc(nodes=64, delay=50, bandwidth=1):
     return delay, bandwidth, None
 
 
-def simulate_6_debug(nodes=8):
-    print("Simulate case 6: debug PP, nodes 8")
+def simulate_6_2_debug_pipeline(nodes=8):
+    print("Simulate case 6-2: debug PP, nodes 8")
     delay = np.ones((nodes, nodes))
     bandwidth = np.ones((nodes, nodes)) * 5
     for i in range(nodes-1):
@@ -284,7 +284,7 @@ def simulate_6_debug(nodes=8):
 
 
 def main():
-    simulate_4_2_worldwide_geo_distributed()
+    simulate_5_1_worldwide_geo_distributed()
 
 
 if __name__ == '__main__':

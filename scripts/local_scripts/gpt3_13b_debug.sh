@@ -14,13 +14,14 @@ num_layers=$6
 batch_size=$7
 ############################################################
 
-pp_degree=10
+dp_mode=sharded_ps
+pp_degree=20
 dp_degree=1
 
-DIST_CONF="--rank $rank --cuda-id $cuda_id --pp-mode gpipe --gradient-accumulate-step $ga_step --world-size $world_size --pipeline-group-size $pp_degree --data-group-size $dp_degree"
+DIST_CONF="--rank $rank --cuda-id $cuda_id --pp-mode gpipe --dp-mode $dp_mode --gradient-accumulate-step $ga_step --world-size $world_size --pipeline-group-size $pp_degree --data-group-size $dp_degree"
 MODEL_CONF="--embedding-dim 5120 --num-heads 40 --num-layers $num_layers --batch-size $batch_size --micro-batch-size 1"
 
-if [ "$world_size" -ne 10 ]
+if [ "$world_size" -ne 20 ]
 then
   echo "Not correct number of nodes"
   exit 1

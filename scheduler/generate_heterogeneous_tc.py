@@ -71,22 +71,22 @@ private_ip = [
 
 
 def get_delay_bandwidth(args):
-    if args.case == '0':
-        return simulate_0_datacenter(args.nodes)
-    elif args.case == '1':
-        return simulate_1_datacenter_spot_gpu(args.nodes)
+    if args.case == '1':
+        return simulate_1_datacenter(args.nodes)
     elif args.case == '2':
-        return simulate_2_multi_universities(args.nodes)
+        return simulate_2_datacenter_spot_gpu(args.nodes)
     elif args.case == '3':
-        return simulate_3_regional_geo_distributed(args.nodes)
+        return simulate_3_multi_universities(args.nodes)
     elif args.case == '4':
-        return simulate_4_worldwide_geo_distributed(args.nodes)
-    elif args.case == '4_2':
-        return simulate_4_2_worldwide_geo_distributed(args.nodes)
+        return simulate_4_regional_geo_distributed(args.nodes)
     elif args.case == '5':
-        return simulate_5_homogeneous_tc(args.nodes)
-    elif args.case == '6':
-        return simulate_6_debug(args.nodes)
+        return simulate_5_worldwide_geo_distributed(args.nodes)
+    elif args.case == '5_2':
+        return simulate_5_2_worldwide_geo_distributed(args.nodes)
+    elif args.case == '6_1':
+        return simulate_6_1_debug_homogeneous_tc(args.nodes)
+    elif args.case == '6_2':
+        return simulate_6_2_debug_pipeline(args.nodes)
     else:
         assert False
 
@@ -123,7 +123,7 @@ def generate_tc_scripts(args):
 
 def main():
     parser = argparse.ArgumentParser(description='Test PyTorch Distributed')
-    parser.add_argument('--case', type=str, default='4_2', metavar='R',
+    parser.add_argument('--case', type=str, default='5', metavar='R',
                         help='which case to generate.')
     parser.add_argument('--rank', type=int, default=0, metavar='R',
                         help='rank for this IP')
