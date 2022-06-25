@@ -10,7 +10,7 @@ def compute_random_pipeline_parallel_cost(candidate_partition=None):
         cross_partition_cost = float('-inf')
         for j in range(scheduler.partition_size):
             cur_cost = scheduler.peer_delay[candidate_partition[i][j], candidate_partition[i+1][j]]/1e3 + \
-                config.send_activation_size * 8 / \
+                scheduler.send_activation_size * 8 / \
                 scheduler.peer_bandwidth[candidate_partition[i]
                                          [j], candidate_partition[i+1][j]]
             if cross_partition_cost < cur_cost:

@@ -6,7 +6,7 @@ import config
 
 
 # GPT-3 XL
-batch_size = 0.5e6
+batch_size = 1e6 / 2048
 layer_size = 24
 
 # physical topology
@@ -16,8 +16,14 @@ peer_bandwidth = None
 regions = None
 
 # assigned task
-batch_size_per_task = 0.625e5
+batch_size_per_task = 1.25e5 / 2048
 layer_size_per_task = 3
+send_gradient_size = 1.3 * \
+    np.dtype(np.float32).itemsize * \
+    layer_size_per_task / layer_size  # gigabytes
+send_activation_size = 2024 * 2048 * \
+    np.dtype(np.float16).itemsize * batch_size_per_task / \
+    (1024 * 1024 * 1024)  # gigabytes
 
 
 assert(batch_size % batch_size_per_task == 0)

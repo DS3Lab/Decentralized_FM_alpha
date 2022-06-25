@@ -6,7 +6,7 @@ import config
 
 
 # GPT-3 XL
-batch_size = 0.5e6
+batch_size = 1e6 / 2048
 layer_size = 24
 
 # physical topology
@@ -16,9 +16,14 @@ peer_bandwidth = None
 regions = None
 
 # assigned task
-batch_size_per_task = 0.625e5
+batch_size_per_task = 1.25e5 / 2048
 layer_size_per_task = 3
-
+send_gradient_size = 1.3 * \
+    np.dtype(np.float32).itemsize * \
+    layer_size_per_task / layer_size  # gigabytes
+send_activation_size = 2024 * 2048 * \
+    np.dtype(np.float16).itemsize * batch_size_per_task / \
+    (1024 * 1024 * 1024)  # gigabytes
 
 assert(batch_size % batch_size_per_task == 0)
 assert(layer_size % layer_size_per_task == 0)
@@ -52,7 +57,7 @@ def compute_data_parallel_cost(candidate_partition=None):
         for i in range(partition_size):
             for j in range(partition_size):
                 if i != j:
-                    within_partition_cost[i] += 2 * (peer_delay[partition[i], partition[j]] / 1e3 + config.send_gradient_size * 8 / (
+                    within_partition_cost[i] += 2 * (peer_delay[partition[i], partition[j]] / 1e3 + send_gradient_size * 8 / (
                         peer_bandwidth[partition[i], partition[j]] * partition_size))
         if data_parallel_cost < np.max(within_partition_cost):
             data_parallel_cost = np.max(within_partition_cost)
@@ -122,7 +127,7 @@ def compute_pipeline_parallel_cost(candidate_partition=None):
         for i in range(partition_size):
             for j in range(partition_size):
                 cost_matrix[i, j] = peer_delay[candidate_partition_0[i], candidate_partition_1[j]]/1e3 + \
-                    config.send_activation_size * 8 / \
+                    send_activation_size * 8 / \
                     peer_bandwidth[candidate_partition_0[i],
                                    candidate_partition_1[j]]
 
@@ -149,7 +154,7 @@ def compute_pipeline_parallel_cost(candidate_partition=None):
             #    cur_transfer_times = []
             #    for pair in bipartite_match:
             #        cur_transfer_times.append(
-            #            peer_delay[pair[0], pair[1]]/1e3 + config.send_activation_size * 8 / peer_bandwidth[pair[0], pair[1]])
+            #            peer_delay[pair[0], pair[1]]/1e3 + send_activation_size * 8 / peer_bandwidth[pair[0], pair[1]])
             #    all_transfer_times.append(max(cur_transfer_times))
             # cross_partition_cost[i, j] = min(all_transfer_times)
             # assert(min(all_transfer_times) == bipartite_matching(candidate_partition[i], candidate_partition[j]))
@@ -225,7 +230,7 @@ def GCMA(nodes=None, population_size=None, trails=None):
                     gain[v_idx][partition_idx] = np.inf
                     for target_idx, target_partition_idx in enumerate(cur_offspring):
                         partial_pipeline_parallel_cost = peer_delay[v_idx, target_idx] / \
-                            1e3 + config.send_activation_size * 8 / \
+                            1e3 + send_activation_size * 8 / \
                             peer_bandwidth[v_idx, target_idx]
                         if partition_idx != target_partition_idx:
                             gain[v_idx][target_partition_idx] += partial_pipeline_parallel_cost / \
