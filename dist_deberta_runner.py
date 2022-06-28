@@ -37,6 +37,24 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             
         if get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
             wandb.log({'epoch': e}, step=pipe.global_step)
+            
+#         pipe.forward_compressor.simulate_kmeans()
+#         curr_activs = pipe.forward_compressor.simulate_cache[:20]
+#         np.save(
+#             f'activations/deberta-nodrop-nocompress-cache-r{args.forward_ratio}-e{e}-{get_pipeline_parallel_rank()}',
+#             curr_activs,
+#         )
+#         curr_activs = pipe.forward_compressor.simulate_diff[:20]
+#         np.save(
+#             f'activations/gpt2-nodrop-clustr1e5-norm-simulate-diff-r{args.forward_ratio}-e{e}-{get_pipeline_parallel_rank()}',
+#             curr_activs,
+#         )
+        curr_activs = pipe.forward_compressor.cache[:50]
+        np.save(
+            f'activations/deberta-nodrop-cache-r{args.forward_ratio}-e{e}-{get_pipeline_parallel_rank()}',
+            curr_activs,
+        )
+        
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-DeBERTa')
@@ -85,28 +103,8 @@ def main():
     
     config = DebertaV2Config.from_pretrained(args.model_name)
     config.num_hidden_layers = args.num_layers  # num_layers per node
-#     config.hidden_dropout_prob = 0.0
-#     config.attention_probs_dropout_prob = 0.0
-    if get_pipeline_parallel_rank() == 0:
-        args.num_layers -= 5
-        config.num_hidden_layers = args.num_layers  # num_layers per node
-    elif get_pipeline_parallel_rank() == 1:
-        args.num_layers += 1
-        config.num_hidden_layers = args.num_layers  # num_layers per node
-    elif get_pipeline_parallel_rank() == 2:
-        args.num_layers += 1
-        config.num_hidden_layers = args.num_layers  # num_layers per node
-    elif get_pipeline_parallel_rank() == 3:
-        args.num_layers += 1
-        config.num_hidden_layers = args.num_layers  # num_layers per node
-    elif get_pipeline_parallel_rank() == 4:
-        args.num_layers += 1
-        config.num_hidden_layers = args.num_layers  # num_layers per node
-    elif get_pipeline_parallel_rank() == 5:
-        args.num_layers += 1
-        config.num_hidden_layers = args.num_layers  # num_layers per node
-    else:
-        config.num_hidden_layers = args.num_layers  # num_layers per node
+    config.attention_probs_dropout_prob = 0.0
+    config.hidden_dropout_prob = 0.0
     
     tokenizer = build_tokenizer(args)
     tokenizer.model_max_length = args.seq_length
@@ -145,9 +143,9 @@ def main():
     else:
         print("Running ", args.pp_mode, " without data parallel.")
 
-    torch.manual_seed(args.seed)
-    random.seed(args.seed)
-    np.random.seed(args.seed)
+#     torch.manual_seed(args.seed)
+#     random.seed(args.seed)
+#     np.random.seed(args.seed)
         
     pipe = get_deberta_pp_module(args, config, device, use_dp)
     
@@ -193,106 +191,6 @@ def main():
                 pipe.model.encoder.conv.load_state_dict(
                     torch.load(f'{args.model_name}/pytorch_conv.pt')
                 )
-        elif get_pipeline_parallel_rank() == 1:
-            _i = get_pipeline_parallel_rank() * (args.num_layers-1) - 5
-            for i in range(len(pipe.model.encoder.layer)):
-                print(_i+i)
-                pipe.model.encoder.layer[i].load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_{_i+i}.pt')
-                )
-            if hasattr(pipe.model.encoder, 'rel_embeddings'):
-                pipe.model.encoder.rel_embeddings.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_rel_embs.pt')
-                )
-            if hasattr(pipe.model.encoder, 'LayerNorm'):
-                pipe.model.encoder.LayerNorm.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_ln.pt')
-                )
-            if hasattr(pipe.model.encoder, 'conv') and pipe.model.encoder.conv is not None:
-                raise Exception('should not have conv')
-                pipe.model.encoder.conv.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_conv.pt')
-                ) 
-        elif get_pipeline_parallel_rank() == 2:
-            _i = get_pipeline_parallel_rank() * (args.num_layers-1) - 4
-            for i in range(len(pipe.model.encoder.layer)):
-                print(_i+i)
-                pipe.model.encoder.layer[i].load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_{_i+i}.pt')
-                )
-            if hasattr(pipe.model.encoder, 'rel_embeddings'):
-                pipe.model.encoder.rel_embeddings.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_rel_embs.pt')
-                )
-            if hasattr(pipe.model.encoder, 'LayerNorm'):
-                pipe.model.encoder.LayerNorm.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_ln.pt')
-                )
-            if hasattr(pipe.model.encoder, 'conv') and pipe.model.encoder.conv is not None:
-                raise Exception('should not have conv')
-                pipe.model.encoder.conv.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_conv.pt')
-                ) 
-        elif get_pipeline_parallel_rank() == 3:
-            _i = get_pipeline_parallel_rank() * (args.num_layers-1) - 3
-            for i in range(len(pipe.model.encoder.layer)):
-                print(_i+i)
-                pipe.model.encoder.layer[i].load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_{_i+i}.pt')
-                )
-            if hasattr(pipe.model.encoder, 'rel_embeddings'):
-                pipe.model.encoder.rel_embeddings.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_rel_embs.pt')
-                )
-            if hasattr(pipe.model.encoder, 'LayerNorm'):
-                pipe.model.encoder.LayerNorm.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_ln.pt')
-                )
-            if hasattr(pipe.model.encoder, 'conv') and pipe.model.encoder.conv is not None:
-                raise Exception('should not have conv')
-                pipe.model.encoder.conv.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_conv.pt')
-                ) 
-        elif get_pipeline_parallel_rank() == 4:
-            _i = get_pipeline_parallel_rank() * (args.num_layers-1) - 2
-            for i in range(len(pipe.model.encoder.layer)):
-                print(_i+i)
-                pipe.model.encoder.layer[i].load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_{_i+i}.pt')
-                )
-            if hasattr(pipe.model.encoder, 'rel_embeddings'):
-                pipe.model.encoder.rel_embeddings.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_rel_embs.pt')
-                )
-            if hasattr(pipe.model.encoder, 'LayerNorm'):
-                pipe.model.encoder.LayerNorm.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_ln.pt')
-                )
-            if hasattr(pipe.model.encoder, 'conv') and pipe.model.encoder.conv is not None:
-                raise Exception('should not have conv')
-                pipe.model.encoder.conv.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_conv.pt')
-                ) 
-        elif get_pipeline_parallel_rank() == 5:
-            _i = get_pipeline_parallel_rank() * (args.num_layers-1) - 1
-            for i in range(len(pipe.model.encoder.layer)):
-                print(_i+i)
-                pipe.model.encoder.layer[i].load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_{_i+i}.pt')
-                )
-            if hasattr(pipe.model.encoder, 'rel_embeddings'):
-                pipe.model.encoder.rel_embeddings.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_rel_embs.pt')
-                )
-            if hasattr(pipe.model.encoder, 'LayerNorm'):
-                pipe.model.encoder.LayerNorm.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_ln.pt')
-                )
-            if hasattr(pipe.model.encoder, 'conv') and pipe.model.encoder.conv is not None:
-                raise Exception('should not have conv')
-                pipe.model.encoder.conv.load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_conv.pt')
-                ) 
         else:
             _i = get_pipeline_parallel_rank() * args.num_layers
             for i in range(len(pipe.model.encoder.layer)):

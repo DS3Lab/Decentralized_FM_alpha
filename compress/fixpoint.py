@@ -205,6 +205,7 @@ def decompress_flexible_nbits_by_bucket(x, scale, bits, original_shape, bucket_s
     # CUDA only
     
     x = unpack_low_bit_tensor(x, bits, original_shape)
+
     x = x.view(bucket_size, -1)
     x = _decompress_nbits(x, scale, bits=bits)
     x = x.view(original_shape)

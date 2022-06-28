@@ -35,6 +35,28 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             
         if get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
             wandb.log({'epoch': e}, step=pipe.global_step)
+        
+#         pipe.forward_compressor.simulate_kmeans()
+        curr_activs = pipe.forward_compressor.simulate_cache[:20]
+        np.save(
+            f'activations/gpt2-knn-simulate-cache-r{args.forward_ratio}-e{e}-{get_pipeline_parallel_rank()}',
+            curr_activs,
+        )
+        curr_activs = pipe.forward_compressor.simulate_diff[:20]
+        np.save(
+            f'activations/gpt2-knn-simulate-diff-r{args.forward_ratio}-e{e}-{get_pipeline_parallel_rank()}',
+            curr_activs,
+        )
+        curr_activs = pipe.forward_compressor.cache[:20]
+        np.save(
+            f'activations/gpt2-knn-cache-r{args.forward_ratio}-e{e}-{get_pipeline_parallel_rank()}',
+            curr_activs,
+        )
+        np.save(
+            f'activations/gpt2-knn-counts-r{args.forward_ratio}-e{e}-{get_pipeline_parallel_rank()}',
+            pipe.forward_compressor.counts,
+        )
+        pipe.forward_compressor.counts.fill(0)
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
@@ -84,24 +106,26 @@ def main():
     init_communicators(args)
     
     config = GPTConfig.from_pretrained(args.model_name)
+#     config.attn_pdrop = 0.0
+#     config.embd_pdrop = 0.0
+#     config.resid_pdrop = 0.0
+#     config.summary_first_dropout = 0.0
     
-    if get_pipeline_parallel_rank() == args.pipeline_group_size-1:
-        args.num_layers -= 4
-        config.n_layer = args.num_layers  # num_layers per node
-    elif get_pipeline_parallel_rank() == args.pipeline_group_size-5:
-        args.num_layers += 1
-        config.n_layer = args.num_layers  # num_layers per node
-    elif get_pipeline_parallel_rank() == args.pipeline_group_size-4:
-        args.num_layers += 1
-        config.n_layer = args.num_layers  # num_layers per node
-    elif get_pipeline_parallel_rank() == args.pipeline_group_size-3:
-        args.num_layers += 1
-        config.n_layer = args.num_layers  # num_layers per node
-    elif get_pipeline_parallel_rank() == args.pipeline_group_size-2:
-        args.num_layers += 1
-        config.n_layer = args.num_layers  # num_layers per node
-    else:
-        config.n_layer = args.num_layers  # num_layers per node
+    config.n_layer = args.num_layers
+#     if get_pipeline_parallel_rank() == args.pipeline_group_size-1:
+#         args.num_layers -= 3
+#         config.n_layer = args.num_layers  # num_layers per node
+#     elif get_pipeline_parallel_rank() == args.pipeline_group_size-4:
+#         args.num_layers += 1
+#         config.n_layer = args.num_layers  # num_layers per node
+#     elif get_pipeline_parallel_rank() == args.pipeline_group_size-3:
+#         args.num_layers += 1
+#         config.n_layer = args.num_layers  # num_layers per node
+#     elif get_pipeline_parallel_rank() == args.pipeline_group_size-2:
+#         args.num_layers += 1
+#         config.n_layer = args.num_layers  # num_layers per node
+#     else:
+#         config.n_layer = args.num_layers  # num_layers per node
     
     tokenizer = build_tokenizer(args)
     tokenizer.model_max_length = args.seq_length
@@ -126,16 +150,16 @@ def main():
     if args.warmup_steps is None:
         args.warmup_steps = len(train_data_loader)
     args.total_steps = len(train_data_loader) * args.n_epochs
-
+    
     use_dp = (args.world_size != args.pipeline_group_size)
     if use_dp:
         print("Running ", args.pp_mode, " with data parallel.")
     else:
         print("Running ", args.pp_mode, " without data parallel.")
 
-    torch.manual_seed(args.seed)
-    random.seed(args.seed)
-    np.random.seed(args.seed)
+#     torch.manual_seed(args.seed)
+#     random.seed(args.seed)
+#     np.random.seed(args.seed)
     
     pipe = get_pp_module(args, config, device, use_dp)
     
@@ -150,7 +174,8 @@ def main():
                     torch.load(f'{args.model_name}/pytorch_{i}.pt')
                 )
         elif get_pipeline_parallel_rank() == args.pipeline_group_size-1:
-            _i = get_pipeline_parallel_rank() * (args.num_layers+4) + 4
+#             _i = get_pipeline_parallel_rank() * (args.num_layers+3) + 3
+            _i = get_pipeline_parallel_rank() * args.num_layers
             # skip last classification layer
             for i in range(len(pipe.model.model)-1):
                 print(_i + i)
@@ -160,34 +185,27 @@ def main():
             pipe.model.model[-1].load_state_dict(
                 torch.load(f'{args.model_name}/pytorch_lm_head.pt')
             )
-        elif get_pipeline_parallel_rank() == args.pipeline_group_size-2:
-            _i = get_pipeline_parallel_rank() * (args.num_layers-1) + 3
-            for i in range(len(pipe.model.model)):
-                print(_i + i)
-                pipe.model.model[i].load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
-                )
-        elif get_pipeline_parallel_rank() == args.pipeline_group_size-3:
-            _i = get_pipeline_parallel_rank() * (args.num_layers-1) + 2
-            for i in range(len(pipe.model.model)):
-                print(_i + i)
-                pipe.model.model[i].load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
-                )
-        elif get_pipeline_parallel_rank() == args.pipeline_group_size-4:
-            _i = get_pipeline_parallel_rank() * (args.num_layers-1) + 1
-            for i in range(len(pipe.model.model)):
-                print(_i + i)
-                pipe.model.model[i].load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
-                )
-        elif get_pipeline_parallel_rank() == args.pipeline_group_size-5:
-            _i = get_pipeline_parallel_rank() * (args.num_layers-1)
-            for i in range(len(pipe.model.model)):
-                print(_i + i)
-                pipe.model.model[i].load_state_dict(
-                    torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
-                )
+#         elif get_pipeline_parallel_rank() == args.pipeline_group_size-2:
+#             _i = get_pipeline_parallel_rank() * (args.num_layers-1) + 2
+#             for i in range(len(pipe.model.model)):
+#                 print(_i + i)
+#                 pipe.model.model[i].load_state_dict(
+#                     torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
+#                 )
+#         elif get_pipeline_parallel_rank() == args.pipeline_group_size-3:
+#             _i = get_pipeline_parallel_rank() * (args.num_layers-1) + 1
+#             for i in range(len(pipe.model.model)):
+#                 print(_i + i)
+#                 pipe.model.model[i].load_state_dict(
+#                     torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
+#                 )
+#         elif get_pipeline_parallel_rank() == args.pipeline_group_size-4:
+#             _i = get_pipeline_parallel_rank() * (args.num_layers-1)
+#             for i in range(len(pipe.model.model)):
+#                 print(_i + i)
+#                 pipe.model.model[i].load_state_dict(
+#                     torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
+#                 )
         else:
             _i = get_pipeline_parallel_rank() * args.num_layers
             for i in range(len(pipe.model.model)):
