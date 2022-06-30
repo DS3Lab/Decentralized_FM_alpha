@@ -1,5 +1,6 @@
 import torch
 import math
+import numpy as np
 from torch import nn
 from torch.nn import functional
 from torch.utils.checkpoint import checkpoint
@@ -56,8 +57,9 @@ class GPTEmbeddings(nn.Module):
     
 
 class GPTBlock(_GPT2Block):
-    def __init__(self, *args, use_checkpoint=True, **kargs):
-        super().__init__(*args, **kargs)
+    def __init__(self, config, *args, use_checkpoint=True, **kargs):
+        super().__init__(config=config, *args, **kargs)
+        self.config = config
         self.use_checkpoint = use_checkpoint
         
         def attn_res(x: torch.Tensor) -> torch.Tensor:
@@ -73,19 +75,59 @@ class GPTBlock(_GPT2Block):
             x = self.mlp(x)
             return x + res
         self.mlp_res = mlp_res
+        
+        def attn_res_no_drop(x: torch.Tensor) -> torch.Tensor:
+            res = x
+            x = self.ln_1(x)
+            x = self.attn(x)[0]
+            return x / self.config.layer_keep_p + res
+        self.attn_res_no_drop = attn_res_no_drop
+        
+        def mlp_res_no_drop(x: torch.Tensor) -> torch.Tensor:
+            res = x
+            x = self.ln_2(x)
+            x = self.mlp(x)
+            return x / self.config.layer_keep_p + res
+        self.mlp_res_no_drop = mlp_res_no_drop
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.use_checkpoint:
-            x.requires_grad_(True)
-            x = checkpoint(self.attn_res, x)
+        
+        if not self.training:
+            if self.use_checkpoint:
+                x.requires_grad_(True)
+                x = checkpoint(self.attn_res, x)
+            else:
+                x = self.attn_res(x)
+            if self.use_checkpoint:
+                x.requires_grad_(True)
+                x = checkpoint(self.mlp_res, x)
+            else:
+                x = self.mlp_res(x)
+            return x
+        
+        config = self.config
+        config.theta = (1-config.theta_bar) * np.exp(- config.gamma * config.t) + config.theta_bar
+        b = 1 - (config.pp_rank / config.pp_size) * (1-config.theta)
+        e = 1 - ((config.pp_rank+1) / config.pp_size) * (1-config.theta)
+        config.layer_keep_p = b - (b-e)/config.n_layer * config.layer_count
+#         print(config.pp_rank * config.n_layer + config.layer_count, f"{config.layer_keep_p:.4f}")
+        config.t += 1
+        
+#         np.random.seed(f"{config.t}-{config.n_layer}-{config.pp_rank}")
+        if np.random.rand() < self.config.layer_keep_p:
+            if self.use_checkpoint:
+                x.requires_grad_(True)
+                x = checkpoint(self.attn_res_no_drop, x)
+            else:
+                x = self.attn_res(x)
+            if self.use_checkpoint:
+                x.requires_grad_(True)
+                x = checkpoint(self.mlp_res_no_drop, x)
+            else:
+                x = self.mlp_res(x)
+            return x
         else:
-            x = self.attn_res(x)
-        if self.use_checkpoint:
-            x.requires_grad_(True)
-            x = checkpoint(self.mlp_res, x)
-        else:
-            x = self.mlp_res(x)
-        return x
+            return x
     
     
 class GPTModel(_GPT2Model):

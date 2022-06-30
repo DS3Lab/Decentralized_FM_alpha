@@ -37,26 +37,26 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             wandb.log({'epoch': e}, step=pipe.global_step)
         
 #         pipe.forward_compressor.simulate_kmeans()
-        curr_activs = pipe.forward_compressor.simulate_cache[:20]
-        np.save(
-            f'activations/gpt2-knn-simulate-cache-r{args.forward_ratio}-e{e}-{get_pipeline_parallel_rank()}',
-            curr_activs,
-        )
-        curr_activs = pipe.forward_compressor.simulate_diff[:20]
-        np.save(
-            f'activations/gpt2-knn-simulate-diff-r{args.forward_ratio}-e{e}-{get_pipeline_parallel_rank()}',
-            curr_activs,
-        )
-        curr_activs = pipe.forward_compressor.cache[:20]
-        np.save(
-            f'activations/gpt2-knn-cache-r{args.forward_ratio}-e{e}-{get_pipeline_parallel_rank()}',
-            curr_activs,
-        )
-        np.save(
-            f'activations/gpt2-knn-counts-r{args.forward_ratio}-e{e}-{get_pipeline_parallel_rank()}',
-            pipe.forward_compressor.counts,
-        )
-        pipe.forward_compressor.counts.fill(0)
+#         curr_activs = pipe.forward_compressor.simulate_cache[:20]
+#         np.save(
+#             f'activations/gpt2-knn-simulate-cache-r{args.forward_ratio}-e{e}-{get_pipeline_parallel_rank()}',
+#             curr_activs,
+#         )
+#         curr_activs = pipe.forward_compressor.simulate_diff[:20]
+#         np.save(
+#             f'activations/gpt2-knn-simulate-diff-r{args.forward_ratio}-e{e}-{get_pipeline_parallel_rank()}',
+#             curr_activs,
+#         )
+#         curr_activs = pipe.forward_compressor.cache[:20]
+#         np.save(
+#             f'activations/gpt2-knn-cache-r{args.forward_ratio}-e{e}-{get_pipeline_parallel_rank()}',
+#             curr_activs,
+#         )
+#         np.save(
+#             f'activations/gpt2-knn-counts-r{args.forward_ratio}-e{e}-{get_pipeline_parallel_rank()}',
+#             pipe.forward_compressor.counts,
+#         )
+#         pipe.forward_compressor.counts.fill(0)
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
@@ -133,6 +133,8 @@ def main():
     config.bos_token_id = tokenizer.bos_token_id
     config.eos_token_id = tokenizer.eos_token_id
     config.pad_token_id = tokenizer.pad_token_id
+    config.pp_rank = get_pipeline_parallel_rank() 
+    config.pp_size = args.pipeline_group_size
     print("token vocab size:", tokenizer.vocab_size)
     
     if args.task_name == 'wikitext':
