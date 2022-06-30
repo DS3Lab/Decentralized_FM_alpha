@@ -91,6 +91,12 @@ def main():
     parser.add_argument('--do-evaluation', 
                         type=lambda x: x.lower()=='true', default=True, metavar='S',
                         help='do evaluation or not.')
+    parser.add_argument('--layer-drop-gamma', 
+                        type=float, default=0.14)
+    parser.add_argument('--layer-drop-theta-bar', 
+                        type=float, default=1.0)
+    parser.add_argument('--layer-drop-block-drop', 
+                        type=lambda x: x.lower()=='true', default=False)
     args = parser.parse_args()
     
     torch.manual_seed(args.seed)

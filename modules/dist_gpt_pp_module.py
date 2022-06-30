@@ -20,6 +20,9 @@ class GPTStageBase(nn.Module):
         self._num_layers = args.num_layers
         self._task_type = getattr(args, 'task_type', 'classification')
         self._layer_count = 0
+        self._gamma = getattr(args, 'layer_drop_gamma', 0.14)
+        self._theta_bar = getattr(args, 'layer_drop_theta_bar', 1.0)
+        self._block_drop = getattr(args, 'layer_drop_block_drop', False)
         
         self.config = config
 
@@ -36,10 +39,11 @@ class GPTStageBase(nn.Module):
     def _create_transformer_layer(self):
         config = deepcopy(self.config)
         config.layer_count = self._layer_count
-        config.theta_bar = 0.5
-        config.gamma = 10/(70*100)
+        config.theta_bar = self._theta_bar
+        config.gamma = self._gamma
         config.t = 0
-        self._layer_count += 1
+        if not self._block_drop:
+            self._layer_count += 1
         return GPTBlock(config) # TODO: checkpoint
 
 

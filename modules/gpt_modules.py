@@ -89,6 +89,8 @@ class GPTBlock(_GPT2Block):
             x = self.mlp(x)
             return x / self.config.layer_keep_p + res
         self.mlp_res_no_drop = mlp_res_no_drop
+        
+        self.seed_base = 3 ** (config.layer_count+1) + 5 ** (config.pp_rank+1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         
@@ -110,11 +112,13 @@ class GPTBlock(_GPT2Block):
         b = 1 - (config.pp_rank / config.pp_size) * (1-config.theta)
         e = 1 - ((config.pp_rank+1) / config.pp_size) * (1-config.theta)
         config.layer_keep_p = b - (b-e)/config.n_layer * config.layer_count
-#         print(config.pp_rank * config.n_layer + config.layer_count, f"{config.layer_keep_p:.4f}")
+        # print(config.pp_rank * config.n_layer + config.layer_count, f"{config.layer_keep_p:.4f}")
         config.t += 1
         
-#         np.random.seed(f"{config.t}-{config.n_layer}-{config.pp_rank}")
-        if np.random.rand() < self.config.layer_keep_p:
+        np.random.seed(config.t + self.seed_base)
+        _tmp = np.random.rand()
+        # print(config.pp_rank * config.n_layer + config.layer_count, f"{_tmp:.4f}")
+        if _tmp < self.config.layer_keep_p:
             if self.use_checkpoint:
                 x.requires_grad_(True)
                 x = checkpoint(self.attn_res_no_drop, x)
