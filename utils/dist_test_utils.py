@@ -14,7 +14,7 @@ def get_metric(args):
         metrics.append(metric)
         metric = datasets.load_metric('./metrics/f1')
         metrics.append(metric)
-    if args.task_name in {'wikitext', 'wiki103', 'arxiv21'}:
+    if args.task_name in {'wikitext', 'wiki103', 'arxiv21', 'openwebtext'}:
         metric = datasets.load_metric('./metrics/perplexity_custom')
         metrics.append(metric)
     return metrics

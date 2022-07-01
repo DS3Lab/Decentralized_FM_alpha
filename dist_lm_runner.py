@@ -7,6 +7,7 @@ import torch.autograd.profiler as profiler
 from tasks.data_loaders.wikitext import get_wikitext_train_data_loader, get_wikitext_test_data_loader
 from tasks.data_loaders.wiki103 import get_wiki103_train_data_loader, get_wiki103_test_data_loader
 from tasks.data_loaders.arxiv21 import get_arxiv21_train_data_loader, get_arxiv21_test_data_loader
+from tasks.data_loaders.openwebtext import get_openwebtext_train_data_loader
 from modules.gpt_modules import GPTConfig
 from modules.tokenizer import build_tokenizer
 from pipeline_parallel.dist_1f1b_pipeline_async import Pipe1F1BAsync
@@ -79,6 +80,7 @@ def main():
     parser.add_argument('--n-epochs', type=int, default=10, help='-')
     parser.add_argument('--warmup-epochs', type=int, default=1, help='-')
     parser.add_argument('--warmup-steps', type=int, default=None, help='-')
+    parser.add_argument('--total-steps', type=int, default=None, help='-')
     parser.add_argument('--load-pretrained-model', 
                         type=lambda x: x.lower()=='true', default=True, metavar='S',
                         help='load pretrained model or not.')
@@ -152,12 +154,16 @@ def main():
     elif args.task_name == 'arxiv21':
         train_data_loader = get_arxiv21_train_data_loader(args, tokenizer)
         test_data_loader = get_arxiv21_test_data_loader(args, tokenizer)
+    elif args.task_name == 'openwebtext':
+        train_data_loader = get_openwebtext_train_data_loader(args, tokenizer)
+        test_data_loader = get_wikitext_test_data_loader(args, tokenizer)
     else:
         raise Exception('unknown task.')
         
     if args.warmup_steps is None:
         args.warmup_steps = len(train_data_loader)
-    args.total_steps = len(train_data_loader) * args.n_epochs
+    if args.total_steps is None:
+        args.total_steps = len(train_data_loader) * args.n_epochs
     
     use_dp = (args.world_size != args.pipeline_group_size)
     if use_dp:

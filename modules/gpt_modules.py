@@ -131,6 +131,7 @@ class GPTBlock(_GPT2Block):
                 x = self.mlp_res(x)
             return x
         else:
+            print(config.pp_rank * config.n_layer + config.layer_count, 'skipped!')
             return x
     
     
