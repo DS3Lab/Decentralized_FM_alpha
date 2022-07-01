@@ -409,8 +409,11 @@ class GpipeAsync:
                 with torch.cuda.stream(self.torch_comp_stream) as st:
                     self.profile_mark_backward_comp_start(i)
                     loss = loss_func(input=cached_output_micro_batches[i], target=target_as_micro_batches[i])
-                    loss.backward()
                     tr_loss.append(loss.item())
+                    if self.use_fp16:
+                        self.optimizer.backward(loss)
+                    else:
+                        loss.backward()
                     self.torch_comp_stream.record_event(self.backward_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
@@ -502,7 +505,8 @@ class GpipeAsync:
 
     def optimizer_step(self):
         # hard code: grad clipping
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+        if not self.use_fp16:
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
         if self.use_dp:
             with torch.cuda.stream(self.torch_comp_stream):
                 self.torch_comp_stream.record_event(self.dp_optim.backward_ready_event)

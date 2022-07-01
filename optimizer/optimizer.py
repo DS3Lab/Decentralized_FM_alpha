@@ -70,9 +70,9 @@ class Fp16Optimizer:
         self.grad_scaler = grad_scaler
 
         if self.grad_scaler:
-            self.found_inf = torch.cuda.FloatTensor([0.0]) if not self.offload else torch.FloatTensor([0.0])
+            self.found_inf = torch.cuda.FloatTensor([0.0], device=device) if not self.offload else torch.FloatTensor([0.0])
 
-        self._dummy_overflow_buf = torch.cuda.IntTensor([0]) if not self.offload else torch.IntTensor([0])
+        self._dummy_overflow_buf = torch.cuda.IntTensor([0], device=device) if not self.offload else torch.IntTensor([0])
 
         # Note that the model should first be cast to fp16 before passing to the optimizer.
         self.float16_groups = []
@@ -201,7 +201,10 @@ class Fp16Optimizer:
         # If we found inf/nan, skip the update.
         if found_inf_flag:
             print("!!! Warning: find inf in fp16 optimizer-step() !!!")
-            # return False
+            return False
+        
+        for params in self.fp32_from_float16_groups:
+            torch.nn.utils.clip_grad_norm_(params, 1.0)
 
         # Step the optimizer.
         self.optimizer.step()
@@ -209,6 +212,10 @@ class Fp16Optimizer:
         self._copy_optimizer_params_to_model_params()
         # Successful update.
         return True
+    
+    def backward(self, loss):
+        loss = loss * self.grad_scaler.scale
+        loss.backward()
 
 
 def get_fp16_optimizer(args, optimizer, device):
