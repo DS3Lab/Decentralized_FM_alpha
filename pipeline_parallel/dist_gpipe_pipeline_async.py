@@ -411,7 +411,7 @@ class GpipeAsync:
                     loss = loss_func(input=cached_output_micro_batches[i], target=target_as_micro_batches[i])
                     tr_loss.append(loss.item())
                     if self.use_fp16:
-                        self.optimizer.backward(loss)
+                        self.optimizer.scale(loss).backward()
                     else:
                         loss.backward()
                     self.torch_comp_stream.record_event(self.backward_comp_ready_events[i])
@@ -420,6 +420,9 @@ class GpipeAsync:
                     self.torch_send_stream.wait_event(self.backward_comp_ready_events[i])
                     self.profile_mark_backward_send_start(i)
                     # compress
+                    if self.use_fp16:
+                        self.input_micro_batches[i].grad.copy_(
+                            self.optimizer.unscale(self.input_micro_batches[i].grad))
                     self.backward_compressor.compress_send(
                         self.input_micro_batches[i].grad, i_micro_batch=i,
                         comm=self.comm, dst=self.pre_node_rank, stream=cupy_send_stream
@@ -433,6 +436,8 @@ class GpipeAsync:
                     # decompress
                     _data = self.backward_compressor.recv_decompress(
                         i, comm=self.comm, src=self.post_node_rank, stream=cupy_recv_stream)
+                    if self.use_fp16:
+                        _data = self.optimizer.scale(_data)
                     self.output_micro_batches_grad[i].copy_(_data)
 #                     self.comm.recv(self.output_micro_batches_grad[i], src=self.post_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.backward_recv_ready_events[i])
@@ -448,6 +453,8 @@ class GpipeAsync:
                     # decompress
                     _data = self.backward_compressor.recv_decompress(
                         i, comm=self.comm, src=self.post_node_rank, stream=cupy_recv_stream)
+                    if self.use_fp16:
+                        _data = self.optimizer.scale(_data)
                     self.output_micro_batches_grad[i].copy_(_data)
 #                     self.comm.recv(self.output_micro_batches_grad[i], src=self.post_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.backward_recv_ready_events[i])
@@ -461,6 +468,9 @@ class GpipeAsync:
                     self.torch_send_stream.wait_event(self.backward_comp_ready_events[i])
                     self.profile_mark_backward_send_start(i)
                     # compress
+                    if self.use_fp16:
+                        self.input_micro_batches[i].grad.copy_(
+                            self.optimizer.unscale(self.input_micro_batches[i].grad))
                     self.backward_compressor.compress_send(
                         self.input_micro_batches[i].grad, i_micro_batch=i,
                         comm=self.comm, dst=self.pre_node_rank, stream=cupy_send_stream
@@ -475,6 +485,7 @@ class GpipeAsync:
                 {
                     'loss': sum(tr_loss)/len(tr_loss),
                     'lr': self.scheduler.get_last_lr()[0],
+#                     'scale': self.optimizer.get_loss_scale(), ##todo
                 }, step=self.global_step,
             )
 

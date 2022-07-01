@@ -213,9 +213,11 @@ class Fp16Optimizer:
         # Successful update.
         return True
     
-    def backward(self, loss):
-        loss = loss * self.grad_scaler.scale
-        loss.backward()
+    def scale(self, z):
+        return z * self.grad_scaler.scale
+    
+    def unscale(self, z):
+        return z * self.grad_scaler.inv_scale
 
 
 def get_fp16_optimizer(args, optimizer, device):

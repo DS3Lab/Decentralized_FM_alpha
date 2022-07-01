@@ -86,6 +86,7 @@ class DynamicGradScaler(GradScaler):
             if self._hysteresis_tracker <= 0:
                 self._scale = torch.max(self._scale * self.backoff_factor,
                                         self.min_scale)
+                print('##### scale backoff to', self._scale)
         else:
             # If there is no nan/inf, increment the growth tracker.
             self._growth_tracker += 1
@@ -96,6 +97,7 @@ class DynamicGradScaler(GradScaler):
                 self._hysteresis_tracker = self.hysteresis
                 # and scale up the loss scale.
                 self._scale = self._scale * self.growth_factor
+                print('##### scale grow to', self._scale)
 
     def state_dict(self):
         state_dict = {}
@@ -105,6 +107,6 @@ class DynamicGradScaler(GradScaler):
         return state_dict
 
     def load_state_dict(self, state_dict):
-        self._scale = state_dict['scale'].cuda(self.device)
+        self._scale = state_dict['scale'].to(self.device)
         self._growth_tracker = state_dict['growth_tracker']
         self._hysteresis_tracker = state_dict['hysteresis_tracker']
