@@ -4,9 +4,8 @@
 #BSUB -R "rusage[mem=32000]"     # 4000 MB per core
 #BSUB -R "rusage[ngpus_excl_p=1]"
 #BSUB -R "select[gpu_model0==NVIDIATITANRTX]"
-#BSUB -J foo
-#BSUB -o /cluster/home/biyuan/exe_log/foo.out
-#BSUB -e /cluster/home/biyuan/exe_log/foo.err
+#BSUB -o /cluster/home/biyuan/exe_log/foo.out.%J
+#BSUB -e /cluster/home/biyuan/exe_log/foo.err.%J
 
 
 module load gcc/6.3.0 cuda/11.0.3             # Load modules from Euler setup
