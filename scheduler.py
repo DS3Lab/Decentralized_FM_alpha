@@ -189,7 +189,7 @@ def compute_pipeline_parallel_cost(candidate_partition=None):
     return dp_pipeline_parallel_cost, dp_pipeline_parallel_path, dp_pipeline_parallel_match
 
 
-def GCMA(nodes=None, population_size=None, trails=None):
+def GCMA(nodes=None, population_size=None, trails=None, mode=None):
     # https://dl.acm.org/doi/10.5555/2933718.2933740
     def five_point_crossover(parent1=None, parent2=None):
         parent1_str = [0] * num_devices
@@ -219,7 +219,7 @@ def GCMA(nodes=None, population_size=None, trails=None):
         return parent2_str
 
     def cyclic_partitioning(offspring=None):
-        def calculate_gain(cur_offspring=None, locked_v_idx=None):
+        def calculate_gain_default(cur_offspring=None, locked_v_idx=None):
             partition_sizes = [0] * way
             for partition_idx in cur_offspring:
                 partition_sizes[partition_idx] += 1
@@ -254,6 +254,40 @@ def GCMA(nodes=None, population_size=None, trails=None):
                 if v_idx != None:
                     for target_partition_idx, target_gain in enumerate(gain[v_idx]):
                         if target_partition_idx != partition_idx:
+                            target_gain = round(
+                                target_gain, 6) - round(gain[v_idx][partition_idx], 6)
+                            if target_gain > G_ij[partition_idx, target_partition_idx]:
+                                G_ij[partition_idx,
+                                     target_partition_idx] = target_gain
+                            if target_gain > G_i[partition_idx]:
+                                G_i[partition_idx] = target_gain
+                                G_i_trace[partition_idx] = [
+                                    v_idx, target_partition_idx]
+
+            return G_ij, G_i, G_i_trace
+
+        def calculate_gain_baseline(cur_offspring=None, locked_v_idx=None):
+            gain = np.zeros(shape=(num_devices, way))
+            for v_idx, partition_idx in enumerate(cur_offspring):
+                if locked_v_idx[v_idx] == 0:
+                    for target_idx, target_partition_idx in enumerate(cur_offspring):
+                        partial_pipeline_parallel_cost = peer_delay[v_idx, target_idx] / \
+                            1e3 + send_activation_size * 8 / \
+                            peer_bandwidth[v_idx, target_idx]
+                        partial_data_parallel_cost = peer_delay[v_idx, target_idx] / \
+                            1e3 + send_gradient_size * 8 / \
+                            peer_bandwidth[v_idx, target_idx]
+                        if v_idx != target_idx:
+                            gain[v_idx][target_partition_idx] += partial_pipeline_parallel_cost
+                            gain[v_idx][target_partition_idx] -= partial_data_parallel_cost
+
+            G_i_trace = [[None, None] for i in range(way)]
+            G_i = np.full(shape=(way), fill_value=-np.inf)
+            G_ij = np.full(shape=(way, way), fill_value=-np.inf)
+            for v_idx, partition_idx in enumerate(cur_offspring):
+                if locked_v_idx[v_idx] == 0:
+                    for target_partition_idx, target_gain in enumerate(gain[v_idx]):
+                        if target_partition_idx != partition_idx:
                             target_gain -= gain[v_idx][partition_idx]
                             if target_gain > G_ij[partition_idx, target_partition_idx]:
                                 G_ij[partition_idx,
@@ -275,8 +309,12 @@ def GCMA(nodes=None, population_size=None, trails=None):
                 movements = []
                 epsilon = []
                 tau = []
-                G_ij, G_i, G_i_trace = calculate_gain(
-                    cur_offspring, locked_v_idx)
+                if mode == "default":
+                    G_ij, G_i, G_i_trace = calculate_gain_default(
+                        cur_offspring, locked_v_idx)
+                else:
+                    G_ij, G_i, G_i_trace = calculate_gain_baseline(
+                        cur_offspring, locked_v_idx)
                 S0 = Si = np.argmax(G_i)
                 for _ in range(num_devices):  # how many movement per cycle
                     v_idx, Pv = G_i_trace[Si]
@@ -292,8 +330,12 @@ def GCMA(nodes=None, population_size=None, trails=None):
                     Si = Pv
                     if Si == S0:
                         break
-                    G_ij, G_i, G_i_trace = calculate_gain(
-                        cur_offspring, locked_v_idx)
+                    if mode == "default":
+                        G_ij, G_i, G_i_trace = calculate_gain_default(
+                            cur_offspring, locked_v_idx)
+                    else:
+                        G_ij, G_i, G_i_trace = calculate_gain_baseline(
+                            cur_offspring, locked_v_idx)
 
                 max_sum = 0
                 l = 0
@@ -445,7 +487,7 @@ if __name__ == "__main__":
             #        pipeline_parallel_match = cur_pipeline_parallel_match
 
             candidate_partitions, all_cost_records, min_cost_records = GCMA(
-                nodes=list(range(num_devices)), population_size=100, trails=4900)
+                nodes=list(range(num_devices)), population_size=100, trails=4900, mode="default")
             candidate_partition_idx = np.argmin(all_cost_records)
             candidate_partition = [candidate_partitions[candidate_partition_idx][i: i + partition_size]
                                    for i in range(0, num_devices, partition_size)]
