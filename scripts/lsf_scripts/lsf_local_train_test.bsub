@@ -4,9 +4,8 @@
 #BSUB -R "rusage[mem=32000]"     # 4000 MB per core
 #BSUB -R "rusage[ngpus_excl_p=1]"
 #BSUB -R "select[gpu_model0==NVIDIATITANRTX]"
-#BSUB -J local_train_glue_qqp_task
-#BSUB -o /cluster/home/biyuan/exe_log/local_train_glue_qqp_task.out
-#BSUB -e /cluster/home/biyuan/exe_log/local_train_glue_qqp_task.err
+#BSUB -o /cluster/home/biyuan/exe_log/local_train_glue_qqp_task.out.%J
+#BSUB -e /cluster/home/biyuan/exe_log/local_train_glue_qqp_task.err.%J
 
 
 module load gcc/6.3.0 cuda/11.0.3             # Load modules from Euler setup

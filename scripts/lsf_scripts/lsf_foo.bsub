@@ -11,4 +11,7 @@
 module load gcc/6.3.0 cuda/11.0.3             # Load modules from Euler setup
 source activate base                          # Activate my conda python environment
 cd /cluster/home/biyuan/GPT-home-private      # Change directory
+
+ifconfig
+
 python foo.py
