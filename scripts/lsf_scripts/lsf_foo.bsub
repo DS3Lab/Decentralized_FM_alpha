@@ -14,4 +14,8 @@ cd /cluster/home/biyuan/GPT-home-private      # Change directory
 
 ifconfig
 
+## capture IP address of network dev access
+ip=`ip addr show dev access | grep inet | cut -d '/' -f 1 | cut -b 10-`
+echo "Capture the ip of the assigned node: ${ip}"
+
 python foo.py
