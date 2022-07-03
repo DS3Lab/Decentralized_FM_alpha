@@ -1,0 +1,28 @@
+#!/bin/bash
+#BSUB -n 1                     # 1 cores
+#BSUB -W 0:20                   # 3-minutes run-time
+#BSUB -R "rusage[mem=32000]"     # 32 GB per core
+#BSUB -R "rusage[ngpus_excl_p=4]"
+#BSUB -R "select[gpu_model0==NVIDIATITANRTX]"
+#BSUB -o /cluster/home/biyuan/exe_log/gpt3small_4gpu_1node.out.%J
+#BSUB -e /cluster/home/biyuan/exe_log/gpt3small_4gpu_1node.err.%J
+
+
+module load gcc/6.3.0 cuda/11.0.3             # Load modules from Euler setup
+source activate base                          # Activate my conda python environment
+cd /cluster/home/biyuan/GPT-home-private      # Change directory
+
+nvidia-smi
+
+world_size=4
+DIST_CONF="--pp-mode gpipe --world-size $world_size --pipeline-group-size $world_size --data-group-size 1"
+MODEL_CONF="--embedding-dim 2048 --num-heads 16 --num-layers 6 --batch-size 64 --micro-batch-size 1"
+
+export NCCL_SOCKET_IFNAME=access
+export GLOO_SOCKET_IFNAME=access
+
+for (( i=0; i<$world_size; i++))
+do
+  python dist_runner.py --dist-url tcp://localhost:9000 --fp16 $DIST_CONF $MODEL_CONF --rank $i --cuda-id $i &
+done
+wait
