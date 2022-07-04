@@ -22,4 +22,4 @@ export NCCL_SOCKET_IFNAME=access
 export GLOO_SOCKET_IFNAME=access
 
 
-python dist_runner_w_coordinator.py --fp16 $DIST_CONF $MODEL_CONF --cuda-id 0
+python dist_runner_w_coordinator.py --fp16 $DIST_CONF $MODEL_CONF --cuda-id 0 --coordinator-server-ip 129.132.93.84
