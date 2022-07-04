@@ -12,6 +12,7 @@ def client_message_parser(msg: bytes, context: str):
     return arg_dict
 
 
+# TODO: Make each client connect to server from a fixed port. This should be doable, right?
 class CoordinatorClient:
     def __init__(self, args):
         self.host = args.coordinator_server_ip
