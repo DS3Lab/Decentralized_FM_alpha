@@ -108,11 +108,14 @@ def get_model_arguments_str(args):
     return '_s' + str(args.seq_length) + '_m' + str(args.embedding_dim) + '_l' + str(args.num_layers)
 
 
-def get_dist_arguments_str(args, add_rank=True):
+def get_dist_arguments_str(args, add_rank=True, rank=None):
     dist_str = '_w' + str(args.world_size) + '_p' + str(args.pipeline_group_size) + "_" + \
                str(args.gradient_accumulate_step) + '_d' + str(args.data_group_size)
     if add_rank:
-        dist_str = dist_str + '_' + str(args.rank)
+        if rank is not None:
+            dist_str = dist_str + '_' + str(rank)
+        else:
+            dist_str = dist_str + '_' + str(args.rank)
     return dist_str
 
 
