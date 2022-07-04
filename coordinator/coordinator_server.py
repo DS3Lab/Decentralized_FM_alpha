@@ -44,7 +44,7 @@ class CoordinatorServer:
                     msg_arg = server_message_parser(msg_data)
                     if msg_arg['task'] == 'train':
                         if msg_arg['state'] == 'join':
-                            return_msg = self.prime_worker_ip + '#' + str(self.worker_nodes[worker_ip]['rank'])
+                            return_msg = self.prime_worker_ip + '#' + str(self.worker_nodes[node_id]['rank'])
 
                     connection.sendall(return_msg.encode())
                     connection.close()
