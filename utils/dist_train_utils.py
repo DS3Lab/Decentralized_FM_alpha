@@ -2,8 +2,8 @@ from comm.comm_utils import *
 
 
 def distributed_train_foo_iter(args, pipeline, device, train_data_loader):
+    total_time = 0
     if get_pipeline_parallel_rank() == 0:
-        total_time = 0
         for i, data in enumerate(train_data_loader):
             input_ids = data['text'].to(device)
             current_iter_time = pipeline.sgd_iter(input_ids, None)
@@ -23,13 +23,20 @@ def distributed_train_foo_iter(args, pipeline, device, train_data_loader):
             else:
                 print("Not supported task!")
                 assert False
-            pipeline.sgd_iter(None, labels)
+            current_iter_time = pipeline.sgd_iter(None, labels)
+            if i > 0:
+                total_time += current_iter_time
             if i >= args.num_iters-1:
                 break
+        averaged_time = total_time / (args.num_iters - 1)
     else:
         i = 0
         while True:
-            pipeline.sgd_iter(None, None)
-            i += 1
-            if i >= args.num_iters:
+            current_iter_time=pipeline.sgd_iter(None, None)
+            if i > 0:
+                total_time += current_iter_time
+            if i >= args.num_iters-1:
                 break
+            i += 1
+        averaged_time = total_time / (args.num_iters - 1)
+    return averaged_time

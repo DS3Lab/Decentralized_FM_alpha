@@ -33,7 +33,7 @@ def main():
         device = torch.device('cpu')
 
     coord_client = CoordinatorClient(args)
-    prime_ip, rank = coord_client.request_train_join()
+    prime_ip, rank = coord_client.notify_train_join()
     print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
 
     init_communicators_with_coordinator(args, prime_ip, rank)
@@ -58,7 +58,7 @@ def main():
     pipe = get_pp_module(args, vocab_size, num_classes, device, use_dp, rank=rank)
 
     if args.profiling == 'no-profiling':
-        distributed_train_foo_iter(args, pipe, device, train_data_loader)
+        avg_iter_time = distributed_train_foo_iter(args, pipe, device, train_data_loader)
     else:
         prefix = './trace_json/gpt3_' + args.pp_mode
         if use_dp:
@@ -67,16 +67,18 @@ def main():
                      get_dist_arguments_str(args, rank=rank) + get_mixed_precision_arguments_str(args) + '_' + \
                      args.profiling + '_' + args.trace_postfix + '.json'
         if args.profiling == 'tidy_profiling':
-            distributed_train_foo_iter(args, pipe, device, train_data_loader)
+            avg_iter_time = distributed_train_foo_iter(args, pipe, device, train_data_loader)
             pipe.export_profiling_result(filename=trace_file)
         elif args.profiling == 'pytorch_profiling':
             with profiler.profile(profile_memory=True, use_cuda=args.use_cuda) as prof:
-                distributed_train_foo_iter(args, pipe, device, train_data_loader)
+                avg_iter_time = distributed_train_foo_iter(args, pipe, device, train_data_loader)
             print(prof.key_averages().table())
             prof.export_chrome_trace(trace_file)
         else:
             print("No recognized profiler?")
             assert False
+    train_finish_msg = str(rank) + '#' + str(round(avg_iter_time))
+    coord_client.notify_train_finish(message=train_finish_msg)
 
 
 if __name__ == '__main__':

@@ -17,7 +17,7 @@ class CoordinatorClient:
         self.host = args.coordinator_server_ip
         self.port = args.port
 
-    def request_train_join(self):
+    def notify_train_join(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((self.host, self.port))
             s.sendall(b"train#join")
@@ -25,6 +25,13 @@ class CoordinatorClient:
             print(f"Received: {msg}")
             msg_arg = client_message_parser(msg, 'join_training')
             return msg_arg['prime_ip'], msg_arg['my_rank']
+
+    def notify_train_finish(self, message: str):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((self.host, self.port))
+            s.sendall(b"train#finish#"+message.encode())
+            msg = s.recv(1024)
+            print(f"Received: {msg}")
 
 
 def main():
@@ -35,7 +42,7 @@ def main():
                         help='The IP of coordinator-server.')
     args = parser.parse_args()
     client = CoordinatorClient(args)
-    client.request_train_join()
+    client.notify_train_join()
 
 
 if __name__ == '__main__':
