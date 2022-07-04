@@ -24,6 +24,21 @@ def add_torch_distributed_arguments(parser):
                         help='rank of the node')
 
 
+def add_torch_distributed_w_coordinator_arguments(parser):
+    parser.add_argument('--dist-backend', type=str, default='cupy_nccl', metavar='S',
+                        help='backend type for distributed PyTorch (default: cupy_nccl)')
+    parser.add_argument('--port', type=int, default=9002, metavar='N',
+                        help='The port of coordinator-server.')
+    parser.add_argument('--coordinator-server-ip', type=str, default='localhost', metavar='S',
+                        help='The IP of coordinator-server.')
+    parser.add_argument('--world-size', type=int, default=4, metavar='D',
+                        help='world-size (default: 4)')
+    parser.add_argument('--pipeline-group-size', type=int, default=4, metavar='D',
+                        help='world-size (default: 2)')
+    parser.add_argument('--data-group-size', type=int, default=1, metavar='D',
+                        help='world-size (default: 1)')
+
+
 def add_qqp_task_arguments(parser):
     parser.add_argument('--train-data', nargs='+', default=['./task_datasets/data/QQP/train.tsv'], metavar='S',
                         help='path to the training data')

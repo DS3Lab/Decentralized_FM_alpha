@@ -211,6 +211,11 @@ class NCCLCommunicator:
 def default_init(args):
     dist.init_process_group(backend='gloo', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
 
+
+def init_with_coordinator(args, prime_ip, rank):
+    dist.init_process_group(backend='gloo', init_method='tcp://'+prime_ip+':9999',
+                            world_size=args.world_size, rank=rank)
+
 """
 def init_comm(args):
     if args.dist_backend == 'cupy_nccl':

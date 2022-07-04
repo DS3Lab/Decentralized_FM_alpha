@@ -58,10 +58,9 @@ def get_megatron_tensor_parallel_world_size() -> int:
     return _TENSOR_PARALLEL_WORLD_SIZE
 
 
-def init_communicators(args):
-    default_init(args)
-    assert args.world_size == args.data_group_size * args.pipeline_group_size
-    if args.world_size == args.data_group_size * args.pipeline_group_size:
+def _init_communicators(world_size, data_group_size, pipeline_group_size, rank, cuda_id):
+    assert world_size == data_group_size * pipeline_group_size
+    if world_size == data_group_size * pipeline_group_size:
         #    We do the following hard code alignment of communication groups:
         #    Suppose there are 8 instances (world_size), and 4 data parallel groups (data_group_size is 2),
         #    Then there would be 2 pipeline parallel groups (pipeline_group_size is 4), then the groups will look like:
@@ -75,15 +74,15 @@ def init_communicators(args):
         global _DATA_PARALLEL_WORLD_SIZE
         global _PIPELINE_PARALLEL_WORLD_SIZE
         # We use pipeline parallel by default.
-        _PIPELINE_PARALLEL_WORLD_SIZE = args.pipeline_group_size
-        _PIPELINE_PARALLEL_RANK = args.rank % args.pipeline_group_size
-        _PIPELINE_PARALLEL_COMM = NCCLCommunicator(_PIPELINE_PARALLEL_RANK, args.cuda_id, args.pipeline_group_size,
-                                                   "pipeline_group_"+str(args.rank // args.pipeline_group_size))
-        if args.data_group_size != 1:
-            _DATA_PARALLEL_WORLD_SIZE = args.data_group_size
-            _DATA_PARALLEL_RANK = args.rank // args.pipeline_group_size
-            _DATA_PARALLEL_COMM = NCCLCommunicator(_DATA_PARALLEL_RANK, args.cuda_id, args.data_group_size,
-                                                   "data_group_"+str(args.rank % args.pipeline_group_size))
+        _PIPELINE_PARALLEL_WORLD_SIZE = pipeline_group_size
+        _PIPELINE_PARALLEL_RANK = rank % pipeline_group_size
+        _PIPELINE_PARALLEL_COMM = NCCLCommunicator(_PIPELINE_PARALLEL_RANK, cuda_id, pipeline_group_size,
+                                                   "pipeline_group_" + str(rank // pipeline_group_size))
+        if data_group_size != 1:
+            _DATA_PARALLEL_WORLD_SIZE = data_group_size
+            _DATA_PARALLEL_RANK = rank // pipeline_group_size
+            _DATA_PARALLEL_COMM = NCCLCommunicator(_DATA_PARALLEL_RANK, cuda_id, data_group_size,
+                                                   "data_group_" + str(rank % pipeline_group_size))
     # elif args.world_size == args.data_group_size * args.tensor_group_size:
     #    global _DATA_PARALLEL_COMM
     #    global _TENSOR_PARALLEL_COMM
@@ -91,7 +90,7 @@ def init_communicators(args):
     #    global _TENSOR_PARALLEL_RANK
     #    global _DATA_PARALLEL_WORLD_SIZE
     #    global _TENSOR_PARALLEL_WORLD_SIZE
-        # We use megatron tensor parallel by default.
+    # We use megatron tensor parallel by default.
     #    _TENSOR_PARALLEL_WORLD_SIZE = args.tensor_group_size
     #    _TENSOR_PARALLEL_RANK = args.rank % args.tensor_group_size
     #    _TENSOR_PARALLEL_COMM = NCCLCommunicator(_TENSOR_PARALLEL_RANK, args.cuda_id, args.tensor_group_size,
@@ -104,3 +103,13 @@ def init_communicators(args):
     else:
         print("Not supported yet")
         assert False
+
+
+def init_communicators(args):
+    default_init(args)
+    _init_communicators(args.world_size, args.data_group_size, args.pipeline_group_size, args.rank, args.cuda_id)
+
+
+def init_communicators_with_coordinator(args, prime_ip, rank):
+    init_with_coordinator(args, prime_ip, rank)
+    _init_communicators(args.world_size, args.data_group_size, args.pipeline_group_size, rank, args.cuda_id)
