@@ -55,7 +55,7 @@ def main():
     else:
         print("Running ", args.pp_mode, " without data parallel.")
 
-    pipe = get_pp_module(args, vocab_size, num_classes, device, use_dp)
+    pipe = get_pp_module(args, vocab_size, num_classes, device, use_dp, rank=rank)
 
     if args.profiling == 'no-profiling':
         distributed_train_foo_iter(args, pipe, device, train_data_loader)

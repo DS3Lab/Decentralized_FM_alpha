@@ -29,12 +29,13 @@ class CoordinatorServer:
                 connection, address = s.accept()
                 with connection:
                     worker_ip, port = address
-                    if worker_ip not in self.worker_nodes:
+                    node_id = worker_ip + str(port)
+                    if node_id not in self.worker_nodes:
                         print(f"Connected by +NEW+ worker with address {worker_ip}, (port:{port})")
                         new_node_rank = len(self.worker_nodes)
                         if new_node_rank == 0:
                             self.prime_worker_ip = worker_ip
-                        self.worker_nodes[worker_ip] = {'rank': new_node_rank}
+                        self.worker_nodes[node_id] = {'rank': new_node_rank}
                     else:
                         print(f"Connected by known worker with address {worker_ip}, (port:{port}), allocated rank "
                               f"{self.worker_nodes[worker_ip]['rank']}")

@@ -4,9 +4,13 @@ from .flatten_utils import flatten_params
 
 
 class ShardedPSDP:
-    def __init__(self, args, device, module: torch.nn.Module, optimizer: torch.optim.Optimizer = None, flatten=True):
+    def __init__(self, args, device, module: torch.nn.Module, optimizer: torch.optim.Optimizer = None,
+                 flatten=True, rank=None):
         self.flatten = flatten
-        self.global_rank = args.rank
+        if rank is None:
+            self.global_rank = args.rank
+        else:
+            self.global_rank = rank
         self.dp_group_size = args.data_group_size
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
         self.dp_comm = get_data_parallel_comm()
@@ -34,7 +38,6 @@ class ShardedPSDP:
         self.grad_buffer = self._declare_grad_buffer()
 
         if self.enable_tidy_profiling:
-            self.global_rank = args.rank
             self.init_event = None
             self.init_time_stamp = None
 

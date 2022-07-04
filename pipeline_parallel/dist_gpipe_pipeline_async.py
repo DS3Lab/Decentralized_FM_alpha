@@ -19,7 +19,7 @@ class GpipeAsync:
         a group of events to check if computation finishes in the backward propagation.
     """
 
-    def __init__(self, args, vocab_size, num_classes, device, use_dp=False):
+    def __init__(self, args, vocab_size, num_classes, device, use_dp=False, rank=None):
         print("=======Initialize Gpipe.")
         if args.fp16:
             self.use_fp16 = True
@@ -29,7 +29,10 @@ class GpipeAsync:
             print("=======Gpipe use FP32")
         self.use_dp = use_dp
         self.dtype = torch.float16 if self.use_fp16 else torch.float32
-        self.global_rank = args.rank
+        if rank is None:
+            self.global_rank = args.rank
+        else:
+            self.global_rank = rank
         self.pipeline_group_size = args.pipeline_group_size
         self.pp_rank = get_pipeline_parallel_rank()  # Rank is the pipeline rank by default.
         self.pre_node_rank = self.pp_rank - 1
@@ -116,7 +119,7 @@ class GpipeAsync:
 
         # Notice that if we use fp16, gradients are aggregated in fp16, this may not be the default in Megatron.
         if use_dp:
-            self.dp_optim = get_dp_module(args, device, self.model, self.optimizer)
+            self.dp_optim = get_dp_module(args, device, self.model, self.optimizer, rank=rank)
 
     def _compute_micro_batch_size(self):
         micro_batch_float_num = self.micro_batch_size * self.seq_length * self.embedding_dim
