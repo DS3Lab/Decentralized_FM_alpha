@@ -4,6 +4,7 @@ from collections import OrderedDict
 import subprocess
 import os
 
+
 def server_message_parser(msg: bytes):
     msg_arg = msg.decode().split('#')
     arg_dict = {'task': msg_arg[0],
@@ -50,7 +51,12 @@ class CoordinatorServer:
                 for i in range(self.train_demand_workers):
                     # with subprocess.Popen([f"bsub < {job_name}"], stdout=subprocess.PIPE) as submit_proc:
                     #    print(submit_proc.stdout.read())
-                    os.system(f"cd {self.bsub_script_path} && bsub < {job_name} {i+1}")
+                    # os.system(f"cd {self.bsub_script_path} && bsub < {job_name} {i+1}")
+                    os.system(f"cp {self.bsub_script_path}/{job_name}.bsub "
+                              f"{self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
+                    os.system(f"echo \'{i+1}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
+                    os.system(f"cd {self.bsub_script_path}/submit_cache && "
+                              f"bsub < {job_name}_{i+1}.bsub")
                 # with subprocess.Popen(["bjobs"], stdout=subprocess.PIPE) as bjobs_proc:
                 #    print(bjobs_proc.stdout.read())
                 os.system("bjobs")
