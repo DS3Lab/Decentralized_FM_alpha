@@ -47,7 +47,7 @@ class CoordinatorServer:
             if job_name == 'lsf_gpt3small_1gpu_3node.bsub':
                 self.train_demand_workers = 3
                 for _ in range(self.train_demand_workers):
-                    with subprocess.Popen(["bsub <", job_name], stdout=subprocess.PIPE) as submit_proc:
+                    with subprocess.Popen([f"bsub < {job_name}"], stdout=subprocess.PIPE) as submit_proc:
                         print(submit_proc.stdout.read())
                 with subprocess.Popen(["bjobs"], stdout=subprocess.PIPE) as bjobs_proc:
                     print(bjobs_proc.stdout.read())
