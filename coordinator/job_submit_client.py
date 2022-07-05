@@ -12,7 +12,7 @@ class JobSubmitClient:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(('', self.client_port))
             s.connect((self.host_ip, self.host_port))
-            s.sendall(b"train#submit#"+job_name)
+            s.sendall(b"train#submit#"+job_name.encode())
             msg = s.recv(1024)
             print(f"Received: {msg}")
 
