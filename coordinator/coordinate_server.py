@@ -1,7 +1,6 @@
 import socket
 import argparse
 from collections import OrderedDict
-from utils.dist_args_utils import print_arguments
 import subprocess
 
 
@@ -115,7 +114,7 @@ def main():
                         default='/cluster/home/biyuan/GPT-home-private/scripts/lsf_scripts', metavar='S',
                         help='Path to store the bsub scripts')
     args = parser.parse_args()
-    print_arguments(args)
+    print(vars(args))
     coordinator = CoordinatorServer(args)
     coordinator.execute_server()
 

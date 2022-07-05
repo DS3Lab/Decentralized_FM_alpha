@@ -1,6 +1,5 @@
 import socket
 import argparse
-from utils.dist_args_utils import print_arguments
 
 
 class JobSubmitClient:
@@ -27,7 +26,7 @@ def main():
     parser.add_argument('--job-name', type=str, default='lsf_gpt3small_1gpu_3node.bsub', metavar='S',
                         help='Support a fixed list of job first, this can be more flexible later.')
     args = parser.parse_args()
-    print_arguments(args)
+    print(vars(args))
     client = JobSubmitClient(args)
     client.submit_train_job(args.job_name)
 

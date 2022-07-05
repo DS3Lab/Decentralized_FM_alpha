@@ -1,6 +1,5 @@
 import socket
 import argparse
-from utils.dist_args_utils import print_arguments
 
 
 def client_message_parser(msg: bytes, context: str):
@@ -48,7 +47,7 @@ def main():
     parser.add_argument('--lsf-job-no', type=str, default='100', metavar='S',
                         help='Job-<ID> assigned by LSF.')
     args = parser.parse_args()
-    print_arguments(args)
+    print(vars(args))
     client = CoordinatorClient(args)
     client.notify_train_join()
     client.notify_train_finish("0#6.88")
