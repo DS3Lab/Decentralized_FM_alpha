@@ -54,7 +54,7 @@ class CoordinatorServer:
                     # os.system(f"cd {self.bsub_script_path} && bsub < {job_name} {i+1}")
                     os.system(f"cp {self.bsub_script_path}/{job_name}.bsub "
                               f"{self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
-                    os.system(f"echo \'{i+1}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
+                    os.system(f"echo \' {i+1}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
                     os.system(f"cd {self.bsub_script_path}/submit_cache && "
                               f"bsub < {job_name}_{i+1}.bsub")
                 # with subprocess.Popen(["bjobs"], stdout=subprocess.PIPE) as bjobs_proc:
