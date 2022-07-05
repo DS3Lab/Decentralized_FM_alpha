@@ -2,7 +2,7 @@ import socket
 import argparse
 from collections import OrderedDict
 import subprocess
-
+import os
 
 def server_message_parser(msg: bytes):
     msg_arg = msg.decode().split('#')
@@ -42,15 +42,18 @@ class CoordinatorServer:
         if self.train_demand_workers != 0:
             return_msg = 'Current training task is still running, cannot handle your job submission.'
         else:
-            with subprocess.Popen(["cd", self.bsub_script_path], stdout=subprocess.PIPE) as cd_proc:
-                print(cd_proc.stdout.read())
+            # with subprocess.Popen(["cd", self.bsub_script_path], stdout=subprocess.PIPE) as cd_proc:
+            #    print(cd_proc.stdout.read())
+            os.system(f"cd {self.bsub_script_path}")
             if job_name == 'lsf_gpt3small_1gpu_3node.bsub':
                 self.train_demand_workers = 3
                 for _ in range(self.train_demand_workers):
-                    with subprocess.Popen([f"bsub < {job_name}"], stdout=subprocess.PIPE) as submit_proc:
-                        print(submit_proc.stdout.read())
-                with subprocess.Popen(["bjobs"], stdout=subprocess.PIPE) as bjobs_proc:
-                    print(bjobs_proc.stdout.read())
+                    # with subprocess.Popen([f"bsub < {job_name}"], stdout=subprocess.PIPE) as submit_proc:
+                    #    print(submit_proc.stdout.read())
+                    os.system(f"bsub < {job_name}")
+                # with subprocess.Popen(["bjobs"], stdout=subprocess.PIPE) as bjobs_proc:
+                #    print(bjobs_proc.stdout.read())
+                os.system("bjobs")
                 return_msg = f'Succeed to submit job - {job_name}'
             else:
                 return_msg = f'This job is not recognized on coordinate - {job_name}'
