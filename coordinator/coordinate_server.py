@@ -47,10 +47,10 @@ class CoordinatorServer:
             # os.system(f"cd {self.bsub_script_path}")
             if job_name == 'lsf_gpt3small_1gpu_3node.bsub':
                 self.train_demand_workers = 3
-                for _ in range(self.train_demand_workers):
+                for i in range(self.train_demand_workers):
                     # with subprocess.Popen([f"bsub < {job_name}"], stdout=subprocess.PIPE) as submit_proc:
                     #    print(submit_proc.stdout.read())
-                    os.system(f"cd {self.bsub_script_path} && bsub < {job_name}")
+                    os.system(f"cd {self.bsub_script_path} && bsub < {job_name} {i+1}")
                 # with subprocess.Popen(["bjobs"], stdout=subprocess.PIPE) as bjobs_proc:
                 #    print(bjobs_proc.stdout.read())
                 os.system("bjobs")

@@ -7,6 +7,7 @@
 #BSUB -o /cluster/home/biyuan/exe_log/gpt3small_1gpu_3node.out.%J
 #BSUB -e /cluster/home/biyuan/exe_log/gpt3small_1gpu_3node.err.%J
 
+SUBMIT_INDEX=$1
 
 module load gcc/6.3.0 cuda/11.0.3             # Load modules from Euler setup
 source activate base                          # Activate my conda python environment
@@ -17,7 +18,7 @@ nvidia-smi
 world_size=3
 DIST_CONF="--pp-mode gpipe --world-size $world_size --pipeline-group-size $world_size --data-group-size 1 --cuda-id 0"
 MODEL_CONF="--fp16 --embedding-dim 2048 --num-heads 16 --num-layers 6 --batch-size 64 --micro-batch-size 1"
-COOR_CONF="--coordinator-server-ip 129.132.93.84 --lsf-job-no ${%J}"
+COOR_CONF="--coordinator-server-ip 129.132.93.84 --lsf-job-no $SUBMIT_INDEX"
 
 export NCCL_SOCKET_IFNAME=access
 export GLOO_SOCKET_IFNAME=access
