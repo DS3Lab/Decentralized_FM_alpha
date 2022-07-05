@@ -6,7 +6,7 @@ from pipeline_parallel.dist_pp_utils import get_pp_module
 from utils.dist_args_utils import *
 from utils.dist_train_utils import *
 from comm.comm_utils import *
-from coordinator.coordinator_client import *
+from coordinator.coordinate_client import *
 
 
 def main():
@@ -25,6 +25,7 @@ def main():
     parser.add_argument('--trace-postfix', type=str, default='default', metavar='S',
                         help='postfix of the tracing file name.')
     args = parser.parse_args()
+    print_arguments(args)
     torch.manual_seed(args.seed)
     if args.use_cuda:
         assert (torch.cuda.is_available())

@@ -15,11 +15,11 @@ cd /cluster/home/biyuan/GPT-home-private      # Change directory
 nvidia-smi
 
 world_size=3
-DIST_CONF="--pp-mode gpipe --world-size $world_size --pipeline-group-size $world_size --data-group-size 1"
-MODEL_CONF="--embedding-dim 2048 --num-heads 16 --num-layers 6 --batch-size 64 --micro-batch-size 1"
+DIST_CONF="--pp-mode gpipe --world-size $world_size --pipeline-group-size $world_size --data-group-size 1 --cuda-id 0"
+MODEL_CONF="--fp16 --embedding-dim 2048 --num-heads 16 --num-layers 6 --batch-size 64 --micro-batch-size 1"
+COOR_CONF="--coordinator-server-ip 129.132.93.84 --lsf-job-no ${%J}"
 
 export NCCL_SOCKET_IFNAME=access
 export GLOO_SOCKET_IFNAME=access
 
-
-python dist_runner_w_coordinator.py --fp16 $DIST_CONF $MODEL_CONF --cuda-id 0 --coordinator-server-ip 129.132.93.84
+python dist_runner_w_coordinator.py $DIST_CONF $MODEL_CONF $COOR_CONF

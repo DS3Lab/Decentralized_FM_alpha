@@ -1,5 +1,6 @@
 import socket
 import argparse
+from utils.dist_args_utils import print_arguments
 
 
 def client_message_parser(msg: bytes, context: str):
@@ -12,15 +13,17 @@ def client_message_parser(msg: bytes, context: str):
     return arg_dict
 
 
-# TODO: Make each client connect to server from a fixed port. This should be doable, right?
+# The client port should be determined by the job-id which is unique. The ip + port will identify a worker.
 class CoordinatorClient:
     def __init__(self, args):
-        self.host = args.coordinator_server_ip
-        self.port = args.port
+        self.host_ip = args.coordinator_server_ip
+        self.host_port = args.coordinator_server_port
+        self.client_port = int(args.lsf_job_no) % 10000 + 10000
 
     def notify_train_join(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((self.host, self.port))
+            s.bind(('', self.client_port))
+            s.connect((self.host_ip, self.host_port))
             s.sendall(b"train#join")
             msg = s.recv(1024)
             print(f"Received: {msg}")
@@ -29,7 +32,8 @@ class CoordinatorClient:
 
     def notify_train_finish(self, message: str):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((self.host, self.port))
+            s.bind(('', self.client_port))
+            s.connect((self.host_ip, self.host_port))
             s.sendall(b"train#finish#"+message.encode())
             msg = s.recv(1024)
             print(f"Received: {msg}")
@@ -37,13 +41,17 @@ class CoordinatorClient:
 
 def main():
     parser = argparse.ArgumentParser(description='Test Coordinator-Client')
-    parser.add_argument('--port', type=int, default=9002, metavar='N',
+    parser.add_argument('--coordinator-server-port', type=int, default=9002, metavar='N',
                         help='The port of coordinator-server.')
     parser.add_argument('--coordinator-server-ip', type=str, default='localhost', metavar='S',
                         help='The IP of coordinator-server.')
+    parser.add_argument('--lsf-job-no', type=str, default='100', metavar='S',
+                        help='Job-<ID> assigned by LSF.')
     args = parser.parse_args()
+    print_arguments(args)
     client = CoordinatorClient(args)
     client.notify_train_join()
+    client.notify_train_finish("0#6.88")
 
 
 if __name__ == '__main__':

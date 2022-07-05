@@ -27,10 +27,12 @@ def add_torch_distributed_arguments(parser):
 def add_torch_distributed_w_coordinator_arguments(parser):
     parser.add_argument('--dist-backend', type=str, default='cupy_nccl', metavar='S',
                         help='backend type for distributed PyTorch (default: cupy_nccl)')
-    parser.add_argument('--port', type=int, default=9002, metavar='N',
+    parser.add_argument('--coordinator-server-port', type=int, default=9002, metavar='N',
                         help='The port of coordinator-server.')
     parser.add_argument('--coordinator-server-ip', type=str, default='localhost', metavar='S',
                         help='The IP of coordinator-server.')
+    parser.add_argument('--lsf-job-no', type=str, default='100', metavar='S',
+                        help='Job-<ID> assigned by LSF.')
     parser.add_argument('--world-size', type=int, default=4, metavar='D',
                         help='world-size (default: 4)')
     parser.add_argument('--pipeline-group-size', type=int, default=4, metavar='D',
@@ -130,3 +132,11 @@ def get_mixed_precision_arguments_str(args):
     if args.use_offload:
         arg_str += '_offload'
     return arg_str
+
+
+def print_arguments(args):
+    args_dict = vars(args)
+    print("======================Input Arguments=========================")
+    for key in args_dict.keys():
+        print(key, ": ", args_dict[key])
+    print("==============================================================")
