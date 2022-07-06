@@ -1,7 +1,6 @@
 import socket
 import argparse
 from collections import OrderedDict
-import subprocess
 import os
 
 
@@ -38,34 +37,28 @@ class CoordinatorServer:
             print(f"Node rank {self.worker_nodes[node_key]['rank']}, Address: {node_key}")
         print("-------------------------------------------------------")
 
-    def _handle_train_submit(self, job_name):
+    def _handle_train_submit(self, job_name) -> str:
         print("<<<<<<<<<<<<<<<<<<<<< Submit Job >>>>>>>>>>>>>>>>>>>>>>")
         if self.train_demand_workers != 0:
-            return_msg = 'Current training task is still running, cannot handle your job submission.'
+            return 'Current training task is still running, cannot handle your job submission.'
         else:
-            # with subprocess.Popen(["cd", self.bsub_script_path], stdout=subprocess.PIPE) as cd_proc:
-            #    print(cd_proc.stdout.read())
-            # os.system(f"cd {self.bsub_script_path}")
-            if job_name == 'lsf_gpt3small_1gpu_3node':
+            if job_name == 'lsf_gpt3xl_3gpu':
                 self.train_demand_workers = 3
-                for i in range(self.train_demand_workers):
-                    # with subprocess.Popen([f"bsub < {job_name}"], stdout=subprocess.PIPE) as submit_proc:
-                    #    print(submit_proc.stdout.read())
-                    # os.system(f"cd {self.bsub_script_path} && bsub < {job_name} {i+1}")
-                    os.system(f"cp {self.bsub_script_path}/{job_name}.bsub "
-                              f"{self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
-                    os.system(f"echo \' {i+1}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
-                    os.system(f"cd {self.bsub_script_path}/submit_cache && "
-                              f"bsub < {job_name}_{i+1}.bsub")
-                # with subprocess.Popen(["bjobs"], stdout=subprocess.PIPE) as bjobs_proc:
-                #    print(bjobs_proc.stdout.read())
-                os.system("bjobs")
-                return_msg = f'Succeed to submit job - {job_name}'
+            elif job_name == 'lsf_gpt3xl_64gpu':
+                self.train_demand_workers = 64
             else:
-                return_msg = f'This job is not recognized on coordinate - {job_name}'
-        return return_msg
+                return f'This job is not recognized on coordinate - {job_name}'
+            for i in range(self.train_demand_workers):
+                os.system(f"rm {self.bsub_script_path}/submit_cache/*.bsub")
+                os.system(f"cp {self.bsub_script_path}/{job_name}.bsub "
+                          f"{self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
+                os.system(f"echo \' {i+1}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
+                os.system(f"cd {self.bsub_script_path}/submit_cache && "
+                          f"bsub < {job_name}_{i+1}.bsub")
+            os.system("bjobs")
+            return f'Succeed to submit job - {job_name}'
 
-    def _handle_train_join(self, worker_ip, port):
+    def _handle_train_join(self, worker_ip, port) -> str:
         node_key = worker_ip + ':' + str(port)
         assert node_key not in self.worker_nodes, f"Worker called notify_train_join has been joined before ({node_key})"
         print(f"Connected by +NEW+ worker with address {worker_ip}, (port:{port})")
@@ -76,7 +69,7 @@ class CoordinatorServer:
         return_msg = self.prime_worker_ip + '#' + str(self.worker_nodes[node_key]['rank'])
         return return_msg
 
-    def _handle_train_finish(self, worker_ip, port, msg_arg):
+    def _handle_train_finish(self, worker_ip, port, msg_arg) -> str:
         node_key = worker_ip + ':' + str(port)
         assert node_key in self.worker_nodes, f"Worker called notify_train_finish is not recognized ({node_key})"
         print(f"Connected by known worker with address {worker_ip}, (port:{port}), allocated rank "
