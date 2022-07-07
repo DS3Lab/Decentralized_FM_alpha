@@ -1,7 +1,7 @@
 import os
 import argparse
 import torch
-from transformers import GPT2Model, GPT2LMHeadModel, GPT2Tokenizer
+from transformers import GPT2Model, GPT2LMHeadModel, GPT2Tokenizer, GPT2Config
 # from modules.gpt_modules import GPTEmbeddings, GPTBlock
 
 
@@ -20,6 +20,8 @@ if __name__ == '__main__':
     if not os.path.exists(save_path):
         os.mkdir(save_path)
     
+    config = GPT2Config.from_pretrained(args.model_name)
+    config.save_pretrained(save_path)
     model = GPT2LMHeadModel.from_pretrained(args.model_name)
 #     model.save_pretrained(save_path)
 

@@ -1,7 +1,7 @@
 import os
 import argparse
 import torch
-from transformers import GPTJModel, GPTJForCausalLM
+from transformers import GPTJModel, GPTJForCausalLM, AutoTokenizer, GPTJConfig
 # from modules.gpt_modules import GPTEmbeddings, GPTBlock
 
 
@@ -16,8 +16,12 @@ if __name__ == '__main__':
     
     if not os.path.exists(args.save_dir):
         os.mkdir(args.save_dir)
-    save_path = os.path.join(args.save_dir, args.model_name)
+    save_path = os.path.join(args.save_dir, args.model_name.replace('/', '_'))
+    if not os.path.exists(save_path):
+        os.mkdir(save_path)
     
+    config = GPTJConfig.from_pretrained(args.model_name, revision="float16", dtype=torch.float16)
+    config.save_pretrained(save_path)
     model = GPTJForCausalLM.from_pretrained(args.model_name)
 #     model.save_pretrained(save_path)
 
@@ -34,3 +38,7 @@ if __name__ == '__main__':
         'lm_head.weight': model.lm_head.state_dict()['weight'],
         'lm_head.bias': model.lm_head.state_dict()['bias'],
     }, os.path.join(save_path, 'pytorch_lm_head.pt'))
+    
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+    tokenizer.save_pretrained(save_path)
+
