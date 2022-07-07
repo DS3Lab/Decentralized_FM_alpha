@@ -1,0 +1,16 @@
+#!/bin/bash
+#BSUB -n 1                     # 1 cores
+#BSUB -W 0:10                   # 3-minutes run-time
+#BSUB -R "rusage[mem=32000]"     # 4000 MB per core
+#BSUB -R "rusage[ngpus_excl_p=1]"
+#BSUB -R "select[gpu_model0==NVIDIATITANRTX]"
+#BSUB -o /cluster/home/juewang/gpt_exe_log/test.out.%J
+#BSUB -e /cluster/home/juewang/gpt_exe_log/test.err.%J
+
+
+export HF_DATASETS_CACHE="/cluster/scratch/juewang/hf"
+
+module load gcc/6.3.0 cuda/11.0.3             # Load modules from Euler setup
+source activate pipeline                          # Activate my conda python environment
+cd /cluster/home/juewang/workspace/GPT-home-private      # Change directory
+python convert_gpt2_checkpoint.py --model-name gpt2 --save-dir /cluster/scratch/juewang/models
