@@ -42,35 +42,20 @@ class GPTBlock(_GPTJBlock):
         super().__init__(config=config, *args, **kargs)
         self.config = config
         self.use_checkpoint = use_checkpoint
-        
-        def attn_res(x: torch.Tensor, layer_past=None) -> torch.Tensor:
-            res = x
-            x = self.ln_1(x)
-            x, present = self.attn(x, use_cache=True, layer_past=layer_past)
-            return x + res, present
-        self.attn_res = attn_res
-        
-        def mlp_res(x: torch.Tensor) -> torch.Tensor:
-            res = x
-            x = self.ln_2(x)
-            x = self.mlp(x)
-            return x + res
-        self.mlp_res = mlp_res
 
     def forward(self, x: torch.Tensor, layer_past=None) -> torch.Tensor:
-        
-        x, present = self.attn_res(x, layer_past=layer_past)
-        
-        x = self.mlp_res(x)
-        
-        return x, present
+        res = x
+        x = self.ln_1(x)
+        x_a, present = self.attn(x, use_cache=True, layer_past=layer_past)
+        x_m = self.mlp(x)
+        return x_a + x_m + res, present
     
     
 class GPTLMHead(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.ln_f = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
-        self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(config.n_embd, config.vocab_size)
         
     def forward(self, x, input_ids=None):
         x = self.ln_f(x)
