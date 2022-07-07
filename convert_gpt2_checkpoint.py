@@ -1,7 +1,7 @@
 import os
 import argparse
 import torch
-from transformers import GPT2Model, GPT2LMHeadModel
+from transformers import GPT2Model, GPT2LMHeadModel, GPT2Tokenizer
 # from modules.gpt_modules import GPTEmbeddings, GPTBlock
 
 
@@ -17,6 +17,8 @@ if __name__ == '__main__':
     if not os.path.exists(args.save_dir):
         os.mkdir(args.save_dir)
     save_path = os.path.join(args.save_dir, args.model_name)
+    if not os.path.exists(save_path):
+        os.mkdir(save_path)
     
     model = GPT2LMHeadModel.from_pretrained(args.model_name)
 #     model.save_pretrained(save_path)
@@ -34,3 +36,7 @@ if __name__ == '__main__':
         'ln_f.bias': model.transformer.ln_f.state_dict()['bias'],
         'lm_head.weight': model.lm_head.state_dict()['weight'],
     }, os.path.join(save_path, 'pytorch_lm_head.pt'))
+    
+    
+    tokenizer = GPT2Tokenizer.from_pretrained(args.model_name)
+    tokenizer.save_pretrained(save_path)
