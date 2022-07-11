@@ -1,7 +1,7 @@
 import torch
 import argparse
-from task_datasets import QQPDataset
-from task_datasets import build_tokenizer
+from task_datasets.qqp import QQPDataset
+from task_datasets.tokenizer import build_tokenizer
 
 
 def train_data_loader(args, tokenizer):
