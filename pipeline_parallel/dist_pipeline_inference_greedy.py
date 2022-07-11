@@ -5,7 +5,7 @@ from comm.comm_utils import *
 from modules.hf_gpt2_module import *
 
 
-class DistInferenceAsync:
+class DistGreedyInferenceAsync:
     r"""
     Async implementation of Distributed Inference.
     The current implementation leave the computation on the PyTorch default stream and the communication on a different
@@ -14,7 +14,7 @@ class DistInferenceAsync:
         a group of events to check if computation finishes in the forward propagation.
     """
 
-    def __init__(self, args, vocab_size, num_classes, device, use_dp=False, rank=None):
+    def __init__(self, args, device, rank=None):
         print("=======Initialize Dist Inference.")
         if rank is None:
             self.global_rank = args.rank
@@ -119,13 +119,13 @@ class DistInferenceAsync:
         self.prompt_input = None
         self.prompt_output = None
         self.cached_attention.clear()
-        for _ in range(self.num_layers-1):
+        for _ in range(self.num_layers):
             self.cached_attention.append([None for _ in range(self.seq_num)])
 
     def _merge_cached_seqs_and_attentions(self):
         self.prompt_input = torch.cat(self.input_seq_emb, dim=0)
         self.prompt_output = torch.cat(self.output_seq_emb, dim=0)
-        for layer_index in range(self.num_layers-1):
+        for layer_index in range(self.num_layers):
             self.cached_attention[layer_index][0] = torch.cat(self.cached_attention[layer_index][0], dim=0)
             self.cached_attention[layer_index][1] = torch.cat(self.cached_attention[layer_index][1], dim=0)
 
@@ -133,16 +133,17 @@ class DistInferenceAsync:
         print("Compute prompt seq<", index, ">.")
         if self.pp_rank == 0:
             self.input_seq_emb[index] = self.layers['emb'](seq)
+        current_emb = None
         for layer_index in range(self.num_layers):
             if layer_index == 0:
-                self.cached_attention[layer_index][index] = self.layers['block' + str(layer_index)](
-                    self.input_seq_emb[index])
+                current_emb, self.cached_attention[layer_index][index] = \
+                    self.layers['block' + str(layer_index)](self.input_seq_emb[index])
             elif layer_index == self.num_layers - 1:
-                self.output_seq_emb[index] = self.layers['block'+str(layer_index)](
-                    self.cached_attention[layer_index - 1][index])
+                self.output_seq_emb[index], self.cached_attention[layer_index][index] = \
+                    self.layers['block'+str(layer_index)](current_emb)
             else:
-                self.cached_attention[layer_index][index] = self.layers['block' + str(layer_index)](
-                    self.cached_attention[layer_index - 1][index])
+                current_emb, self.cached_attention[layer_index][index] = \
+                    self.layers['block' + str(layer_index)](current_emb)
 
     def _forward_compute_generate_token(self, step):
         print("Compute prompt seq<", step, ">.")
@@ -155,14 +156,15 @@ class DistInferenceAsync:
                 current_emb, self.cached_attention[layer_index] = self.layers['block' + str(layer_index)](
                     current_emb, self.cached_attention[layer_index])
             else:
-                self.output_token_emb[step] = self.layers['block' + str(layer_index)](
+                self.output_token_emb[step], self.cached_attention[layer_index] = self.layers['block' + str(layer_index)](
                     current_emb, self.cached_attention[layer_index])
         if self.pp_rank == self.pipeline_group_size - 1:
-            self.send_new_tokens[step] = self.layers['lm'](self.output_token_emb[step])
+            self._generate_new_token(step)
 
     def _generate_new_token(self, step):
         assert self.pp_rank == self.pipeline_group_size - 1
-        self.send_new_tokens[step] = self.layers['lm'](self.output_token_emb[step])
+        z = self.layers['lm'](self.output_token_emb[step])
+        self.send_new_tokens[step] = z.argmax(-1)[:, -1:]
 
     def profile_mark_forward_seq_comp_start(self, i):
         if self.enable_tidy_profiling:
@@ -240,14 +242,14 @@ class DistInferenceAsync:
                 recv_slot = self.forward_seq_recv_start_events[i].elapsed_time(self.forward_seq_recv_ready_events[i]) * 1e+3
                 recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. forward-recv",
                             "ts": self.get_ts(self.forward_seq_recv_start_events[i]), "dur": recv_slot,
-                            "args": {"micro-batch": i}, "cname": "startup"}  # cname is for color, a little silly.
+                            "args": {"seq-index": i}, "cname": "startup"}  # cname is for color, a little silly.
                 # print(recv_log)
                 self.profiling_log.append(recv_log)
 
             comp_slot = self.forward_seq_comp_start_events[i].elapsed_time(self.forward_seq_comp_ready_events[i]) * 1e+3
             comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. forward-compute",
                         "ts": self.get_ts(self.forward_seq_comp_start_events[i]), "dur": comp_slot,
-                        "args": {"micro-batch": i}, "cname": "good"}
+                        "args": {"seq-index": i}, "cname": "good"}
             # print(comp_log)
             self.profiling_log.append(comp_log)
 
@@ -255,7 +257,7 @@ class DistInferenceAsync:
                 send_slot = self.forward_seq_send_start_events[i].elapsed_time(self.forward_seq_send_end_events[i]) * 1e+3
                 send_log = {"name": "send", "ph": "X", "pid": self.global_rank, "tid": "3. forward-send",
                             "ts": self.get_ts(self.forward_seq_send_start_events[i]), "dur": send_slot,
-                            "args": {"micro-batch": i}, "cname": "thread_state_iowait"}
+                            "args": {"seq-index": i}, "cname": "thread_state_iowait"}
                 # print(send_log)
                 self.profiling_log.append(send_log)
 
@@ -313,16 +315,17 @@ class DistInferenceAsync:
                     self.profile_mark_forward_token_recv_start(i)
                     self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.forward_token_recv_ready_events[i])
-                with torch.cuda.stream(self.torch_comp_stream):
-                    self.profile_mark_forward_token_comp_start(i)
-                    self._forward_compute_generate_token(step=i)
-                    self.torch_comp_stream.record_event(self.forward_token_comp_ready_events[0])
-                with torch.cuda.stream(self.torch_send_stream):
-                    cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
-                    self.torch_send_stream.wait_event(self.forward_token_comp_ready_events[0])
-                    self.profile_mark_forward_token_send_start(0)
-                    self.comm.send(self.send_new_tokens[0], dst=0, stream=cupy_send_stream)
-                    self.profile_mark_forward_token_send_end(0)
+                if i != self.generate_seq_length - 1:
+                    with torch.cuda.stream(self.torch_comp_stream):
+                        self.profile_mark_forward_token_comp_start(i+1)
+                        self._forward_compute_generate_token(step=i+1)
+                        self.torch_comp_stream.record_event(self.forward_token_comp_ready_events[i+1])
+                    with torch.cuda.stream(self.torch_send_stream):
+                        cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
+                        self.torch_send_stream.wait_event(self.forward_token_comp_ready_events[i+1])
+                        self.profile_mark_forward_token_send_start(i+1)
+                        self.comm.send(self.send_new_tokens[i+1], dst=0, stream=cupy_send_stream)
+                        self.profile_mark_forward_token_send_end(i+1)
             else:
                 with torch.cuda.stream(self.torch_recv_stream):
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
@@ -330,15 +333,15 @@ class DistInferenceAsync:
                     self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.forward_token_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
-                    self.profile_mark_forward_token_comp_start(0)
+                    self.profile_mark_forward_token_comp_start(i)
                     self._forward_compute_generate_token(step=i)
-                    self.torch_comp_stream.record_event(self.forward_token_comp_ready_events[0])
+                    self.torch_comp_stream.record_event(self.forward_token_comp_ready_events[i])
                 with torch.cuda.stream(self.torch_send_stream):
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
-                    self.torch_send_stream.wait_event(self.forward_token_comp_ready_events[0])
-                    self.profile_mark_forward_token_send_start(0)
-                    self.comm.send(self.output_token_emb[i], dst=0, stream=cupy_send_stream)
-                    self.profile_mark_forward_token_send_end(0)
+                    self.torch_send_stream.wait_event(self.forward_token_comp_ready_events[i])
+                    self.profile_mark_forward_token_send_start(i)
+                    self.comm.send(self.output_token_emb[i], dst=self.post_node_rank, stream=cupy_send_stream)
+                    self.profile_mark_forward_token_send_end(i)
 
         if self.enable_tidy_profiling:
             self.profile_token_pipeline_stage()
@@ -350,14 +353,14 @@ class DistInferenceAsync:
                 recv_slot = self.forward_token_recv_start_events[i].elapsed_time(self.forward_token_recv_ready_events[i]) * 1e+3
                 recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. forward-recv",
                             "ts": self.get_ts(self.forward_token_recv_start_events[i]), "dur": recv_slot,
-                            "args": {"micro-batch": i}, "cname": "startup"}  # cname is for color, a little silly.
+                            "args": {"token-step": i}, "cname": "startup"}  # cname is for color, a little silly.
                 # print(recv_log)
                 self.profiling_log.append(recv_log)
 
             comp_slot = self.forward_token_comp_start_events[i].elapsed_time(self.forward_token_comp_ready_events[i]) * 1e+3
             comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. forward-compute",
                         "ts": self.get_ts(self.forward_token_comp_start_events[i]), "dur": comp_slot,
-                        "args": {"micro-batch": i}, "cname": "good"}
+                        "args": {"token-step": i}, "cname": "good"}
             # print(comp_log)
             self.profiling_log.append(comp_log)
 
@@ -365,15 +368,28 @@ class DistInferenceAsync:
                 send_slot = self.forward_token_send_start_events[i].elapsed_time(self.forward_token_send_end_events[i]) * 1e+3
                 send_log = {"name": "send", "ph": "X", "pid": self.global_rank, "tid": "3. forward-send",
                             "ts": self.get_ts(self.forward_token_send_start_events[i]), "dur": send_slot,
-                            "args": {"micro-batch": i}, "cname": "thread_state_iowait"}
+                            "args": {"token-step": i}, "cname": "thread_state_iowait"}
                 # print(send_log)
                 self.profiling_log.append(send_log)
-
 
     def export_profiling_result(self, filename):
         with open(filename, 'w') as outfile:
             json.dump(self.profiling_log, outfile)
 
-    def inference_batch(self, input_=None, target=None):
-        pass
+    def inference_batch(self, input_=None):
+        self.comm.barrier()
+        start_time = time.time()
+        if self.enable_tidy_profiling:
+            torch.cuda.synchronize()
+            self.init_time_stamp = time.time() * 1e+6
+            self.init_event.record()
+
+        self.forward_seq_pipeline_stage(input_data=input_)
+        self.forward_new_token_pipeline_stage()
+
+        self.comm.barrier()
+        end_time = time.time()
+        iter_time = end_time - start_time
+        print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
+        print("-------------------------------------------")
 
