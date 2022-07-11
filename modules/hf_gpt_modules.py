@@ -27,12 +27,12 @@ class GPTEmbeddings(nn.Module):
         self.wpe = nn.Embedding(config.max_position_embeddings, self.embed_dim)
         self.drop = nn.Dropout(config.embd_pdrop)
         
-    def forward(self, input_ids, past_layer=None):
+    def forward(self, input_ids, past_length=0):
         
-        if past_layer is not None:
-            past_length = past_layer[0].size(2)
-        else:
-            past_length = 0
+        # if past_layer is not None:
+        #     past_length = past_layer[0].size(2)
+        # else:
+        #     past_length = 0
         
         device = input_ids.device
         
@@ -43,8 +43,10 @@ class GPTEmbeddings(nn.Module):
         
         # position ids
         position_ids = torch.arange(
-            past_length, past_length+input_shape[-1], dtype=torch.long, device=device)
+            0, input_shape[-1], dtype=torch.long, device=device)
         position_ids = position_ids.unsqueeze(0).view(-1, input_shape[-1])
+        position_ids = position_ids + past_length
+        position_ids[position_ids<0] = 0
             
         inputs_embeds = self.wte(input_ids)
         position_embeds = self.wpe(position_ids)
@@ -60,26 +62,25 @@ class GPTBlock(_GPT2Block):
         super().__init__(config=config, *args, **kargs)
         self.config = config
         self.use_checkpoint = use_checkpoint
-        
-        def attn_res(x: torch.Tensor, layer_past=None) -> torch.Tensor:
-            res = x
-            x = self.ln_1(x)
-            x, present = self.attn(x, use_cache=True, layer_past=layer_past)
-            return x + res, present
-        self.attn_res = attn_res
-        
-        def mlp_res(x: torch.Tensor) -> torch.Tensor:
-            res = x
-            x = self.ln_2(x)
-            x = self.mlp(x)
-            return x + res
-        self.mlp_res = mlp_res
 
-    def forward(self, x: torch.Tensor, layer_past=None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, layer_past=None, attention_mask=None) -> torch.Tensor:
         
-        x, present = self.attn_res(x, layer_past=layer_past)
+        if attention_mask is not None:
+            # bool -> float
+            attention_mask = 1000*(attention_mask[:, None, None, :]-1)
+            
+        res = x
+        x = self.ln_1(x)
+        x, present = self.attn(
+            x, use_cache=True, layer_past=layer_past,
+            attention_mask=attention_mask,
+        )
+        x = x + res
         
-        x = self.mlp_res(x)
+        res = x
+        x = self.ln_2(x)
+        x = self.mlp(x)
+        x = x + res
         
         return x, present
     
@@ -90,7 +91,7 @@ class GPTLMHead(nn.Module):
         self.ln_f = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
         
-    def forward(self, x, input_ids=None):
+    def forward(self, x):
         x = self.ln_f(x)
         x = self.lm_head(x)
         return x

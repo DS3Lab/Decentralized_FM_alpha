@@ -24,14 +24,11 @@ class GPTEmbeddings(nn.Module):
         self.wte = nn.Embedding(config.vocab_size, self.embed_dim)
         self.drop = nn.Dropout(config.embd_pdrop)
         
-    def forward(self, input_ids, past_layer=None):
-      
-        device = input_ids.device
+    def forward(self, input_ids, *args, **kargs):
         
         # input ids
         input_shape = input_ids.size()
         input_ids = input_ids.view(-1, input_shape[-1])
-        batch_size = input_ids.shape[0]
         hidden_states = self.wte(input_ids)
         hidden_states = self.drop(hidden_states)
         return hidden_states
@@ -43,7 +40,7 @@ class GPTBlock(_GPTJBlock):
         self.config = config
         self.use_checkpoint = use_checkpoint
 
-    def forward(self, x: torch.Tensor, layer_past=None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, layer_past=None, attention_mask=None) -> torch.Tensor:
         res = x
         x = self.ln_1(x)
         x_a, present = self.attn(x, use_cache=True, layer_past=layer_past)
@@ -57,7 +54,7 @@ class GPTLMHead(nn.Module):
         self.ln_f = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size)
         
-    def forward(self, x, input_ids=None):
+    def forward(self, x):
         x = self.ln_f(x)
         x = self.lm_head(x)
         return x
