@@ -1,3 +1,4 @@
+import os
 import torch
 from torch import nn
 from transformers.models.gpt2.modeling_gpt2 import GPT2Block as _GPT2Block
@@ -12,6 +13,16 @@ class GPTEmbeddings(nn.Module):
         self.wte = nn.Embedding(config.vocab_size, self.embed_dim)
         self.wpe = nn.Embedding(config.max_position_embeddings, self.embed_dim)
         self.drop = nn.Dropout(config.embd_pdrop)
+        
+    @classmethod
+    def from_pretrained(cls, model_path, config=None):
+        if config is None:
+            config = GPTConfig.from_pretrained(model_path)
+        module = cls(config).eval()
+        module.load_state_dict(torch.load(os.path.join(
+            model_path, 'pytorch_embs.pt',
+        )))
+        return module
 
     def forward(self, input_ids, past_layer=None):
         if past_layer is not None:
@@ -60,6 +71,17 @@ class GPTBlock(_GPT2Block):
             return x + res
 
         self.mlp_res = mlp_res
+        
+    @classmethod
+    def from_pretrained(cls, model_path, config=None, layer_index=None):
+        assert layer_index is not None
+        if config is None:
+            config = GPTConfig.from_pretrained(model_path)
+        module = cls(config).eval()
+        module.load_state_dict(torch.load(os.path.join(
+            model_path, f'pytorch_{layer_index}.pt',
+        )))
+        return module
 
     def forward(self, x: torch.Tensor, layer_past=None) -> torch.Tensor:
         x, present = self.attn_res(x, layer_past=layer_past)
@@ -72,6 +94,16 @@ class GPTLMHead(nn.Module):
         super().__init__()
         self.ln_f = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
+        
+    @classmethod
+    def from_pretrained(cls, model_path, config=None):
+        if config is None:
+            config = GPTConfig.from_pretrained(model_path)
+        module = cls(config).eval()
+        module.load_state_dict(torch.load(os.path.join(
+            model_path, 'pytorch_lm_head.pt',
+        )))
+        return module
 
     def forward(self, x, input_ids=None):
         x = self.ln_f(x)
