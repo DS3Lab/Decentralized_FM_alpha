@@ -33,6 +33,7 @@ class DistGreedyInferenceAsync:
         self.embedding_dim = args.embedding_dim
         # self.vocab_size = vocab_size
         self.num_layers = args.num_layers
+        self.model_name = args.model_name
 
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
         self.device = device
@@ -76,12 +77,12 @@ class DistGreedyInferenceAsync:
 
         if self.pp_rank == 0:
             self.recv_new_token = [torch.zeros((self.seq_num, 1),
-                                               requires_grad=False, device=self.device, dtype=torch.int)
+                                               requires_grad=False, device=self.device, dtype=torch.int64)
                                    for _ in range(self.generate_seq_length)]
 
         if self.pp_rank == self.pipeline_group_size - 1:
             self.send_new_tokens = [torch.zeros((self.seq_num, 1),
-                                                requires_grad=False, device=self.device, dtype=torch.int)
+                                                requires_grad=False, device=self.device, dtype=torch.int64)
                                     for _ in range(self.generate_seq_length)]
 
         self.input_seq_emb = [torch.zeros((1, self.input_seq_length, self.embedding_dim),
@@ -102,18 +103,19 @@ class DistGreedyInferenceAsync:
         self.prompt_output = None
         self.layers = {}
         self._create_layers()
+        self._init_cached_seqs_and_attentions()
 
     def _create_layers(self):
         # model path could be an argument
-        CHECKPOINT_PATH='../pretrained_models/gpt2/'
         if self.pp_rank == 0:
-            self.layers['emb'] = GPTEmbeddings.from_pretrained(CHECKPOINT_PATH).eval()
+            self.layers['emb'] = GPTEmbeddings.from_pretrained(self.model_name).eval().to(self.device)
         for layer_index in range(self.num_layers):
             # global layer indexing could be an argument
             global_layer_index = self.num_layers * self.pp_rank + layer_index
-            self.layers['block'+str(layer_index)] = GPTBlock.from_pretrained(CHECKPOINT_PATH, layer_index=global_layer_index).eval()
+            print(f'loading layer {global_layer_index}')
+            self.layers['block'+str(layer_index)] = GPTBlock.from_pretrained(self.model_name, layer_index=global_layer_index).eval().to(self.device)
         if self.pp_rank == self.pipeline_group_size - 1:
-            self.layers['lm'] = GPTLMHead.from_pretrained(CHECKPOINT_PATH).eval()
+            self.layers['lm'] = GPTLMHead.from_pretrained(self.model_name).eval().to(self.device)
 
     def _init_cached_seqs_and_attentions(self):
         self.prompt_input = None
@@ -123,11 +125,12 @@ class DistGreedyInferenceAsync:
             self.cached_attention.append([None for _ in range(self.seq_num)])
 
     def _merge_cached_seqs_and_attentions(self):
-        self.prompt_input = torch.cat(self.input_seq_emb, dim=0)
-        self.prompt_output = torch.cat(self.output_seq_emb, dim=0)
+        self.prompt_input = torch.cat(self.input_seq_emb, dim=0) # TODO
+        self.prompt_output = torch.cat(self.output_seq_emb, dim=0) # TODO
         for layer_index in range(self.num_layers):
-            self.cached_attention[layer_index][0] = torch.cat(self.cached_attention[layer_index][0], dim=0)
-            self.cached_attention[layer_index][1] = torch.cat(self.cached_attention[layer_index][1], dim=0)
+            key = torch.cat([kv[0] for kv in self.cached_attention[layer_index]], dim=0)
+            value = torch.cat([kv[1] for kv in self.cached_attention[layer_index]], dim=0)
+            self.cached_attention[layer_index] = (key, value)
 
     def _forward_compute_prompt_seq(self, index, seq=None):
         print("Compute prompt seq<", index, ">.")
@@ -144,11 +147,13 @@ class DistGreedyInferenceAsync:
             else:
                 current_emb, self.cached_attention[layer_index][index] = \
                     self.layers['block' + str(layer_index)](current_emb)
+        if self.pp_rank == self.pipeline_group_size - 1:
+            self.output_token_emb[0][index] = current_emb[:, -1:]
 
     def _forward_compute_generate_token(self, step):
-        print("Compute prompt seq<", step, ">.")
+        print("Compute generate seq<", step, ">.")
         if self.pp_rank == 0:
-            current_emb = self.layers['emb'](self.recv_new_token[step], self.prompt_input)
+            current_emb = self.layers['emb'](self.recv_new_token[step], self.cached_attention[0])
         else:
             current_emb = self.input_token_emb[step]
         for layer_index in range(self.num_layers):
@@ -165,6 +170,7 @@ class DistGreedyInferenceAsync:
         assert self.pp_rank == self.pipeline_group_size - 1
         z = self.layers['lm'](self.output_token_emb[step])
         self.send_new_tokens[step] = z.argmax(-1)[:, -1:]
+        # print(step, self.send_new_tokens[step][0])
 
     def profile_mark_forward_seq_comp_start(self, i):
         if self.enable_tidy_profiling:
@@ -317,14 +323,15 @@ class DistGreedyInferenceAsync:
                     self.torch_recv_stream.record_event(self.forward_token_recv_ready_events[i])
                 if i != self.generate_seq_length - 1:
                     with torch.cuda.stream(self.torch_comp_stream):
+                        self.torch_comp_stream.wait_event(self.forward_token_recv_ready_events[i])
                         self.profile_mark_forward_token_comp_start(i+1)
-                        self._forward_compute_generate_token(step=i+1)
+                        self._forward_compute_generate_token(step=i) # Note: i+1 is wrong. tiny up tomorrow
                         self.torch_comp_stream.record_event(self.forward_token_comp_ready_events[i+1])
                     with torch.cuda.stream(self.torch_send_stream):
                         cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
                         self.torch_send_stream.wait_event(self.forward_token_comp_ready_events[i+1])
                         self.profile_mark_forward_token_send_start(i+1)
-                        self.comm.send(self.send_new_tokens[i+1], dst=0, stream=cupy_send_stream)
+                        self.comm.send(self.send_new_tokens[i], dst=0, stream=cupy_send_stream) # Note: i+1 is wrong. tiny up tomorrow
                         self.profile_mark_forward_token_send_end(i+1)
             else:
                 with torch.cuda.stream(self.torch_recv_stream):
@@ -333,6 +340,7 @@ class DistGreedyInferenceAsync:
                     self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.forward_token_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
+                    self.torch_comp_stream.wait_event(self.forward_token_recv_ready_events[i])
                     self.profile_mark_forward_token_comp_start(i)
                     self._forward_compute_generate_token(step=i)
                     self.torch_comp_stream.record_event(self.forward_token_comp_ready_events[i])
@@ -379,6 +387,7 @@ class DistGreedyInferenceAsync:
     def inference_batch(self, input_=None):
         self.comm.barrier()
         start_time = time.time()
+        self._init_cached_seqs_and_attentions() # TODO: should I put here
         if self.enable_tidy_profiling:
             torch.cuda.synchronize()
             self.init_time_stamp = time.time() * 1e+6
@@ -392,4 +401,5 @@ class DistGreedyInferenceAsync:
         iter_time = end_time - start_time
         print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
         print("-------------------------------------------")
+        return iter_time
 

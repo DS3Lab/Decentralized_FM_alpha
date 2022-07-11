@@ -43,7 +43,7 @@ class GPTEmbeddings(nn.Module):
         position_embeds = self.wpe(position_ids)
         hidden_states = inputs_embeds + position_embeds
 
-        hidden_states = self.drop(hidden_states)
+        # hidden_states = self.drop(hidden_states)
 
         return hidden_states
 

@@ -1,10 +1,10 @@
 from comm.comm_utils import *
 
 
-def distributed_inference_foo_iter(args, pipeline, device, train_data_loader):
+def distributed_inference_foo_iter(args, pipeline, device, infer_data_loader):
     total_time = 0
     if get_pipeline_parallel_rank() == 0:
-        for i, data in enumerate(train_data_loader):
+        for i, data in enumerate(infer_data_loader):
             input_ids = data['text'].to(device)
             current_iter_time = pipeline.inference_batch(input_ids)
             if i > 0:

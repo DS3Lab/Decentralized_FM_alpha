@@ -59,6 +59,10 @@ def add_qqp_task_arguments(parser):
 def add_model_arguments(parser):
     parser.add_argument('--seq-length', type=int, default=2048, metavar='N',
                         help='-')
+    parser.add_argument('--input-seq-length', type=int, default=16, metavar='N',
+                        help='-')
+    parser.add_argument('--generate-seq-length', type=int, default=16, metavar='N',
+                        help='-')
     parser.add_argument('--embedding-dim', type=int, default=768, metavar='N',
                         help='-')
     parser.add_argument('--num-layers', type=int, default=4, metavar='N',
