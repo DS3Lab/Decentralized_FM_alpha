@@ -28,9 +28,12 @@ class GPTEmbeddings(nn.Module):
         if config is None:
             config = GPTConfig.from_pretrained(model_path)
         module = cls(config).eval()
-        module.load_state_dict(torch.load(os.path.join(
-            model_path, 'pytorch_embs.pt',
-        )))
+        try:
+            module.load_state_dict(torch.load(os.path.join(
+                model_path, 'pytorch_embs.pt',
+            )))
+        except:
+            print('Cannot load from <model_name>. The model is randomly initialized.')
         return module
         
     def forward(self, input_ids, *args, **kargs):
@@ -54,9 +57,12 @@ class GPTBlock(_GPTJBlock):
         if config is None:
             config = GPTConfig.from_pretrained(model_path)
         module = cls(config).eval()
-        module.load_state_dict(torch.load(os.path.join(
-            model_path, f'pytorch_{layer_index}.pt',
-        )))
+        try:
+            module.load_state_dict(torch.load(os.path.join(
+                model_path, f'pytorch_{layer_index}.pt',
+            )))
+        except:
+            print('Cannot load from <model_name>. The model is randomly initialized.')
         return module
 
     def forward(self, x: torch.Tensor, layer_past=None, attention_mask=None) -> torch.Tensor:
@@ -78,9 +84,12 @@ class GPTLMHead(nn.Module):
         if config is None:
             config = GPTConfig.from_pretrained(model_path)
         module = cls(config).eval()
-        module.load_state_dict(torch.load(os.path.join(
-            model_path, 'pytorch_lm_head.pt',
-        )))
+        try:
+            module.load_state_dict(torch.load(os.path.join(
+                model_path, 'pytorch_lm_head.pt',
+            )))
+        except:
+            print('Cannot load from <model_name>. The model is randomly initialized.')
         return module
         
     def forward(self, x):

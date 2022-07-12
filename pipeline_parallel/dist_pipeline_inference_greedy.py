@@ -2,7 +2,7 @@ import time
 import json
 import torch.nn.functional
 from comm.comm_utils import *
-from modules.hf_gpt2_module import *
+from modules.generation_utils import get_logits_processor, get_logits_warper
 
 
 class DistGreedyInferenceAsync:
@@ -16,6 +16,13 @@ class DistGreedyInferenceAsync:
 
     def __init__(self, args, device, rank=None):
         print("=======Initialize Dist Inference.")
+        if args.fp16:
+            self.use_fp16 = True
+            print("=======Gpipe use FP16")
+        else:
+            self.use_fp16 = False
+            print("=======Gpipe use FP32")
+        self.dtype = torch.float16 if self.use_fp16 else torch.float32
         if rank is None:
             self.global_rank = args.rank
         else:
@@ -26,14 +33,15 @@ class DistGreedyInferenceAsync:
         self.post_node_rank = self.pp_rank + 1 if self.pp_rank != self.pipeline_group_size - 1 else -1
         self.comm = get_pipeline_parallel_comm()
 
-        # assert (args.batch_size % args.micro_batch_size == 0)
-        self.seq_num = args.batch_size # // args.micro_batch_size
+        assert (args.batch_size % args.micro_batch_size == 0)
+        self.seq_num = args.batch_size // args.micro_batch_size
         self.input_seq_length = args.input_seq_length
         self.generate_seq_length = args.generate_seq_length
         self.embedding_dim = args.embedding_dim
         # self.vocab_size = vocab_size
         self.num_layers = args.num_layers
         self.model_name = args.model_name
+        self.model_type = args.model_type
 
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
         self.device = device
@@ -85,48 +93,69 @@ class DistGreedyInferenceAsync:
                                                 requires_grad=False, device=self.device, dtype=torch.int64)
                                     for _ in range(self.generate_seq_length)]
 
-        self.input_seq_emb = [torch.zeros((1, self.input_seq_length, self.embedding_dim),
-                                          requires_grad=False, device=self.device, dtype=torch.float32)
+        self.input_seq_emb = [torch.zeros((args.micro_batch_size, self.input_seq_length, self.embedding_dim),
+                                          requires_grad=False, device=self.device, dtype=self.dtype)
                               for _ in range(self.seq_num)]
-        self.output_seq_emb = [torch.zeros((1, self.input_seq_length, self.embedding_dim),
-                                           requires_grad=False, device=self.device, dtype=torch.float32)
+        self.output_seq_emb = [torch.zeros((args.micro_batch_size, self.input_seq_length, self.embedding_dim),
+                                           requires_grad=False, device=self.device, dtype=self.dtype)
                                for _ in range(self.seq_num)]
         self.input_token_emb = [torch.zeros((self.seq_num, 1, self.embedding_dim),
-                                            requires_grad=False, device=self.device, dtype=torch.float32)
+                                            requires_grad=False, device=self.device, dtype=self.dtype)
                                 for _ in range(self.generate_seq_length)]
         self.output_token_emb = [torch.zeros((self.seq_num, 1, self.embedding_dim),
-                                             requires_grad=False, device=self.device, dtype=torch.float32)
+                                             requires_grad=False, device=self.device, dtype=self.dtype)
                                  for _ in range(self.generate_seq_length)]
 
         self.cached_attention = []
-        self.prompt_input = None
-        self.prompt_output = None
+        # self.prompt_input = None
+        # self.prompt_output = None
         self.layers = {}
         self._create_layers()
         self._init_cached_seqs_and_attentions()
+        
+        # self.logits_processor = get_logits_processor() # not needed now
+        self.logits_warper = get_logits_warper(
+            top_k = args.top_k,
+            top_p = args.top_p,
+            temperature = args.temperature,
+            num_beams = 1,
+        )
 
     def _create_layers(self):
-        # model path could be an argument
+        
+        if self.model_type == 'gpt2':
+            from modules.hf_gpt2_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'gptj':
+            from modules.hf_gptj_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        else:
+            raise Exception(f'unknown model type {self.model_type}')
+        
         if self.pp_rank == 0:
-            self.layers['emb'] = GPTEmbeddings.from_pretrained(self.model_name).eval().to(self.device)
+            self.layers['emb'] = GPTEmbeddings.from_pretrained(
+                self.model_name
+            ).to(self.dtype).eval().to(self.device)
         for layer_index in range(self.num_layers):
             # global layer indexing could be an argument
             global_layer_index = self.num_layers * self.pp_rank + layer_index
             print(f'loading layer {global_layer_index}')
-            self.layers['block'+str(layer_index)] = GPTBlock.from_pretrained(self.model_name, layer_index=global_layer_index).eval().to(self.device)
+            self.layers['block'+str(layer_index)] = GPTBlock.from_pretrained(
+                self.model_name, layer_index=global_layer_index
+            ).to(self.dtype).eval().to(self.device)
         if self.pp_rank == self.pipeline_group_size - 1:
-            self.layers['lm'] = GPTLMHead.from_pretrained(self.model_name).eval().to(self.device)
+            self.layers['lm'] = GPTLMHead.from_pretrained(
+                self.model_name
+            ).to(self.dtype).eval().to(self.device)
 
     def _init_cached_seqs_and_attentions(self):
-        self.prompt_input = None
-        self.prompt_output = None
+        # self.prompt_input = None
+        # self.prompt_output = None
         self.cached_attention.clear()
         for _ in range(self.num_layers):
             self.cached_attention.append([None for _ in range(self.seq_num)])
 
     def _merge_cached_seqs_and_attentions(self):
-        self.prompt_input = torch.cat(self.input_seq_emb, dim=0) # TODO
-        self.prompt_output = torch.cat(self.output_seq_emb, dim=0) # TODO
+        # self.prompt_input = torch.cat(self.input_seq_emb, dim=0) # TODO
+        # self.prompt_output = torch.cat(self.output_seq_emb, dim=0) # TODO
         for layer_index in range(self.num_layers):
             key = torch.cat([kv[0] for kv in self.cached_attention[layer_index]], dim=0)
             value = torch.cat([kv[1] for kv in self.cached_attention[layer_index]], dim=0)
@@ -169,7 +198,10 @@ class DistGreedyInferenceAsync:
     def _generate_new_token(self, step):
         assert self.pp_rank == self.pipeline_group_size - 1
         z = self.layers['lm'](self.output_token_emb[step])
-        self.send_new_tokens[step] = z.argmax(-1)[:, -1:]
+        z = torch.nn.functional.log_softmax(z[:, -1], -1)
+        z = self.logits_warper(None, z)
+        self.send_new_tokens[step] = torch.multinomial(z.exp(), num_samples=1)
+        # self.send_new_tokens[step] = z.argmax(-1)
         # print(step, self.send_new_tokens[step][0])
 
     def profile_mark_forward_seq_comp_start(self, i):
@@ -401,5 +433,6 @@ class DistGreedyInferenceAsync:
         iter_time = end_time - start_time
         print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
         print("-------------------------------------------")
+        
         return iter_time
 
