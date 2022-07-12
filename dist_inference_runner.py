@@ -39,13 +39,14 @@ def main():
         
         tokenizer = AutoTokenizer.from_pretrained(args.model_name)
         tokenizer.pad_token = tokenizer.eos_token
-        tokenizer.padding_side = "left"
+        tokenizer.padding_side = 'left'
+        tokenizer.truncation_side = 'left'
         tokenizer.model_max_length = args.input_seq_length
 
         ### TODO some dataset for inference.
         class CustomDataset(torch.utils.data.Dataset):
             def __init__(self):
-                self.data = tokenizer(['you are']*128, return_tensors='pt')
+                self.data = tokenizer(['you are']*1280, return_tensors='pt', padding='max_length', truncation=True)
 
             def __len__(self):
                 return len(self.data['input_ids'])
