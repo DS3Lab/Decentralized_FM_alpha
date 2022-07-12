@@ -158,8 +158,8 @@ class DistGreedyInferenceAsync:
         else:
             print("=======input_token_emb: {} MB shape: {} X {} (fp32)======="
                   .format(token_emb_num * 4 // 1024 // 1024, self.input_token_emb[0].shape, self.generate_seq_length))
-            print("=======output_seq_emb: {} MB shape: {} X {} (fp32)======="
-                  .format(token_emb_num * 4 // 1024 // 1024, self.output_token_emb[0].shape, self.seq_num))
+            print("=======output_token_emb: {} MB shape: {} X {} (fp32)======="
+                  .format(token_emb_num * 4 // 1024 // 1024, self.output_token_emb[0].shape, self.generate_seq_length))
 
     def _create_layers(self):
         if self.model_type == 'gpt2':
