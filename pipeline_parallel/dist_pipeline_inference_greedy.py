@@ -126,43 +126,42 @@ class DistGreedyInferenceAsync:
     def _print_buffers(self):
         if self.pp_rank == 0:
             if self.use_fp16:
-                print("=======Rank-(0) recv_new_token: {} KB (fp16)"
+                print("=======Rank-(0) recv_new_token: {} KB (fp16)======="
                       .format(self.seq_num * self.generate_seq_length * 2 // 1024))
             else:
-                print("=======Rank-(0) recv_new_token: {} KB (fp32)"
+                print("=======Rank-(0) recv_new_token: {} KB (fp32)======="
                       .format(self.seq_num * self.generate_seq_length * 4 // 1024))
         if self.pp_rank == self.pipeline_group_size - 1:
             if self.use_fp16:
-                print("=======Rank-(N-1) send_new_token: {} KB (fp16)"
+                print("=======Rank-(N-1) send_new_token: {} KB (fp16)======="
                       .format(self.seq_num * self.generate_seq_length * 2 // 1024))
             else:
-                print("=======Rank-(N-1) send_new_token: {} KB (fp32)"
+                print("=======Rank-(N-1) send_new_token: {} KB (fp32)======="
                       .format(self.seq_num * self.generate_seq_length * 4 // 1024))
         seq_emb_num = self.seq_num * self.input_seq_length * self.embedding_dim * self.seq_num
         if self.use_fp16:
-            print("=======input_seq_emb: {} MB (fp16)"
-                  .format(seq_emb_num * 2 // 1024 // 1024))
-            print("=======output_seq_emb: {} MB (fp16)"
-                  .format(seq_emb_num * 2 // 1024 // 1024))
+            print("=======input_seq_emb: {} MB shape: {} X {} (fp16)======="
+                  .format(seq_emb_num * 2 // 1024 // 1024, self.input_seq_emb[0].shape, self.seq_num))
+            print("=======output_seq_emb: {} MB shape: {} X {} (fp16)======="
+                  .format(seq_emb_num * 2 // 1024 // 1024,  self.input_seq_emb[0].shape, self.seq_num))
         else:
-            print("=======input_seq_emb: {} MB (fp32)"
-                  .format(seq_emb_num * 4 // 1024 // 1024))
-            print("=======output_seq_emb: {} MB (fp32)"
-                  .format(seq_emb_num * 4 // 1024 // 1024))
+            print("=======input_seq_emb: {} MB shape: {} X {} (fp32)======="
+                  .format(seq_emb_num * 4 // 1024 // 1024, self.input_seq_emb[0].shape, self.seq_num))
+            print("=======output_seq_emb: {} MB shape: {} X {} (fp32)======="
+                  .format(seq_emb_num * 4 // 1024 // 1024, self.input_seq_emb[0].shape, self.seq_num))
         token_emb_num = self.seq_num * self.embedding_dim * self.generate_seq_length
         if self.use_fp16:
-            print("=======input_token_emb: {} MB (fp16)"
-                  .format(token_emb_num * 2 // 1024 // 1024))
-            print("=======output_seq_emb: {} MB (fp16)"
-                  .format(token_emb_num * 2 // 1024 // 1024))
+            print("=======input_token_emb: {} MB shape: {} X {} (fp16)======="
+                  .format(token_emb_num * 2 // 1024 // 1024, self.input_token_emb[0].shape, self.generate_seq_length))
+            print("=======output_seq_emb: {} MB shape: {} X {} (fp16)======="
+                  .format(token_emb_num * 2 // 1024 // 1024, self.output_token_emb[0].shape, self.generate_seq_length))
         else:
-            print("=======input_seq_emb: {} MB (fp32)"
-                  .format(token_emb_num * 4 // 1024 // 1024))
-            print("=======output_seq_emb: {} MB (fp32)"
-                  .format(token_emb_num * 4 // 1024 // 1024))
+            print("=======input_token_emb: {} MB shape: {} X {} (fp32)======="
+                  .format(token_emb_num * 4 // 1024 // 1024, self.input_token_emb[0].shape, self.generate_seq_length))
+            print("=======output_seq_emb: {} MB shape: {} X {} (fp32)======="
+                  .format(token_emb_num * 4 // 1024 // 1024, self.output_token_emb[0].shape, self.seq_num))
 
     def _create_layers(self):
-        
         if self.model_type == 'gpt2':
             from modules.hf_gpt2_module import GPTEmbeddings, GPTBlock, GPTLMHead
         elif self.model_type == 'gptj':
@@ -201,11 +200,15 @@ class DistGreedyInferenceAsync:
             value = torch.cat([kv[1] for kv in self.cached_attention[layer_index]], dim=0)
             self.cached_attention[layer_index] = (key, value)
             if self.use_fp16:
-                print("Layer {} cached key: {} MB (fp16).".format(layer_index, torch.numel(key) * 2 // 1024 // 1024))
-                print("Layer {} cached key: {} MB (fp16).".format(layer_index, torch.numel(value) * 2 // 1024 // 1024))
+                print("=======Layer {} cached key: {} MB shape: {} (fp16)======="
+                      .format(layer_index, torch.numel(key) * 2 // 1024 // 1024, key.shape))
+                print("=======Layer {} cached key: {} MB shape: {} (fp16)======="
+                      .format(layer_index, torch.numel(value) * 2 // 1024 // 1024, value.shape))
             else:
-                print("Layer {} cached key: {} MB (fp32).".format(layer_index, torch.numel(key) * 2 // 1024 // 1024))
-                print("Layer {} cached key: {} MB (fp32)".format(layer_index, torch.numel(value) * 2 // 1024 // 1024))
+                print("=======Layer {} cached key: {} MB shape: {} (fp32)======="
+                      .format(layer_index, torch.numel(key) * 2 // 1024 // 1024, key.shape))
+                print("=======Layer {} cached key: {} MB shape: {} (fp32)======="
+                      .format(layer_index, torch.numel(value) * 2 // 1024 // 1024, value.shape))
 
     def _forward_compute_prompt_seq(self, index, seq=None):
         print("Compute prompt seq<", index, ">.")
