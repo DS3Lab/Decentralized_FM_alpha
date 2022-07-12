@@ -106,6 +106,8 @@ class DistGreedyInferenceAsync:
                                              requires_grad=False, device=self.device, dtype=self.dtype)
                                  for _ in range(self.generate_seq_length)]
 
+        self._print_buffers()
+
         self.cached_attention = []
         # self.prompt_input = None
         # self.prompt_output = None
@@ -120,6 +122,44 @@ class DistGreedyInferenceAsync:
             temperature = args.temperature,
             num_beams = 1,
         )
+
+    def _print_buffers(self):
+        if self.pp_rank == 0:
+            if self.use_fp16:
+                print("=======Rank-(0) recv_new_token: {} KB (fp16)"
+                      .format(self.seq_num * self.generate_seq_length * 2 // 1024))
+            else:
+                print("=======Rank-(0) recv_new_token: {} KB (fp32)"
+                      .format(self.seq_num * self.generate_seq_length * 4 // 1024))
+        if self.pp_rank == self.pipeline_group_size - 1:
+            if self.use_fp16:
+                print("=======Rank-(N-1) send_new_token: {} KB (fp16)"
+                      .format(self.seq_num * self.generate_seq_length * 2 // 1024))
+            else:
+                print("=======Rank-(N-1) send_new_token: {} KB (fp32)"
+                      .format(self.seq_num * self.generate_seq_length * 4 // 1024))
+        seq_emb_num = self.seq_num * self.input_seq_length * self.embedding_dim * self.seq_num
+        if self.use_fp16:
+            print("=======input_seq_emb: {} MB (fp16)"
+                  .format(seq_emb_num * 2 // 1024 // 1024))
+            print("=======output_seq_emb: {} MB (fp16)"
+                  .format(seq_emb_num * 2 // 1024 // 1024))
+        else:
+            print("=======input_seq_emb: {} MB (fp32)"
+                  .format(seq_emb_num * 4 // 1024 // 1024))
+            print("=======output_seq_emb: {} MB (fp32)"
+                  .format(seq_emb_num * 4 // 1024 // 1024))
+        token_emb_num = self.seq_num * self.embedding_dim * self.generate_seq_length
+        if self.use_fp16:
+            print("=======input_token_emb: {} MB (fp16)"
+                  .format(token_emb_num * 2 // 1024 // 1024))
+            print("=======output_seq_emb: {} MB (fp16)"
+                  .format(token_emb_num * 2 // 1024 // 1024))
+        else:
+            print("=======input_seq_emb: {} MB (fp32)"
+                  .format(token_emb_num * 4 // 1024 // 1024))
+            print("=======output_seq_emb: {} MB (fp32)"
+                  .format(token_emb_num * 4 // 1024 // 1024))
 
     def _create_layers(self):
         
@@ -160,6 +200,12 @@ class DistGreedyInferenceAsync:
             key = torch.cat([kv[0] for kv in self.cached_attention[layer_index]], dim=0)
             value = torch.cat([kv[1] for kv in self.cached_attention[layer_index]], dim=0)
             self.cached_attention[layer_index] = (key, value)
+            if self.use_fp16:
+                print("Layer {} cached key: {} MB (fp16).".format(layer_index, torch.numel(key) * 2 // 1024 // 1024))
+                print("Layer {} cached key: {} MB (fp16).".format(layer_index, torch.numel(value) * 2 // 1024 // 1024))
+            else:
+                print("Layer {} cached key: {} MB (fp32).".format(layer_index, torch.numel(key) * 2 // 1024 // 1024))
+                print("Layer {} cached key: {} MB (fp32)".format(layer_index, torch.numel(value) * 2 // 1024 // 1024))
 
     def _forward_compute_prompt_seq(self, index, seq=None):
         print("Compute prompt seq<", index, ">.")

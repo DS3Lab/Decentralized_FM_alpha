@@ -46,8 +46,7 @@ def main():
                         help='enable which profiling? default: tidy mode')
     parser.add_argument('--trace-postfix', type=str, default='default', metavar='S',
                         help='postfix of the tracing file name.')
-    parser.add_argument('--fp16', action='store_true',
-                        help='Run model in fp16 mode.')
+
     args = parser.parse_args()
     torch.manual_seed(args.seed)
     if args.use_cuda:
