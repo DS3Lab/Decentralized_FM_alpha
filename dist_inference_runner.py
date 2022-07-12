@@ -19,7 +19,7 @@ def main():
     # add_parallel_schema_arguments(parser)
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
-    parser.add_argument('--model-name', type=str, default='', metavar='S',
+    parser.add_argument('--model-name', type=str, default='./pretrained_models/gpt2', metavar='S',
                         help='trained model path')
     parser.add_argument('--profiling', type=str, default='tidy_profiling', metavar='S',
                         help='enable which profiling? default: tidy mode')
