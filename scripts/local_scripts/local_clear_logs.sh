@@ -1,4 +1,4 @@
 cd ~/GPT-home-private/logs
-rm ./*
+rm ./*.log
 cd ~/GPT-home-private/trace_json
 rm ./*.json

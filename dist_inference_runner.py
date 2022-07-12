@@ -4,7 +4,7 @@ from utils.dist_args_utils import *
 from utils.dist_inference_utils import *
 from comm.comm_utils import *
 from task_datasets.inference_data import get_inference_data_loader
-from pipeline_parallel.dist_pipeline_inference_greedy import DistGreedyInferenceAsync
+from pipeline_parallel.dist_pp_utils import *
 from transformers import AutoTokenizer
 
 
@@ -12,14 +12,15 @@ def main():
     parser = argparse.ArgumentParser(description='Inference Runner')
     add_device_arguments(parser)
     add_torch_distributed_arguments(parser)
-    add_model_arguments(parser)
-    add_qqp_task_arguments(parser)
-    add_training_hyper_parameter_arguments(parser)
-    add_mixed_precision_arguments(parser)
-    add_parallel_schema_arguments(parser)
+    # add_model_arguments(parser)
+    # add_qqp_task_arguments(parser)
+    add_inference_arguments(parser)
+    # add_training_hyper_parameter_arguments(parser)
+    # add_mixed_precision_arguments(parser)
+    # add_parallel_schema_arguments(parser)
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
-    parser.add_argument('--model-name', type=str, default='', metavar='S',
+    parser.add_argument('--model-name', type=str, default='./pretrained_models/gpt2', metavar='S',
                         help='trained model path')
     parser.add_argument('--model-type', type=str, default='gpt2', metavar='S',
                         help='trained model path')
@@ -45,6 +46,8 @@ def main():
                         help='enable which profiling? default: tidy mode')
     parser.add_argument('--trace-postfix', type=str, default='default', metavar='S',
                         help='postfix of the tracing file name.')
+    parser.add_argument('--fp16', action='store_true',
+                        help='Run model in fp16 mode.')
     args = parser.parse_args()
     torch.manual_seed(args.seed)
     if args.use_cuda:
@@ -59,7 +62,7 @@ def main():
         
         tokenizer = AutoTokenizer.from_pretrained(args.model_name)
         tokenizer.pad_token = tokenizer.eos_token
-        tokenizer.padding_side = "left"
+        tokenizer.padding_side = 'left'
         tokenizer.truncation_side = 'left'
         tokenizer.model_max_length = args.input_seq_length
 
@@ -98,15 +101,13 @@ def main():
         tokenizer = None
         infer_data_loader = None
 
-    pipe = DistGreedyInferenceAsync(args, device)
+    pipe = get_pp_inference_module(args, device)
 
     if args.profiling == 'no-profiling':
         distributed_inference_foo_iter(args, pipe, device, infer_data_loader)
     else:
-        prefix = './trace_json/gpt3_' + args.pp_mode
-        trace_file = prefix + get_learning_arguments_str(args) + get_model_arguments_str(args) + \
-                     get_dist_arguments_str(args) + get_mixed_precision_arguments_str(args) + '_' + \
-                     args.profiling + '_' + args.trace_postfix + '.json'
+        prefix = './trace_json/inference_' + args.pp_mode
+        trace_file = prefix + get_inference_arguments_str(args) + args.profiling + '_' + args.trace_postfix + '.json'
         if args.profiling == 'tidy_profiling':
             distributed_inference_foo_iter(args, pipe, device, infer_data_loader)
             pipe.export_profiling_result(filename=trace_file)
@@ -118,6 +119,7 @@ def main():
         else:
             print("No recognized profiler?")
             assert False
+
 
 
 if __name__ == '__main__':

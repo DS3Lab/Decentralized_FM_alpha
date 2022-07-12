@@ -138,6 +138,36 @@ def get_mixed_precision_arguments_str(args):
     return arg_str
 
 
+def add_inference_arguments(parser):
+    parser.add_argument('--batch-size', type=int, default=16, metavar='N',
+                        help='input batch size for training (default: 100)')
+    parser.add_argument('--micro-batch-size', type=int, default=1, metavar='N',
+                        help='input micro batch size for training (default: 100)')
+    parser.add_argument('--input-seq-length', type=int, default=16, metavar='N',
+                        help='-')
+    parser.add_argument('--generate-seq-length', type=int, default=16, metavar='N',
+                        help='-')
+    parser.add_argument('--num-layers', type=int, default=4, metavar='N',
+                        help='-')
+    parser.add_argument('--pp-mode', type=str, default='pipe_greedy', metavar='S',
+                        help='use which pipeline parallel mode: gpipe or 1f1b.')
+    parser.add_argument('--num-iters', type=int, default=5, metavar='N',
+                        help='-')
+
+
+def get_inference_arguments_str(args, add_rank=True, rank=None):
+    arg_str = ''
+    arg_str += '_b' + str(args.batch_size) + '_' + str(args.micro_batch_size)
+    arg_str += '_s' + str(args.input_seq_length) + '_' + str(args.generate_seq_length)
+    arg_str += '_w' + str(args.world_size) + '_p' + str(args.pipeline_group_size) + '_d' + str(args.data_group_size)
+    if add_rank:
+        if rank is not None:
+            arg_str += '_' + str(rank)
+        else:
+            arg_str += '_' + str(args.rank)
+    return arg_str
+
+
 def print_arguments(args):
     args_dict = vars(args)
     print("======================Input Arguments=========================")
