@@ -47,7 +47,7 @@ class DistGreedyInferenceAsync:
         self.device = device
         self.torch_comp_stream = torch.cuda.default_stream(device=device)
         self.torch_recv_stream = torch.cuda.Stream(device=device, priority=-1)
-        self.torch_send_stream = torch.cuda.Stream(device=device, priority=-1)
+        self.torch_send_stream = torch.cuda.Stream(device=device, priority=0)
 
         self.forward_seq_recv_ready_events = [torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
                                               for _ in range(self.seq_num)]
