@@ -6,7 +6,7 @@ rank=$3
 timestamp=$(date +%Y_%m_%d_%H_%M)
 
 DIST_CONF="--pp-mode pipe_greedy --world-size $world_size --pipeline-group-size $world_size --data-group-size 1 --rank "$rank""
-INFERENCE_CONF="--batch-size 64 --input-seq-length 128 --generate-seq-length 128 --micro-batch-size 1 --num-layers 4"
+INFERENCE_CONF="--batch-size 16 --input-seq-length 128 --generate-seq-length 64 --micro-batch-size 1 --num-layers 4"
 
 
 if [ "$world_size" -ne 3 ]

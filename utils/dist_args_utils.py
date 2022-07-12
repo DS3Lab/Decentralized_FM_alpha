@@ -151,6 +151,8 @@ def add_inference_arguments(parser):
                         help='-')
     parser.add_argument('--pp-mode', type=str, default='pipe_greedy', metavar='S',
                         help='use which pipeline parallel mode: gpipe or 1f1b.')
+    parser.add_argument('--num-iters', type=int, default=5, metavar='N',
+                        help='-')
 
 
 def get_inference_arguments_str(args, add_rank=True, rank=None):
