@@ -14,8 +14,9 @@ then
   profix=$1
 
   postfixes=(
-    "fp16_offload_tidy_profiling_default"
-    "fp16_offload_tidy_profiling_b1"
+    "fp16_tidy_profiling_default"
+    #"fp16_offload_tidy_profiling_default"
+    #"fp16_offload_tidy_profiling_b1"
     #"fp16_offload_tidy_profiling_d1b5"
     #"fp16_offload_tidy_profiling_d5b2"
     #"fp16_offload_tidy_profiling_d10b1"

@@ -16,4 +16,4 @@ then
 fi
 
 
-python dist_inference_runner.py --dist-url tcp://"$ip":9000 $DIST_CONF $INFERENCE_CONF>> "./logs/${timestamp}_inference_pp3_default.log"
+python dist_inference_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $INFERENCE_CONF>> "./logs/${timestamp}_inference_pp3_default.log"
