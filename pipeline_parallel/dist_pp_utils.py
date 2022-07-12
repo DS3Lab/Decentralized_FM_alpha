@@ -2,6 +2,7 @@ from .dist_gpipe_pipeline_async import GpipeAsync
 from .dist_gpipe_pipeline_async_offload import GpipeAsyncOffload
 from .dist_1f1b_pipeline_async import Pipe1F1BAsync
 from .dist_pipeline_inference_greedy import DistGreedyInferenceAsync
+from .dist_pipeline_inference_sample import DistSampleInferenceAsync
 
 
 def get_pp_module(args, vocab_size, num_classes, device, use_dp, rank=None):
@@ -19,6 +20,8 @@ def get_pp_module(args, vocab_size, num_classes, device, use_dp, rank=None):
 def get_pp_inference_module(args, device):
     if args.pp_mode == 'pipe_greedy':
         return DistGreedyInferenceAsync(args, device)
+    elif args.pp_mode == 'pipe_sample':
+        return DistSampleInferenceAsync(args, device)
     else:
         print("Not recognize this pipeline parallel mode.")
         assert False

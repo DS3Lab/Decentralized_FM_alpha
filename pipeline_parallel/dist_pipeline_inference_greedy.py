@@ -113,7 +113,7 @@ class DistGreedyInferenceAsync:
         self._create_layers()
         self._init_cached_seqs_and_attentions()
         
-        # self.logits_processor = get_logits_processor() # not needed now
+        self.logits_processor = get_logits_processor() # not needed now
         self.logits_warper = get_logits_warper(
             top_k = args.top_k,
             top_p = args.top_p,
@@ -198,10 +198,7 @@ class DistGreedyInferenceAsync:
     def _generate_new_token(self, step):
         assert self.pp_rank == self.pipeline_group_size - 1
         z = self.layers['lm'](self.output_token_emb[step])
-        z = torch.nn.functional.log_softmax(z[:, -1], -1)
-        z = self.logits_warper(None, z)
-        self.send_new_tokens[step] = torch.multinomial(z.exp(), num_samples=1)
-        # self.send_new_tokens[step] = z.argmax(-1)
+        self.send_new_tokens[step] = z.argmax(-1)
         # print(step, self.send_new_tokens[step][0])
 
     def profile_mark_forward_seq_comp_start(self, i):
