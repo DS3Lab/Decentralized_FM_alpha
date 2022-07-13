@@ -56,10 +56,6 @@ class DistGreedyInferenceSync:
                                                   for _ in range(self.seq_num)]
             self.forward_seq_send_end_events = [torch.cuda.Event(enable_timing=True, blocking=False)
                                                 for _ in range(self.seq_num)]
-            self.forward_token_recv_end_events = [torch.cuda.Event(enable_timing=True, blocking=False)
-                                                  for _ in range(self.generate_seq_length)]
-            self.forward_token_comp_end_events = [torch.cuda.Event(enable_timing=True, blocking=False)
-                                                  for _ in range(self.generate_seq_length)]
             self.forward_token_recv_start_events = [torch.cuda.Event(enable_timing=True, blocking=False)
                                                     for _ in range(self.generate_seq_length)]
             self.forward_token_recv_end_events = [torch.cuda.Event(enable_timing=True, blocking=False)
@@ -276,7 +272,6 @@ class DistGreedyInferenceSync:
             input_seqs = torch.chunk(input_data, self.seq_num, dim=0)
         else:
             input_seqs = None
-        cupy_comm_stream = cupy.cuda.ExternalStream(torch.cuda.default_stream())
         for i in range(self.seq_num):
             if self.pp_rank == 0:  # Only send output to next node, do not receive
                 # Compute
@@ -285,12 +280,12 @@ class DistGreedyInferenceSync:
                 self.profile_mark_forward_seq_comp_end(i)
                 # Send
                 self.profile_mark_forward_seq_send_start(i)
-                self.comm.send(self.output_seq_emb[i], dst=self.post_node_rank, stream=cupy_comm_stream)
+                self.comm.send(self.output_seq_emb[i], dst=self.post_node_rank)
                 self.profile_mark_forward_seq_send_end(i)
             elif self.pp_rank == self.pipeline_group_size - 1:  # Only receive input from last node, do not send
                 # Receive
                 self.profile_mark_forward_seq_recv_start(i)
-                self.comm.recv(self.input_seq_emb[i], src=self.pre_node_rank, stream=cupy_comm_stream)
+                self.comm.recv(self.input_seq_emb[i], src=self.pre_node_rank)
                 self.profile_mark_forward_seq_recv_end(i)
                 # Compute
                 self.profile_mark_forward_seq_comp_start(i)
@@ -299,7 +294,7 @@ class DistGreedyInferenceSync:
             else:  # receive, compute, and send
                 # Receive
                 self.profile_mark_forward_seq_recv_start(i)
-                self.comm.recv(self.input_seq_emb[i], src=self.pre_node_rank, stream=cupy_comm_stream)
+                self.comm.recv(self.input_seq_emb[i], src=self.pre_node_rank)
                 self.profile_mark_forward_seq_recv_end(i)
                 # Compute
                 self.profile_mark_forward_seq_comp_start(i)
@@ -307,7 +302,7 @@ class DistGreedyInferenceSync:
                 self.profile_mark_forward_seq_comp_end(i)
                 # Send
                 self.profile_mark_forward_seq_send_start(i)
-                self.comm.send(self.output_seq_emb[i], dst=self.post_node_rank, stream=cupy_comm_stream)
+                self.comm.send(self.output_seq_emb[i], dst=self.post_node_rank)
                 self.profile_mark_forward_seq_send_end(i)
         if self.enable_tidy_profiling:
             self.profile_seq_pipeline_stage()
@@ -366,7 +361,6 @@ class DistGreedyInferenceSync:
 
     def forward_new_token_pipeline_stage(self):
         self._merge_cached_seqs_and_attentions()
-        cupy_comm_stream = cupy.cuda.ExternalStream(torch.cuda.default_stream())
         if self.pp_rank == self.pipeline_group_size - 1:
             # Compute
             self.profile_mark_forward_token_comp_start(0)
@@ -374,13 +368,13 @@ class DistGreedyInferenceSync:
             self.profile_mark_forward_token_comp_end(0)
             # Send
             self.profile_mark_forward_token_send_start(0)
-            self.comm.send(self.send_new_tokens[0], dst=0, stream=cupy_comm_stream)
+            self.comm.send(self.send_new_tokens[0], dst=0)
             self.profile_mark_forward_token_send_end(0)
         for i in range(self.generate_seq_length):
             if self.pp_rank == 0:
                 # Receive
                 self.profile_mark_forward_token_recv_start(i)
-                self.comm.recv(self.recv_new_token[i], src=self.pipeline_group_size - 1, stream=cupy_comm_stream)
+                self.comm.recv(self.recv_new_token[i], src=self.pipeline_group_size - 1)
                 self.profile_mark_forward_token_recv_end(i)
                 # Compute
                 self.profile_mark_forward_token_comp_start(i)
@@ -388,12 +382,12 @@ class DistGreedyInferenceSync:
                 self.profile_mark_forward_seq_comp_end(i)
                 # Send
                 self.profile_mark_forward_token_send_start(i)
-                self.comm.send(self.output_token_emb[i], dst=self.post_node_rank, stream=cupy_comm_stream)
+                self.comm.send(self.output_token_emb[i], dst=self.post_node_rank)
                 self.profile_mark_forward_token_send_end(i)
             elif self.pp_rank == self.pipeline_group_size - 1:
                 # Receive
                 self.profile_mark_forward_token_recv_start(i)
-                self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank, stream=cupy_comm_stream)
+                self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank)
                 self.profile_mark_forward_token_recv_end(i)
                 if i != self.generate_seq_length - 1:
                     # Compute
@@ -402,12 +396,12 @@ class DistGreedyInferenceSync:
                     self.profile_mark_forward_token_comp_end(i + 1)
                     # Send
                     self.profile_mark_forward_token_send_start(i + 1)
-                    self.comm.send(self.send_new_tokens[i], dst=0, stream=cupy_comm_stream)  # Note: i+1 is wrong. tiny up tomorrow
+                    self.comm.send(self.send_new_tokens[i], dst=0)  # Note: i+1 is wrong. tiny up tomorrow
                     self.profile_mark_forward_token_send_end(i + 1)
             else:
                 # Recv
                 self.profile_mark_forward_token_recv_start(i)
-                self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank, stream=cupy_comm_stream)
+                self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank)
                 self.profile_mark_forward_token_recv_end(i)
                 # Compute
                 self.profile_mark_forward_token_comp_start(i)
@@ -415,7 +409,7 @@ class DistGreedyInferenceSync:
                 self.profile_mark_forward_token_comp_end(i)
                 # Send
                 self.profile_mark_forward_token_send_start(i)
-                self.comm.send(self.output_token_emb[i], dst=self.post_node_rank, stream=cupy_comm_stream)
+                self.comm.send(self.output_token_emb[i], dst=self.post_node_rank)
                 self.profile_mark_forward_token_send_end(i)
 
         if self.enable_tidy_profiling:
