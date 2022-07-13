@@ -10,11 +10,11 @@ MODEL_CONF="--model-type gptj --model-name ./pretrained_models/gpt-j-6B"
 INFERENCE_CONF="--batch-size 6 --input-seq-length 512 --generate-seq-length 32 --micro-batch-size 1 --num-layers 2"
 
 
-if [ "$world_size" -ne 3 ]
+if [ "$world_size" -ne 14 ]
 then
   echo "Not correct number of nodes"
   exit 1
 fi
 
 
-python dist_inference_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF $INFERENCE_CONF>> "./logs/${timestamp}_inference_pp3_default.log"
+python dist_inference_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF $INFERENCE_CONF>> "./logs/${timestamp}_GPTJ_inference_pp14_default.log"
