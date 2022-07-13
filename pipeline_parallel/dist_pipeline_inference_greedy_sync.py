@@ -204,16 +204,17 @@ class DistGreedyInferenceSync:
         if self.pp_rank == 0:
             self.input_seq_emb[index] = self.layers['emb'](seq)
         current_emb = None
-        for layer_index in range(self.num_layers):
-            if layer_index == 0:
-                current_emb, self.cached_attention[layer_index][index] = \
-                    self.layers['block' + str(layer_index)](self.input_seq_emb[index])
-            elif layer_index == self.num_layers - 1:
-                self.output_seq_emb[index], self.cached_attention[layer_index][index] = \
-                    self.layers['block' + str(layer_index)](current_emb)
-            else:
-                current_emb, self.cached_attention[layer_index][index] = \
-                    self.layers['block' + str(layer_index)](current_emb)
+        with torch.no_grad():
+            for layer_index in range(self.num_layers):
+                if layer_index == 0:
+                    current_emb, self.cached_attention[layer_index][index] = \
+                        self.layers['block' + str(layer_index)](self.input_seq_emb[index])
+                elif layer_index == self.num_layers - 1:
+                    self.output_seq_emb[index], self.cached_attention[layer_index][index] = \
+                        self.layers['block' + str(layer_index)](current_emb)
+                else:
+                    current_emb, self.cached_attention[layer_index][index] = \
+                        self.layers['block' + str(layer_index)](current_emb)
         if self.pp_rank == self.pipeline_group_size - 1:
             self.output_token_emb[0][index] = current_emb[:, -1:]
 
@@ -223,14 +224,15 @@ class DistGreedyInferenceSync:
             current_emb = self.layers['emb'](self.recv_new_token[step], self.cached_attention[0])
         else:
             current_emb = self.input_token_emb[step]
-        for layer_index in range(self.num_layers):
-            if layer_index != self.num_layers - 1:
-                current_emb, self.cached_attention[layer_index] = self.layers['block' + str(layer_index)](
-                    current_emb, self.cached_attention[layer_index])
-            else:
-                self.output_token_emb[step], self.cached_attention[layer_index] = self.layers[
-                    'block' + str(layer_index)](
-                    current_emb, self.cached_attention[layer_index])
+        with torch.no_grad():
+            for layer_index in range(self.num_layers):
+                if layer_index != self.num_layers - 1:
+                    current_emb, self.cached_attention[layer_index] = self.layers['block' + str(layer_index)](
+                        current_emb, self.cached_attention[layer_index])
+                else:
+                    self.output_token_emb[step], self.cached_attention[layer_index] = self.layers[
+                        'block' + str(layer_index)](
+                        current_emb, self.cached_attention[layer_index])
         if self.pp_rank == self.pipeline_group_size - 1:
             self._generate_new_token(step)
 
