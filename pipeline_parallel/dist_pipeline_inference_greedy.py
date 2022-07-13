@@ -463,9 +463,9 @@ class DistGreedyInferenceAsync:
             json.dump(self.profiling_log, outfile)
 
     def inference_batch(self, input_=None):
+        self._init_cached_seqs_and_attentions()  # TODO: should I put here
         self.comm.barrier()
         start_time = time.time()
-        self._init_cached_seqs_and_attentions() # TODO: should I put here
         if self.enable_tidy_profiling:
             torch.cuda.synchronize()
             self.init_time_stamp = time.time() * 1e+6

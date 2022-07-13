@@ -35,7 +35,7 @@ def merge_logs(args):
                 log['ts'] = log['ts'] - current_min_stamp
             result.extend(current_trace)
     print(len(result))
-    with open("../trace_json/" + args.profix + '_' + args.postfix, 'w') as outputJson:
+    with open("../trace_json/" + args.profix + '_' + args.postfix + '.json', 'w') as outputJson:
         json.dump(result, outputJson)
 
 
