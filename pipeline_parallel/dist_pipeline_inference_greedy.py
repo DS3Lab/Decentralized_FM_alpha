@@ -107,19 +107,10 @@ class DistGreedyInferenceAsync:
                                  for _ in range(self.generate_seq_length)]
 
         self.cached_attention = []
-        # self.prompt_input = None
-        # self.prompt_output = None
         self.layers = {}
         self._create_layers()
         self._init_cached_seqs_and_attentions()
         
-        self.logits_processor = get_logits_processor() # not needed now
-        self.logits_warper = get_logits_warper(
-            top_k = args.top_k,
-            top_p = args.top_p,
-            temperature = args.temperature,
-            num_beams = 1,
-        )
 
     def _create_layers(self):
         
@@ -147,15 +138,11 @@ class DistGreedyInferenceAsync:
             ).to(self.dtype).eval().to(self.device)
 
     def _init_cached_seqs_and_attentions(self):
-        # self.prompt_input = None
-        # self.prompt_output = None
         self.cached_attention.clear()
         for _ in range(self.num_layers):
             self.cached_attention.append([None for _ in range(self.seq_num)])
 
     def _merge_cached_seqs_and_attentions(self):
-        # self.prompt_input = torch.cat(self.input_seq_emb, dim=0) # TODO
-        # self.prompt_output = torch.cat(self.output_seq_emb, dim=0) # TODO
         for layer_index in range(self.num_layers):
             key = torch.cat([kv[0] for kv in self.cached_attention[layer_index]], dim=0)
             value = torch.cat([kv[1] for kv in self.cached_attention[layer_index]], dim=0)
@@ -177,7 +164,7 @@ class DistGreedyInferenceAsync:
                 current_emb, self.cached_attention[layer_index][index] = \
                     self.layers['block' + str(layer_index)](current_emb)
         if self.pp_rank == self.pipeline_group_size - 1:
-            self.output_token_emb[0][index] = current_emb[:, -1:]
+            self.output_token_emb[0][index] = self.output_seq_emb[index][:, -1:]
 
     def _forward_compute_generate_token(self, step):
         print("Compute generate seq<", step, ">.")
@@ -413,7 +400,7 @@ class DistGreedyInferenceAsync:
         with open(filename, 'w') as outfile:
             json.dump(self.profiling_log, outfile)
 
-    def inference_batch(self, input_=None):
+    def inference_batch(self, input_=None, output_=None):
         self.comm.barrier()
         start_time = time.time()
         self._init_cached_seqs_and_attentions() # TODO: should I put here
@@ -426,6 +413,9 @@ class DistGreedyInferenceAsync:
         self.forward_new_token_pipeline_stage()
 
         self.comm.barrier()
+        if self.pp_rank == 0 and output_ is not None:
+            assert isinstance(output_, list)
+            output_.append(torch.cat([z.cpu() for z in self.recv_new_token], 1))
         end_time = time.time()
         iter_time = end_time - start_time
         print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
