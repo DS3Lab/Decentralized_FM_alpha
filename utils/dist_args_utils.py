@@ -153,10 +153,14 @@ def add_inference_arguments(parser):
                         help='use which pipeline parallel mode: gpipe or 1f1b.')
     parser.add_argument('--num-iters', type=int, default=5, metavar='N',
                         help='-')
+    parser.add_argument('--fp16', action='store_true',
+                        help='Run model in fp16 mode.')
 
 
 def get_inference_arguments_str(args, add_rank=True, rank=None):
     arg_str = ''
+    if args.fp16:
+        arg_str += '_fp16'
     arg_str += '_b' + str(args.batch_size) + '_' + str(args.micro_batch_size)
     arg_str += '_s' + str(args.input_seq_length) + '_' + str(args.generate_seq_length)
     arg_str += '_w' + str(args.world_size) + '_p' + str(args.pipeline_group_size) + '_d' + str(args.data_group_size)

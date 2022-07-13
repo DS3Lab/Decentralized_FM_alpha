@@ -5,8 +5,8 @@ world_size=$2
 rank=$3
 timestamp=$(date +%Y_%m_%d_%H_%M)
 
-DIST_CONF="--pp-mode pipe_greedy --world-size $world_size --pipeline-group-size $world_size --data-group-size 1 --rank "$rank""
-INFERENCE_CONF="--batch-size 16 --input-seq-length 128 --generate-seq-length 64 --micro-batch-size 1 --num-layers 4"
+DIST_CONF="--pp-mode pipe_sync_greedy --world-size $world_size --pipeline-group-size $world_size --data-group-size 1 --rank "$rank""
+INFERENCE_CONF="--batch-size 32 --input-seq-length 512 --generate-seq-length 10 --micro-batch-size 1 --num-layers 5"
 
 
 if [ "$world_size" -ne 3 ]
@@ -16,4 +16,4 @@ then
 fi
 
 
-python dist_inference_runner.py --dist-url tcp://"$ip":9000 $DIST_CONF $INFERENCE_CONF>> "./logs/${timestamp}_inference_pp3_default.log"
+python dist_inference_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $INFERENCE_CONF>> "./logs/${timestamp}_inference_pp3_default.log"

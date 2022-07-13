@@ -48,8 +48,7 @@ def main():
                         help='enable which profiling? default: tidy mode')
     parser.add_argument('--trace-postfix', type=str, default='default', metavar='S',
                         help='postfix of the tracing file name.')
-    parser.add_argument('--fp16', action='store_true',
-                        help='Run model in fp16 mode.')
+
     args = parser.parse_args()
     torch.manual_seed(args.seed)
     if args.use_cuda:
@@ -109,7 +108,8 @@ def main():
         distributed_inference_foo_iter(args, pipe, device, infer_data_loader)
     else:
         prefix = './trace_json/inference_' + args.pp_mode
-        trace_file = prefix + get_inference_arguments_str(args) + args.profiling + '_' + args.trace_postfix + '.json'
+        trace_file = prefix + get_inference_arguments_str(args) + '_' + args.profiling + '_' + args.trace_postfix + \
+                     '.json'
         if args.profiling == 'tidy_profiling':
             distributed_inference_foo_iter(args, pipe, device, infer_data_loader)
             pipe.export_profiling_result(filename=trace_file)
@@ -121,7 +121,6 @@ def main():
         else:
             print("No recognized profiler?")
             assert False
-
 
 
 if __name__ == '__main__':
