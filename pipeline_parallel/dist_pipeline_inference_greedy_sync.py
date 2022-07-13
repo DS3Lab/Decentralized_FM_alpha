@@ -379,7 +379,7 @@ class DistGreedyInferenceSync:
                 # Compute
                 self.profile_mark_forward_token_comp_start(i)
                 self._forward_compute_generate_token(step=i)
-                self.profile_mark_forward_seq_comp_end(i)
+                self.profile_mark_forward_token_comp_end(i)
                 # Send
                 self.profile_mark_forward_token_send_start(i)
                 self.comm.send(self.output_token_emb[i], dst=self.post_node_rank)
