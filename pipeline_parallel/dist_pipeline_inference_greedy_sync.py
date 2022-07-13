@@ -33,7 +33,8 @@ class DistGreedyInferenceSync:
         self.seq_num = args.batch_size // args.micro_batch_size
         self.input_seq_length = args.input_seq_length
         self.generate_seq_length = args.generate_seq_length
-        self.embedding_dim = 768  # Hard code this for now, this will be captured by the loaded model later.
+        # self.embedding_dim = 768  # Hard code for GPT2, this will be captured by the loaded model later.
+        self.embedding_dim = 4096  # Hard code for GPT-J
         # self.vocab_size = vocab_size
         self.num_layers = args.num_layers
         self.model_name = args.model_name
