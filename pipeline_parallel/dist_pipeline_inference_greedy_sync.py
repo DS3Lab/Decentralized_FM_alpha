@@ -458,13 +458,18 @@ class DistGreedyInferenceSync:
             self.init_event.record()
 
         self.forward_seq_pipeline_stage(input_data=input_)
+
+        self.comm.barrier()
+        prompt_time = time.time()
+        print("Rank {} node INFERENCE prompt takes {:3.2f}s".format(self.global_rank, prompt_time-start_time))
+
         self.forward_new_token_pipeline_stage()
 
         self.comm.barrier()
         end_time = time.time()
-        iter_time = end_time - start_time
-        print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
+        print("Rank {} node INFERENCE new token takes {:3.2f}s".format(self.global_rank, end_time - prompt_time))
+        print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, end_time - start_time))
         print("-------------------------------------------")
 
-        return iter_time
+        return end_time - start_time
 

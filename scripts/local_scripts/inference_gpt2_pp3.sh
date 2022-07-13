@@ -5,7 +5,7 @@ world_size=$2
 rank=$3
 timestamp=$(date +%Y_%m_%d_%H_%M)
 
-DIST_CONF="--pp-mode pipe_sync_greedy --world-size $world_size --pipeline-group-size $world_size --data-group-size 1 --rank "$rank""
+DIST_CONF="--pp-mode pipe_async_greedy --world-size $world_size --pipeline-group-size $world_size --data-group-size 1 --rank "$rank""
 INFERENCE_CONF="--batch-size 16 --input-seq-length 128 --generate-seq-length 64 --micro-batch-size 1 --num-layers 4"
 
 
