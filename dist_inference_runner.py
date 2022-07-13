@@ -26,6 +26,8 @@ def main():
                         help='trained model path')
     parser.add_argument('--infer-data', type=str, default='', metavar='S',
                         help='data path')
+    parser.add_argument('--infer-output-dir', type=str, default='inference_outputs', metavar='S',
+                        help='output path')
     parser.add_argument('--top-k', type=int, default=1, metavar='S',
                         help='sample from top k')
     parser.add_argument('--top-p', type=float, default=1, metavar='S',
@@ -36,11 +38,11 @@ def main():
     parser.add_argument('--echo-prompt', type=lambda x: (str(x).lower() == 'true'),
                         default=False, metavar='S',
                         help='append prompt to the generated text')
-    # TODO
+    # TODO: almost, need to fix output_token_emb overlapping issue
     parser.add_argument('--num-completions', type=int, default=1, metavar='S',
                         help='num of completions')
     # TODO
-    parser.add_argument('--top-k-per-token', type=int, default=1, metavar='S',
+    parser.add_argument('--top-k-per-token', type=int, default=0, metavar='S',
                         help='return top k candidate for each token')
     parser.add_argument('--profiling', type=str, default='tidy_profiling', metavar='S',
                         help='enable which profiling? default: tidy mode')
