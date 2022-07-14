@@ -105,11 +105,29 @@ def _init_communicators(world_size, data_group_size, pipeline_group_size, rank, 
         assert False
 
 
+def _init_inference_communicators(pipeline_group_size, rank, cuda_id):
+    _PIPELINE_PARALLEL_WORLD_SIZE = pipeline_group_size
+    _PIPELINE_PARALLEL_RANK = rank % pipeline_group_size
+    _PIPELINE_PARALLEL_COMM = NCCLCommunicator(_PIPELINE_PARALLEL_RANK, cuda_id, pipeline_group_size, "pipeline_group")
+
+
+# Communicator for training
 def init_communicators(args):
     default_init(args)
     _init_communicators(args.world_size, args.data_group_size, args.pipeline_group_size, args.rank, args.cuda_id)
 
 
+def init_inference_communicators(args):
+    default_init(args)
+    _init_inference_communicators(args.pipeline_group_size, args.rank, args.cuda_id)
+
+
+# Communicator for training with coordinator
 def init_communicators_with_coordinator(args, prime_ip, rank):
     init_with_coordinator(args, prime_ip, rank)
     _init_communicators(args.world_size, args.data_group_size, args.pipeline_group_size, rank, args.cuda_id)
+
+
+def init_inference_communicators_with_coordinator(args, prime_ip, rank):
+    init_with_coordinator(args, prime_ip, rank)
+    _init_inference_communicators(args.pipeline_group_size, args.rank, args.cuda_id)

@@ -14,7 +14,7 @@ def main():
     parser = argparse.ArgumentParser(description='Fairscale-ZeRO_S3-GPT3')
     add_device_arguments(parser)
     add_torch_distributed_arguments(parser)
-    add_model_arguments(parser)
+    add_training_model_arguments(parser)
     add_qqp_task_arguments(parser)
     add_training_hyper_parameter_arguments(parser)
     parser.add_argument('--fsdp-degree', type=str, default="recursive", metavar='S',
