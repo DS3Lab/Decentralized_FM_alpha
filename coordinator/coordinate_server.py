@@ -114,7 +114,7 @@ class CoordinatorInferenceServer:
         self.port = args.coordinator_server_port
         # An array of dict object to store worker info
         self.working_pipelines = []
-        self.prime_worker_ip = []
+        self.prime_worker_ips = []
         self.active_inference_pipeline = 0
         self.bsub_script_path = args.bsub_script_path
         self.inference_pipeline_demand_worker_num = 0
@@ -131,10 +131,10 @@ class CoordinatorInferenceServer:
         print("<<<<<<<<<<<<<<<<<<<<< Submit Job >>>>>>>>>>>>>>>>>>>>>>")
 
         if job_name == 'something to add':
-            self.inference_pipeline_demand_worker_num = 3
+            self.inference_pipeline_demand_worker_num = 4
         else:
             return f'This job is not recognized on coordinate - {job_name}'
-        for i in range(self.train_demand_workers):
+        for i in range(self.inference_pipeline_demand_worker_num):
             os.system(f"rm {self.bsub_script_path}/submit_cache/*.bsub")
             os.system(f"cp {self.bsub_script_path}/{job_name}.bsub "
                       f"{self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
@@ -142,28 +142,45 @@ class CoordinatorInferenceServer:
             os.system(f"cd {self.bsub_script_path}/submit_cache && "
                       f"bsub < {job_name}_{i+1}.bsub")
         os.system("bjobs")
+        self.working_pipelines.append(OrderedDict())
+        self.active_inference_pipeline += 1
         return f'Succeed to submit job - {job_name}'
 
-    def _handle_train_join(self, worker_ip, port) -> str:
+    def _check_if_node_has_joined(self, node_key):
+        for pipe in self.working_pipelines:
+            if node_key in pipe:
+                return True
+        return False
+
+    def _get_node_working_pipeline_index(self, node_key):
+        for i in range(len(self.working_pipelines)):
+            if node_key in self.working_pipelines[i]:
+                return i
+        return -1
+
+    def _handle_inference_join(self, worker_ip, port) -> str:
         node_key = worker_ip + ':' + str(port)
-        assert node_key not in self.worker_nodes, f"Worker called notify_train_join has been joined before ({node_key})"
+        assert not self._check_if_node_has_joined(node_key),\
+            f"Worker called notify_inference_join has been joined before ({node_key})"
         print(f"Connected by +NEW+ worker with address {worker_ip}, (port:{port})")
-        new_node_rank = len(self.worker_nodes)
+        new_node_rank = len(self.working_pipelines[-1])
         if new_node_rank == 0:
-            self.prime_worker_ip = worker_ip
-        self.worker_nodes[node_key] = {'rank': new_node_rank}
-        return_msg = self.prime_worker_ip + '#' + str(self.worker_nodes[node_key]['rank'])
+            self.prime_worker_ips.append(worker_ip)
+        self.working_pipelines[-1][node_key] = {'rank': new_node_rank}
+        return_msg = self.prime_worker_ips[-1] + '#' + str(self.working_pipelines[-1][node_key]['rank'])
         return return_msg
 
-    def _handle_train_finish(self, worker_ip, port, msg_arg) -> str:
+    def _handle_inference_finish(self, worker_ip, port, msg_arg) -> str:
         node_key = worker_ip + ':' + str(port)
-        assert node_key in self.worker_nodes, f"Worker called notify_train_finish is not recognized ({node_key})"
-        print(f"Connected by known worker with address {worker_ip}, (port:{port}), allocated rank "
-              f"{self.worker_nodes[node_key]['rank']}")
-        print(f"<=====Training finished on rank-{msg_arg['rank']} worker, "
+        pipe_index = self._get_node_working_pipeline_index(node_key)
+        assert pipe_index != -1, f"Worker called notify_inference_finish is not recognized ({node_key})"
+        print(f"Connected by known worker with address {worker_ip}, (port:{port}), Pipeline Index {pipe_index},"
+              f" allocated rank {self.working_pipelines[pipe_index][node_key]['rank']}")
+        print(f"<=====Inference finished on rank-{msg_arg['rank']} worker, "
               f"average time {msg_arg['iter_time']} seconds.=====>")
-        del self.worker_nodes[node_key]
-        self.train_demand_workers -= 1
+        if self.working_pipelines[pipe_index][node_key]['rank'] == 0:
+            del self.prime_worker_ips[pipe_index]
+        del self.working_pipelines[pipe_index][node_key]
         return_msg = 'done'
         return return_msg
 
@@ -178,13 +195,13 @@ class CoordinatorInferenceServer:
                     msg_data = connection.recv(1024)
                     print(f"==[Recv message: {msg_data}]==")
                     msg_arg = server_message_parser(msg_data)
-                    if msg_arg['task'] == 'train':
+                    if msg_arg['task'] == 'inference':
                         if msg_arg['state'] == 'submit':
-                            return_msg = self._handle_train_submit(msg_arg['job_name'])
+                            return_msg = self._handle_inference_submit(msg_arg['job_name'])
                         elif msg_arg['state'] == 'join':
-                            return_msg = self._handle_train_join(worker_ip, port)
+                            return_msg = self._handle_inference_join(worker_ip, port)
                         elif msg_arg['state'] == 'finish':
-                            return_msg = self._handle_train_finish(worker_ip, port, msg_arg)
+                            return_msg = self._handle_inference_finish(worker_ip, port, msg_arg)
                         else:
                             assert False, f"Not valid operator for training ({msg_arg['state']})"
                     connection.sendall(return_msg.encode())

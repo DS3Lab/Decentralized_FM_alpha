@@ -170,6 +170,44 @@ def add_inference_arguments(parser):
                         help='Run model in fp16 mode.')
 
 
+def add_torch_distributed_inference_w_coordinator_arguments(parser):
+    parser.add_argument('--dist-backend', type=str, default='cupy_nccl', metavar='S',
+                        help='backend type for distributed PyTorch (default: cupy_nccl)')
+    parser.add_argument('--coordinator-server-port', type=int, default=9002, metavar='N',
+                        help='The port of coordinator-server.')
+    parser.add_argument('--coordinator-server-ip', type=str, default='localhost', metavar='S',
+                        help='The IP of coordinator-server.')
+    parser.add_argument('--lsf-job-no', type=str, default='100', metavar='S',
+                        help='Job-<ID> assigned by LSF.')
+    parser.add_argument('--pipeline-group-size', type=int, default=4, metavar='D',
+                        help='world-size (default: 4)')
+
+
+def add_inference_details_arguments(parser):
+    parser.add_argument('--model-name', type=str, default='./pretrained_models/gpt2', metavar='S',
+                        help='trained model path')
+    parser.add_argument('--model-type', type=str, default='gpt2', metavar='S',
+                        help='trained model path')
+    parser.add_argument('--infer-data', type=str, default='', metavar='S',
+                        help='data path')
+    parser.add_argument('--top-k', type=int, default=1, metavar='S',
+                        help='sample from top k')
+    parser.add_argument('--top-p', type=float, default=1, metavar='S',
+                        help='sample from top p')
+    parser.add_argument('--temperature', type=float, default=1, metavar='S',
+                        help='temperature on logits')
+    # TODO: trivial
+    parser.add_argument('--echo-prompt', type=lambda x: (str(x).lower() == 'true'),
+                        default=False, metavar='S',
+                        help='append prompt to the generated text')
+    # TODO: almost, need to fix output_token_emb overlapping issue
+    parser.add_argument('--num-completions', type=int, default=1, metavar='S',
+                        help='num of completions')
+    # TODO
+    parser.add_argument('--top-k-per-token', type=int, default=0, metavar='S',
+                        help='return top k candidate for each token')
+
+
 def get_inference_arguments_str(args, add_rank=True, rank=None):
     arg_str = ''
     if args.fp16:

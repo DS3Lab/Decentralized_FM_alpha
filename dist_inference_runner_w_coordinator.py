@@ -1,23 +1,19 @@
 import argparse
 import torch.autograd.profiler as profiler
+from pipeline_parallel.dist_pp_utils import get_pp_inference_module
 from utils.dist_args_utils import *
 from utils.dist_inference_utils import *
 from comm.comm_utils import *
-from task_datasets.inference_data import get_request_processor
-from pipeline_parallel.dist_pp_utils import *
+from coordinator.coordinate_client import *
 from transformers import AutoTokenizer
+from task_datasets.inference_data import get_request_processor
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Inference Runner')
+    parser = argparse.ArgumentParser(description='Inference Runner with coordinator.')
     add_device_arguments(parser)
-    add_torch_distributed_arguments(parser)
-    # add_model_arguments(parser)
-    # add_qqp_task_arguments(parser)
+    add_torch_distributed_inference_w_coordinator_arguments(parser)
     add_inference_arguments(parser)
-    # add_training_hyper_parameter_arguments(parser)
-    # add_mixed_precision_arguments(parser)
-    # add_parallel_schema_arguments(parser)
     add_inference_details_arguments(parser)
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
@@ -26,6 +22,7 @@ def main():
     parser.add_argument('--trace-postfix', type=str, default='default', metavar='S',
                         help='postfix of the tracing file name.')
     args = parser.parse_args()
+    print_arguments(args)
     torch.manual_seed(args.seed)
     if args.use_cuda:
         assert (torch.cuda.is_available())
@@ -33,10 +30,14 @@ def main():
     else:
         device = torch.device('cpu')
 
-    init_communicators(args)
+    coord_client = CoordinatorInferenceClient(args)
+    prime_ip, rank = coord_client.notify_inference_join()
+    print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
+
+    init_inference_communicators_with_coordinator(args, prime_ip, rank)
 
     if get_pipeline_parallel_rank() == 0 or True:
-        
+
         tokenizer = AutoTokenizer.from_pretrained(args.model_name)
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
@@ -46,7 +47,7 @@ def main():
 
         request_processor = get_request_processor(args, tokenizer)
         request_processor.set_arguments(args)
-        
+
     else:
         tokenizer = None
         request_processor = None
@@ -55,22 +56,24 @@ def main():
     pipe = get_pp_inference_module(args, device)
 
     if args.profiling == 'no-profiling':
-        distributed_inference_foo_iter(args, pipe, device, request_processor)
+        avg_iter_time = distributed_inference_foo_iter(args, pipe, device, request_processor)
     else:
         prefix = './trace_json/inference_' + args.pp_mode
         trace_file = prefix + get_inference_arguments_str(args) + '_' + args.profiling + '_' + args.trace_postfix + \
                      '.json'
         if args.profiling == 'tidy_profiling':
-            distributed_inference_foo_iter(args, pipe, device, request_processor)
+            avg_iter_time = distributed_inference_foo_iter(args, pipe, device, request_processor)
             pipe.export_profiling_result(filename=trace_file)
         elif args.profiling == 'pytorch_profiling':
             with profiler.profile(profile_memory=True, use_cuda=args.use_cuda) as prof:
-                distributed_inference_foo_iter(args, pipe, device, request_processor)
+                avg_iter_time = distributed_inference_foo_iter(args, pipe, device, request_processor)
             print(prof.key_averages().table())
             prof.export_chrome_trace(trace_file)
         else:
             print("No recognized profiler?")
             assert False
+    train_finish_msg = str(rank) + '#' + str(round(avg_iter_time, 3))
+    coord_client.notify_inference_finish(message=train_finish_msg)
 
 
 if __name__ == '__main__':
