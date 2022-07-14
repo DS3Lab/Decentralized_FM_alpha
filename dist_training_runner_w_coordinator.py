@@ -13,7 +13,7 @@ def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
     add_device_arguments(parser)
     add_torch_distributed_w_coordinator_arguments(parser)
-    add_model_arguments(parser)
+    add_training_model_arguments(parser)
     add_qqp_task_arguments(parser)
     add_training_hyper_parameter_arguments(parser)
     add_mixed_precision_arguments(parser)
@@ -33,7 +33,7 @@ def main():
     else:
         device = torch.device('cpu')
 
-    coord_client = CoordinatorClient(args)
+    coord_client = CoordinatorTrainClient(args)
     prime_ip, rank = coord_client.notify_train_join()
     print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
 

@@ -56,7 +56,7 @@ def add_qqp_task_arguments(parser):
                         help='-')
 
 
-def add_model_arguments(parser):
+def add_training_model_arguments(parser):
     parser.add_argument('--seq-length', type=int, default=2048, metavar='N',
                         help='-')
     parser.add_argument('--input-seq-length', type=int, default=16, metavar='N',
@@ -136,6 +136,19 @@ def get_mixed_precision_arguments_str(args):
     if args.use_offload:
         arg_str += '_offload'
     return arg_str
+
+
+def add_torch_inference_distributed_arguments(parser):
+    parser.add_argument('--dist-backend', type=str, default='cupy_nccl', metavar='S',
+                        help='backend type for distributed PyTorch (default: cupy_nccl)')
+    parser.add_argument('--dist-url', type=str, default='tcp://127.0.0.1:9000', metavar='S',
+                        help='master ip for distributed PyTorch')
+    parser.add_argument('--pipeline-group-size', type=int, default=4, metavar='D',
+                        help='world-size (default: 2)')
+    parser.add_argument('--data-group-size', type=int, default=1, metavar='D',
+                        help='world-size (default: 1)')
+    parser.add_argument('--rank', type=int, default=0, metavar='N',
+                        help='rank of the node')
 
 
 def add_inference_arguments(parser):

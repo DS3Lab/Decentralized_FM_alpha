@@ -12,7 +12,7 @@ from modules.gpt_modules import GlueSeqClassificationModel, get_position_id
 
 def main():
     parser = argparse.ArgumentParser(description='ZeRO-GPT3')
-    add_model_arguments(parser)
+    add_training_model_arguments(parser)
     add_qqp_task_arguments(parser)
     # add_torch_distributed_arguments(parser)
     add_training_hyper_parameter_arguments(parser)

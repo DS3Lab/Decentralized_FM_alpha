@@ -12,7 +12,7 @@ def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
     add_device_arguments(parser)
     add_torch_distributed_arguments(parser)
-    add_model_arguments(parser)
+    add_training_model_arguments(parser)
     add_qqp_task_arguments(parser)
     add_training_hyper_parameter_arguments(parser)
     add_mixed_precision_arguments(parser)
