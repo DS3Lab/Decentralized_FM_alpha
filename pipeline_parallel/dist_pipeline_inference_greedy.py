@@ -32,16 +32,17 @@ class DistGreedyInferenceAsync:
         self.pre_node_rank = self.pp_rank - 1
         self.post_node_rank = self.pp_rank + 1 if self.pp_rank != self.pipeline_group_size - 1 else -1
         self.comm = get_pipeline_parallel_comm()
+        
+        self.num_layers = args.num_layers
+        self.model_name = args.model_name
+        self.model_type = args.model_type
 
         assert (args.batch_size % args.micro_batch_size == 0)
         self.seq_num = args.batch_size // args.micro_batch_size
         self.input_seq_length = args.input_seq_length
         self.generate_seq_length = args.generate_seq_length
-        self.embedding_dim = 768 # Hard code this for now, this will be captured by the loaded model later.
+        self.embedding_dim = self._get_embedding_size()
         # self.vocab_size = vocab_size
-        self.num_layers = args.num_layers
-        self.model_name = args.model_name
-        self.model_type = args.model_type
 
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
         self.device = device
@@ -151,6 +152,18 @@ class DistGreedyInferenceAsync:
                   .format(token_emb_num * 4 // 1024 // 1024, self.input_token_emb[0].shape, self.generate_seq_length))
             print("=======output_token_emb: {} MB shape: {} X {} (fp32)======="
                   .format(token_emb_num * 4 // 1024 // 1024, self.output_token_emb[0].shape, self.generate_seq_length))
+            
+    def _get_embedding_size(self):
+        if self.model_type == 'gpt2':
+            from modules.hf_gpt2_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.n_embd
+        elif self.model_type == 'gptj':
+            from modules.hf_gptj_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.n_embd
+        else:
+            raise Exception(f'unknown model type {self.model_type}')
 
     def _create_layers(self):
         if self.model_type == 'gpt2':
@@ -223,11 +236,11 @@ class DistGreedyInferenceAsync:
             current_emb = self.input_token_emb[step]
         for layer_index in range(self.num_layers):
             if layer_index != self.num_layers - 1:
-                current_emb, self.cached_attention[layer_index] = self.layers['block' + str(layer_index)](
-                    current_emb, self.cached_attention[layer_index])
+                current_emb, self.cached_attention[layer_index] = \
+                    self.layers['block' + str(layer_index)](current_emb, self.cached_attention[layer_index])
             else:
-                self.output_token_emb[step], self.cached_attention[layer_index] = self.layers['block' + str(layer_index)](
-                    current_emb, self.cached_attention[layer_index])
+                self.output_token_emb[step], self.cached_attention[layer_index] = \
+                    self.layers['block' + str(layer_index)](current_emb, self.cached_attention[layer_index])
         if self.pp_rank == self.pipeline_group_size - 1:
             self._generate_new_token(step)
 
@@ -363,6 +376,7 @@ class DistGreedyInferenceAsync:
                 self.profile_mark_forward_token_send_end(0)
 
         for i in range(self.generate_seq_length):
+            
             if self.pp_rank == 0:
                 with torch.cuda.stream(self.torch_recv_stream):
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
@@ -449,7 +463,7 @@ class DistGreedyInferenceAsync:
         with open(filename, 'w') as outfile:
             json.dump(self.profiling_log, outfile)
 
-    def inference_batch(self, input_=None, output_=None):
+    def inference_batch(self, input_=None, output_=None, **kargs):
         self._init_cached_seqs_and_attentions()  # TODO: should I put here
         self.comm.barrier()
         start_time = time.time()
@@ -457,9 +471,10 @@ class DistGreedyInferenceAsync:
             torch.cuda.synchronize()
             self.init_time_stamp = time.time() * 1e+6
             self.init_event.record()
-
-        self.forward_seq_pipeline_stage(input_data=input_)
-        self.forward_new_token_pipeline_stage()
+        
+        with torch.no_grad():
+            self.forward_seq_pipeline_stage(input_data=input_)
+            self.forward_new_token_pipeline_stage()
 
         self.comm.barrier()
         if self.pp_rank == 0 and output_ is not None:

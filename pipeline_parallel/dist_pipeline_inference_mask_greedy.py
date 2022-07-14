@@ -5,19 +5,23 @@ from comm.comm_utils import *
 from modules.generation_utils import get_logits_processor, get_logits_warper
 
 
-class DistGreedyInferenceSync:
+class DistGreedyInferenceMaskAsync:
     r"""
-    Sync implementation of Distributed Inference.
+    Async implementation of Distributed Inference.
+    The current implementation leave the computation on the PyTorch default stream and the communication on a different
+    stream, there is:
+        a group of events to check if recv (from rank i-1) finishes in the forward propagation;
+        a group of events to check if computation finishes in the forward propagation.
     """
 
     def __init__(self, args, device, rank=None):
-        print("=======Initialize Dist Inference(Sync).=======")
+        print("=======Initialize Dist Inference.")
         if args.fp16:
             self.use_fp16 = True
-            print("=======Gpipe use FP16=======")
+            print("=======Gpipe use FP16")
         else:
             self.use_fp16 = False
-            print("=======Gpipe use FP32=======")
+            print("=======Gpipe use FP32")
         self.dtype = torch.float16 if self.use_fp16 else torch.float32
         if rank is None:
             self.global_rank = args.rank
@@ -28,11 +32,11 @@ class DistGreedyInferenceSync:
         self.pre_node_rank = self.pp_rank - 1
         self.post_node_rank = self.pp_rank + 1 if self.pp_rank != self.pipeline_group_size - 1 else -1
         self.comm = get_pipeline_parallel_comm()
-
+        
         self.num_layers = args.num_layers
         self.model_name = args.model_name
         self.model_type = args.model_type
-        
+
         assert (args.batch_size % args.micro_batch_size == 0)
         self.seq_num = args.batch_size // args.micro_batch_size
         self.input_seq_length = args.input_seq_length
@@ -42,29 +46,37 @@ class DistGreedyInferenceSync:
 
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
         self.device = device
+        self.torch_comp_stream = torch.cuda.default_stream(device=device)
+        self.torch_recv_stream = torch.cuda.Stream(device=device, priority=-1)
+        self.torch_send_stream = torch.cuda.Stream(device=device, priority=0)
+
+        self.forward_seq_recv_ready_events = [torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
+                                              for _ in range(self.seq_num)]
+        self.forward_seq_comp_ready_events = [torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
+                                              for _ in range(self.seq_num)]
+        self.forward_token_recv_ready_events = [torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
+                                                for _ in range(self.generate_seq_length)]
+        self.forward_token_comp_ready_events = [torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
+                                                for _ in range(self.generate_seq_length)]
 
         if self.enable_tidy_profiling:
             self.profiling_log = []
             self.forward_seq_recv_start_events = [torch.cuda.Event(enable_timing=True, blocking=False)
                                                   for _ in range(self.seq_num)]
-            self.forward_seq_recv_end_events = [torch.cuda.Event(enable_timing=True, blocking=False)
-                                                for _ in range(self.seq_num)]
             self.forward_seq_comp_start_events = [torch.cuda.Event(enable_timing=True, blocking=False)
                                                   for _ in range(self.seq_num)]
-            self.forward_seq_comp_end_events = [torch.cuda.Event(enable_timing=True, blocking=False)
-                                                for _ in range(self.seq_num)]
             self.forward_seq_send_start_events = [torch.cuda.Event(enable_timing=True, blocking=False)
                                                   for _ in range(self.seq_num)]
             self.forward_seq_send_end_events = [torch.cuda.Event(enable_timing=True, blocking=False)
                                                 for _ in range(self.seq_num)]
             self.forward_token_recv_start_events = [torch.cuda.Event(enable_timing=True, blocking=False)
                                                     for _ in range(self.generate_seq_length)]
-            self.forward_token_recv_end_events = [torch.cuda.Event(enable_timing=True, blocking=False)
-                                                  for _ in range(self.generate_seq_length)]
-            self.forward_token_comp_start_events = [torch.cuda.Event(enable_timing=True, blocking=False)
-                                                    for _ in range(self.generate_seq_length)]
-            self.forward_token_comp_end_events = [torch.cuda.Event(enable_timing=True, blocking=False)
-                                                  for _ in range(self.generate_seq_length)]
+            if self.pp_rank == self.pipeline_group_size - 1:
+                self.forward_token_comp_start_events = [torch.cuda.Event(enable_timing=True, blocking=False)
+                                                        for _ in range(self.generate_seq_length)]
+            else:
+                self.forward_token_comp_start_events = [torch.cuda.Event(enable_timing=True, blocking=False)
+                                                        for _ in range(self.generate_seq_length+1)]
             self.forward_token_send_start_events = [torch.cuda.Event(enable_timing=True, blocking=False)
                                                     for _ in range(self.generate_seq_length)]
             self.forward_token_send_end_events = [torch.cuda.Event(enable_timing=True, blocking=False)
@@ -98,19 +110,10 @@ class DistGreedyInferenceSync:
         self._print_buffers()
 
         self.cached_attention = []
-        # self.prompt_input = None
-        # self.prompt_output = None
         self.layers = {}
         self._create_layers()
         self._init_cached_seqs_and_attentions()
-
-        self.logits_processor = get_logits_processor()  # not needed now
-        self.logits_warper = get_logits_warper(
-            top_k=args.top_k,
-            top_p=args.top_p,
-            temperature=args.temperature,
-            num_beams=1,
-        )
+        
 
     def _print_buffers(self):
         if self.pp_rank == 0:
@@ -132,7 +135,7 @@ class DistGreedyInferenceSync:
             print("=======input_seq_emb: {} MB shape: {} X {} (fp16)======="
                   .format(seq_emb_num * 2 // 1024 // 1024, self.input_seq_emb[0].shape, self.seq_num))
             print("=======output_seq_emb: {} MB shape: {} X {} (fp16)======="
-                  .format(seq_emb_num * 2 // 1024 // 1024, self.input_seq_emb[0].shape, self.seq_num))
+                  .format(seq_emb_num * 2 // 1024 // 1024,  self.input_seq_emb[0].shape, self.seq_num))
         else:
             print("=======input_seq_emb: {} MB shape: {} X {} (fp32)======="
                   .format(seq_emb_num * 4 // 1024 // 1024, self.input_seq_emb[0].shape, self.seq_num))
@@ -169,7 +172,7 @@ class DistGreedyInferenceSync:
             from modules.hf_gptj_module import GPTEmbeddings, GPTBlock, GPTLMHead
         else:
             raise Exception(f'unknown model type {self.model_type}')
-
+        
         if self.pp_rank == 0:
             self.layers['emb'] = GPTEmbeddings.from_pretrained(
                 self.model_name
@@ -178,7 +181,7 @@ class DistGreedyInferenceSync:
             # global layer indexing could be an argument
             global_layer_index = self.num_layers * self.pp_rank + layer_index
             print(f'loading layer {global_layer_index}')
-            self.layers['block' + str(layer_index)] = GPTBlock.from_pretrained(
+            self.layers['block'+str(layer_index)] = GPTBlock.from_pretrained(
                 self.model_name, layer_index=global_layer_index
             ).to(self.dtype).eval().to(self.device)
         if self.pp_rank == self.pipeline_group_size - 1:
@@ -187,15 +190,11 @@ class DistGreedyInferenceSync:
             ).to(self.dtype).eval().to(self.device)
 
     def _init_cached_seqs_and_attentions(self):
-        # self.prompt_input = None
-        # self.prompt_output = None
         self.cached_attention.clear()
         for _ in range(self.num_layers):
             self.cached_attention.append([None for _ in range(self.seq_num)])
 
     def _merge_cached_seqs_and_attentions(self):
-        # self.prompt_input = torch.cat(self.input_seq_emb, dim=0) # TODO
-        # self.prompt_output = torch.cat(self.output_seq_emb, dim=0) # TODO
         for layer_index in range(self.num_layers):
             key = torch.cat([kv[0] for kv in self.cached_attention[layer_index]], dim=0)
             value = torch.cat([kv[1] for kv in self.cached_attention[layer_index]], dim=0)
@@ -211,40 +210,37 @@ class DistGreedyInferenceSync:
                 print("=======Layer {} cached key: {} MB shape: {} (fp32)======="
                       .format(layer_index, torch.numel(value) * 4 // 1024 // 1024, value.shape))
 
-    def _forward_compute_prompt_seq(self, index, seq=None):
+    def _forward_compute_prompt_seq(self, index, seq=None, mask=None):
         print("Compute prompt seq<", index, ">.")
         if self.pp_rank == 0:
-            self.input_seq_emb[index] = self.layers['emb'](seq)
+            self.input_seq_emb[index] = self.layers['emb'](seq, mask=mask)
         current_emb = None
-        with torch.no_grad():
-            for layer_index in range(self.num_layers):
-                if layer_index == 0:
-                    current_emb, self.cached_attention[layer_index][index] = \
-                        self.layers['block' + str(layer_index)](self.input_seq_emb[index])
-                elif layer_index == self.num_layers - 1:
-                    self.output_seq_emb[index], self.cached_attention[layer_index][index] = \
-                        self.layers['block' + str(layer_index)](current_emb)
-                else:
-                    current_emb, self.cached_attention[layer_index][index] = \
-                        self.layers['block' + str(layer_index)](current_emb)
+        for layer_index in range(self.num_layers):
+            if layer_index == 0:
+                current_emb, self.cached_attention[layer_index][index] = \
+                    self.layers['block' + str(layer_index)](self.input_seq_emb[index], mask=mask)
+            elif layer_index == self.num_layers - 1:
+                self.output_seq_emb[index], self.cached_attention[layer_index][index] = \
+                    self.layers['block'+str(layer_index)](current_emb, mask=mask)
+            else:
+                current_emb, self.cached_attention[layer_index][index] = \
+                    self.layers['block' + str(layer_index)](current_emb, mask=mask)
         if self.pp_rank == self.pipeline_group_size - 1:
-            self.output_token_emb[0][index] = current_emb[:, -1:]
+            self.output_token_emb[0][index] = self.output_seq_emb[index][:, -1:]
 
-    def _forward_compute_generate_token(self, step):
+    def _forward_compute_generate_token(self, step, mask=None):
         print("Compute generate seq<", step, ">.")
         if self.pp_rank == 0:
-            current_emb = self.layers['emb'](self.recv_new_token[step], self.cached_attention[0])
+            current_emb = self.layers['emb'](self.recv_new_token[step], self.cached_attention[0], mask=mask)
         else:
             current_emb = self.input_token_emb[step]
-        with torch.no_grad():
-            for layer_index in range(self.num_layers):
-                if layer_index != self.num_layers - 1:
-                    current_emb, self.cached_attention[layer_index] = self.layers['block' + str(layer_index)](
-                        current_emb, self.cached_attention[layer_index])
-                else:
-                    self.output_token_emb[step], self.cached_attention[layer_index] = self.layers[
-                        'block' + str(layer_index)](
-                        current_emb, self.cached_attention[layer_index])
+        for layer_index in range(self.num_layers):
+            if layer_index != self.num_layers - 1:
+                current_emb, self.cached_attention[layer_index] = \
+                    self.layers['block' + str(layer_index)](current_emb, self.cached_attention[layer_index], mask=mask)
+            else:
+                self.output_token_emb[step], self.cached_attention[layer_index] = \
+                    self.layers['block' + str(layer_index)](current_emb, self.cached_attention[layer_index], mask=mask)
         if self.pp_rank == self.pipeline_group_size - 1:
             self._generate_new_token(step)
 
@@ -254,72 +250,77 @@ class DistGreedyInferenceSync:
         self.send_new_tokens[step] = z.argmax(-1)
         # print(step, self.send_new_tokens[step][0])
 
-    def profile_mark_forward_seq_recv_start(self, i):
-        if self.enable_tidy_profiling:
-            self.forward_seq_recv_start_events[i].record()
-
-    def profile_mark_forward_seq_recv_end(self, i):
-        if self.enable_tidy_profiling:
-            self.forward_seq_recv_end_events[i].record()
-
     def profile_mark_forward_seq_comp_start(self, i):
         if self.enable_tidy_profiling:
-            self.forward_seq_comp_start_events[i].record()
+            self.torch_comp_stream.record_event(self.forward_seq_comp_start_events[i])
 
-    def profile_mark_forward_seq_comp_end(self, i):
+    def profile_mark_forward_seq_recv_start(self, i):
         if self.enable_tidy_profiling:
-            self.forward_seq_comp_end_events[i].record()
+            self.torch_recv_stream.record_event(self.forward_seq_recv_start_events[i])
 
     def profile_mark_forward_seq_send_start(self, i):
         if self.enable_tidy_profiling:
-            self.forward_seq_send_start_events[i].record()
+            self.torch_send_stream.record_event(self.forward_seq_send_start_events[i])
 
     def profile_mark_forward_seq_send_end(self, i):
         if self.enable_tidy_profiling:
-            self.forward_seq_send_end_events[i].record()
+            self.torch_send_stream.record_event(self.forward_seq_send_end_events[i])
 
     def get_ts(self, event):
         return self.init_time_stamp + self.init_event.elapsed_time(event) * 1e+3
 
-    def forward_seq_pipeline_stage(self, input_data=None):
+    def forward_seq_pipeline_stage(self, input_data=None, attention_mask=None):
         if self.pp_rank == 0:
-            assert (input_data is not None)
+            assert(input_data is not None)
             input_seqs = torch.chunk(input_data, self.seq_num, dim=0)
         else:
             input_seqs = None
             
+        if attention_mask is not None:
+            attention_mask = torch.chunk(attention_mask, self.seq_num, dim=0)
+        else:
+            attention_mask = [None]*self.seq_num
+
         for i in range(self.seq_num):
             if self.pp_rank == 0:  # Only send output to next node, do not receive
-                # Compute
-                self.profile_mark_forward_seq_comp_start(i)
-                self._forward_compute_prompt_seq(index=i, seq=input_seqs[i])
-                self.profile_mark_forward_seq_comp_end(i)
-                # Send
-                self.profile_mark_forward_seq_send_start(i)
-                self.comm.send(self.output_seq_emb[i], dst=self.post_node_rank)
-                self.profile_mark_forward_seq_send_end(i)
+                with torch.cuda.stream(self.torch_comp_stream):
+                    self.profile_mark_forward_seq_comp_start(i)
+                    self._forward_compute_prompt_seq(index=i, seq=input_seqs[i], mask=attention_mask[i])
+                    self.torch_comp_stream.record_event(self.forward_seq_comp_ready_events[i])
+                with torch.cuda.stream(self.torch_send_stream):
+                    cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
+                    self.torch_send_stream.wait_event(self.forward_seq_comp_ready_events[i])
+                    self.profile_mark_forward_seq_send_start(i)
+                    self.comm.send(self.output_seq_emb[i], dst=self.post_node_rank, stream=cupy_send_stream)
+                    self.profile_mark_forward_seq_send_end(i)
             elif self.pp_rank == self.pipeline_group_size - 1:  # Only receive input from last node, do not send
-                # Receive
-                self.profile_mark_forward_seq_recv_start(i)
-                self.comm.recv(self.input_seq_emb[i], src=self.pre_node_rank)
-                self.profile_mark_forward_seq_recv_end(i)
-                # Compute
-                self.profile_mark_forward_seq_comp_start(i)
-                self._forward_compute_prompt_seq(index=i, seq=None)
-                self.profile_mark_forward_seq_comp_end(i)
+                with torch.cuda.stream(self.torch_recv_stream):
+                    cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
+                    self.profile_mark_forward_seq_recv_start(i)
+                    self.comm.recv(self.input_seq_emb[i], src=self.pre_node_rank, stream=cupy_recv_stream)
+                    self.torch_recv_stream.record_event(self.forward_seq_recv_ready_events[i])
+                with torch.cuda.stream(self.torch_comp_stream):
+                    self.torch_comp_stream.wait_event(self.forward_seq_recv_ready_events[i])
+                    self.profile_mark_forward_seq_comp_start(i)
+                    self._forward_compute_prompt_seq(index=i, seq=None, mask=attention_mask[i])
+                    self.torch_comp_stream.record_event(self.forward_seq_comp_ready_events[i])
             else:  # receive, compute, and send
-                # Receive
-                self.profile_mark_forward_seq_recv_start(i)
-                self.comm.recv(self.input_seq_emb[i], src=self.pre_node_rank)
-                self.profile_mark_forward_seq_recv_end(i)
-                # Compute
-                self.profile_mark_forward_seq_comp_start(i)
-                self._forward_compute_prompt_seq(index=i, seq=None)
-                self.profile_mark_forward_seq_comp_end(i)
-                # Send
-                self.profile_mark_forward_seq_send_start(i)
-                self.comm.send(self.output_seq_emb[i], dst=self.post_node_rank)
-                self.profile_mark_forward_seq_send_end(i)
+                with torch.cuda.stream(self.torch_recv_stream):
+                    cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
+                    self.profile_mark_forward_seq_recv_start(i)
+                    self.comm.recv(self.input_seq_emb[i], src=self.pre_node_rank, stream=cupy_recv_stream)
+                    self.torch_recv_stream.record_event(self.forward_seq_recv_ready_events[i])
+                with torch.cuda.stream(self.torch_comp_stream):
+                    self.torch_comp_stream.wait_event(self.forward_seq_recv_ready_events[i])
+                    self.profile_mark_forward_seq_comp_start(i)
+                    self._forward_compute_prompt_seq(index=i, seq=None, mask=attention_mask[i])
+                    self.torch_comp_stream.record_event(self.forward_seq_comp_ready_events[i])
+                with torch.cuda.stream(self.torch_send_stream):
+                    cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
+                    self.torch_send_stream.wait_event(self.forward_seq_comp_ready_events[i])
+                    self.profile_mark_forward_seq_send_start(i)
+                    self.comm.send(self.output_seq_emb[i], dst=self.post_node_rank, stream=cupy_send_stream)
+                    self.profile_mark_forward_seq_send_end(i)
         if self.enable_tidy_profiling:
             self.profile_seq_pipeline_stage()
 
@@ -327,15 +328,14 @@ class DistGreedyInferenceSync:
         torch.cuda.synchronize()
         for i in range(self.seq_num):
             if self.pp_rank != 0:
-                recv_slot = self.forward_seq_recv_start_events[i].elapsed_time(
-                    self.forward_seq_recv_end_events[i]) * 1e+3
+                recv_slot = self.forward_seq_recv_start_events[i].elapsed_time(self.forward_seq_recv_ready_events[i]) * 1e+3
                 recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. forward-recv",
                             "ts": self.get_ts(self.forward_seq_recv_start_events[i]), "dur": recv_slot,
                             "args": {"seq-index": i}, "cname": "startup"}  # cname is for color, a little silly.
                 # print(recv_log)
                 self.profiling_log.append(recv_log)
 
-            comp_slot = self.forward_seq_comp_start_events[i].elapsed_time(self.forward_seq_comp_end_events[i]) * 1e+3
+            comp_slot = self.forward_seq_comp_start_events[i].elapsed_time(self.forward_seq_comp_ready_events[i]) * 1e+3
             comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. forward-compute",
                         "ts": self.get_ts(self.forward_seq_comp_start_events[i]), "dur": comp_slot,
                         "args": {"seq-index": i}, "cname": "good"}
@@ -343,92 +343,101 @@ class DistGreedyInferenceSync:
             self.profiling_log.append(comp_log)
 
             if self.pp_rank != self.pipeline_group_size - 1:
-                send_slot = self.forward_seq_send_start_events[i].elapsed_time(
-                    self.forward_seq_send_end_events[i]) * 1e+3
+                send_slot = self.forward_seq_send_start_events[i].elapsed_time(self.forward_seq_send_end_events[i]) * 1e+3
                 send_log = {"name": "send", "ph": "X", "pid": self.global_rank, "tid": "3. forward-send",
                             "ts": self.get_ts(self.forward_seq_send_start_events[i]), "dur": send_slot,
                             "args": {"seq-index": i}, "cname": "thread_state_iowait"}
                 # print(send_log)
                 self.profiling_log.append(send_log)
 
-    def profile_mark_forward_token_recv_start(self, i):
-        if self.enable_tidy_profiling:
-            self.forward_token_recv_start_events[i].record()
-
-    def profile_mark_forward_token_recv_end(self, i):
-        if self.enable_tidy_profiling:
-            self.forward_token_recv_end_events[i].record()
-
     def profile_mark_forward_token_comp_start(self, i):
         if self.enable_tidy_profiling:
-            self.forward_token_comp_start_events[i].record()
+            self.torch_comp_stream.record_event(self.forward_token_comp_start_events[i])
 
-    def profile_mark_forward_token_comp_end(self, i):
+    def profile_mark_forward_token_recv_start(self, i):
         if self.enable_tidy_profiling:
-            self.forward_token_comp_end_events[i].record()
+            self.torch_recv_stream.record_event(self.forward_token_recv_start_events[i])
 
     def profile_mark_forward_token_send_start(self, i):
         if self.enable_tidy_profiling:
-            self.forward_token_send_start_events[i].record()
+            self.torch_send_stream.record_event(self.forward_token_send_start_events[i])
 
     def profile_mark_forward_token_send_end(self, i):
         if self.enable_tidy_profiling:
-            self.forward_token_send_end_events[i].record()
+            self.torch_send_stream.record_event(self.forward_token_send_end_events[i])
 
-    def forward_new_token_pipeline_stage(self):
+    def forward_new_token_pipeline_stage(self, attention_mask=None):
         self._merge_cached_seqs_and_attentions()
         if self.pp_rank == self.pipeline_group_size - 1:
-            # Compute
-            self.profile_mark_forward_token_comp_start(0)
-            self._generate_new_token(0)
-            self.profile_mark_forward_token_comp_end(0)
-            # Send
-            self.profile_mark_forward_token_send_start(0)
-            self.comm.send(self.send_new_tokens[0], dst=0)
-            self.profile_mark_forward_token_send_end(0)
-            
+            with torch.cuda.stream(self.torch_comp_stream):
+                self.profile_mark_forward_token_comp_start(0)
+                self._generate_new_token(0)
+                self.torch_comp_stream.record_event(self.forward_token_comp_ready_events[0])
+            with torch.cuda.stream(self.torch_send_stream):
+                cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
+                self.torch_send_stream.wait_event(self.forward_token_comp_ready_events[0])
+                self.profile_mark_forward_token_send_start(0)
+                self.comm.send(self.send_new_tokens[0], dst=0, stream=cupy_send_stream)
+                self.profile_mark_forward_token_send_end(0)
+
         for i in range(self.generate_seq_length):
-                
+            
+            if attention_mask is not None:
+                # increase one for the new token
+                attention_mask = torch.nn.functional.pad(attention_mask, pad=(0, 1), mode='constant', value=1)
+            
             if self.pp_rank == 0:
-                # Receive
-                self.profile_mark_forward_token_recv_start(i)
-                self.comm.recv(self.recv_new_token[i], src=self.pipeline_group_size - 1)
-                self.profile_mark_forward_token_recv_end(i)
-                # Compute
-                self.profile_mark_forward_token_comp_start(i)
-                self._forward_compute_generate_token(step=i)
-                self.profile_mark_forward_token_comp_end(i)
-                # Send
-                self.profile_mark_forward_token_send_start(i)
-                self.comm.send(self.output_token_emb[i], dst=self.post_node_rank)
-                self.profile_mark_forward_token_send_end(i)
+                with torch.cuda.stream(self.torch_recv_stream):
+                    cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
+                    self.profile_mark_forward_token_recv_start(i)
+                    self.comm.recv(self.recv_new_token[i], src=self.pipeline_group_size-1, stream=cupy_recv_stream)
+                    self.torch_recv_stream.record_event(self.forward_token_recv_ready_events[i])
+                with torch.cuda.stream(self.torch_comp_stream):
+                    self.torch_comp_stream.wait_event(self.forward_token_recv_ready_events[i])
+                    self.profile_mark_forward_token_comp_start(i)
+                    self._forward_compute_generate_token(step=i, mask=attention_mask)
+                    self.torch_comp_stream.record_event(self.forward_token_comp_ready_events[i])
+                with torch.cuda.stream(self.torch_send_stream):
+                    cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
+                    self.torch_send_stream.wait_event(self.forward_token_comp_ready_events[i])
+                    self.profile_mark_forward_token_send_start(i)
+                    self.comm.send(self.output_token_emb[i], dst=self.post_node_rank, stream=cupy_send_stream)
+                    self.profile_mark_forward_token_send_end(i)
             elif self.pp_rank == self.pipeline_group_size - 1:
-                # Receive
-                self.profile_mark_forward_token_recv_start(i)
-                self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank)
-                self.profile_mark_forward_token_recv_end(i)
+                with torch.cuda.stream(self.torch_recv_stream):
+                    cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
+                    self.profile_mark_forward_token_recv_start(i)
+                    self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank, stream=cupy_recv_stream)
+                    self.torch_recv_stream.record_event(self.forward_token_recv_ready_events[i])
                 if i != self.generate_seq_length - 1:
-                    # Compute
-                    self.profile_mark_forward_token_comp_start(i + 1)
-                    self._forward_compute_generate_token(step=i)  # Note: i+1 is wrong. tiny up tomorrow
-                    self.profile_mark_forward_token_comp_end(i + 1)
-                    # Send
-                    self.profile_mark_forward_token_send_start(i + 1)
-                    self.comm.send(self.send_new_tokens[i], dst=0)  # Note: i+1 is wrong. tiny up tomorrow
-                    self.profile_mark_forward_token_send_end(i + 1)
+                    with torch.cuda.stream(self.torch_comp_stream):
+                        self.torch_comp_stream.wait_event(self.forward_token_recv_ready_events[i])
+                        self.profile_mark_forward_token_comp_start(i+1)
+                        self._forward_compute_generate_token(step=i, mask=attention_mask) # Note: i+1 is wrong. tiny up tomorrow
+                        self.torch_comp_stream.record_event(self.forward_token_comp_ready_events[i+1])
+                    with torch.cuda.stream(self.torch_send_stream):
+                        cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
+                        self.torch_send_stream.wait_event(self.forward_token_comp_ready_events[i+1])
+                        self.profile_mark_forward_token_send_start(i+1)
+                        self.comm.send(self.send_new_tokens[i], dst=0, stream=cupy_send_stream) # Note: i+1 is wrong. tiny up tomorrow
+                        self.profile_mark_forward_token_send_end(i+1)
             else:
-                # Recv
-                self.profile_mark_forward_token_recv_start(i)
-                self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank)
-                self.profile_mark_forward_token_recv_end(i)
-                # Compute
-                self.profile_mark_forward_token_comp_start(i)
-                self._forward_compute_generate_token(step=i)
-                self.profile_mark_forward_token_comp_end(i)
-                # Send
-                self.profile_mark_forward_token_send_start(i)
-                self.comm.send(self.output_token_emb[i], dst=self.post_node_rank)
-                self.profile_mark_forward_token_send_end(i)
+                with torch.cuda.stream(self.torch_recv_stream):
+                    cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
+                    self.profile_mark_forward_token_recv_start(i)
+                    self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank, stream=cupy_recv_stream)
+                    self.torch_recv_stream.record_event(self.forward_token_recv_ready_events[i])
+                with torch.cuda.stream(self.torch_comp_stream):
+                    self.torch_comp_stream.wait_event(self.forward_token_recv_ready_events[i])
+                    self.profile_mark_forward_token_comp_start(i)
+                    self._forward_compute_generate_token(step=i, mask=attention_mask)
+                    self.torch_comp_stream.record_event(self.forward_token_comp_ready_events[i])
+                with torch.cuda.stream(self.torch_send_stream):
+                    cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
+                    self.torch_send_stream.wait_event(self.forward_token_comp_ready_events[i])
+                    self.profile_mark_forward_token_send_start(i)
+                    self.comm.send(self.output_token_emb[i], dst=self.post_node_rank, stream=cupy_send_stream)
+                    self.profile_mark_forward_token_send_end(i)
 
         if self.enable_tidy_profiling:
             self.profile_token_pipeline_stage()
@@ -437,16 +446,14 @@ class DistGreedyInferenceSync:
         torch.cuda.synchronize()
         for i in range(self.generate_seq_length):
             if self.pp_rank != 0:
-                recv_slot = self.forward_token_recv_start_events[i].elapsed_time(
-                    self.forward_token_recv_end_events[i]) * 1e+3
+                recv_slot = self.forward_token_recv_start_events[i].elapsed_time(self.forward_token_recv_ready_events[i]) * 1e+3
                 recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. forward-recv",
                             "ts": self.get_ts(self.forward_token_recv_start_events[i]), "dur": recv_slot,
                             "args": {"token-step": i}, "cname": "startup"}  # cname is for color, a little silly.
                 # print(recv_log)
                 self.profiling_log.append(recv_log)
 
-            comp_slot = self.forward_token_comp_start_events[i].elapsed_time(
-                self.forward_token_comp_end_events[i]) * 1e+3
+            comp_slot = self.forward_token_comp_start_events[i].elapsed_time(self.forward_token_comp_ready_events[i]) * 1e+3
             comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. forward-compute",
                         "ts": self.get_ts(self.forward_token_comp_start_events[i]), "dur": comp_slot,
                         "args": {"token-step": i}, "cname": "good"}
@@ -454,8 +461,7 @@ class DistGreedyInferenceSync:
             self.profiling_log.append(comp_log)
 
             if self.pp_rank != self.pipeline_group_size - 1:
-                send_slot = self.forward_token_send_start_events[i].elapsed_time(
-                    self.forward_token_send_end_events[i]) * 1e+3
+                send_slot = self.forward_token_send_start_events[i].elapsed_time(self.forward_token_send_end_events[i]) * 1e+3
                 send_log = {"name": "send", "ph": "X", "pid": self.global_rank, "tid": "3. forward-send",
                             "ts": self.get_ts(self.forward_token_send_start_events[i]), "dur": send_slot,
                             "args": {"token-step": i}, "cname": "thread_state_iowait"}
@@ -466,7 +472,7 @@ class DistGreedyInferenceSync:
         with open(filename, 'w') as outfile:
             json.dump(self.profiling_log, outfile)
 
-    def inference_batch(self, input_=None, output_=None, **kargs):
+    def inference_batch(self, input_=None, output_=None, attention_mask=None):
         self._init_cached_seqs_and_attentions()  # TODO: should I put here
         self.comm.barrier()
         start_time = time.time()
@@ -475,8 +481,9 @@ class DistGreedyInferenceSync:
             self.init_time_stamp = time.time() * 1e+6
             self.init_event.record()
         
-        self.forward_seq_pipeline_stage(input_data=input_)
-        self.forward_new_token_pipeline_stage()
+        with torch.no_grad():
+            self.forward_seq_pipeline_stage(input_data=input_, attention_mask=attention_mask)
+            self.forward_new_token_pipeline_stage(attention_mask=attention_mask)
 
         self.comm.barrier()
         if self.pp_rank == 0 and output_ is not None:

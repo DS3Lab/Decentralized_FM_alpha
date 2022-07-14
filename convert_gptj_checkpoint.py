@@ -8,9 +8,9 @@ from transformers import GPTJModel, GPTJForCausalLM, AutoTokenizer, GPTJConfig
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Convert HF checkpoints')
-    parser.add_argument('--model-name', type=str, default='gpt2', 
+    parser.add_argument('--model-name', type=str, default='EleutherAI/gpt-j-6B', 
                         help='model-name')
-    parser.add_argument('--save-dir', type=str, default='./', 
+    parser.add_argument('--save-dir', type=str, default='./pretrained_models', 
                         help='model-name')
     args = parser.parse_args()
     
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     
     config = GPTJConfig.from_pretrained(args.model_name, revision="float16", dtype=torch.float16)
     config.save_pretrained(save_path)
-    model = GPTJForCausalLM.from_pretrained(args.model_name)
+    model = GPTJForCausalLM.from_pretrained(args.model_name, torch_dtype=torch.float16)
 #     model.save_pretrained(save_path)
 
     torch.save({
