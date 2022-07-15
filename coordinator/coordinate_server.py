@@ -187,6 +187,8 @@ class CoordinatorInferenceServer:
         if self.working_pipelines[pipe_index][node_key]['rank'] == 0:
             del self.prime_worker_ips[pipe_index]
         del self.working_pipelines[pipe_index][node_key]
+        if len(self.working_pipelines[pipe_index]) == 0:
+            del self.working_pipelines[pipe_index]
         return_msg = 'done'
         return return_msg
 
