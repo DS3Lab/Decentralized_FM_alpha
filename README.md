@@ -105,7 +105,7 @@
 
 - On a different terminal, start a job submission client to submit a job:
 
-      python job_submit_client.py --coordinator-server-ip 129.132.93.88 --submit-job inference --job-name lsf_gptJ_inf_4gpu
+      python job_submit_client.py --coordinator-server-ip 129.132.93.88 --submit-job inference --job-name lsf_gptJ_inf_4RTX2080Ti
 
 - So far, we need to manually change the IP in the job-submit templates, e.g. change lsf_gptJ_inf_4gpu.bsub file.
 
