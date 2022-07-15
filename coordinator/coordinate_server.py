@@ -118,12 +118,18 @@ class CoordinatorInferenceServer:
     def __init__(self, args):
         self.host = args.coordinator_server_ip
         self.port = args.coordinator_server_port
+        self.allocated_index = 0
         # An array of dict object to store worker info
         self.working_pipelines = []
         self.prime_worker_ips = []
         self.active_inference_pipeline = 0
         self.bsub_script_path = args.bsub_script_path
         self.inference_pipeline_demand_worker_num = 0
+        self.submit_locked = False
+
+    def _allocate_index(self):
+        self.allocated_index = (self.allocated_index + 1) % 10000
+        return self.allocated_index
 
     def _print_current_working_nodes(self):
         print(f"<----------------Current Working Pipelines [{len(self.working_pipelines)}]---------------->")
@@ -135,22 +141,25 @@ class CoordinatorInferenceServer:
 
     def _handle_inference_submit(self, job_name) -> str:
         print("<<<<<<<<<<<<<<<<<<<<< Submit Job >>>>>>>>>>>>>>>>>>>>>>")
-
-        if job_name == 'lsf_gptJ_inf_4RTX2080Ti' or job_name == 'lsf_gptJ_inf_4RTXTitan.bsub':
-            self.inference_pipeline_demand_worker_num = 4
+        if not self.submit_locked:
+            self.submit_locked = True
+            if job_name == 'lsf_gptJ_inf_4RTX2080Ti' or job_name == 'lsf_gptJ_inf_4RTXTitan.bsub':
+                self.inference_pipeline_demand_worker_num = 4
+            else:
+                return f'This job is not recognized on coordinate - {job_name}'
+            for i in range(self.inference_pipeline_demand_worker_num):
+                os.system(f"rm {self.bsub_script_path}/submit_cache/*.bsub")
+                os.system(f"cp {self.bsub_script_path}/{job_name}.bsub "
+                          f"{self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
+                os.system(f"echo \' {self._allocate_index()}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
+                os.system(f"cd {self.bsub_script_path}/submit_cache && "
+                          f"bsub < {job_name}_{i+1}.bsub")
+            os.system("bjobs")
+            self.working_pipelines.append(OrderedDict())
+            self.active_inference_pipeline += 1
+            return f'Succeed to submit job - {job_name}'
         else:
-            return f'This job is not recognized on coordinate - {job_name}'
-        for i in range(self.inference_pipeline_demand_worker_num):
-            os.system(f"rm {self.bsub_script_path}/submit_cache/*.bsub")
-            os.system(f"cp {self.bsub_script_path}/{job_name}.bsub "
-                      f"{self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
-            os.system(f"echo \' {i+1}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
-            os.system(f"cd {self.bsub_script_path}/submit_cache && "
-                      f"bsub < {job_name}_{i+1}.bsub")
-        os.system("bjobs")
-        self.working_pipelines.append(OrderedDict())
-        self.active_inference_pipeline += 1
-        return f'Succeed to submit job - {job_name}'
+            return f'Fail to submit job - {job_name}, coordinator server is handling other submission'
 
     def _check_if_node_has_joined(self, node_key):
         for pipe in self.working_pipelines:
@@ -173,6 +182,8 @@ class CoordinatorInferenceServer:
         if new_node_rank == 0:
             self.prime_worker_ips.append(worker_ip)
         self.working_pipelines[-1][node_key] = {'rank': new_node_rank}
+        if len(self.working_pipelines[-1]) == self.inference_pipeline_demand_worker_num:
+            self.submit_locked = False
         return_msg = self.prime_worker_ips[-1] + '#' + str(self.working_pipelines[-1][node_key]['rank'])
         return return_msg
 
