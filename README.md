@@ -12,6 +12,8 @@
       # Magic, not sure why cupy-cuda111 would not work, it seems that cupy-cuda111 will use different PTX from torch.
       pip3 install cupy-cuda110==8.6.0
 
+      pip install transformers
+
 - Install deepspeed for some micro-benchmark (optional)
 
       pip install deepspeed
@@ -90,3 +92,34 @@
 
       bash copy_traces.sh #PREFIX
       bash generate_traces.sh #PREFIX
+
+## Run the System on Euler with Coordinator
+
+- First log in to ETH Zurich Euler cluster (need to use VPN if not on campus), our working directory:
+
+      /nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/
+
+- Get the Euler ssh client's node IP, and start the coordinator server (under ./coordinator directory), e.g.:
+
+      python coordinate_server.py --coordinator-server-ip 129.132.93.88 --coordinator-type inference/train
+
+- Alternatively, we can use the following script to submit multiple jobs:
+
+      bash multi_inference_jobs_submit.sh 129.132.93.88 lsf_gptJ_inf_4RTX2080Ti 3 10
+
+- On a different terminal, start a job submission client to submit a job:
+
+      python job_submit_client.py --coordinator-server-ip 129.132.93.88 --submit-job inference --job-name lsf_gptJ_inf_4RTX2080Ti
+
+- So far, we need to manually change the IP in the job-submit templates, e.g. change lsf_gptJ_inf_4gpu.bsub file.
+
+- Check submitted job states:
+
+      bjobs
+
+
+
+
+
+
+

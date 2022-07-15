@@ -474,6 +474,12 @@ class DistGreedyInferenceAsync:
         
         with torch.no_grad():
             self.forward_seq_pipeline_stage(input_data=input_)
+
+        self.comm.barrier()
+        prompt_time = time.time()
+        print("Rank {} node INFERENCE prompt takes {:3.2f}s".format(self.global_rank, prompt_time - start_time))
+
+        with torch.no_grad():
             self.forward_new_token_pipeline_stage()
 
         self.comm.barrier()
@@ -482,6 +488,7 @@ class DistGreedyInferenceAsync:
             output_.append(torch.cat([z.cpu() for z in self.recv_new_token], 1))
         end_time = time.time()
         iter_time = end_time - start_time
+        print("Rank {} node INFERENCE new token takes {:3.2f}s".format(self.global_rank, end_time - prompt_time))
         print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
         print("-------------------------------------------")
         

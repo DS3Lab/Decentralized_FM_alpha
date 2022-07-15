@@ -68,6 +68,7 @@ class CoordinatorInferenceClient:
 
 def main():
     parser = argparse.ArgumentParser(description='Test Coordinator-Client')
+    parser.add_argument('--coordinator-type', type=str, default='train', help='train or inference')
     parser.add_argument('--coordinator-server-port', type=int, default=9002, metavar='N',
                         help='The port of coordinator-server.')
     parser.add_argument('--coordinator-server-ip', type=str, default='localhost', metavar='S',
@@ -76,9 +77,17 @@ def main():
                         help='Job-<ID> assigned by LSF.')
     args = parser.parse_args()
     print(vars(args))
-    client = CoordinatorTrainClient(args)
-    client.notify_train_join()
-    client.notify_train_finish("0#6.88")
+    print(vars(args))
+    if args.coordinator_type == 'train':
+        client = CoordinatorTrainClient(args)
+        client.notify_train_join()
+        client.notify_train_finish("0#6.88")
+    elif args.coordinator_type == 'inference':
+        client = CoordinatorInferenceClient(args)
+        client.notify_inference_join()
+        client.notify_inference_finish("0#6.88")
+    else:
+        assert False
 
 
 if __name__ == '__main__':
