@@ -214,7 +214,7 @@ def get_inference_arguments_str(args, add_rank=True, rank=None):
         arg_str += '_fp16'
     arg_str += '_b' + str(args.batch_size) + '_' + str(args.micro_batch_size)
     arg_str += '_s' + str(args.input_seq_length) + '_' + str(args.generate_seq_length)
-    arg_str += '_w' + str(args.world_size) + '_p' + str(args.pipeline_group_size) + '_d' + str(args.data_group_size)
+    arg_str += '_p' + str(args.pipeline_group_size)
     if add_rank:
         if rank is not None:
             arg_str += '_' + str(rank)
