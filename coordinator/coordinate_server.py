@@ -14,6 +14,12 @@ def server_message_parser(msg: bytes):
             arg_dict['iter_time'] = float(msg_arg[3])
         elif arg_dict['state'] == 'submit':
             arg_dict['job_name'] = msg_arg[2]
+    if arg_dict['task'] == 'inference':
+        if arg_dict['state'] == 'finish':
+            arg_dict['rank'] = int(msg_arg[2])
+            arg_dict['iter_time'] = float(msg_arg[3])
+        elif arg_dict['state'] == 'submit':
+            arg_dict['job_name'] = msg_arg[2]
     return arg_dict
 
 
