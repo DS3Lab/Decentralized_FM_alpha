@@ -106,6 +106,9 @@ def _init_communicators(world_size, data_group_size, pipeline_group_size, rank, 
 
 
 def _init_inference_communicators(pipeline_group_size, rank, cuda_id):
+    global _PIPELINE_PARALLEL_COMM
+    global _PIPELINE_PARALLEL_RANK
+    global _PIPELINE_PARALLEL_WORLD_SIZE
     _PIPELINE_PARALLEL_WORLD_SIZE = pipeline_group_size
     _PIPELINE_PARALLEL_RANK = rank % pipeline_group_size
     _PIPELINE_PARALLEL_COMM = NCCLCommunicator(_PIPELINE_PARALLEL_RANK, cuda_id, pipeline_group_size, "pipeline_group")
