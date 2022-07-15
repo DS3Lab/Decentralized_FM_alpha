@@ -1,12 +1,13 @@
 import socket
 import argparse
+import random
 
 
 class JobSubmitClient:
     def __init__(self, args):
         self.host_ip = args.coordinator_server_ip
         self.host_port = args.coordinator_server_port
-        self.client_port = 9999
+        self.client_port = 9999 + random.randint(0, 3000)
 
     def submit_train_job(self, job_name: str):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
