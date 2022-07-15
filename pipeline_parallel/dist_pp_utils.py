@@ -27,7 +27,7 @@ def get_pp_inference_module(args, device):
     elif args.pp_mode == 'pipe_async_greedy_mask':
         return DistGreedyInferenceMaskAsync(args, device)
     elif args.pp_mode == 'pipe_async_sample_mask':
-        return DistSampeInferenceMaskAsync(args, device)
+        return DistSampleInferenceMaskAsync(args, device)
     else:
         print("Not recognize this pipeline parallel mode.")
         assert False
