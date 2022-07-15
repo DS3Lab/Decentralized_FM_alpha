@@ -21,27 +21,27 @@ def main():
     add_inference_details_arguments(parser)
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
-    parser.add_argument('--model-name', type=str, default='./pretrained_models/gpt2', metavar='S',
-                        help='trained model path')
-    parser.add_argument('--model-type', type=str, default='gpt2', metavar='S',
-                        help='trained model path')
-    parser.add_argument('--infer-data', type=str, default='', metavar='S',
-                        help='data path')
-    parser.add_argument('--top-k', type=int, default=None, metavar='S',
-                        help='sample from top k')
-    parser.add_argument('--top-p', type=float, default=None, metavar='S',
-                        help='sample from top p')
-    parser.add_argument('--temperature', type=float, default=0, metavar='S',
-                        help='temperature on logits')
-    parser.add_argument('--echo-prompt', type=lambda x: (str(x).lower() == 'true'),
-                        default=False, metavar='S',
-                        help='append prompt to the generated text')
-    # TODO: almost, need to fix output_token_emb overlapping issue
-    parser.add_argument('--num-completions', type=int, default=1, metavar='S',
-                        help='num of completions')
-    # TODO
-    parser.add_argument('--top-k-per-token', type=int, default=0, metavar='S',
-                        help='return top k candidate for each token')
+    # parser.add_argument('--model-name', type=str, default='./pretrained_models/gpt2', metavar='S',
+    #                     help='trained model path')
+    # parser.add_argument('--model-type', type=str, default='gpt2', metavar='S',
+    #                     help='trained model path')
+    # parser.add_argument('--infer-data', type=str, default='', metavar='S',
+    #                     help='data path')
+    # parser.add_argument('--top-k', type=int, default=None, metavar='S',
+    #                     help='sample from top k')
+    # parser.add_argument('--top-p', type=float, default=None, metavar='S',
+    #                     help='sample from top p')
+    # parser.add_argument('--temperature', type=float, default=0, metavar='S',
+    #                     help='temperature on logits')
+    # parser.add_argument('--echo-prompt', type=lambda x: (str(x).lower() == 'true'),
+    #                     default=False, metavar='S',
+    #                     help='append prompt to the generated text')
+    # # TODO: almost, need to fix output_token_emb overlapping issue
+    # parser.add_argument('--num-completions', type=int, default=1, metavar='S',
+    #                     help='num of completions')
+    # # TODO
+    # parser.add_argument('--top-k-per-token', type=int, default=0, metavar='S',
+    #                     help='return top k candidate for each token')
     parser.add_argument('--profiling', type=str, default='tidy_profiling', metavar='S',
                         help='enable which profiling? default: tidy mode')
     parser.add_argument('--trace-postfix', type=str, default='default', metavar='S',
