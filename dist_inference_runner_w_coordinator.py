@@ -53,7 +53,7 @@ def main():
         request_processor = None
         print('warning: todo: arguments specified in the request will not take effect.')
 
-    pipe = get_pp_inference_module(args, device)
+    pipe = get_pp_inference_module(args, device, rank=rank)
 
     if args.profiling == 'no-profiling':
         avg_iter_time = distributed_inference_foo_iter(args, pipe, device, request_processor)

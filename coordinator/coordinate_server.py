@@ -126,9 +126,9 @@ class CoordinatorInferenceServer:
         self.inference_pipeline_demand_worker_num = 0
 
     def _print_current_working_nodes(self):
-        print("<----------------Current Working Pipelines---------------->")
+        print(f"<----------------Current Working Pipelines{len(self.working_pipelines)}---------------->")
         for i in range(len(self.working_pipelines)):
-            print("<----------------Current Pipeline Workers---------------->")
+            print(f"<----------------Current Pipeline [{i}] Workers---------------->")
             for node_key in self.working_pipelines[i].keys():
                 print(f"Node rank {self.working_pipelines[i][node_key]['rank']}, Address: {node_key}")
         print("-------------------------------------------------------")
