@@ -204,7 +204,7 @@ class RequestProcessor:
                 }
             }
             self.data[idx]['result'] = item
-            print(json.dumps(item, indent=4))
+            # print(json.dumps(item, indent=4))
         
     def write_scenario_state(self):
         with open(self.output_path, 'w') as f:
