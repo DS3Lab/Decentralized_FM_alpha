@@ -130,4 +130,4 @@ def init_communicators_with_coordinator(args, prime_ip, rank):
 
 def init_inference_communicators_with_coordinator(args, prime_ip, rank):
     init_with_coordinator(args, prime_ip, rank)
-    _init_inference_communicators(args.pipeline_group_size, args.rank, args.cuda_id)
+    _init_inference_communicators(args.pipeline_group_size, rank, args.cuda_id)
