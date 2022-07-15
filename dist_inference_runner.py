@@ -26,13 +26,12 @@ def main():
                         help='trained model path')
     parser.add_argument('--infer-data', type=str, default='', metavar='S',
                         help='data path')
-    parser.add_argument('--top-k', type=int, default=1, metavar='S',
+    parser.add_argument('--top-k', type=int, default=None, metavar='S',
                         help='sample from top k')
-    parser.add_argument('--top-p', type=float, default=1, metavar='S',
+    parser.add_argument('--top-p', type=float, default=None, metavar='S',
                         help='sample from top p')
-    parser.add_argument('--temperature', type=float, default=1, metavar='S',
+    parser.add_argument('--temperature', type=float, default=0, metavar='S',
                         help='temperature on logits')
-    # TODO: trivial
     parser.add_argument('--echo-prompt', type=lambda x: (str(x).lower() == 'true'),
                         default=False, metavar='S',
                         help='append prompt to the generated text')
@@ -77,17 +76,17 @@ def main():
     pipe = get_pp_inference_module(args, device)
 
     if args.profiling == 'no-profiling':
-        distributed_inference_foo_iter(args, pipe, device, request_processor)
+        distributed_inference_mask_iter(args, pipe, device, request_processor)
     else:
         prefix = './trace_json/inference_' + args.pp_mode
         trace_file = prefix + get_inference_arguments_str(args) + '_' + args.profiling + '_' + args.trace_postfix + \
                      '.json'
         if args.profiling == 'tidy_profiling':
-            distributed_inference_foo_iter(args, pipe, device, request_processor)
+            distributed_inference_mask_iter(args, pipe, device, request_processor)
             pipe.export_profiling_result(filename=trace_file)
         elif args.profiling == 'pytorch_profiling':
             with profiler.profile(profile_memory=True, use_cuda=args.use_cuda) as prof:
-                distributed_inference_foo_iter(args, pipe, device, request_processor)
+                distributed_inference_mask_iter(args, pipe, device, request_processor)
             print(prof.key_averages().table())
             prof.export_chrome_trace(trace_file)
         else:
