@@ -103,6 +103,10 @@
 
       python coordinate_server.py --coordinator-server-ip 129.132.93.88 --coordinator-type inference/train
 
+- Alternatively, we can use the following script to submit multiple jobs:
+
+      bash multi_inference_jobs_submit.sh 129.132.93.88 lsf_gptJ_inf_4RTX2080Ti 3 10
+
 - On a different terminal, start a job submission client to submit a job:
 
       python job_submit_client.py --coordinator-server-ip 129.132.93.88 --submit-job inference --job-name lsf_gptJ_inf_4RTX2080Ti
