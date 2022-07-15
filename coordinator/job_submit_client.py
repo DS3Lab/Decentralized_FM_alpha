@@ -40,7 +40,7 @@ def main():
     if args.submit_job == 'train':
         client.submit_train_job(args.job_name)
     elif args.submit_job == 'inference':
-        client.submit_inference_job()
+        client.submit_inference_job(args.job_name)
     else:
         assert False
 

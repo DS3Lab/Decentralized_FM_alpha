@@ -90,3 +90,25 @@
 
       bash copy_traces.sh #PREFIX
       bash generate_traces.sh #PREFIX
+
+## Run the System on Euler with Coordinator
+
+- First log in to ETH Zurich Euler cluster (need to use VPN if not on campus), our working directory:
+
+      /nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/
+
+- Get the Euler ssh client's node IP, and start the coordinator server (under ./coordinator directory), e.g.:
+
+      python coordinate_server.py --coordinator-server-ip 129.132.93.88 --coordinator-type inference/train
+
+- On a different terminal, start a job submission client to submit a job:
+
+      python job_submit_client.py --coordinator-server-ip 129.132.93.88 --submit-job inference --job-name lsf_gptJ_inf_4gpu
+
+
+
+
+
+
+
+
