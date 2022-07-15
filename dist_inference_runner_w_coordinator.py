@@ -56,17 +56,17 @@ def main():
     pipe = get_pp_inference_module(args, device, rank=rank)
 
     if args.profiling == 'no-profiling':
-        avg_iter_time = distributed_inference_foo_iter(args, pipe, device, request_processor)
+        avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor)
     else:
         prefix = './trace_json/inference_' + args.pp_mode
         trace_file = prefix + get_inference_arguments_str(args, rank=rank) + '_' + args.profiling + '_' + args.trace_postfix + \
                      '.json'
         if args.profiling == 'tidy_profiling':
-            avg_iter_time = distributed_inference_foo_iter(args, pipe, device, request_processor)
+            avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor)
             pipe.export_profiling_result(filename=trace_file)
         elif args.profiling == 'pytorch_profiling':
             with profiler.profile(profile_memory=True, use_cuda=args.use_cuda) as prof:
-                avg_iter_time = distributed_inference_foo_iter(args, pipe, device, request_processor)
+                avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor)
             print(prof.key_averages().table())
             prof.export_chrome_trace(trace_file)
         else:

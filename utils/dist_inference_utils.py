@@ -4,7 +4,6 @@ from datetime import datetime
 from comm.comm_utils import *
 
 
-
 def distributed_inference_foo_iter(args, pipeline, device, request_processor):
     
     total_time = 0
@@ -51,7 +50,7 @@ def distributed_inference_mask_iter(args, pipeline, device, request_processor):
             attention_mask = inputs['attention_mask'].to(device)
             output_ids_list = []
             current_iter_time = pipeline.inference_batch(input_ids, output_ids_list, attention_mask=attention_mask)
-            request_processor.add_result(inputs, output_ids_list)
+            request_processor.add_result(inputs, output_ids_list, batch_time=current_iter_time)
             
             if i > 0:
                 total_time += current_iter_time

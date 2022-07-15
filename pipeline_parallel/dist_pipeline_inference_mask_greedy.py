@@ -36,8 +36,11 @@ class DistGreedyInferenceMaskAsync:
         self.num_layers = args.num_layers
         self.model_name = args.model_name
         self.model_type = args.model_type
+        self.top_k_per_token = args.top_k_per_token
 
         assert (args.batch_size % args.micro_batch_size == 0)
+        self.batch_size = args.batch_size
+        self.micro_batch_size = args.micro_batch_size
         self.seq_num = args.batch_size // args.micro_batch_size
         self.input_seq_length = args.input_seq_length
         self.generate_seq_length = args.generate_seq_length
@@ -88,11 +91,39 @@ class DistGreedyInferenceMaskAsync:
             self.recv_new_token = [torch.zeros((self.seq_num, 1),
                                                requires_grad=False, device=self.device, dtype=torch.int64)
                                    for _ in range(self.generate_seq_length)]
+            self.recv_new_token_logprob = [torch.zeros((self.seq_num, 1),
+                                                requires_grad=False, device=self.device, dtype=self.dtype)
+                                    for _ in range(self.generate_seq_length)]
+            
+            if self.top_k_per_token > 0:
+                self.recv_topk_token = [torch.zeros((self.seq_num, 1, self.top_k_per_token),
+                                                   requires_grad=False, device=self.device, dtype=torch.int64)
+                                       for _ in range(self.generate_seq_length)]
+                self.recv_topk_logprob = [torch.zeros((self.seq_num, 1, self.top_k_per_token),
+                                                   requires_grad=False, device=self.device, dtype=self.dtype)
+                                       for _ in range(self.generate_seq_length)]
 
         if self.pp_rank == self.pipeline_group_size - 1:
             self.send_new_tokens = [torch.zeros((self.seq_num, 1),
                                                 requires_grad=False, device=self.device, dtype=torch.int64)
                                     for _ in range(self.generate_seq_length)]
+            self.send_new_token_logprobs = [torch.zeros((self.seq_num, 1),
+                                                requires_grad=False, device=self.device, dtype=self.dtype)
+                                    for _ in range(self.generate_seq_length)]
+            
+            if self.top_k_per_token > 0:
+                self.send_topk_token = [torch.zeros((self.seq_num, 1, self.top_k_per_token),
+                                                   requires_grad=False, device=self.device, dtype=torch.int64)
+                                       for _ in range(self.generate_seq_length)]
+                self.send_topk_logprob = [torch.zeros((self.seq_num, 1, self.top_k_per_token),
+                                                   requires_grad=False, device=self.device, dtype=self.dtype)
+                                       for _ in range(self.generate_seq_length)]
+            
+        if self.pp_rank == self.pipeline_group_size - 1:
+            self.initial_output_token_emb = torch.zeros(
+                (self.seq_num, 1, self.embedding_dim),
+                requires_grad=False, device=self.device, dtype=self.dtype
+            )
 
         self.input_seq_emb = [torch.zeros((args.micro_batch_size, self.input_seq_length, self.embedding_dim),
                                           requires_grad=False, device=self.device, dtype=self.dtype)
@@ -116,6 +147,11 @@ class DistGreedyInferenceMaskAsync:
         
 
     def _print_buffers(self):
+        
+        if self.generate_seq_length == 0:
+            # dont print when seq_length == 0
+            return
+        
         if self.pp_rank == 0:
             if self.use_fp16:
                 print("=======Rank-(0) recv_new_token: {} KB (fp16)======="
@@ -226,7 +262,7 @@ class DistGreedyInferenceMaskAsync:
                 current_emb, self.cached_attention[layer_index][index] = \
                     self.layers['block' + str(layer_index)](current_emb, mask=mask)
         if self.pp_rank == self.pipeline_group_size - 1:
-            self.output_token_emb[0][index] = self.output_seq_emb[index][:, -1:]
+            self.initial_output_token_emb[index] = self.output_seq_emb[index][:, -1:]
 
     def _forward_compute_generate_token(self, step, mask=None):
         print("Compute generate seq<", step, ">.")
@@ -246,9 +282,19 @@ class DistGreedyInferenceMaskAsync:
 
     def _generate_new_token(self, step):
         assert self.pp_rank == self.pipeline_group_size - 1
-        z = self.layers['lm'](self.output_token_emb[step])
+        if step >= 0:
+            z = self.layers['lm'](self.output_token_emb[step])
+        else:
+            # generate from prompt
+            z = self.layers['lm'](self.initial_output_token_emb)
+            step = 0
         self.send_new_tokens[step] = z.argmax(-1)
-        # print(step, self.send_new_tokens[step][0])
+        self.send_new_token_logprobs[step] = z[self.send_new_tokens[step]]
+        if self.top_k_per_token > 0:
+            z = torch.nn.functional.log_softmax(z, -1)
+            logprobs, indices = z.topk(k=self.top_k_per_token, dim=-1)
+            self.send_topk_token[step] = indices 
+            self.send_topk_logprob[step] = logprobs
 
     def profile_mark_forward_seq_comp_start(self, i):
         if self.enable_tidy_profiling:
@@ -367,17 +413,26 @@ class DistGreedyInferenceMaskAsync:
             self.torch_send_stream.record_event(self.forward_token_send_end_events[i])
 
     def forward_new_token_pipeline_stage(self, attention_mask=None):
+        
+        if self.generate_seq_length == 0:
+            # handle seq_length == 0
+            return
+            
         self._merge_cached_seqs_and_attentions()
         if self.pp_rank == self.pipeline_group_size - 1:
             with torch.cuda.stream(self.torch_comp_stream):
                 self.profile_mark_forward_token_comp_start(0)
-                self._generate_new_token(0)
+                self._generate_new_token(-1) # generate from prompt
                 self.torch_comp_stream.record_event(self.forward_token_comp_ready_events[0])
             with torch.cuda.stream(self.torch_send_stream):
                 cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
                 self.torch_send_stream.wait_event(self.forward_token_comp_ready_events[0])
                 self.profile_mark_forward_token_send_start(0)
                 self.comm.send(self.send_new_tokens[0], dst=0, stream=cupy_send_stream)
+                self.comm.send(self.send_new_token_logprobs[0], dst=0, stream=cupy_send_stream)
+                if self.top_k_per_token > 0:
+                    self.comm.send(self.send_topk_token[0], dst=0, stream=cupy_send_stream)
+                    self.comm.send(self.send_topk_logprob[0], dst=0, stream=cupy_send_stream)
                 self.profile_mark_forward_token_send_end(0)
 
         for i in range(self.generate_seq_length):
@@ -391,6 +446,10 @@ class DistGreedyInferenceMaskAsync:
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                     self.profile_mark_forward_token_recv_start(i)
                     self.comm.recv(self.recv_new_token[i], src=self.pipeline_group_size-1, stream=cupy_recv_stream)
+                    self.comm.recv(self.recv_new_token_logprob[i], src=self.pipeline_group_size-1, stream=cupy_recv_stream)
+                    if self.top_k_per_token > 0:
+                        self.comm.recv(self.recv_topk_token[i], src=self.pipeline_group_size-1, stream=cupy_recv_stream)
+                        self.comm.recv(self.recv_topk_logprob[i], src=self.pipeline_group_size-1, stream=cupy_recv_stream)
                     self.torch_recv_stream.record_event(self.forward_token_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.forward_token_recv_ready_events[i])
@@ -420,6 +479,10 @@ class DistGreedyInferenceMaskAsync:
                         self.torch_send_stream.wait_event(self.forward_token_comp_ready_events[i+1])
                         self.profile_mark_forward_token_send_start(i+1)
                         self.comm.send(self.send_new_tokens[i], dst=0, stream=cupy_send_stream) # Note: i+1 is wrong. tiny up tomorrow
+                        self.comm.send(self.send_new_token_logprobs[i], dst=0, stream=cupy_send_stream)
+                        if self.top_k_per_token > 0:
+                            self.comm.send(self.send_topk_token[i], dst=0, stream=cupy_send_stream)
+                            self.comm.send(self.send_topk_logprob[i], dst=0, stream=cupy_send_stream)
                         self.profile_mark_forward_token_send_end(i+1)
             else:
                 with torch.cuda.stream(self.torch_recv_stream):
@@ -488,7 +551,16 @@ class DistGreedyInferenceMaskAsync:
         self.comm.barrier()
         if self.pp_rank == 0 and output_ is not None:
             assert isinstance(output_, list)
-            output_.append(torch.cat([z.cpu() for z in self.recv_new_token], 1))
+            item = {}
+            if self.generate_seq_length > 0:
+                item = {
+                    'token_ids': torch.cat([z.cpu() for z in self.recv_new_token], 1),
+                    'token_logprobs': torch.cat([z.cpu() for z in self.recv_new_token_logprob], 1),
+                }
+                if self.top_k_per_token > 0:
+                    item['topk_ids'] = torch.cat([z.cpu() for z in self.recv_topk_token], 1)
+                    item['topk_logprobs'] = torch.cat([z.cpu() for z in self.recv_topk_logprob], 1)
+            output_.append(item)
         end_time = time.time()
         iter_time = end_time - start_time
         print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
