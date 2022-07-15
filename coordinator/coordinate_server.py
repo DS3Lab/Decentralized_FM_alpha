@@ -7,7 +7,7 @@ import os
 def server_message_parser(msg: bytes):
     msg_arg = msg.decode().split('#')
     arg_dict = {'task': msg_arg[0],
-                'state': msg_arg[1]}
+                'state': msg_arg[1],}
     if arg_dict['task'] == 'train':
         if arg_dict['state'] == 'finish':
             arg_dict['rank'] = int(msg_arg[2])
@@ -20,6 +20,7 @@ def server_message_parser(msg: bytes):
             arg_dict['iter_time'] = float(msg_arg[3])
         elif arg_dict['state'] == 'submit':
             arg_dict['job_name'] = msg_arg[2]
+            arg_dict['infer_data'] = msg_arg[3] 
     return arg_dict
 
 
