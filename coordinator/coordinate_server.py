@@ -140,7 +140,7 @@ class CoordinatorInferenceServer:
                 print(f"Node rank {self.working_pipelines[i][node_key]['rank']}, Address: {node_key}")
         print("-------------------------------------------------------")
 
-    def _handle_inference_submit(self, job_name) -> str:
+    def _handle_inference_submit(self, job_name, infer_data) -> str:
         print("<<<<<<<<<<<<<<<<<<<<< Submit Job >>>>>>>>>>>>>>>>>>>>>>")
         if not self.submit_locked:
             self.submit_locked = True
@@ -152,7 +152,7 @@ class CoordinatorInferenceServer:
                 os.system(f"rm {self.bsub_script_path}/submit_cache/*.bsub")
                 os.system(f"cp {self.bsub_script_path}/{job_name}.bsub "
                           f"{self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
-                os.system(f"echo \' {self._allocate_index()}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
+                os.system(f"echo \'--lsf-job-no {self._allocate_index()} --infer-data {infer_data}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
                 os.system(f"cd {self.bsub_script_path}/submit_cache && "
                           f"bsub < {job_name}_{i+1}.bsub")
             os.system("bjobs")
@@ -217,7 +217,7 @@ class CoordinatorInferenceServer:
                     msg_arg = server_message_parser(msg_data)
                     if msg_arg['task'] == 'inference':
                         if msg_arg['state'] == 'submit':
-                            return_msg = self._handle_inference_submit(msg_arg['job_name'])
+                            return_msg = self._handle_inference_submit(msg_arg['job_name'], msg_arg['infer_data'])
                         elif msg_arg['state'] == 'join':
                             return_msg = self._handle_inference_join(worker_ip, port)
                         elif msg_arg['state'] == 'finish':
