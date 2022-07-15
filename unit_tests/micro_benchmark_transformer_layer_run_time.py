@@ -126,6 +126,8 @@ def main():
     parser.add_argument('--num-heads', type=int, default=4, metavar='N',
                         help='-')
     args = parser.parse_args()
+    print(hasattr(args, 'foo'))
+    assert hasattr(args, 'cuda_id')
     if args.use_cuda:
         assert (torch.cuda.is_available())
         device = torch.device('cuda', args.cuda_id)
