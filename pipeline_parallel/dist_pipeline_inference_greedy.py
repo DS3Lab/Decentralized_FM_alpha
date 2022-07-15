@@ -475,6 +475,7 @@ class DistGreedyInferenceAsync:
         with torch.no_grad():
             self.forward_seq_pipeline_stage(input_data=input_)
 
+        self.comm.barrier()
         prompt_time = time.time()
         print("Rank {} node INFERENCE prompt takes {:3.2f}s".format(self.global_rank, prompt_time - start_time))
 

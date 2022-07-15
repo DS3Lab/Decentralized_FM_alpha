@@ -136,7 +136,7 @@ class CoordinatorInferenceServer:
     def _handle_inference_submit(self, job_name) -> str:
         print("<<<<<<<<<<<<<<<<<<<<< Submit Job >>>>>>>>>>>>>>>>>>>>>>")
 
-        if job_name == 'lsf_gptJ_inf_4gpu':
+        if job_name == 'lsf_gptJ_inf_4RTX2080Ti' or job_name == 'lsf_gptJ_inf_4RTXTitan.bsub':
             self.inference_pipeline_demand_worker_num = 4
         else:
             return f'This job is not recognized on coordinate - {job_name}'

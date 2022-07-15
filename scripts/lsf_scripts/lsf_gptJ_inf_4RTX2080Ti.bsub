@@ -3,9 +3,9 @@
 #BSUB -W 0:20                   # 3-minutes run-time
 #BSUB -R "rusage[mem=16000]"     # 32 GB per core
 #BSUB -R "rusage[ngpus_excl_p=1]"
-#BSUB -R "select[gpu_model0==NVIDIATITANRTX]"
-#BSUB -o /nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/exe_log/gptJ_inf_4gpu.out.%J
-#BSUB -e /nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/exe_log/gptJ_inf_4gpu.err.%J
+#BSUB -R "select[gpu_model0==NVIDIAGeForceRTX2080Ti]"
+#BSUB -o /nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/exe_log/gptJ_inf_4RTX2080Ti.out.%J
+#BSUB -e /nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/exe_log/gptJ_inf_4RTX2080Ti.err.%J
 
 module load gcc/6.3.0 cuda/11.0.3             # Load modules from Euler setup
 source activate base                          # Activate my conda python environment
@@ -17,7 +17,7 @@ world_size=4
 
 DIST_CONF="--pp-mode pipe_sync_greedy --pipeline-group-size $world_size --cuda-id 0"
 MODEL_CONF="--model-type gptj --model-name ./pretrained_models/gpt-j-6B"
-INFERENCE_CONF="--fp16 --batch-size 48 --input-seq-length 512 --generate-seq-length 32 --micro-batch-size 1 --num-layers 7"
+INFERENCE_CONF="--fp16 --batch-size 32 --input-seq-length 512 --generate-seq-length 32 --micro-batch-size 1 --num-layers 7"
 COOR_CONF="--coordinator-server-ip 129.132.93.88"
 
 export NCCL_SOCKET_IFNAME=access

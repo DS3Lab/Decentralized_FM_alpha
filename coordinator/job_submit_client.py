@@ -32,7 +32,7 @@ def main():
                         help='The port of coordinator-server.')
     parser.add_argument('--coordinator-server-ip', type=str, default='localhost', metavar='S',
                         help='The IP of coordinator-server.')
-    parser.add_argument('--job-name', type=str, default='lsf_gpt3small_1gpu_3node', metavar='S',
+    parser.add_argument('--job-name', type=str, default='lsf_gptJ_inf_4RTX2080Ti', metavar='S',
                         help='Support a fixed list of job first, this can be more flexible later.')
     args = parser.parse_args()
     print(vars(args))
