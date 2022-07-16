@@ -9,7 +9,8 @@ def client_message_parser(msg: bytes, context: str):
                     'my_rank': int(msg_arg[1])}
     elif context == 'join_inference':
         arg_dict = {'prime_ip': msg_arg[0],
-                    'my_rank': int(msg_arg[1])}
+                    'my_rank': int(msg_arg[1]),
+                    'port': int(msg_arg)}
     else:
         assert False
     return arg_dict
@@ -55,7 +56,7 @@ class CoordinatorInferenceClient:
             msg = s.recv(1024)
             print(f"Received: {msg}")
             msg_arg = client_message_parser(msg, 'join_inference')
-            return msg_arg['prime_ip'], msg_arg['my_rank']
+            return msg_arg['prime_ip'], msg_arg['my_rank'], msg_arg['port']
 
     def notify_inference_finish(self, message: str):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
