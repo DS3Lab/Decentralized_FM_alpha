@@ -189,7 +189,7 @@ class CoordinatorInferenceServer:
         # all nodes have the same random port
         random.seed(self.prime_worker_ips[-1])
         nccl_port = 10000 + random.randint(0,1000)
-        return_msg = self.prime_worker_ips[-1] + '#' + str(self.working_pipelines[-1][node_key]['rank']) + '#' + nccl_port
+        return_msg = self.prime_worker_ips[-1] + '#' + str(self.working_pipelines[-1][node_key]['rank']) + '#' + str(nccl_port)
         return return_msg
 
     def _handle_inference_finish(self, worker_ip, port, msg_arg) -> str:
