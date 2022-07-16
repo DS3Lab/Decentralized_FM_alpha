@@ -94,7 +94,7 @@ class DummyRequestProcessor:
                                     output_dict['topk_ids'][i], 
                                     output_dict['topk_logprobs'][i]
                                 )
-                            ] if self.top_k_per_token > 0 else None),
+                            ] if self.top_k_per_token > 0 and self.generate_seq_length > 0 else None),
                             "text_offset": [],
                         },
                         "finish_reason": "stop",
@@ -192,7 +192,7 @@ class RequestProcessor:
                                     output_dict['topk_ids'][i], 
                                     output_dict['topk_logprobs'][i]
                                 )
-                            ] if self.top_k_per_token > 0 else None),
+                            ] if self.top_k_per_token > 0 and self.generate_seq_length > 0 else None),
                             "text_offset": [],
                         },
                         "finish_reason": "length",
