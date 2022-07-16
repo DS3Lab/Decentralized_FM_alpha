@@ -31,10 +31,10 @@ def main():
         device = torch.device('cpu')
 
     coord_client = CoordinatorInferenceClient(args)
-    prime_ip, rank = coord_client.notify_inference_join()
+    prime_ip, rank, port = coord_client.notify_inference_join()
     print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
 
-    init_inference_communicators_with_coordinator(args, prime_ip, rank)
+    init_inference_communicators_with_coordinator(args, prime_ip, rank, port=port)
 
     if get_pipeline_parallel_rank() == 0 or True:
 
