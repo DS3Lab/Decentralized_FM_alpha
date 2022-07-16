@@ -190,6 +190,7 @@ class CoordinatorInferenceServer:
         random.seed(self.prime_worker_ips[-1])
         nccl_port = 15000 + random.randint(0,1000)
         return_msg = self.prime_worker_ips[-1] + '#' + str(self.working_pipelines[-1][node_key]['rank']) + '#' + str(nccl_port)
+        print(return_msg)
         return return_msg
 
     def _handle_inference_finish(self, worker_ip, port, msg_arg) -> str:
