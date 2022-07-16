@@ -26,11 +26,11 @@ class JobSubmitClient:
                 s.sendall(b"inference#submit#"+job_name.encode())
                 msg = s.recv(1024)
                 print(f"Received: {msg}")
-            if not str(msg).startswith('Fail'):
-                break
-            else:
+            if msg.decode('utf-8').startswith('Fail'):
                 print("try again in 10 seconds..")
                 time.sleep(10)
+            else:
+                break
 
 
 def main():
