@@ -195,7 +195,7 @@ class RequestProcessor:
                             ] if self.top_k_per_token > 0 else None),
                             "text_offset": [],
                         },
-                        "finish_reason": "stop",
+                        "finish_reason": "length",
                     } for i_ret, output_dict in enumerate(outputs)
                 ],
                 'request_time': {
