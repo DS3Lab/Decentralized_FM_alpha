@@ -10,7 +10,7 @@ def client_message_parser(msg: bytes, context: str):
     elif context == 'join_inference':
         arg_dict = {'prime_ip': msg_arg[0],
                     'my_rank': int(msg_arg[1]),
-                    'port': int(msg_arg)}
+                    'port': int(msg_arg[2])}
     else:
         assert False
     return arg_dict
