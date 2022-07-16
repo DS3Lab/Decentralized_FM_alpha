@@ -1,3 +1,4 @@
+import time
 import socket
 import argparse
 import random
@@ -18,12 +19,18 @@ class JobSubmitClient:
             print(f"Received: {msg}")
 
     def submit_inference_job(self, job_name: str):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(('', self.client_port))
-            s.connect((self.host_ip, self.host_port))
-            s.sendall(b"inference#submit#"+job_name.encode())
-            msg = s.recv(1024)
-            print(f"Received: {msg}")
+        while True:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(('', self.client_port))
+                s.connect((self.host_ip, self.host_port))
+                s.sendall(b"inference#submit#"+job_name.encode())
+                msg = s.recv(1024)
+                print(f"Received: {msg}")
+            if not str(msg).startswith('Fail'):
+                break
+            else:
+                print("try again in 10 seconds..")
+                time.sleep(10)
 
 
 def main():
