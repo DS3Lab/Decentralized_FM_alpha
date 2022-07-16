@@ -198,6 +198,10 @@ class DistGreedyInferenceMaskAsync:
             from modules.hf_gptj_module import GPTConfig
             config = GPTConfig.from_pretrained(self.model_name)
             return config.n_embd
+        elif self.model_type == 'gptneox':
+            from modules.hf_gptneox_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.hidden_size
         else:
             raise Exception(f'unknown model type {self.model_type}')
 
@@ -206,6 +210,8 @@ class DistGreedyInferenceMaskAsync:
             from modules.hf_gpt2_module import GPTEmbeddings, GPTBlock, GPTLMHead
         elif self.model_type == 'gptj':
             from modules.hf_gptj_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'gptneox':
+            from modules.hf_gptneox_module import GPTEmbeddings, GPTBlock, GPTLMHead
         else:
             raise Exception(f'unknown model type {self.model_type}')
         
@@ -288,10 +294,12 @@ class DistGreedyInferenceMaskAsync:
             # generate from prompt
             z = self.layers['lm'](self.initial_output_token_emb)
             step = 0
-        self.send_new_tokens[step] = z.argmax(-1)
-        self.send_new_token_logprobs[step] = z[self.send_new_tokens[step]]
+        z = torch.nn.functional.log_softmax(z, -1)
+        logprobs, indices = z.topk(k=1, dim=-1)
+        self.send_new_tokens[step] = indices.squeeze(-1)
+        self.send_new_token_logprobs[step] =logprobs.squeeze(-1)
+        # self.send_new_token_logprobs[step] = z[self.send_new_tokens[step]]
         if self.top_k_per_token > 0:
-            z = torch.nn.functional.log_softmax(z, -1)
             logprobs, indices = z.topk(k=self.top_k_per_token, dim=-1)
             self.send_topk_token[step] = indices 
             self.send_topk_logprob[step] = logprobs

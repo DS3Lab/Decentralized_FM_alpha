@@ -126,7 +126,6 @@ class GPTJAttention(_GPTJAttention):
         return outputs  # a, present, (attentions)
 
 
-
 class GPTEmbeddings(nn.Module):
     def __init__(self, config):
         super().__init__()
