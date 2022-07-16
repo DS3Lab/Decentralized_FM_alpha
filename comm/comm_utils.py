@@ -131,6 +131,6 @@ def init_communicators_with_coordinator(args, prime_ip, rank):
     _init_communicators(args.world_size, args.data_group_size, args.pipeline_group_size, rank, args.cuda_id)
 
 
-def init_inference_communicators_with_coordinator(args, prime_ip, rank):
-    init_with_coordinator(args, prime_ip, rank)
+def init_inference_communicators_with_coordinator(args, prime_ip, rank, port=9999):
+    init_with_coordinator(args, prime_ip, rank, port=port)
     _init_inference_communicators(args.pipeline_group_size, rank, args.cuda_id)
