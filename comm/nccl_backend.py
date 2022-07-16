@@ -218,13 +218,13 @@ def default_init(args):
                                 world_size=args.pipeline_group_size, rank=args.rank)
 
 
-def init_with_coordinator(args, prime_ip, rank):
+def init_with_coordinator(args, prime_ip, rank, port=9999):
     if hasattr(args, 'world_size'):
-        dist.init_process_group(backend='gloo', init_method='tcp://'+prime_ip+':9999',
+        dist.init_process_group(backend='gloo', init_method='tcp://'+prime_ip+f':{port}',
                                 world_size=args.world_size, rank=rank)
     else:
         assert hasattr(args, 'pipeline_group_size')
-        dist.init_process_group(backend='gloo', init_method='tcp://' + prime_ip + ':9999',
+        dist.init_process_group(backend='gloo', init_method='tcp://' + prime_ip + f':{port}',
                                 world_size=args.pipeline_group_size, rank=rank)
 
 
