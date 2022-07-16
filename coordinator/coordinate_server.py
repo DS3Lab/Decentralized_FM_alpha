@@ -187,7 +187,7 @@ class CoordinatorInferenceServer:
         if len(self.working_pipelines[-1]) == self.inference_pipeline_demand_worker_num:
             self.submit_locked = False
         # all nodes have the same random port
-        random.seed(self.prime_worker_ips[-1])
+        random.seed(self.allocated_index)
         nccl_port = 15000 + random.randint(0,1000)
         return_msg = self.prime_worker_ips[-1] + '#' + str(self.working_pipelines[-1][node_key]['rank']) + '#' + str(nccl_port)
         print(return_msg)
