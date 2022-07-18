@@ -38,14 +38,7 @@ def main():
 
     if get_pipeline_parallel_rank() == 0 or True:
 
-        tokenizer = AutoTokenizer.from_pretrained(args.model_name)
-        if tokenizer.pad_token is None:
-            tokenizer.pad_token = tokenizer.eos_token
-        tokenizer.padding_side = 'left'
-        tokenizer.truncation_side = 'left'
-        tokenizer.model_max_length = args.input_seq_length
-
-        request_processor = get_request_processor(args, tokenizer)
+        request_processor = get_request_processor(args)
         request_processor.set_arguments(args)
 
     else:

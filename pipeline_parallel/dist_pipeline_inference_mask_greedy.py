@@ -303,6 +303,12 @@ class DistGreedyInferenceMaskAsync:
             logprobs, indices = z.topk(k=self.top_k_per_token, dim=-1)
             self.send_topk_token[step] = indices 
             self.send_topk_logprob[step] = logprobs
+            
+    def _process_attention_mask_during_generation(self, attention_mask):
+        if attention_mask is not None:
+            # increase one for the new token
+            attention_mask = torch.nn.functional.pad(attention_mask, pad=(0, 1), mode='constant', value=1)
+        return attention_mask
 
     def profile_mark_forward_seq_comp_start(self, i):
         if self.enable_tidy_profiling:
@@ -445,9 +451,7 @@ class DistGreedyInferenceMaskAsync:
 
         for i in range(self.generate_seq_length):
             
-            if attention_mask is not None:
-                # increase one for the new token
-                attention_mask = torch.nn.functional.pad(attention_mask, pad=(0, 1), mode='constant', value=1)
+            attention_mask = self._process_mask_during_generation(attention_mask)
             
             if self.pp_rank == 0:
                 with torch.cuda.stream(self.torch_recv_stream):

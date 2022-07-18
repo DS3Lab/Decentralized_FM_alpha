@@ -3,12 +3,12 @@ import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from transformers import AutoTokenizer
 
 
 class JsonDataset(torch.utils.data.Dataset):
     def __init__(self, data, tokenizer, batch_size=None):
-        if tokenizer.pad_token is None:
-            tokenizer.pad_token = tokenizer.eos_token
+        
         self.tokenizer = tokenizer
         self.data = data
         self.idx = list(range(len(data)))
@@ -77,11 +77,11 @@ class DummyRequestProcessor:
                 
             echo_text = tokenizer.decode(
                 inputs['text'][i]
-            ).replace('<|endoftext|>', '')
+            ).replace(tokenizer.pad_token, '')
             item = {
                 'choices': [
                     {
-                        "text": (echo_text + (tokenizer.decode(output_dict['token_ids'][i]).replace('<|endoftext|>', '') if 'token_ids' in output_dict else '')),
+                        "text": (echo_text + (tokenizer.decode(output_dict['token_ids'][i]).replace(tokenizer.pad_token, '') if 'token_ids' in output_dict else '')),
                         "index": i_ret,
                         "logprobs": {
                             "tokens": (tokenizer.convert_ids_to_tokens(output_dict['token_ids'][i] if 'token_ids' in output_dict else [])),
@@ -97,7 +97,7 @@ class DummyRequestProcessor:
                             ] if self.top_k_per_token > 0 and self.max_tokens > 0 else None),
                             "text_offset": [],
                         },
-                        "finish_reason": "stop",
+                        "finish_reason": "length",
                     } for i_ret, output_dict in enumerate(outputs)
                 ],
                 'request_time': {
@@ -113,6 +113,7 @@ class DummyRequestProcessor:
 
 class RequestProcessor:
     def __init__(self, request_path, tokenizer):
+        
         self.tokenizer = tokenizer
         self.request_path = request_path
         dirname = os.path.dirname(request_path)
@@ -173,13 +174,13 @@ class RequestProcessor:
             if self.echo_prompt:
                 echo_text = tokenizer.decode(
                     inputs['text'][i]
-                ).replace('<|endoftext|>', '')
+                ).replace(tokenizer.pad_token, '')
             else:
                 echo_text = ''
             item = {
                 'choices': [
                     {
-                        "text": (echo_text + (tokenizer.decode(output_dict['token_ids'][i]).replace('<|endoftext|>', '') if 'token_ids' in output_dict else '')),
+                        "text": (echo_text + (tokenizer.decode(output_dict['token_ids'][i]).replace(tokenizer.pad_token, '') if 'token_ids' in output_dict else '')),
                         "index": i_ret,
                         "logprobs": {
                             "tokens": (tokenizer.convert_ids_to_tokens(output_dict['token_ids'][i] if 'token_ids' in output_dict else [])),
@@ -213,7 +214,22 @@ class RequestProcessor:
             
             
             
-def get_request_processor(args, tokenizer):
+def get_request_processor(args):
+    
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    if args.model_type in ['t5']:
+        tokenizer.padding_side = 'right'
+        tokenizer.truncation_side = 'right'
+    else:
+        tokenizer.padding_side = 'left'
+        tokenizer.truncation_side = 'left'
+    tokenizer.model_max_length = args.input_seq_length
+    
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    
     if args.infer_data.strip() == '':
         return DummyRequestProcessor(tokenizer)
     else:
