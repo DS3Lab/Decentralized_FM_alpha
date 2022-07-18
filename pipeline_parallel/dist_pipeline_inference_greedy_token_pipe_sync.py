@@ -39,7 +39,7 @@ class DistGreedyInferenceTokePipeSync:
         self.generate_seq_length = args.generate_seq_length
         self.embedding_dim = self._get_embedding_size()
 
-        assert (self.seq_num % self.token_micro_batch_size == 0)
+        assert (self.seq_num % args.token_micro_batch_size == 0)
         self.token_micro_batch_size = args.token_micro_batch_size
         self.token_micro_batch_num = self.seq_num // self.token_micro_batch_size
         # self.vocab_size = vocab_size
@@ -506,7 +506,12 @@ class DistGreedyInferenceTokePipeSync:
         self.comm.barrier()
         if self.pp_rank == 0 and output_ is not None:
             assert isinstance(output_, list)
-            output_.append(torch.cat([z.cpu() for z in self.recv_new_token], 1))
+            item = {}
+            if self.generate_seq_length > 0:
+                item = {
+                    'token_ids': torch.cat([z.cpu() for z in self.recv_new_token], 1),
+                }
+            output_.append(item)
         end_time = time.time()
         iter_time = end_time - start_time
         print("Rank {} node INFERENCE new token takes {:3.2f}s".format(self.global_rank, end_time - prompt_time))
