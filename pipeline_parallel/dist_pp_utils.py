@@ -6,6 +6,7 @@ from .dist_pipeline_inference_greedy_sync import DistGreedyInferenceSync
 from .dist_pipeline_inference_mask_greedy import DistGreedyInferenceMaskAsync
 from .dist_pipeline_inference_mask_sample import DistSampleInferenceMaskAsync
 from .dist_pipeline_enc_dec_inference_mask_sample import DistSampleEncDecInferenceMaskAsync
+from .dist_pipeline_inference_greedy_token_pipe_sync import DistGreedyInferenceTokePipeSync
 
 
 def get_pp_module(args, vocab_size, num_classes, device, use_dp, rank=None):
@@ -25,6 +26,8 @@ def get_pp_inference_module(args, device, rank=None):
         return DistGreedyInferenceAsync(args, device, rank=rank)
     elif args.pp_mode == 'pipe_sync_greedy':
         return DistGreedyInferenceSync(args, device, rank=rank)
+    elif args.pp_mode == 'pipe_sync_greedy_token_pipe':
+        return DistGreedyInferenceTokePipeSync(args, device, rank=rank)
     elif args.pp_mode == 'pipe_async_greedy_mask':
         return DistGreedyInferenceMaskAsync(args, device, rank=rank)
     elif args.pp_mode == 'pipe_async_sample_mask':
