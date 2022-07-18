@@ -304,7 +304,7 @@ class DistGreedyInferenceMaskAsync:
             self.send_topk_token[step] = indices 
             self.send_topk_logprob[step] = logprobs
             
-    def _process_attention_mask_during_generation(self, attention_mask):
+    def _process_mask_during_generation(self, attention_mask):
         if attention_mask is not None:
             # increase one for the new token
             attention_mask = torch.nn.functional.pad(attention_mask, pad=(0, 1), mode='constant', value=1)
