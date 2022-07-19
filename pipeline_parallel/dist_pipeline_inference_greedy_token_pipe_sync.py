@@ -214,7 +214,7 @@ class DistGreedyInferenceTokePipeSync:
                               key[0].shape))
                 print("=======Layer {} cached key: {} MB shape: {} (fp16)======="
                       .format(layer_index, torch.numel(value[0]) * self.token_micro_batch_num * 2 // 1024 // 1024,
-                              value.shape))
+                              value[0].shape))
             else:
                 print("=======Layer {} cached key: {} MB shape: {} (fp32)======="
                       .format(layer_index, torch.numel(key[0]) * self.token_micro_batch_num * 4 // 1024 // 1024,
