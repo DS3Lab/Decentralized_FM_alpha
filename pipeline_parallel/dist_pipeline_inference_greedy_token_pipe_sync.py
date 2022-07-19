@@ -541,14 +541,15 @@ class DistGreedyInferenceTokePipeSync:
         self.forward_new_token_pipeline_stage()
 
         self.comm.barrier()
-        if self.pp_rank == 0 and output_ is not None:
-            assert isinstance(output_, list)
-            item = {}
-            if self.generate_seq_length > 0:
-                item = {
-                    'token_ids': torch.cat([z.cpu() for z in self.recv_new_token], 1),
-                }
-            output_.append(item)
+        # TODO fix this later.
+        # if self.pp_rank == 0 and output_ is not None:
+        #    assert isinstance(output_, list)
+        #    item = {}
+        #    if self.generate_seq_length > 0:
+        #        item = {
+        #            'token_ids': torch.cat([z.cpu() for z in self.recv_new_token], 1),
+        #        }
+        #    output_.append(item)
         end_time = time.time()
         iter_time = end_time - start_time
         print("Rank {} node INFERENCE new token takes {:3.2f}s".format(self.global_rank, end_time - prompt_time))
