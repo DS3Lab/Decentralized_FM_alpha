@@ -2,7 +2,7 @@ source ./ip_list.sh
 
 #nodes_per_node=(8 8 8 8 8 8 8 8)
 nodes_per_node=(8)
-world_size=64
+world_size=8
 
 script=$1
 

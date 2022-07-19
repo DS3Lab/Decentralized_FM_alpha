@@ -7,7 +7,7 @@
   - Input sequence length: 512
   - Generate sequence length: 32
   - Max batch size: 48;
-- Tuning Token level pipe micro batch size:
+- Tuning token level pipe micro batch size:
 
 | Token micro-batch-size | Prompt time | Generate time | Overall time |
 |------------------------|-------------|---------------|--------------|
@@ -20,3 +20,19 @@
 
 
 ## OPT-66
+
+- Test on 1 P4d.24xlarge (8 40G A100)
+- Configure
+  - Input sequence length: 1024
+  - Generate sequence length: 100
+  - Max batch size: 20;
+- Tuning token level pipe micro batch size:
+
+
+| Token micro-batch-size | Prompt time | Generate time | Overall time |
+|------------------------|-------------|---------------|--------------|
+| 20                     | 2.71 s      | 42.78 s       | 45.49 s      | 
+| 10                     | 2.72 s      | 42.82 s       | 45.54 s      | 
+| 4                      | 2.71 s      | 130.78 s      | 133.49 s     | 
+| 2                      | s           | s             | s            | 
+| 1                      | s           | s             | s            |
