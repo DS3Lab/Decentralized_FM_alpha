@@ -207,7 +207,7 @@ class DistGreedyInferenceTokePipeSync:
                               self.token_micro_batch_size, dim=0)
             value = torch.split(torch.cat([kv[1] for kv in self.cached_attention[layer_index]], dim=0),
                               self.token_micro_batch_size, dim=0)
-            self.cached_attention[layer_index] = zip(key, value)
+            self.cached_attention[layer_index] = list(zip(key, value))
             if self.use_fp16:
                 print("=======Layer {} cached key: {} MB shape: {} (fp16)======="
                       .format(layer_index, torch.numel(key[0]) * self.token_micro_batch_num * 2 // 1024 // 1024,
