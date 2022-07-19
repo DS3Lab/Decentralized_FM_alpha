@@ -221,6 +221,7 @@ class DistGreedyInferenceTokePipeSync:
                 self._generate_new_token(i)
         self.merge_switch_end_event.record()
         if self.enable_tidy_profiling:
+            torch.cuda.synchronize()
             comp_slot = self.merge_switch_start_event.elapsed_time(
                 self.merge_switch_end_event) * 1e+3
             comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. forward-compute",
