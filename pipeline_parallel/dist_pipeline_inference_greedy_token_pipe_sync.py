@@ -258,18 +258,18 @@ class DistGreedyInferenceTokePipeSync:
     def _forward_compute_generate_token(self, index):
         print("Compute generate seq micro-batch <", index, ">.")
         if self.pp_rank == 0:
-            current_emb = self.layers['emb'](self.recv_new_token[index], self.cached_attention[0])
+            current_emb = self.layers['emb'](self.recv_new_token[index], self.cached_attention[0][index])
         else:
             current_emb = self.input_token_emb[index]
         with torch.no_grad():
             for layer_index in range(self.num_layers):
                 if layer_index != self.num_layers - 1:
-                    current_emb, self.cached_attention[layer_index] = self.layers['block' + str(layer_index)](
-                        current_emb, self.cached_attention[layer_index])
+                    current_emb, self.cached_attention[layer_index][index] = self.layers['block' + str(layer_index)](
+                        current_emb, self.cached_attention[layer_index][index])
                 else:
-                    self.output_token_emb[index], self.cached_attention[layer_index] = self.layers[
+                    self.output_token_emb[index], self.cached_attention[layer_index][index] = self.layers[
                         'block' + str(layer_index)](
-                        current_emb, self.cached_attention[layer_index])
+                        current_emb, self.cached_attention[layer_index][index])
         if self.pp_rank == self.pipeline_group_size - 1:
             self._generate_new_token(index)
 
