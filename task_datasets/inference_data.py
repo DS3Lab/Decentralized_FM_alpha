@@ -105,7 +105,7 @@ class DummyRequestProcessor:
                     'batch_size': batch_size,
                 }
             }
-            print(json.dumps(item, indent=4))
+            # print(json.dumps(item, indent=4))
         
     def write_scenario_state(self):
         pass
