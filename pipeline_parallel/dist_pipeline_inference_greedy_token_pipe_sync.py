@@ -431,7 +431,7 @@ class DistGreedyInferenceTokePipeSync:
                     self.profile_mark_forward_token_send_start(i)
                     self.comm.send(self.output_token_emb[i], dst=self.post_node_rank)
                     self.profile_mark_forward_token_send_end(i)
-            else: # Middle nodes:
+            else:  # Middle nodes:
                 if step != self.generate_seq_length - 1:
                     # Receive
                     self.profile_mark_forward_token_recv_start(i)
@@ -454,34 +454,63 @@ class DistGreedyInferenceTokePipeSync:
         for step in range(self.generate_seq_length):
             self.forward_new_token_pipeline_step(step)
 
+    def _profile_token_pipeline_step_add_send_slot(self, step: int, i: int):
+        send_slot = self.forward_token_send_start_events[i].elapsed_time(
+            self.forward_token_send_end_events[i]) * 1e+3
+        send_log = {"name": "send", "ph": "X", "pid": self.global_rank, "tid": "3. forward-send",
+                    "ts": self.get_ts(self.forward_token_send_start_events[i]), "dur": send_slot,
+                    "args": {"token-step": step, "token-micro-batch": i}, "cname": "thread_state_iowait"}
+        # print(send_log)
+        return send_log
+
+    def _profile_token_pipeline_step_add_recv_slot(self, step: int, i: int):
+        recv_slot = self.forward_token_recv_start_events[i].elapsed_time(
+            self.forward_token_recv_end_events[i]) * 1e+3
+        recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. forward-recv",
+                    "ts": self.get_ts(self.forward_token_recv_start_events[i]), "dur": recv_slot,
+                    "args": {"token-step": step, "token-micro-batch": i}, "cname": "startup"}
+        # print(recv_log)
+        return recv_log
+
+    def _profile_token_pipeline_step_add_comp_slot(self, step: int, i: int):
+        comp_slot = self.forward_token_comp_start_events[i].elapsed_time(
+            self.forward_token_comp_end_events[i]) * 1e+3
+        comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. forward-compute",
+                    "ts": self.get_ts(self.forward_token_comp_start_events[i]), "dur": comp_slot,
+                    "args": {"token-step": step, "token-micro-batch": i}, "cname": "good"}
+        # print(comp_log)
+        return comp_log
+
     def profile_token_pipeline_step(self, step: int):
         torch.cuda.synchronize()
-        for i in range(self.generate_seq_length):
-            if self.pp_rank != 0:
-                recv_slot = self.forward_token_recv_start_events[i].elapsed_time(
-                    self.forward_token_recv_end_events[i]) * 1e+3
-                recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. forward-recv",
-                            "ts": self.get_ts(self.forward_token_recv_start_events[i]), "dur": recv_slot,
-                            "args": {"token-step": step, "token-micro-batch": i}, "cname": "startup"}
-                # print(recv_log)
-                self.profiling_log.append(recv_log)
-
-            comp_slot = self.forward_token_comp_start_events[i].elapsed_time(
-                self.forward_token_comp_end_events[i]) * 1e+3
-            comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. forward-compute",
-                        "ts": self.get_ts(self.forward_token_comp_start_events[i]), "dur": comp_slot,
-                        "args": {"token-step": step, "token-micro-batch": i}, "cname": "good"}
-            # print(comp_log)
-            self.profiling_log.append(comp_log)
-
-            if self.pp_rank != self.pipeline_group_size - 1:
-                send_slot = self.forward_token_send_start_events[i].elapsed_time(
-                    self.forward_token_send_end_events[i]) * 1e+3
-                send_log = {"name": "send", "ph": "X", "pid": self.global_rank, "tid": "3. forward-send",
-                            "ts": self.get_ts(self.forward_token_send_start_events[i]), "dur": send_slot,
-                            "args": {"token-step": step, "token-micro-batch": i}, "cname": "thread_state_iowait"}
-                # print(send_log)
-                self.profiling_log.append(send_log)
+        for i in range(self.token_micro_batch_num):
+            if self.pp_rank == self.pipeline_group_size - 1:
+                if step == 0:
+                    # Send
+                    send_log = self._profile_token_pipeline_step_add_send_slot(step, i)
+                    self.profiling_log.append(send_log)
+                else:
+                    # Receive
+                    recv_log = self._profile_token_pipeline_step_add_recv_slot(step, i)
+                    self.profiling_log.append(recv_log)
+                    # Compute
+                    comp_log = self._profile_token_pipeline_step_add_comp_slot(step, i)
+                    self.profiling_log.append(comp_log)
+                    if step != self.generate_seq_length - 1:
+                        # Send
+                        send_log = self._profile_token_pipeline_step_add_send_slot(step, i)
+                        self.profiling_log.append(send_log)
+            else:
+                if step != self.generate_seq_length - 1:
+                    # Receive
+                    recv_log = self._profile_token_pipeline_step_add_recv_slot(step, i)
+                    self.profiling_log.append(recv_log)
+                    # Compute
+                    comp_log = self._profile_token_pipeline_step_add_comp_slot(step, i)
+                    self.profiling_log.append(comp_log)
+                    # Send
+                    send_log = self._profile_token_pipeline_step_add_send_slot(step, i)
+                    self.profiling_log.append(send_log)
 
     def export_profiling_result(self, filename):
         with open(filename, 'w') as outfile:
