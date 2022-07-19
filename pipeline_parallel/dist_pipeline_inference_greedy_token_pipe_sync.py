@@ -203,19 +203,25 @@ class DistGreedyInferenceTokePipeSync:
     def _merge_cached_seqs_and_attentions(self):
         self.merge_switch_start_event.record()
         for layer_index in range(self.num_layers):
-            key = torch.cat([kv[0] for kv in self.cached_attention[layer_index]], dim=0)
-            value = torch.cat([kv[1] for kv in self.cached_attention[layer_index]], dim=0)
+            key = torch.split(torch.cat([kv[0] for kv in self.cached_attention[layer_index]], dim=0),
+                              self.token_micro_batch_size, dim=0)
+            value = torch.split(torch.cat([kv[1] for kv in self.cached_attention[layer_index]], dim=0),
+                              self.token_micro_batch_size, dim=0)
             self.cached_attention[layer_index] = (key, value)
             if self.use_fp16:
                 print("=======Layer {} cached key: {} MB shape: {} (fp16)======="
-                      .format(layer_index, torch.numel(key) * 2 // 1024 // 1024, key.shape))
+                      .format(layer_index, torch.numel(key[0]) * self.token_micro_batch_num * 2 // 1024 // 1024,
+                              key[0].shape))
                 print("=======Layer {} cached key: {} MB shape: {} (fp16)======="
-                      .format(layer_index, torch.numel(value) * 2 // 1024 // 1024, value.shape))
+                      .format(layer_index, torch.numel(value[0]) * self.token_micro_batch_num * 2 // 1024 // 1024,
+                              value.shape))
             else:
                 print("=======Layer {} cached key: {} MB shape: {} (fp32)======="
-                      .format(layer_index, torch.numel(key) * 4 // 1024 // 1024, key.shape))
+                      .format(layer_index, torch.numel(key[0]) * self.token_micro_batch_num * 4 // 1024 // 1024,
+                              key[0].shape))
                 print("=======Layer {} cached key: {} MB shape: {} (fp32)======="
-                      .format(layer_index, torch.numel(value) * 4 // 1024 // 1024, value.shape))
+                      .format(layer_index, torch.numel(value[0]) * self.token_micro_batch_num * 4 // 1024 // 1024,
+                              value[0].shape))
         if self.pp_rank == self.pipeline_group_size - 1:
             for i in range(self.token_micro_batch_num):
                 self._generate_new_token(i)
