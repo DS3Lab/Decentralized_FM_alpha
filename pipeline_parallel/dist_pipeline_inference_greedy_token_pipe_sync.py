@@ -246,7 +246,7 @@ class DistGreedyInferenceTokePipeSync:
                     current_emb, self.cached_attention[layer_index][index] = \
                         self.layers['block' + str(layer_index)](current_emb)
         if self.pp_rank == self.pipeline_group_size - 1:
-            self.output_token_emb[0][index] = current_emb[:, -1:]
+            self.output_token_emb[index] = current_emb[:, -1:]
 
     def _forward_compute_generate_token(self, index):
         print("Compute generate seq micro-batch <", index, ">.")
