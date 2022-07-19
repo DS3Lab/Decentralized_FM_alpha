@@ -203,23 +203,31 @@ class DistGreedyInferenceTokePipeSync:
     def _merge_cached_seqs_and_attentions(self):
         self.merge_switch_start_event.record()
         for layer_index in range(self.num_layers):
-            key = torch.cat([kv[0] for kv in self.cached_attention[layer_index]], dim=0)
-            value = torch.cat([kv[1] for kv in self.cached_attention[layer_index]], dim=0)
-            self.cached_attention[layer_index] = (key, value)
+            key = torch.split(torch.cat([kv[0] for kv in self.cached_attention[layer_index]], dim=0),
+                              self.token_micro_batch_size, dim=0)
+            value = torch.split(torch.cat([kv[1] for kv in self.cached_attention[layer_index]], dim=0),
+                              self.token_micro_batch_size, dim=0)
+            self.cached_attention[layer_index] = list(zip(key, value))
             if self.use_fp16:
                 print("=======Layer {} cached key: {} MB shape: {} (fp16)======="
-                      .format(layer_index, torch.numel(key) * 2 // 1024 // 1024, key.shape))
+                      .format(layer_index, torch.numel(key[0]) * self.token_micro_batch_num * 2 // 1024 // 1024,
+                              key[0].shape))
                 print("=======Layer {} cached key: {} MB shape: {} (fp16)======="
-                      .format(layer_index, torch.numel(value) * 2 // 1024 // 1024, value.shape))
+                      .format(layer_index, torch.numel(value[0]) * self.token_micro_batch_num * 2 // 1024 // 1024,
+                              value[0].shape))
             else:
                 print("=======Layer {} cached key: {} MB shape: {} (fp32)======="
-                      .format(layer_index, torch.numel(key) * 4 // 1024 // 1024, key.shape))
+                      .format(layer_index, torch.numel(key[0]) * self.token_micro_batch_num * 4 // 1024 // 1024,
+                              key[0].shape))
                 print("=======Layer {} cached key: {} MB shape: {} (fp32)======="
-                      .format(layer_index, torch.numel(value) * 4 // 1024 // 1024, value.shape))
-        for i in range(self.token_micro_batch_num):
-            self._generate_new_token(i)
+                      .format(layer_index, torch.numel(value[0]) * self.token_micro_batch_num * 4 // 1024 // 1024,
+                              value[0].shape))
+        if self.pp_rank == self.pipeline_group_size - 1:
+            for i in range(self.token_micro_batch_num):
+                self._generate_new_token(i)
         self.merge_switch_end_event.record()
         if self.enable_tidy_profiling:
+            torch.cuda.synchronize()
             comp_slot = self.merge_switch_start_event.elapsed_time(
                 self.merge_switch_end_event) * 1e+3
             comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. forward-compute",
@@ -227,7 +235,6 @@ class DistGreedyInferenceTokePipeSync:
                         "args": {"token-step": 0}, "cname": "good"}
             # print(comp_log)
             self.profiling_log.append(comp_log)
-
 
     def _forward_compute_prompt_seq(self, index, seq=None):
         print("Compute prompt seq<", index, ">.")
@@ -246,23 +253,23 @@ class DistGreedyInferenceTokePipeSync:
                     current_emb, self.cached_attention[layer_index][index] = \
                         self.layers['block' + str(layer_index)](current_emb)
         if self.pp_rank == self.pipeline_group_size - 1:
-            self.output_token_emb[0][index] = current_emb[:, -1:]
+            self.output_token_emb[index] = current_emb[:, -1:]
 
     def _forward_compute_generate_token(self, index):
-        print("Compute generate seq micro-batch <", index, ">.")
+        # print("Compute generate seq micro-batch <", index, ">.")
         if self.pp_rank == 0:
-            current_emb = self.layers['emb'](self.recv_new_token[index], self.cached_attention[0])
+            current_emb = self.layers['emb'](self.recv_new_token[index], self.cached_attention[0][index])
         else:
             current_emb = self.input_token_emb[index]
         with torch.no_grad():
             for layer_index in range(self.num_layers):
                 if layer_index != self.num_layers - 1:
-                    current_emb, self.cached_attention[layer_index] = self.layers['block' + str(layer_index)](
-                        current_emb, self.cached_attention[layer_index])
+                    current_emb, self.cached_attention[layer_index][index] = self.layers['block' + str(layer_index)](
+                        current_emb, self.cached_attention[layer_index][index])
                 else:
-                    self.output_token_emb[index], self.cached_attention[layer_index] = self.layers[
+                    self.output_token_emb[index], self.cached_attention[layer_index][index] = self.layers[
                         'block' + str(layer_index)](
-                        current_emb, self.cached_attention[layer_index])
+                        current_emb, self.cached_attention[layer_index][index])
         if self.pp_rank == self.pipeline_group_size - 1:
             self._generate_new_token(index)
 
@@ -431,7 +438,7 @@ class DistGreedyInferenceTokePipeSync:
                     self.profile_mark_forward_token_send_start(i)
                     self.comm.send(self.output_token_emb[i], dst=self.post_node_rank)
                     self.profile_mark_forward_token_send_end(i)
-            else: # Middle nodes:
+            else:  # Middle nodes:
                 if step != self.generate_seq_length - 1:
                     # Receive
                     self.profile_mark_forward_token_recv_start(i)
@@ -452,36 +459,66 @@ class DistGreedyInferenceTokePipeSync:
     def forward_new_token_pipeline_stage(self):
         self._merge_cached_seqs_and_attentions()
         for step in range(self.generate_seq_length):
+            print("Compute generate seq step <", step, ">.")
             self.forward_new_token_pipeline_step(step)
+
+    def _profile_token_pipeline_step_add_send_slot(self, step: int, i: int):
+        send_slot = self.forward_token_send_start_events[i].elapsed_time(
+            self.forward_token_send_end_events[i]) * 1e+3
+        send_log = {"name": "send", "ph": "X", "pid": self.global_rank, "tid": "3. forward-send",
+                    "ts": self.get_ts(self.forward_token_send_start_events[i]), "dur": send_slot,
+                    "args": {"token-step": step, "token-micro-batch": i}, "cname": "thread_state_iowait"}
+        # print(send_log)
+        return send_log
+
+    def _profile_token_pipeline_step_add_recv_slot(self, step: int, i: int):
+        recv_slot = self.forward_token_recv_start_events[i].elapsed_time(
+            self.forward_token_recv_end_events[i]) * 1e+3
+        recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. forward-recv",
+                    "ts": self.get_ts(self.forward_token_recv_start_events[i]), "dur": recv_slot,
+                    "args": {"token-step": step, "token-micro-batch": i}, "cname": "startup"}
+        # print(recv_log)
+        return recv_log
+
+    def _profile_token_pipeline_step_add_comp_slot(self, step: int, i: int):
+        comp_slot = self.forward_token_comp_start_events[i].elapsed_time(
+            self.forward_token_comp_end_events[i]) * 1e+3
+        comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. forward-compute",
+                    "ts": self.get_ts(self.forward_token_comp_start_events[i]), "dur": comp_slot,
+                    "args": {"token-step": step, "token-micro-batch": i}, "cname": "good"}
+        # print(comp_log)
+        return comp_log
 
     def profile_token_pipeline_step(self, step: int):
         torch.cuda.synchronize()
-        for i in range(self.generate_seq_length):
-            if self.pp_rank != 0:
-                recv_slot = self.forward_token_recv_start_events[i].elapsed_time(
-                    self.forward_token_recv_end_events[i]) * 1e+3
-                recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. forward-recv",
-                            "ts": self.get_ts(self.forward_token_recv_start_events[i]), "dur": recv_slot,
-                            "args": {"token-step": step, "token-micro-batch": i}, "cname": "startup"}
-                # print(recv_log)
-                self.profiling_log.append(recv_log)
-
-            comp_slot = self.forward_token_comp_start_events[i].elapsed_time(
-                self.forward_token_comp_end_events[i]) * 1e+3
-            comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. forward-compute",
-                        "ts": self.get_ts(self.forward_token_comp_start_events[i]), "dur": comp_slot,
-                        "args": {"token-step": step, "token-micro-batch": i}, "cname": "good"}
-            # print(comp_log)
-            self.profiling_log.append(comp_log)
-
-            if self.pp_rank != self.pipeline_group_size - 1:
-                send_slot = self.forward_token_send_start_events[i].elapsed_time(
-                    self.forward_token_send_end_events[i]) * 1e+3
-                send_log = {"name": "send", "ph": "X", "pid": self.global_rank, "tid": "3. forward-send",
-                            "ts": self.get_ts(self.forward_token_send_start_events[i]), "dur": send_slot,
-                            "args": {"token-step": step, "token-micro-batch": i}, "cname": "thread_state_iowait"}
-                # print(send_log)
-                self.profiling_log.append(send_log)
+        for i in range(self.token_micro_batch_num):
+            if self.pp_rank == self.pipeline_group_size - 1:
+                if step == 0:
+                    # Send
+                    send_log = self._profile_token_pipeline_step_add_send_slot(step, i)
+                    self.profiling_log.append(send_log)
+                else:
+                    # Receive
+                    recv_log = self._profile_token_pipeline_step_add_recv_slot(step, i)
+                    self.profiling_log.append(recv_log)
+                    # Compute
+                    comp_log = self._profile_token_pipeline_step_add_comp_slot(step, i)
+                    self.profiling_log.append(comp_log)
+                    if step != self.generate_seq_length - 1:
+                        # Send
+                        send_log = self._profile_token_pipeline_step_add_send_slot(step, i)
+                        self.profiling_log.append(send_log)
+            else:
+                if step != self.generate_seq_length - 1:
+                    # Receive
+                    recv_log = self._profile_token_pipeline_step_add_recv_slot(step, i)
+                    self.profiling_log.append(recv_log)
+                    # Compute
+                    comp_log = self._profile_token_pipeline_step_add_comp_slot(step, i)
+                    self.profiling_log.append(comp_log)
+                    # Send
+                    send_log = self._profile_token_pipeline_step_add_send_slot(step, i)
+                    self.profiling_log.append(send_log)
 
     def export_profiling_result(self, filename):
         with open(filename, 'w') as outfile:
