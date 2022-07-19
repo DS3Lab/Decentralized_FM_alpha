@@ -216,8 +216,9 @@ class DistGreedyInferenceTokePipeSync:
                       .format(layer_index, torch.numel(key) * 4 // 1024 // 1024, key.shape))
                 print("=======Layer {} cached key: {} MB shape: {} (fp32)======="
                       .format(layer_index, torch.numel(value) * 4 // 1024 // 1024, value.shape))
-        for i in range(self.token_micro_batch_num):
-            self._generate_new_token(i)
+        if self.pp_rank == self.pipeline_group_size - 1:
+            for i in range(self.token_micro_batch_num):
+                self._generate_new_token(i)
         self.merge_switch_end_event.record()
         if self.enable_tidy_profiling:
             comp_slot = self.merge_switch_start_event.elapsed_time(
@@ -227,7 +228,6 @@ class DistGreedyInferenceTokePipeSync:
                         "args": {"token-step": 0}, "cname": "good"}
             # print(comp_log)
             self.profiling_log.append(comp_log)
-
 
     def _forward_compute_prompt_seq(self, index, seq=None):
         print("Compute prompt seq<", index, ">.")
