@@ -198,14 +198,13 @@ def add_inference_details_arguments(parser):
                         help='temperature on logits')
     parser.add_argument('--token-micro-batch-size', type=int, default=1, metavar='S',
                         help='token generation micro batch size.')
-    # TODO: trivial
     parser.add_argument('--echo-prompt', type=lambda x: (str(x).lower() == 'true'),
                         default=False, metavar='S',
                         help='append prompt to the generated text')
-    # TODO: almost, need to fix output_token_emb overlapping issue
     parser.add_argument('--num-completions', type=int, default=1, metavar='S',
                         help='num of completions')
-    # TODO
+    parser.add_argument('--best-of', type=int, default=1, metavar='S',
+                        help='num of best of completions')
     parser.add_argument('--top-k-per-token', type=int, default=0, metavar='S',
                         help='return top k candidate for each token')
 

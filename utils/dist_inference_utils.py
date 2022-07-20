@@ -50,7 +50,6 @@ def distributed_inference_mask_iter(args, pipeline, device, request_processor):
             attention_mask = inputs['attention_mask'].to(device)
             output_ids_list = []
             current_iter_time = pipeline.inference_batch(input_ids, output_ids_list, attention_mask=attention_mask)
-            request_processor.add_result(inputs, output_ids_list, batch_time=current_iter_time)
             
             if i > 0:
                 total_time += current_iter_time
@@ -59,7 +58,23 @@ def distributed_inference_mask_iter(args, pipeline, device, request_processor):
         averaged_time = total_time / (args.num_iters - 1 + 1e-9)
         print("Finished running ", args.num_iters,
               " iterations, averaged (exclude the first iter) run time:", averaged_time)
+            
+    elif get_pipeline_parallel_rank() == pipeline.pipeline_group_size - 1:
+        infer_data_loader = request_processor.get_dataloader(args.batch_size)
+        for i, inputs in enumerate(infer_data_loader):
+            input_ids = inputs['text'].to(device)
+            attention_mask = inputs['attention_mask'].to(device)
+            output_ids_list = []
+            current_iter_time = pipeline.inference_batch(input_ids, output_ids_list, attention_mask=attention_mask)
+            request_processor.add_result(inputs, output_ids_list, batch_time=current_iter_time)
+            
+            if i > 0:
+                total_time += current_iter_time
+            if i >= args.num_iters-1:
+                break
+        averaged_time = total_time / (args.num_iters - 1 + 1e-9)
         
+        # last node write
         request_processor.write_scenario_state()
             
     else:
@@ -72,4 +87,5 @@ def distributed_inference_mask_iter(args, pipeline, device, request_processor):
             if i >= args.num_iters-1:
                 break
         averaged_time = total_time / (args.num_iters - 1 + 1e-9)
+        
     return averaged_time
