@@ -166,17 +166,18 @@ class RequestProcessor:
             args.generate_seq_length = self.max_tokens
             args.best_of = self.best_of
         
-            max_input_seq_length = 1
-            for i, x in enumerate(self.data):
-                seq_length = len(self.tokenizer(x['request']['prompt'])['input_ids'])
-                if seq_length > max_input_seq_length:
-                    max_input_seq_length = seq_length
-                if i > 0:
-                    break
-            args.input_seq_length = min(max_input_seq_length + 30, self.tokenizer.model_max_length - args.generate_seq_length)
-            self.tokenizer.model_max_length = args.input_seq_length
+            # max_input_seq_length = 1
+            # for i, x in enumerate(self.data):
+            #     seq_length = len(self.tokenizer(x['request']['prompt'])['input_ids'])
+            #     if seq_length > max_input_seq_length:
+            #         max_input_seq_length = seq_length
+            #     if i > 0:
+            #         break
+            # args.input_seq_length = min(max_input_seq_length + 30, self.tokenizer.model_max_length - args.generate_seq_length)
+            
+        self.tokenizer.model_max_length = args.input_seq_length
 
-            print('input seq length:', args.input_seq_length)
+        print('input seq length:', args.input_seq_length)
         
     def get_dataloader(self, batch_size, num_workers=0):
         
