@@ -255,7 +255,7 @@ class DistGreedyInferenceTokePipeSync:
         if self.pp_rank == self.pipeline_group_size - 1:
             buff_i = index//self.token_micro_batch_size
             pos = index%self.token_micro_batch_size
-            self.output_token_emb[buff_i][pos] = current_emb[:, -1:]
+            self.output_token_emb[buff_i][pos] = self.output_seq_emb[index][:, -1:]
 
     def _forward_compute_generate_token(self, index):
         # print("Compute generate seq micro-batch <", index, ">.")

@@ -1,0 +1,403 @@
+import time
+import json
+import torch.nn.functional
+from comm.comm_utils import *
+from modules.generation_utils import get_logits_processor, get_logits_warper
+from .dist_pipeline_inference_greedy_token_pipe_sync import DistGreedyInferenceTokePipeSync
+
+
+class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
+    r"""
+    Async implementation of Distributed Inference.
+    The current implementation leave the computation on the PyTorch default stream and the communication on a different
+    stream, there is:
+        a group of events to check if recv (from rank i-1) finishes in the forward propagation;
+        a group of events to check if computation finishes in the forward propagation.
+    """
+
+    def __init__(self, args, device, rank=None):
+        
+        self.echo_prompt = args.echo_prompt
+        self.num_completions = args.num_completions
+        self.top_k_per_token = args.top_k_per_token
+        
+        super().__init__(args, device, rank=rank)
+        
+        self.torch_comp_stream = torch.cuda.default_stream(device=device)
+        self.torch_recv_stream = torch.cuda.Stream(device=device, priority=-1)
+        self.torch_send_stream = torch.cuda.Stream(device=device, priority=0)
+        
+        if self.pp_rank == self.pipeline_group_size - 1:
+            ret_seq_length = self.generate_seq_length if not self.echo_prompt else self.input_seq_length + self.generate_seq_length - 1
+            
+            self.ret_tokens = torch.zeros(
+                (self.seq_num, ret_seq_length),
+                requires_grad=False, device=self.device, dtype=torch.int64
+            )
+            
+            self.ret_token_logprobs = torch.zeros(
+                (self.seq_num, ret_seq_length),
+                requires_grad=False, device=self.device, dtype=self.dtype
+            )
+            
+            if self.top_k_per_token > 0:
+                self.ret_topk_tokens = torch.zeros(
+                    (self.seq_num, ret_seq_length, self.top_k_per_token),
+                    requires_grad=False, device=self.device, dtype=torch.int64
+                )
+                
+                self.ret_topk_token_logprobs = torch.zeros(
+                    (self.seq_num, ret_seq_length, self.top_k_per_token),
+                    requires_grad=False, device=self.device, dtype=self.dtype
+                )
+
+    def _print_buffers(self):
+        if self.generate_seq_length == 0:
+            # dont print when seq_length == 0
+            return
+        super()._print_buffers()
+            
+    def _get_embedding_size(self):
+        if self.model_type == 'gpt2':
+            from modules.hf_gpt2_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.n_embd
+        elif self.model_type == 'gptj':
+            from modules.hf_gptj_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.n_embd
+        elif self.model_type == 'gptneox':
+            from modules.hf_gptneox_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.hidden_size
+        elif self.model_type == 'opt':
+            from modules.hf_opt_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.hidden_size
+        elif self.model_type == 'bloom':
+            from modules.hf_bloom_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.n_embed
+        else:
+            raise Exception(f'unknown model type {self.model_type}')
+
+    def _create_layers(self):
+        if self.model_type == 'gpt2':
+            from modules.hf_gpt2_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'gptj':
+            from modules.hf_gptj_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'gptneox':
+            from modules.hf_gptneox_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'opt':
+            from modules.hf_gptneox_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'bloom':
+            from modules.hf_gptneox_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        else:
+            raise Exception(f'unknown model type {self.model_type}')
+        
+        if self.pp_rank == 0:
+            self.layers['emb'] = GPTEmbeddings.from_pretrained(
+                self.model_name
+            ).to(self.dtype).eval().to(self.device)
+        for layer_index in range(self.num_layers):
+            # global layer indexing could be an argument
+            global_layer_index = self.num_layers * self.pp_rank + layer_index
+            print(f'loading layer {global_layer_index}')
+            self.layers['block'+str(layer_index)] = GPTBlock.from_pretrained(
+                self.model_name, layer_index=global_layer_index
+            ).to(self.dtype).eval().to(self.device)
+        if self.pp_rank == self.pipeline_group_size - 1:
+            self.layers['lm'] = GPTLMHead.from_pretrained(
+                self.model_name
+            ).to(self.dtype).eval().to(self.device)
+
+    def _init_cached_seqs_and_attentions(self):
+        self._is_merged = False
+        if not self.echo_prompt:
+            self.i_current_token = 0
+        else:
+            self.i_current_token = self.input_seq_length - 1
+        self.cached_attention.clear()
+        for _ in range(self.num_layers):
+            self.cached_attention.append([None for _ in range(self.seq_num)])
+
+    def _merge_cached_seqs_and_attentions(self):
+        if not self.echo_prompt:
+            self.i_current_token = 0
+        else:
+            self.i_current_token = self.input_seq_length - 1
+        
+        if self._is_merged:
+            
+            if self.pp_rank == self.pipeline_group_size - 1:
+                for i in range(self.token_micro_batch_num):
+                    self._copy_initial_token_emb(i)
+                    self._generate_new_token(i)
+            
+            for layer_index in range(self.num_layers):
+                for index in range(self.token_micro_batch_num):
+                    key, value = self.cached_attention[layer_index][index]
+                    self.cached_attention[layer_index][index] = (key[:, :, :self.input_seq_length], value[:, :, :self.input_seq_length])
+        else:
+            super()._merge_cached_seqs_and_attentions()
+            self._is_merged = True
+
+    def _forward_compute_prompt_seq(self, index, seq=None, mask=None):
+        print("Compute prompt seq<", index, ">.")
+        if self.pp_rank == 0:
+            self.input_seq_emb[index] = self.layers['emb'](seq, mask=mask)
+        current_emb = None
+        for layer_index in range(self.num_layers):
+            if layer_index == 0:
+                current_emb, self.cached_attention[layer_index][index] = \
+                    self.layers['block' + str(layer_index)](self.input_seq_emb[index], mask=mask)
+            elif layer_index == self.num_layers - 1:
+                self.output_seq_emb[index], self.cached_attention[layer_index][index] = \
+                    self.layers['block'+str(layer_index)](current_emb, mask=mask)
+            else:
+                current_emb, self.cached_attention[layer_index][index] = \
+                    self.layers['block' + str(layer_index)](current_emb, mask=mask)
+        
+        if self.pp_rank == self.pipeline_group_size - 1:
+            self._copy_initial_token_emb(index)
+            
+            if self.echo_prompt:
+                self._generate_echo_token_logprobs(index, indices=seq)
+            
+    def _generate_echo_token_logprobs(self, index, indices):
+        assert self.pp_rank == self.pipeline_group_size - 1
+        z = self.layers['lm'](self.output_seq_emb[index][:, :-1]) # skip last
+        z = torch.nn.functional.log_softmax(z, -1)
+        indices = indices[:, 1:] # skip first
+        
+        logprobs = torch.gather(z, -1, indices.unsqueeze(-1)).squeeze(-1)
+        self.ret_tokens[
+            index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
+            :self.i_current_token
+        ] = indices
+        self.ret_token_logprobs[
+            index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
+            :self.i_current_token
+        ] = logprobs
+        if self.top_k_per_token > 0:
+            logprobs, indices = z.topk(k=self.top_k_per_token, dim=-1)
+            self.ret_topk_tokens[
+                index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
+                :self.i_current_token
+            ] = indices
+            self.ret_topk_token_logprobs[
+                index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
+                :self.i_current_token
+            ] = logprobs
+        
+    def _copy_initial_token_emb(self, index):
+        assert self.pp_rank == self.pipeline_group_size - 1
+        buff_i = index//self.token_micro_batch_size
+        pos = index%self.token_micro_batch_size
+        self.output_token_emb[buff_i][pos] = self.output_seq_emb[index][:, -1:]
+
+    def _forward_compute_generate_token(self, index, mask=None):
+        
+        # print("Compute generate seq micro-batch <", index, ">.")
+        if self.pp_rank == 0:
+            current_emb = self.layers['emb'](self.recv_new_token[index], self.cached_attention[0][index], mask=mask)
+        else:
+            current_emb = self.input_token_emb[index]
+            
+        for layer_index in range(self.num_layers):
+            if layer_index != self.num_layers - 1:
+                current_emb, self.cached_attention[layer_index][index] = \
+                    self.layers['block' + str(layer_index)](current_emb, self.cached_attention[layer_index][index], mask=mask)
+            else:
+                self.output_token_emb[index], self.cached_attention[layer_index][index] = \
+                    self.layers['block' + str(layer_index)](current_emb, self.cached_attention[layer_index][index], mask=mask)
+                
+        if self.pp_rank == self.pipeline_group_size - 1:
+            self._generate_new_token(index)
+
+    def _generate_new_token(self, index):
+        assert self.pp_rank == self.pipeline_group_size - 1
+        z = self.layers['lm'](self.output_token_emb[index])
+        z = torch.nn.functional.log_softmax(z, -1)
+        logprobs, indices = z.topk(k=1, dim=-1)
+        self.send_new_tokens[index] = indices
+        self.ret_tokens[
+            index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
+            self.i_current_token
+        ] = indices.squeeze(-1).squeeze(-1)
+        self.ret_token_logprobs[
+            index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
+            self.i_current_token
+        ] =logprobs.squeeze(-1).squeeze(-1)
+        if self.top_k_per_token > 0:
+            logprobs, indices = z.topk(k=self.top_k_per_token, dim=-1)
+            self.ret_topk_tokens[
+                index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
+                self.i_current_token
+            ] = indices.squeeze(1)
+            self.ret_topk_token_logprobs[
+                index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
+                self.i_current_token
+            ] = logprobs.squeeze(1)
+            
+        if index == self.token_micro_batch_num - 1:
+            self.i_current_token += 1
+            
+    def _process_mask_during_generation(self, attention_mask):
+        if attention_mask is not None:
+            # increase one for the new token
+            attention_mask = torch.nn.functional.pad(attention_mask, pad=(0, 1), mode='constant', value=1)
+        return attention_mask
+
+    def forward_seq_pipeline_stage(self, input_data=None, attention_mask=None):
+        if self.pp_rank == 0 or self.pp_rank == self.pipeline_group_size - 1:
+            assert(input_data is not None)
+            input_seqs = torch.chunk(input_data, self.seq_num, dim=0)
+        else:
+            input_seqs = None
+            
+        if attention_mask is not None:
+            attention_mask = torch.chunk(attention_mask, self.seq_num, dim=0)
+        else:
+            attention_mask = [None]*self.seq_num
+
+        for i in range(self.seq_num):
+            if self.pp_rank == 0:  # Only send output to next node, do not receive
+                # Compute
+                self.profile_mark_forward_seq_comp_start(i)
+                self._forward_compute_prompt_seq(index=i, seq=input_seqs[i], mask=attention_mask[i])
+                self.profile_mark_forward_seq_comp_end(i)
+                # Send
+                self.profile_mark_forward_seq_send_start(i)
+                self.comm.send(self.output_seq_emb[i], dst=self.post_node_rank)
+                self.profile_mark_forward_seq_send_end(i)
+            elif self.pp_rank == self.pipeline_group_size - 1:  # Only receive input from last node, do not send
+                # Receive
+                self.profile_mark_forward_seq_recv_start(i)
+                self.comm.recv(self.input_seq_emb[i], src=self.pre_node_rank)
+                self.profile_mark_forward_seq_recv_end(i)
+                # Compute
+                self.profile_mark_forward_seq_comp_start(i)
+                self._forward_compute_prompt_seq(index=i, seq=input_seqs[i], mask=attention_mask[i])
+                self.profile_mark_forward_seq_comp_end(i)
+            else:  # receive, compute, and send
+                # Receive
+                self.profile_mark_forward_seq_recv_start(i)
+                self.comm.recv(self.input_seq_emb[i], src=self.pre_node_rank)
+                self.profile_mark_forward_seq_recv_end(i)
+                # Compute
+                self.profile_mark_forward_seq_comp_start(i)
+                self._forward_compute_prompt_seq(index=i, seq=None, mask=attention_mask[i])
+                self.profile_mark_forward_seq_comp_end(i)
+                # Send
+                self.profile_mark_forward_seq_send_start(i)
+                self.comm.send(self.output_seq_emb[i], dst=self.post_node_rank)
+                self.profile_mark_forward_seq_send_end(i)
+                
+        if self.enable_tidy_profiling:
+            self.profile_seq_pipeline_stage()
+
+    def forward_new_token_pipeline_stage(self, attention_mask=None):
+        if self.generate_seq_length == 0:
+            # handle seq_length == 0
+            return
+        self._merge_cached_seqs_and_attentions()
+        for step in range(self.generate_seq_length):
+            print("Compute generate token step <", step, ">.")
+            # for last node, the first step does not compute
+            if step != 0 or self.pp_rank != self.pipeline_group_size - 1:
+                attention_mask = self._process_mask_during_generation(attention_mask)
+            self.forward_new_token_pipeline_step(step, attention_mask=attention_mask)
+        
+    def forward_new_token_pipeline_step(self, step: int, attention_mask=None):
+        attention_masks = torch.split(
+            attention_mask, self.token_micro_batch_size, dim=0
+        )
+        for i in range(self.token_micro_batch_num):
+            # Last node:
+            if self.pp_rank == self.pipeline_group_size - 1:
+                if step == 0:
+                    # Send
+                    self.profile_mark_forward_token_send_start(i)
+                    self.comm.send(self.send_new_tokens[i], dst=0)
+                    self.profile_mark_forward_token_send_end(i)
+                else:
+                    # Receive
+                    self.profile_mark_forward_token_recv_start(i)
+                    self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank)
+                    self.profile_mark_forward_token_recv_end(i)
+                    # Compute
+                    self.profile_mark_forward_token_comp_start(i)
+                    self._forward_compute_generate_token(i, mask=attention_masks[i])
+                    self.profile_mark_forward_token_comp_end(i)
+                    if step != self.generate_seq_length - 1:
+                        # Send
+                        self.profile_mark_forward_token_send_start(i)
+                        self.comm.send(self.send_new_tokens[i], dst=0)
+                        self.profile_mark_forward_token_send_end(i)
+            # Rank-0 node:
+            elif self.pp_rank == 0:
+                if step != self.generate_seq_length - 1:
+                    # Receive
+                    self.profile_mark_forward_token_recv_start(i)
+                    self.comm.recv(self.recv_new_token[i], src=self.pipeline_group_size - 1)
+                    self.profile_mark_forward_token_recv_end(i)
+                    # Compute
+                    self.profile_mark_forward_token_comp_start(i)
+                    self._forward_compute_generate_token(i, mask=attention_masks[i])
+                    self.profile_mark_forward_token_comp_end(i)
+                    # Send
+                    self.profile_mark_forward_token_send_start(i)
+                    self.comm.send(self.output_token_emb[i], dst=self.post_node_rank)
+                    self.profile_mark_forward_token_send_end(i)
+            else:  # Middle nodes:
+                if step != self.generate_seq_length - 1:
+                    # Receive
+                    self.profile_mark_forward_token_recv_start(i)
+                    self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank)
+                    self.profile_mark_forward_token_recv_end(i)
+                    # Compute
+                    self.profile_mark_forward_token_comp_start(i)
+                    self._forward_compute_generate_token(i, mask=attention_masks[i])
+                    self.profile_mark_forward_token_comp_end(i)
+                    # Send
+                    self.profile_mark_forward_token_send_start(i)
+                    self.comm.send(self.output_token_emb[i], dst=self.post_node_rank)
+                    self.profile_mark_forward_token_send_end(i)
+
+        if self.enable_tidy_profiling:
+            self.profile_token_pipeline_step(step)
+
+    def inference_batch(self, input_=None, output_=None, attention_mask=None):
+        self._init_cached_seqs_and_attentions()  # TODO: should I put here
+        self.comm.barrier()
+        start_time = time.time()
+        if self.enable_tidy_profiling:
+            torch.cuda.synchronize()
+            self.init_time_stamp = time.time() * 1e+6
+            self.init_event.record()
+        
+        with torch.no_grad():
+            self.forward_seq_pipeline_stage(input_data=input_, attention_mask=attention_mask)
+            self.forward_new_token_pipeline_stage(attention_mask=attention_mask)
+
+        self.comm.barrier()
+        if self.pp_rank == self.pipeline_group_size - 1 and output_ is not None:
+            assert isinstance(output_, list)
+            item = {}
+            if self.generate_seq_length > 0:
+                item = {
+                    'token_ids': self.ret_tokens.cpu(),
+                    'token_logprobs': self.ret_token_logprobs.cpu(),
+                }
+                if self.top_k_per_token > 0:
+                    item['topk_ids'] = self.ret_topk_tokens.cpu()
+                    item['topk_logprobs'] = self.ret_topk_token_logprobs.cpu()
+            output_.append(item)
+        end_time = time.time()
+        iter_time = end_time - start_time
+        print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
+        print("-------------------------------------------")
+        
+        return iter_time
+
