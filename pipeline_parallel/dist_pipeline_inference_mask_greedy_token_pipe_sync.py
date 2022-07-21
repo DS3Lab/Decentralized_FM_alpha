@@ -20,6 +20,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         self.echo_prompt = args.echo_prompt
         self.num_completions = args.num_completions
         self.top_k_per_token = args.top_k_per_token
+        self.micro_batch_size = 1
         
         super().__init__(args, device, rank=rank)
         
@@ -186,21 +187,21 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         
         logprobs = torch.gather(z, -1, indices.unsqueeze(-1)).squeeze(-1)
         self.ret_tokens[
-            index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
+            index*self.micro_batch_size:(index+1)*self.micro_batch_size,
             :self.i_current_token
         ] = original_indices
         self.ret_token_logprobs[
-            index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
+            index*self.micro_batch_size:(index+1)*self.micro_batch_size,
             1:self.i_current_token
         ] = logprobs
         if self.top_k_per_token > 0:
             logprobs, indices = z.topk(k=self.top_k_per_token, dim=-1)
             self.ret_topk_tokens[
-                index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
+                index*self.micro_batch_size:(index+1)*self.micro_batch_size,
                 1:self.i_current_token
             ] = indices
             self.ret_topk_token_logprobs[
-                index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
+                index*self.micro_batch_size:(index+1)*self.micro_batch_size,
                 1:self.i_current_token
             ] = logprobs
         
