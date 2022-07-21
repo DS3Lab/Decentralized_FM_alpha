@@ -175,7 +175,11 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             
     def _generate_echo_token_logprobs(self, index, indices):
         assert self.pp_rank == self.pipeline_group_size - 1
-        z = self.layers['lm'](self.output_seq_emb[index])
+        
+        if self.generate_seq_length == 0:
+            z = self.layers['lm'](self.output_seq_emb[index])
+        else:
+            z = self.layers['lm'](self.output_seq_emb[index][:, :-1])
         z = torch.nn.functional.log_softmax(z, -1)
         original_indices = indices
         indices = indices[:, 1:] # skip first
