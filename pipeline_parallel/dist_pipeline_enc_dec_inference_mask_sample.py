@@ -130,19 +130,24 @@ class DistSampleEncDecInferenceMaskAsync(DistSampleInferenceMaskAsync):
         assert self.pp_rank == self.pipeline_group_size - 1
         if step >= 0:
             z = self.layers['dec_head'](self.output_token_emb[step])
-            # [:, -1] because multinomial only accept 1/2d tensors
-            z = torch.nn.functional.log_softmax(z[:, -1], -1)
+            
+            z = torch.nn.functional.log_softmax(z, -1)
+
             if self.top_k_per_token > 0:
                 logprobs, indices = z.topk(k=self.top_k_per_token, dim=-1)
-                self.send_topk_token[step] = indices 
-                self.send_topk_logprob[step] = logprobs
-            z = self.logits_warper(None, z)
-            indices_selected = torch.multinomial(z.softmax(-1), num_samples=1)
-            self.send_new_tokens[step] = indices_selected
-            # TODO: slow implementation
-            self.send_new_token_logprobs[step] = torch.cat([
-                z[i, indices_selected[i]] for i in range(len(z))
-            ], 0)
+                self.ret_topk_tokens[:, step] = indices.squeeze(1)
+                self.ret_topk_token_logprobs[:, step] = logprobs.squeeze(1)
+
+            # [:, -1] because multinomial only accept 1/2d tensors
+            z_to_sample = z[:, -1] # bs, vocab
+            z_to_sample = self.logits_warper(None, z_to_sample)
+            indices = torch.multinomial(z_to_sample.softmax(-1), num_samples=1) # bs, 1
+            logprobs = torch.gather(z[:, -1], -1, indices) # bs, 1
+            self.send_new_tokens[step] = indices
+
+            self.ret_tokens[:, step] = indices.squeeze(-1)
+            self.ret_token_logprobs[:, step] = logprobs.squeeze(-1)
+        
         else:
             # first token is always pad
             self.send_new_tokens[0][:] = self.config.pad_token_id

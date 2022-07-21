@@ -23,27 +23,32 @@ class DistSampleInferenceMaskAsync(DistGreedyInferenceMaskAsync):
 
     def _generate_new_token(self, step):
         assert self.pp_rank == self.pipeline_group_size - 1
-        assert self.pp_rank == self.pipeline_group_size - 1
         if step >= 0:
             z = self.layers['lm'](self.output_token_emb[step])
+            save_step = step+1
         else:
             # generate from prompt
             z = self.layers['lm'](self.initial_output_token_emb)
             # reuse 0-th new tokens
             step = 0
-        # [:, -1] because multinomial only accept 1/2d tensors
-        z = torch.nn.functional.log_softmax(z[:, -1], -1)
+            save_step = 0
+            
+        z = torch.nn.functional.log_softmax(z, -1)
+        
         if self.top_k_per_token > 0:
             logprobs, indices = z.topk(k=self.top_k_per_token, dim=-1)
-            self.send_topk_token[step] = indices 
-            self.send_topk_logprob[step] = logprobs
-        z = self.logits_warper(None, z)
-        indices_selected = torch.multinomial(z.softmax(-1), num_samples=1)
-        self.send_new_tokens[step] = indices_selected
-        # TODO: slow implementation
-        self.send_new_token_logprobs[step] = torch.cat([
-            z[i, indices_selected[i]] for i in range(len(z))
-        ], 0)
+            self.ret_topk_tokens[:, save_step] = indices.squeeze(1)
+            self.ret_topk_token_logprobs[:, save_step] = logprobs.squeeze(1)
+            
+        # [:, -1] because multinomial only accept 1/2d tensors
+        z_to_sample = z[:, -1] # bs, vocab
+        z_to_sample = self.logits_warper(None, z_to_sample)
+        indices = torch.multinomial(z_to_sample.softmax(-1), num_samples=1) # bs, 1
+        logprobs = torch.gather(z[:, -1], -1, indices) # bs, 1
+        self.send_new_tokens[step] = indices
+        
+        self.ret_tokens[:, save_step] = indices.squeeze(-1)
+        self.ret_token_logprobs[:, save_step] = logprobs.squeeze(-1)
         
     def _init_cached_seqs_and_attentions(self):
         self.merged = False
@@ -77,17 +82,17 @@ class DistSampleInferenceMaskAsync(DistGreedyInferenceMaskAsync):
             for nc in range(self.num_completions):
                 self.forward_new_token_pipeline_stage(attention_mask=attention_mask)
                 self.comm.barrier()
-                if self.pp_rank == 0 and output_ is not None:
+                if self.pp_rank == self.pipeline_group_size - 1 and output_ is not None:
                     assert isinstance(output_, list)
                     item = {}
                     if self.generate_seq_length > 0:
                         item = {
-                            'token_ids': torch.cat([z.cpu() for z in self.recv_new_token], 1),
-                            'token_logprobs': torch.cat([z.cpu() for z in self.recv_new_token_logprob], 1),
+                            'token_ids': self.ret_tokens.cpu(),
+                            'token_logprobs': self.ret_token_logprobs.cpu(),
                         }
                         if self.top_k_per_token > 0:
-                            item['topk_ids'] = torch.cat([z.cpu() for z in self.recv_topk_token], 1)
-                            item['topk_logprobs'] = torch.cat([z.cpu() for z in self.recv_topk_logprob], 1)
+                            item['topk_ids'] = self.ret_topk_tokens.cpu()
+                            item['topk_logprobs'] = self.ret_topk_token_logprobs.cpu()
                     output_.append(item)
 
         end_time = time.time()
