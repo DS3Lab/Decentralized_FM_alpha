@@ -28,7 +28,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         self.torch_send_stream = torch.cuda.Stream(device=device, priority=0)
         
         if self.pp_rank == self.pipeline_group_size - 1:
-            ret_seq_length = self.generate_seq_length if not self.echo_prompt else self.input_seq_length + self.generate_seq_length - 1
+            ret_seq_length = self.generate_seq_length if not self.echo_prompt else self.input_seq_length + self.generate_seq_length
             
             self.ret_tokens = torch.zeros(
                 (self.seq_num, ret_seq_length),
@@ -116,7 +116,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         if not self.echo_prompt:
             self.i_current_token = 0
         else:
-            self.i_current_token = self.input_seq_length - 1
+            self.i_current_token = self.input_seq_length
         self.cached_attention.clear()
         for _ in range(self.num_layers):
             self.cached_attention.append([None for _ in range(self.seq_num)])
@@ -125,7 +125,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         if not self.echo_prompt:
             self.i_current_token = 0
         else:
-            self.i_current_token = self.input_seq_length - 1
+            self.i_current_token = self.input_seq_length
         
         if self._is_merged:
             
@@ -168,26 +168,27 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         assert self.pp_rank == self.pipeline_group_size - 1
         z = self.layers['lm'](self.output_seq_emb[index][:, :-1]) # skip last
         z = torch.nn.functional.log_softmax(z, -1)
+        original_indices = indices
         indices = indices[:, 1:] # skip first
         
         logprobs = torch.gather(z, -1, indices.unsqueeze(-1)).squeeze(-1)
         self.ret_tokens[
             index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
             :self.i_current_token
-        ] = indices
+        ] = original_indices
         self.ret_token_logprobs[
             index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
-            :self.i_current_token
+            1:self.i_current_token
         ] = logprobs
         if self.top_k_per_token > 0:
             logprobs, indices = z.topk(k=self.top_k_per_token, dim=-1)
             self.ret_topk_tokens[
                 index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
-                :self.i_current_token
+                1:self.i_current_token
             ] = indices
             self.ret_topk_token_logprobs[
                 index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
-                :self.i_current_token
+                1:self.i_current_token
             ] = logprobs
         
     def _copy_initial_token_emb(self, index):

@@ -52,16 +52,11 @@ class DummyRequestProcessor:
         self.tokenizer.model_max_length = min(args.input_seq_length, self.tokenizer.model_max_length - args.generate_seq_length)
     
     def get_dataloader(self, batch_size, num_workers=0):
-        if not self.echo_prompt:
-            dataset = JsonDataset(
-                ['you are not a']*2000, 
-                self.tokenizer, batch_size=batch_size,
-            )
-        else:
-            dataset = JsonDataset(
-                [self.tokenizer.bos_token+'you are not a']*2000, 
-                self.tokenizer, batch_size=batch_size,
-            )
+        
+        dataset = JsonDataset(
+            ['you are not a']*2000, 
+            self.tokenizer, batch_size=batch_size,
+        )
         
         data_loader = torch.utils.data.DataLoader(
             dataset,
@@ -111,11 +106,16 @@ class DummyRequestProcessor:
                                 output_dict['topk_ids'][i][n_pads:],
                                 output_dict['topk_logprobs'][i][n_pads:]
                             )
-                        ] if self.top_k_per_token > 0 and self.max_tokens > 0 else None),
+                        ] if self.top_k_per_token > 0 else None),
                         "text_offset": [],
                     },
                     "finish_reason": "length",
                 }
+                if self.echo_prompt:
+                    if len(choice['logprobs']['token_logprobs']) > 0:
+                        choice['logprobs']['token_logprobs'][0] = None
+                        if choice['logprobs']['top_logprobs'] is not None:
+                            choice['logprobs']['top_logprobs'][0] = None    
                 item['choices'].append(choice)
             print(json.dumps(item, indent=4))
         
@@ -184,16 +184,10 @@ class RequestProcessor:
         
     def get_dataloader(self, batch_size, num_workers=0):
         
-        if not self.echo_prompt:
-            dataset = JsonDataset(
-                [x['request']['prompt'] for x in self.data], 
-                self.tokenizer, batch_size=batch_size,
-            )
-        else:
-            dataset = JsonDataset(
-                [self.tokenizer.bos_token+x['request']['prompt'] for x in self.data], 
-                self.tokenizer, batch_size=batch_size,
-            )
+        dataset = JsonDataset(
+            [x['request']['prompt'] for x in self.data], 
+            self.tokenizer, batch_size=batch_size,
+        )
         
         data_loader = torch.utils.data.DataLoader(
             dataset,
@@ -243,11 +237,16 @@ class RequestProcessor:
                                 output_dict['topk_ids'][i][n_pads:],
                                 output_dict['topk_logprobs'][i][n_pads:]
                             )
-                        ] if self.top_k_per_token > 0 and self.max_tokens > 0 else None),
+                        ] if self.top_k_per_token > 0 else None),
                         "text_offset": [],
                     },
                     "finish_reason": "length",
                 }
+                if self.echo_prompt:
+                    if len(choice['logprobs']['token_logprobs']) > 0:
+                        choice['logprobs']['token_logprobs'][0] = None
+                        if choice['logprobs']['top_logprobs'] is not None:
+                            choice['logprobs']['top_logprobs'][0] = None
                 item['choices'].append(choice)
             self.data[idx]['result'] = item
             
@@ -274,6 +273,8 @@ def get_request_processor(args):
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+    if tokenizer.bos_token is None:
+        tokenizer.bos_token = tokenizer.eos_token
     if args.model_type in ['t5']:
         tokenizer.padding_side = 'right'
         tokenizer.truncation_side = 'right'
