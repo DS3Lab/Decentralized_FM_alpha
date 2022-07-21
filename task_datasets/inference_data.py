@@ -49,12 +49,18 @@ class DummyRequestProcessor:
         self.top_k_per_token = args.top_k_per_token
         self.num_completions = args.num_completions
         self.max_tokens = args.generate_seq_length
-        self.tokenizer.model_max_length = min(args.input_seq_length, self.tokenizer.model_max_length - args.generate_seq_length)
+        
+        if (args.echo_prompt and args.input_seq_length == self.tokenizer.model_max_length+1 and args.generate_seq_length==0):
+            # special case! to support 2049 tokens
+            args.input_seq_length = self.tokenizer.model_max_length + 1
+            self.tokenizer.model_max_length = args.input_seq_length
+        else:
+            self.tokenizer.model_max_length = min(args.input_seq_length, self.tokenizer.model_max_length - args.generate_seq_length)
     
     def get_dataloader(self, batch_size, num_workers=0):
         
         dataset = JsonDataset(
-            ['you are not a']*2000, 
+            ['you are not a'*10000]*2000, 
             self.tokenizer, batch_size=batch_size,
         )
         
@@ -156,6 +162,7 @@ class RequestProcessor:
             self.num_completions = args.num_completions
             self.max_tokens = args.generate_seq_length
             self.best_of = args.best_of
+            max_input_seq_length = args.input_seq_length
         else:
             args.top_k = self.top_k
             args.top_p = self.top_p
@@ -171,12 +178,15 @@ class RequestProcessor:
                 seq_length = len(self.tokenizer(x['request']['prompt'])['input_ids'])
                 if seq_length > max_input_seq_length:
                     max_input_seq_length = seq_length
-                if i > 0:
-                    break
+                    
             args.input_seq_length = min(
-                max_input_seq_length + 30, 
+                max_input_seq_length + 1, 
                 self.tokenizer.model_max_length - args.generate_seq_length,
             )
+        
+        if (args.echo_prompt and max_input_seq_length == self.tokenizer.model_max_length+1 and args.generate_seq_length==0):
+            # special case! to support 2049 tokens
+            args.input_seq_length = self.tokenizer.model_max_length + 1
             
         self.tokenizer.model_max_length = args.input_seq_length
 
