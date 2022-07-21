@@ -60,7 +60,7 @@ class DummyRequestProcessor:
     def get_dataloader(self, batch_size, num_workers=0):
         
         dataset = JsonDataset(
-            ['you are not a'*10000]*2000, 
+            ['you are not a']*2000, 
             self.tokenizer, batch_size=batch_size,
         )
         
