@@ -19,4 +19,4 @@ then
 fi
 
 
-python dist_inference_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF $INFERENCE_CONF>> "./logs/${timestamp}_token_${token_mbs}_rank_${rank}_inference_pp8_default.log"
+python dist_inference_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF $INFERENCE_CONF>> "./logs/${timestamp}_token_${token_mbs}_rank_${rank}_inference_66B_pp8_default.log"
