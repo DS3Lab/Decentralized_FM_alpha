@@ -66,15 +66,15 @@ class GPTBlock(_BloomBlock):
         return module
 
     def forward(self, hidden_states: torch.Tensor, layer_past=None, mask=None) -> torch.Tensor:
-        
-        if mask is not None:
-            attention_mask = mask
-        else:
-            attention_mask = torch.ones(hidden_states.shape[:2], device=hidden_states.device)
             
         current_sequence_length = hidden_states.shape[1]
         if layer_past is not None:
             current_sequence_length += layer_past[0].shape[1]
+            
+        if mask is None:
+            mask = torch.ones((x.size(0), x.size(1)+past_length), 
+                dtype=torch.bool, device=x.device)
+            
         alibi = build_alibi_tensor(current_sequence_length, self.n_head, hidden_states.dtype)
             
         layernorm_output = self.input_layernorm(hidden_states)

@@ -158,12 +158,13 @@ class GPTBlock(OPTDecoderLayer):
 
     def forward(self, x: torch.Tensor, layer_past=None, mask=None) -> torch.Tensor:
         
-        if mask is None:
-            mask = torch.ones(x.shape[:2], dtype=torch.bool, device=x.device)
         if layer_past is not None:
             past_length = layer_past[0].size(2)
         else:
             past_length = 0
+        if mask is None:
+            mask = torch.ones((x.size(0), x.size(1)+past_length), 
+                dtype=torch.bool, device=x.device)
         attention_mask = _prepare_decoder_attention_mask(
             mask, x.shape[:2], x, past_length
         )
