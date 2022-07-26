@@ -3,7 +3,7 @@
 #BSUB -W 0:20                   # 3-minutes run-time
 #BSUB -R "rusage[mem=16000]"     # 32 GB per core
 #BSUB -R "rusage[ngpus_excl_p=1]"
-#BSUB -R "select[gpu_model0==NVIDIATITANRTX]"
+#BSUB -R "select[gpu_model0==NVIDIAGeForceRTX2080Ti]"
 #BSUB -o /cluster/home/biyuan/exe_log/gpt3small_1gpu_3node.out.%J
 #BSUB -e /cluster/home/biyuan/exe_log/gpt3small_1gpu_3node.err.%J
 
@@ -15,7 +15,7 @@ nvidia-smi
 
 world_size=8
 DIST_CONF="--pp-mode gpipe --world-size $world_size --pipeline-group-size 4 --data-group-size 2 --cuda-id 0"
-MODEL_CONF="--fp16 --embedding-dim 2048 --num-heads 16 --num-layers 6 --batch-size 64 --micro-batch-size 1"
+MODEL_CONF="--fp16 --embedding-dim 2048 --num-heads 16 --num-layers 2 --batch-size 64 --micro-batch-size 1"
 COOR_CONF="--coordinator-server-ip 129.132.93.95"
 
 export NCCL_SOCKET_IFNAME=access
