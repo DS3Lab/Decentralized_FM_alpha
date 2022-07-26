@@ -39,6 +39,8 @@ def add_torch_distributed_w_coordinator_arguments(parser):
                         help='world-size (default: 2)')
     parser.add_argument('--data-group-size', type=int, default=1, metavar='D',
                         help='world-size (default: 1)')
+    parser.add_argument('--rank', type=int, default=0, metavar='N',
+                        help='rank of the node')
 
 
 def add_qqp_task_arguments(parser):

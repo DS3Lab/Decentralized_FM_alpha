@@ -17,6 +17,8 @@ try:
     import wandb
 except Exception as e:
     wandb = None
+wandb = None
+
 from utils.dist_args_utils import *
 from utils.dist_train_utils import *
 from utils.dist_test_utils import *

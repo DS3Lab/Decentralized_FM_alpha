@@ -38,8 +38,9 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
+    add_torch_distributed_w_coordinator_arguments(parser)
     add_device_arguments(parser)
-    add_torch_distributed_arguments(parser)
+    # add_torch_distributed_arguments(parser)
     add_training_model_arguments(parser)
     # add_task_arguments(parser)
     add_training_hyper_parameter_arguments(parser)
@@ -81,6 +82,7 @@ def main():
     prime_ip, rank = coord_client.notify_train_join()
     print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
 
+    args.rank = rank
     init_communicators_with_coordinator(args, prime_ip, rank)
     
     config = GPTConfig.from_pretrained(args.model_name)
@@ -147,9 +149,11 @@ def main():
 #     random.seed(args.seed)
 #     np.random.seed(args.seed)
     
+    print('initializing pipeline')
     pipe = get_pp_module(args, config, device, use_dp)
     
     if args.load_pretrained_model:
+        print('loading model')
         if get_pipeline_parallel_rank() == 0:
             pipe.model.model[0].load_state_dict(
                 torch.load(f'{args.model_name}/pytorch_embs.pt')
@@ -177,6 +181,7 @@ def main():
                     torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
                 )      
 
+    print('starting train loop....')
     if args.profiling == 'no-profiling':
         train_loop(args, pipe, device, train_data_loader, test_data_loader)
     else:
@@ -201,7 +206,7 @@ def main():
             print("No recognized profiler?")
             assert False
     print(get_pipeline_parallel_rank(), 'finished.')
-    train_finish_msg = str(rank) + '#' + str(round(avg_iter_time, 3))
+    train_finish_msg = str(rank) + '#' + str(round(0.0, 3))
     coord_client.notify_train_finish(message=train_finish_msg)
 
 if __name__ == '__main__':

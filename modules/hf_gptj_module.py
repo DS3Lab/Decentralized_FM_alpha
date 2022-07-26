@@ -185,7 +185,7 @@ class GPTBlock(_GPTJBlock):
         
         if mask is not None:
             # bool -> float
-            attention_mask = 1000*(mask[:, None, None, :]-1)
+            attention_mask = (1e4)*(mask[:, None, None, :]-1)
         else:
             attention_mask = None
             

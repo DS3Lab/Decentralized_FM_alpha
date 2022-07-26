@@ -12,6 +12,7 @@ try:
     import wandb
 except Exception as e:
     wandb = None
+wandb = None
 
 from transformers import get_linear_schedule_with_warmup
 
