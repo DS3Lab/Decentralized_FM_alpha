@@ -19,3 +19,6 @@ Go to this directory in the Euler cluster:
 - The current repo in the Euler cluster:
 
       /nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/GPT-home-private 
+
+
+      
