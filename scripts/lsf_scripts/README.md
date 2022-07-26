@@ -14,3 +14,8 @@ Go to this directory in the Euler cluster:
 - Local training test:
 
       bsub < lsf_local_train_test.bsub
+
+
+- The current repo in the Euler cluster:
+
+      /nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/GPT-home-private 
