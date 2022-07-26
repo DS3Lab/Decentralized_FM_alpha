@@ -8,7 +8,7 @@ class JobSubmitClient:
     def __init__(self, args):
         self.host_ip = args.coordinator_server_ip
         self.host_port = args.coordinator_server_port
-        self.client_port = 9999 - random.randint(0, 3000) # cannot exceed 10000
+        self.client_port = 9999 - random.randint(1, 5000) # cannot exceed 10000
 
     def submit_train_job(self, job_name: str):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -27,8 +27,9 @@ class JobSubmitClient:
                 msg = s.recv(1024)
                 print(f"Received: {msg}")
             if msg.decode('utf-8').startswith('Fail'):
-                print("try again in 10 seconds..")
-                time.sleep(10)
+                print("try again in 20 seconds..")
+                time.sleep(20)
+                self.client_port = 9999 - random.randint(1, 5000)
             else:
                 break
 
