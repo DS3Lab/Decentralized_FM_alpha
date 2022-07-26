@@ -9,7 +9,7 @@
 
 module load gcc/6.3.0 cuda/11.0.3             # Load modules from Euler setup
 source activate base                          # Activate my conda python environment
-cd /cluster/home/biyuan/GPT-home-private      # Change directory
+cd /nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/GPT-home-private       # Change directory
 
 nvidia-smi
 
@@ -22,4 +22,4 @@ export NCCL_SOCKET_IFNAME=access
 export GLOO_SOCKET_IFNAME=access
 
 ##python dist_training_runner_w_coordinator.py $DIST_CONF $MODEL_CONF $COOR_CONF
-python dist_runner_w_coordinator.py $DIST_CONF $MODEL_CONF $COOR_CONF --lsf-job-no
+python dist_training_runner_w_coordinator.py $DIST_CONF $MODEL_CONF $COOR_CONF --lsf-job-no
