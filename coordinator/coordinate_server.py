@@ -204,7 +204,7 @@ class CoordinatorInferenceServer:
         # random.seed(self.allocated_index)
         # nccl_port = 15000 + random.randint(0, 1000)
         return_msg = self.prime_worker_ips[-1] + '#' + str(self.working_pipelines[-1][node_key]['rank'])
-        return_msg += '#' + str(self.working_pipelines[-1][node_key]['rank']['nccl_port'])
+        return_msg += '#' + str(self.working_pipelines[-1][node_key]['nccl_port'])
         print(return_msg)
         return return_msg
 
