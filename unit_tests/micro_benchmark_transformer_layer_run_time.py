@@ -119,11 +119,11 @@ def main():
                         help='input batch size for training (default: 100)')
     parser.add_argument('--num-layers', type=int, default=1, metavar='N',
                         help='-')
-    parser.add_argument('--seq-length', type=int, default=512, metavar='N',
+    parser.add_argument('--seq-length', type=int, default=562, metavar='N',
                         help='-')
-    parser.add_argument('--embedding-dim', type=int, default=4096, metavar='N',
+    parser.add_argument('--embedding-dim', type=int, default=12288, metavar='N',
                         help='-')
-    parser.add_argument('--num-heads', type=int, default=4, metavar='N',
+    parser.add_argument('--num-heads', type=int, default=96, metavar='N',
                         help='-')
     args = parser.parse_args()
     print(hasattr(args, 'foo'))

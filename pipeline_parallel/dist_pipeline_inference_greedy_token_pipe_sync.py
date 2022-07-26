@@ -134,7 +134,7 @@ class DistGreedyInferenceTokePipeSync:
             else:
                 print("=======Rank-(N-1) send_new_token: {} KB (fp32)======="
                       .format(self.token_micro_batch_size * self.token_micro_batch_num * 4 // 1024))
-        seq_emb_num = self.seq_num * self.input_seq_length * self.embedding_dim * self.seq_num
+        seq_emb_num = self.seq_num * self.input_seq_length * self.embedding_dim
         if self.use_fp16:
             print("=======input_seq_emb: {} MB shape: {} X {} (fp16)======="
                   .format(seq_emb_num * 2 // 1024 // 1024, self.input_seq_emb[0].shape, self.seq_num))

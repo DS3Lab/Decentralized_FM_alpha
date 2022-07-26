@@ -60,7 +60,7 @@ class DummyRequestProcessor:
     def get_dataloader(self, batch_size, num_workers=0):
         
         dataset = JsonDataset(
-            ['you are not a']*2000, 
+            ['you are not a', 'I am not a']*1000, 
             self.tokenizer, batch_size=batch_size,
         )
         
@@ -99,7 +99,7 @@ class DummyRequestProcessor:
             
             for i_ret, output_dict in enumerate(outputs):
                 choice = {
-                    "text": (tokenizer.decode(output_dict['token_ids'][i][n_pads:]).replace(tokenizer.pad_token, '') if 'token_ids' in output_dict else ''),
+                    "text": (tokenizer.decode(output_dict['token_ids'][i][n_pads:]) if 'token_ids' in output_dict else ''),
                     "index": i_ret,
                     "logprobs": {
                         "tokens": (tokenizer.convert_ids_to_tokens(output_dict['token_ids'][i][n_pads:] if 'token_ids' in output_dict else [])),
@@ -234,7 +234,7 @@ class RequestProcessor:
             
             for i_ret, output_dict in enumerate(outputs):
                 choice = {
-                    "text": (tokenizer.decode(output_dict['token_ids'][i][n_pads:]).replace(tokenizer.pad_token, '') if 'token_ids' in output_dict else ''),
+                    "text": (tokenizer.decode(output_dict['token_ids'][i][n_pads:]) if 'token_ids' in output_dict else ''),
                     "index": i_ret,
                     "logprobs": {
                         "tokens": (tokenizer.convert_ids_to_tokens(output_dict['token_ids'][i][n_pads:] if 'token_ids' in output_dict else [])),

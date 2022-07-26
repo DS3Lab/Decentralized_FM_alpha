@@ -29,6 +29,7 @@ class CoordinatorTrainServer:
     def __init__(self, args):
         self.host = args.coordinator_server_ip
         self.port = args.coordinator_server_port
+        self.rank_to_be_allocated = set()
         # An array of dict object to store worker info
         self.worker_nodes = OrderedDict()
         self.prime_worker_ip = None
@@ -46,6 +47,8 @@ class CoordinatorTrainServer:
         for node_key in self.worker_nodes.keys():
             print(f"Node rank {self.worker_nodes[node_key]['rank']}, Address: {node_key}")
         print("-------------------------------------------------------")
+        print("<-----------------Rank to be allocated----------------->")
+        print(self.rank_to_be_allocated)
 
     def _handle_train_submit(self, job_name) -> str:
         print("<<<<<<<<<<<<<<<<<<<<< Submit Job >>>>>>>>>>>>>>>>>>>>>>")
@@ -54,10 +57,15 @@ class CoordinatorTrainServer:
         else:
             if job_name == 'lsf_gpt3xl_3gpu':
                 self.train_demand_workers = 3
+            elif job_name == 'lsf_gpt3xl_8gpu':
+                self.train_demand_workers = 8
             elif job_name == 'lsf_gpt3xl_64gpu':
                 self.train_demand_workers = 64
             else:
                 return f'This job is not recognized on coordinate - {job_name}'
+
+            self.rank_to_be_allocated.update(list(range(self.train_demand_workers)))
+
             for i in range(self.train_demand_workers):
                 os.system(f"rm {self.bsub_script_path}/submit_cache/*.bsub")
                 os.system(f"cp {self.bsub_script_path}/{job_name}.bsub "
@@ -75,6 +83,7 @@ class CoordinatorTrainServer:
         new_node_rank = len(self.worker_nodes)
         if new_node_rank == 0:
             self.prime_worker_ip = worker_ip
+        self.rank_to_be_allocated.remove(new_node_rank)
         self.worker_nodes[node_key] = {'rank': new_node_rank}
         return_msg = self.prime_worker_ip + '#' + str(self.worker_nodes[node_key]['rank'])
         return return_msg
@@ -90,6 +99,9 @@ class CoordinatorTrainServer:
         self.train_demand_workers -= 1
         return_msg = 'done'
         return return_msg
+
+    def _handle_train_message(self, worker_ip, port, msg_arg):
+        pass
 
     def execute_server(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -121,6 +133,7 @@ class CoordinatorInferenceServer:
         self.host = args.coordinator_server_ip
         self.port = args.coordinator_server_port
         self.allocated_index = 0
+        self.current_nccl_port = 15000
         # An array of dict object to store worker info
         self.working_pipelines = []
         self.prime_worker_ips = []
@@ -183,13 +196,15 @@ class CoordinatorInferenceServer:
         new_node_rank = len(self.working_pipelines[-1])
         if new_node_rank == 0:
             self.prime_worker_ips.append(worker_ip)
-        self.working_pipelines[-1][node_key] = {'rank': new_node_rank}
+            self.current_nccl_port += 1 # make sure each inference job has different nccl_port.
+        self.working_pipelines[-1][node_key] = {'rank': new_node_rank, 'nccl_port': self.current_nccl_port}
         if len(self.working_pipelines[-1]) == self.inference_pipeline_demand_worker_num:
             self.submit_locked = False
         # all nodes have the same random port
-        random.seed(self.allocated_index)
-        nccl_port = 15000 + random.randint(0,1000)
-        return_msg = self.prime_worker_ips[-1] + '#' + str(self.working_pipelines[-1][node_key]['rank']) + '#' + str(nccl_port)
+        # random.seed(self.allocated_index)
+        # nccl_port = 15000 + random.randint(0, 1000)
+        return_msg = self.prime_worker_ips[-1] + '#' + str(self.working_pipelines[-1][node_key]['rank'])
+        return_msg += '#' + str(self.working_pipelines[-1][node_key]['rank']['nccl_port'])
         print(return_msg)
         return return_msg
 

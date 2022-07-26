@@ -11,13 +11,19 @@ class JobSubmitClient:
         self.client_port = 9999 - random.randint(1, 5000) # cannot exceed 10000
 
     def submit_train_job(self, job_name: str):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(('', self.client_port))
-            s.connect((self.host_ip, self.host_port))
-            s.sendall(b"train#submit#"+job_name.encode())
-            msg = s.recv(1024)
-            print(f"Received: {msg}")
-
+        while True:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(('', self.client_port))
+                s.connect((self.host_ip, self.host_port))
+                s.sendall(b"train#submit#"+job_name.encode())
+                msg = s.recv(1024)
+                print(f"Received: {msg}")
+            if msg.decode('utf-8').startswith('Fail'):
+                print("try again in 10 seconds..")
+                time.sleep(10)
+            else:
+                break
+        
     def submit_inference_job(self, job_name: str):
         while True:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
