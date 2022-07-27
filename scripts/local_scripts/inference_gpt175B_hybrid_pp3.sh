@@ -8,7 +8,7 @@ timestamp=$(date +%Y_%m_%d_%H_%M)
 token_mbs=4
 DIST_CONF="--pp-mode pipe_hybrid_greedy --world-size $world_size --pipeline-group-size $world_size --data-group-size 1 --rank $rank  --cuda-id 0"
 MODEL_CONF="--model-type gptj --model-name ./pretrained_models/gpt-j-175B"
-INFERENCE_CONF="--prompt-batch-size 20 --token-batch-size 20 --input-seq-length 1024 --generate-seq-length 100 --prompt-micro-batch-size 1 --num-layers 3 --token-micro-batch-size $token_mbs"
+INFERENCE_CONF="--prompt-batch-size 20 --token-batch-size 20 --input-seq-length 1024 --generate-seq-length 100 --prompt-micro-batch-size 1 --num-layers 2 --token-micro-batch-size $token_mbs"
 
 export NCCL_SOCKET_IFNAME=ens5
 export GLOO_SOCKET_IFNAME=ens5

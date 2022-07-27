@@ -217,8 +217,8 @@ class DistHybridGreedyInferenceTokePipeSync:
                                                          self.token_micro_batch_size, dim=0)
             self.consumer_value[layer_index] = torch.split(torch.cat(self.producer_value[layer_index], dim=0),
                                                            self.token_micro_batch_size, dim=0)
-            self.producer_key.clear()
-            self.producer_value.clear()
+            self.producer_key[layer_index].clear()
+            self.producer_value[layer_index].clear()
 
             if self.use_fp16:
                 print("=======Layer {} cached key: {} MB shape: {} (fp16)======="
@@ -569,8 +569,9 @@ class DistHybridGreedyInferenceTokePipeSync:
 
         self.forward_new_token_pipeline_stage()
 
-        self.consumer_value.clear()
-        self.consumer_key.clear()
+        for layer_index in range(self.num_layers):
+            self.consumer_value[layer_index].clear()
+            self.consumer_key[layer_index].clear()
 
         # TODO fix this later.
         # if self.pp_rank == 0 and output_ is not None:
