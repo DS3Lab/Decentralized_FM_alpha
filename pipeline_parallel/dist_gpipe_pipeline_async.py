@@ -480,14 +480,14 @@ class GpipeAsync:
         if self.enable_tidy_profiling:
             self.profiling_backward_stage()
             
-#         if self.pp_rank == self.pipeline_group_size - 1:
-#             wandb.log(
-#                 {
-#                     'loss': sum(tr_loss)/len(tr_loss),
-#                     'lr': self.scheduler.get_last_lr()[0],
-# #                     'scale': self.optimizer.get_loss_scale(), ##todo
-#                 }, step=self.global_step,
-#             )
+        if self.pp_rank == self.pipeline_group_size - 1:
+            wandb.log(
+                {
+                    'loss': sum(tr_loss)/len(tr_loss),
+                    'lr': self.scheduler.get_last_lr()[0],
+#                     'scale': self.optimizer.get_loss_scale(), ##todo
+                }, step=self.global_step,
+            )
 
     def profiling_backward_stage(self):
         torch.cuda.synchronize()
@@ -561,28 +561,28 @@ class GpipeAsync:
         self.zero_input_grad()
         self.optimizer.zero_grad(set_to_none=False)
 
-        ##############
-        with torch.no_grad():
-            self.model.eval()
-            tr_loss = []
-            for step in range(self.gradient_accumulate_step):
-                outputs = self.forward_stage(input_, aux_input_data=aux_input_data)
-                self.comm.barrier()  # This is an educated guess that such barrier would make it fair TC (probably required)
-                if self.pp_rank == self.pipeline_group_size - 1:
-                    target_as_micro_batches = torch.chunk(target, self.micro_batch_num, dim=0)
-                    for i in range(self.micro_batch_num):
-                        loss = loss_func(input=outputs[i], target=target_as_micro_batches[i])
-                        tr_loss.append(loss.item())
-            if self.pp_rank == self.pipeline_group_size - 1:
-                wandb.log(
-                    {
-                        'loss': sum(tr_loss)/len(tr_loss),
-                        'lr': self.scheduler.get_last_lr()[0],
-                    }, step=self.global_step,
-                )
-            self.model.train()
-        self.optimizer.zero_grad(set_to_none=False)
-        ###############
+#         ##############
+#         with torch.no_grad():
+#             self.model.eval()
+#             tr_loss = []
+#             for step in range(self.gradient_accumulate_step):
+#                 outputs = self.forward_stage(input_, aux_input_data=aux_input_data)
+#                 self.comm.barrier()  # This is an educated guess that such barrier would make it fair TC (probably required)
+#                 if self.pp_rank == self.pipeline_group_size - 1:
+#                     target_as_micro_batches = torch.chunk(target, self.micro_batch_num, dim=0)
+#                     for i in range(self.micro_batch_num):
+#                         loss = loss_func(input=outputs[i], target=target_as_micro_batches[i])
+#                         tr_loss.append(loss.item())
+#             if self.pp_rank == self.pipeline_group_size - 1:
+#                 wandb.log(
+#                     {
+#                         'loss': sum(tr_loss)/len(tr_loss),
+#                         'lr': self.scheduler.get_last_lr()[0],
+#                     }, step=self.global_step,
+#                 )
+#             self.model.train()
+#         self.optimizer.zero_grad(set_to_none=False)
+#         ###############
 
         for step in range(self.gradient_accumulate_step):
             

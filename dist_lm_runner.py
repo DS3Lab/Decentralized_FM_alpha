@@ -93,12 +93,6 @@ def main():
     parser.add_argument('--do-evaluation', 
                         type=lambda x: x.lower()=='true', default=True, metavar='S',
                         help='do evaluation or not.')
-    parser.add_argument('--layer-drop-p', 
-                        type=float, default=0)
-    parser.add_argument('--layer-drop-iters', 
-                        type=int, default=0)
-    parser.add_argument('--layer-drop-method', 
-                        type=str, default='none')
     args = parser.parse_args()
     
     torch.manual_seed(args.seed)
@@ -143,9 +137,6 @@ def main():
     config.pad_token_id = tokenizer.pad_token_id
     config.pp_rank = get_pipeline_parallel_rank() 
     config.pp_size = args.pipeline_group_size
-    config.layer_drop_p = args.layer_drop_p
-    config.layer_drop_iters = args.layer_drop_iters
-    config.layer_drop_method = args.layer_drop_method
     config.batch_size = args.batch_size
     print("token vocab size:", tokenizer.vocab_size)
     
