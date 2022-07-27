@@ -37,21 +37,20 @@ class DistHybridGreedyInferenceTokePipeSync:
         self.model_type = args.model_type
 
         # assert (args.batch_size % args.micro_batch_size == 0)
-        self.prompt_batch_size = args.prompt_batch_size
+        self.batch_size = args.batch_size
         self.input_seq_length = args.input_seq_length
-        self.token_batch_size = args.token_batch_size
         self.generate_seq_length = args.generate_seq_length
         self.embedding_dim = self._get_embedding_size()
 
         assert (args.token_micro_batch_size % args.prompt_micro_batch_size == 0)
 
-        assert (self.prompt_batch_size % args.prompt_micro_batch_size == 0)
+        assert (self.batch_size % args.prompt_micro_batch_size == 0)
         self.prompt_micro_batch_size = args.prompt_micro_batch_size
-        self.prompt_micro_batch_num = self.prompt_batch_size // self.prompt_micro_batch_size
+        self.prompt_micro_batch_num = self.batch_size // self.prompt_micro_batch_size
 
-        assert (self.token_batch_size % args.token_micro_batch_size == 0)
+        assert (self.batch_size % args.token_micro_batch_size == 0)
         self.token_micro_batch_size = args.token_micro_batch_size
-        self.token_micro_batch_num = self.token_batch_size // self.token_micro_batch_size
+        self.token_micro_batch_num = self.batch_size // self.token_micro_batch_size
         # self.vocab_size = vocab_size
 
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
@@ -142,7 +141,7 @@ class DistHybridGreedyInferenceTokePipeSync:
             else:
                 print("=======Rank-(N-1) send_new_token: {} KB (fp32)======="
                       .format(self.token_micro_batch_size * self.token_micro_batch_num * 4 // 1024))
-        seq_emb_num = self.prompt_batch_size * self.input_seq_length * self.embedding_dim
+        seq_emb_num = self.batch_size * self.input_seq_length * self.embedding_dim
         if self.use_fp16:
             print("=======input_seq_emb: {} MB shape: {} X {} (fp16)======="
                   .format(seq_emb_num * 2 // 1024 // 1024, self.input_seq_emb[0].shape, self.prompt_micro_batch_num))
@@ -153,7 +152,7 @@ class DistHybridGreedyInferenceTokePipeSync:
                   .format(seq_emb_num * 4 // 1024 // 1024, self.input_seq_emb[0].shape, self.prompt_micro_batch_num))
             print("=======output_seq_emb: {} MB shape: {} X {} (fp32)======="
                   .format(seq_emb_num * 4 // 1024 // 1024, self.input_seq_emb[0].shape, self.prompt_micro_batch_num))
-        token_emb_num = self.token_batch_size * self.embedding_dim
+        token_emb_num = self.batch_size * self.embedding_dim
         if self.use_fp16:
             print("=======input_token_emb: {} MB shape: {} X {} (fp16)======="
                   .format(token_emb_num * 2 // 1024 // 1024, self.input_token_emb[0].shape, self.token_micro_batch_num))
