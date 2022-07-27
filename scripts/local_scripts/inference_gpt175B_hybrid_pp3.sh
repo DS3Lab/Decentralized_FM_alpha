@@ -9,7 +9,7 @@ timestamp=$(date +%Y_%m_%d_%H_%M)
 token_mbs=4
 DIST_CONF="--pp-mode pipe_hybrid_greedy --world-size $world_size --pipeline-group-size $world_size --data-group-size 1 --rank $rank  --cuda-id $cuda_id"
 MODEL_CONF="--model-type gptj --model-name ./pretrained_models/gpt-j-175B"
-INFERENCE_CONF="--batch-size 20 --input-seq-length 1024 --generate-seq-length 100 --micro-batch-size 1 --num-layers 4  --token-micro-batch-size $token_mbs"
+INFERENCE_CONF="--batch-size 20 --input-seq-length 1024 --generate-seq-length 100 --micro-batch-size 1 --num-layers 3  --token-micro-batch-size $token_mbs"
 
 
 if [ "$world_size" -ne 3 ]
