@@ -217,6 +217,8 @@ class DistHybridGreedyInferenceTokePipeSync:
                                                          self.token_micro_batch_size, dim=0)
             self.consumer_value[layer_index] = torch.split(torch.cat(self.producer_value[layer_index], dim=0),
                                                            self.token_micro_batch_size, dim=0)
+            self.producer_key.clear()
+            self.producer_value.clear()
 
             if self.use_fp16:
                 print("=======Layer {} cached key: {} MB shape: {} (fp16)======="
@@ -546,7 +548,47 @@ class DistHybridGreedyInferenceTokePipeSync:
         with open(filename, 'w') as outfile:
             json.dump(self.profiling_log, outfile)
 
-    def inference_batch(self, input_=None, output_=None, **kargs):
+    def sequential_inference_batch(self, input_=None, output_=None, **kargs):
+        self.gpu_comm.barrier()
+        start_time = time.time()
+        if self.enable_tidy_profiling:
+            torch.cuda.synchronize()
+            self.init_time_stamp = time.time() * 1e+6
+            self.init_event.record()
+
+        self.forward_seq_pipeline_stage(input_data=input_)
+        if self.enable_tidy_profiling:
+            self.profile_seq_pipeline_stage()
+
+        self.gpu_comm.barrier()
+        prompt_time = time.time()
+        print("Rank {} node INFERENCE prompt takes {:3.2f}s".format(self.global_rank, prompt_time - start_time))
+
+        self._merge_cached_seqs_and_attentions()
+
+        self.forward_new_token_pipeline_stage()
+
+        self.consumer_value.clear()
+        self.consumer_key.clear()
+
+        # TODO fix this later.
+        # if self.pp_rank == 0 and output_ is not None:
+        #    assert isinstance(output_, list)
+        #    item = {}
+        #    if self.generate_seq_length > 0:
+        #        item = {
+        #            'token_ids': torch.cat([z.cpu() for z in self.recv_new_token], 1),
+        #        }
+        #    output_.append(item)
+        end_time = time.time()
+        iter_time = end_time - start_time
+        print("Rank {} node INFERENCE new token takes {:3.2f}s".format(self.global_rank, end_time - prompt_time))
+        print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
+        print("-------------------------------------------")
+
+        return iter_time
+
+    def gpu_cpu_pipe_inference_batch(self, input_=None, output_=None, **kargs):
         self.gpu_comm.barrier()
         start_time = time.time()
 
@@ -585,6 +627,8 @@ class DistHybridGreedyInferenceTokePipeSync:
         print("Rank {} node INFERENCE new token takes {:3.2f}s".format(self.global_rank, end_time - prompt_time))
         print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
         print("-------------------------------------------")
-
         return iter_time
+
+    def inference_batch(self, input_=None, output_=None, **kargs):
+        return self.sequential_inference_batch(self, input_=input_, output_=output_, **kargs)
 
