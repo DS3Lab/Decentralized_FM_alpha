@@ -24,6 +24,76 @@ def gpt_loss_func(input, target):
     loss = functional.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
     return loss
 
+
+class DropScheduler(torch.nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.layer_count = config.layer_count
+        self.pp_rank = config.pp_rank
+        self.pp_size = config.pp_size
+        self.batch_size = config.batch_size
+        self.layer_drop_p = config.layer_drop_p
+        self.layer_drop_iters = config.layer_drop_iters
+        self.layer_drop_method = config.layer_drop_method
+        self.dp_size = 1
+        self.dp_batch_size = self.batch_size // self.dp_size
+        self.micro_iter = 0
+        self.global_micro_iter = 0
+        self.schedule_drop()
+            
+    def schedule_drop(self):
+        
+        if self.layer_drop_method == 'none':
+            return
+        
+        dp_size = self.dp_size
+        dp_batch_size = self.dp_batch_size
+        
+        np.random.seed(self.global_micro_iter)
+        Nk = [ # 4 dp size
+            min(np.random.binomial(n=self.pp_size, p=self.layer_drop_p), 2) for _ in range(dp_size)
+        ]
+        self.schedule = np.zeros([self.layer_drop_iters, dp_size, dp_batch_size, self.pp_size])
+        
+        for j in range(len(Nk)):
+#             idx_drop_layer = np.random.choice(self.pp_size, Nk[j], replace=False)
+            for i in range(self.layer_drop_iters):
+                for k in range(dp_batch_size):
+                
+                    if self.layer_drop_method == 'sample':
+                        pass
+                        idx_drop_layer = np.random.choice(self.pp_size, Nk[j], replace=False)
+                    elif self.layer_drop_method == 'round':
+                        idx_drop_layer = [z%self.pp_size for z in range(i+j+k, i+j+k+Nk[j])]
+                    else:
+                        raise Exception('unknown drop method')
+
+                    self.schedule[i, j, k, idx_drop_layer] = 1
+                    
+        print(self.schedule.sum() / self.schedule.size)
+    
+    def is_drop(self):
+        if not self.training:
+            return False
+        if self.layer_drop_method == 'none' or self.layer_drop_p == 0 or self.layer_drop_iters == 0:
+            return False
+        
+        if self.micro_iter >= self.layer_drop_iters * self.batch_size:
+            self.micro_iter = 0
+            self.schedule_drop()
+        
+        i_macro = self.micro_iter // self.batch_size
+        i_micro = (self.micro_iter % self.batch_size)
+        i_pipe = i_micro // self.dp_batch_size
+        i_pipe_micro = i_micro % self.dp_batch_size
+        ret = self.schedule[i_macro, i_pipe, i_pipe_micro, self.pp_rank]
+        
+        self.global_micro_iter += 1
+        self.micro_iter += 1
+            
+        return (ret==1)
+
+
 class GPTEmbeddings(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -80,57 +150,41 @@ class GPTBlock(_GPT2Block):
             res = x
             x = self.ln_1(x)
             x = self.attn(x)[0]
-            return x / self.config.layer_keep_p + res
+            return x / (1-config.layer_drop_p) + res
         self.attn_res_no_drop = attn_res_no_drop
         
         def mlp_res_no_drop(x: torch.Tensor) -> torch.Tensor:
             res = x
             x = self.ln_2(x)
             x = self.mlp(x)
-            return x / self.config.layer_keep_p + res
+            return x / (1-config.layer_drop_p) + res
         self.mlp_res_no_drop = mlp_res_no_drop
         
-        self.seed_base = 3 ** (config.layer_count+1) + 5 ** (config.pp_rank+1)
+        
+        self.drop_scheduler = DropScheduler(config)
+        
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         
         if not self.training:
-            if self.use_checkpoint:
-                x.requires_grad_(True)
-                x = checkpoint(self.attn_res, x)
-            else:
-                x = self.attn_res(x)
-            if self.use_checkpoint:
-                x.requires_grad_(True)
-                x = checkpoint(self.mlp_res, x)
-            else:
-                x = self.mlp_res(x)
+            x = self.attn_res(x)
+            x = self.mlp_res(x)
             return x
         
-        config = self.config
-        config.theta = (1-config.theta_bar) * np.exp(- config.gamma * config.t) + config.theta_bar
-        b = 1 - (config.pp_rank / config.pp_size) * (1-config.theta)
-        e = 1 - ((config.pp_rank+1) / config.pp_size) * (1-config.theta)
-        config.layer_keep_p = b - (b-e)/config.n_layer * config.layer_count
-        # print(config.pp_rank * config.n_layer + config.layer_count, f"{config.layer_keep_p:.4f}")
-        config.t += 1
-        
-        np.random.seed(config.t + self.seed_base)
-        _tmp = np.random.rand()
-        # print(config.pp_rank * config.n_layer + config.layer_count, f"{_tmp:.4f}")
-        if _tmp < self.config.layer_keep_p:
+        if not self.drop_scheduler.is_drop():
             if self.use_checkpoint:
                 x.requires_grad_(True)
                 x = checkpoint(self.attn_res_no_drop, x)
             else:
-                x = self.attn_res(x)
+                x = self.attn_res_no_drop(x)
             if self.use_checkpoint:
                 x.requires_grad_(True)
                 x = checkpoint(self.mlp_res_no_drop, x)
             else:
-                x = self.mlp_res(x)
+                x = self.mlp_res_no_drop(x)
             return x
         else:
+            config = self.config
             print(config.pp_rank * config.n_layer + config.layer_count, 'skipped!')
             return x
     

@@ -3,6 +3,7 @@ from modules.gpt_modules import gpt_loss_func
 
 from itertools import tee, islice, chain
 
+
 def previous_and_next(some_iterable):
     prevs, items, nexts = tee(some_iterable, 3)
     prevs = chain([None], prevs)
