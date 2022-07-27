@@ -548,7 +548,8 @@ class DistHybridGreedyInferenceTokePipeSync:
         with open(filename, 'w') as outfile:
             json.dump(self.profiling_log, outfile)
 
-    def sequential_inference_batch(self, input_=None, output_=None, **kargs):
+    # Sequential debug mode.
+    def inference_batch(self, input_=None, output_=None, **kargs):
         self.gpu_comm.barrier()
         start_time = time.time()
         if self.enable_tidy_profiling:
@@ -628,7 +629,4 @@ class DistHybridGreedyInferenceTokePipeSync:
         print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
         print("-------------------------------------------")
         return iter_time
-
-    def inference_batch(self, input_=None, output_=None, **kargs):
-        return self.sequential_inference_batch(self, input_=input_, output_=output_, **kargs)
 
