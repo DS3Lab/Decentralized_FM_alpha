@@ -478,7 +478,7 @@ class DistHybridGreedyInferenceTokePipeSync:
             self.profile_token_pipeline_step(step)
 
     def forward_new_token_pipeline_stage(self):
-        self._merge_cached_seqs_and_attentions()
+        # self._merge_cached_seqs_and_attentions()
         for step in range(self.generate_seq_length):
             print("Compute generate seq step <", step, ">.")
             self.forward_new_token_pipeline_step(step)
