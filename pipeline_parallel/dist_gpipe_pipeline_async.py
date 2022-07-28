@@ -69,6 +69,7 @@ class GpipeAsync:
         print("=======Initialize Gpipe.")
         if args.fp16:
             self.use_fp16 = True
+            self.use_dynamic_scale = (args.loss_scale == 0)
             print("=======Gpipe use FP16")
         else:
             self.use_fp16 = False
@@ -420,7 +421,7 @@ class GpipeAsync:
                     self.torch_send_stream.wait_event(self.backward_comp_ready_events[i])
                     self.profile_mark_backward_send_start(i)
                     # compress
-                    if self.use_fp16:
+                    if self.use_fp16 and self.use_dynamic_scale:
                         self.input_micro_batches[i].grad.copy_(
                             self.optimizer.unscale(self.input_micro_batches[i].grad))
                     self.backward_compressor.compress_send(
@@ -436,7 +437,7 @@ class GpipeAsync:
                     # decompress
                     _data = self.backward_compressor.recv_decompress(
                         i, comm=self.comm, src=self.post_node_rank, stream=cupy_recv_stream)
-                    if self.use_fp16:
+                    if self.use_fp16 and self.use_dynamic_scale:
                         _data = self.optimizer.scale(_data)
                     self.output_micro_batches_grad[i].copy_(_data)
 #                     self.comm.recv(self.output_micro_batches_grad[i], src=self.post_node_rank, stream=cupy_recv_stream)
@@ -453,7 +454,7 @@ class GpipeAsync:
                     # decompress
                     _data = self.backward_compressor.recv_decompress(
                         i, comm=self.comm, src=self.post_node_rank, stream=cupy_recv_stream)
-                    if self.use_fp16:
+                    if self.use_fp16 and self.use_dynamic_scale:
                         _data = self.optimizer.scale(_data)
                     self.output_micro_batches_grad[i].copy_(_data)
 #                     self.comm.recv(self.output_micro_batches_grad[i], src=self.post_node_rank, stream=cupy_recv_stream)
@@ -468,7 +469,7 @@ class GpipeAsync:
                     self.torch_send_stream.wait_event(self.backward_comp_ready_events[i])
                     self.profile_mark_backward_send_start(i)
                     # compress
-                    if self.use_fp16:
+                    if self.use_fp16 and self.use_dynamic_scale:
                         self.input_micro_batches[i].grad.copy_(
                             self.optimizer.unscale(self.input_micro_batches[i].grad))
                     self.backward_compressor.compress_send(
