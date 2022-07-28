@@ -249,6 +249,9 @@ def main():
 #                     torch.load(f'{args.model_name}/pytorch_{_i + i}.pt')
 #                 )    
 
+    if args.fp16:
+        pipe.optimizer.reload_model_params()
+
     if args.profiling == 'no-profiling':
         train_loop(args, pipe, device, train_data_loader, test_data_loader)
     else:
