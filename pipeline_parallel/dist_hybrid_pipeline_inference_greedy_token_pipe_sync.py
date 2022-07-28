@@ -428,12 +428,12 @@ class DistHybridGreedyInferenceTokePipeSync:
                 if step == 0:
                     # Send
                     self.profile_mark_forward_token_send_start(i)
-                    self.cpu_comm.send(self.send_new_tokens[i], dst=0)
+                    # self.cpu_comm.send(self.send_new_tokens[i], dst=0)
                     self.profile_mark_forward_token_send_end(i)
                 else:
                     # Receive
                     self.profile_mark_forward_token_recv_start(i)
-                    self.cpu_comm.recv(self.input_token_emb[i], src=self.pre_node_rank)
+                    # self.cpu_comm.recv(self.input_token_emb[i], src=self.pre_node_rank)
                     self.profile_mark_forward_token_recv_end(i)
                     # Compute
                     self.profile_mark_forward_token_comp_start(i)
@@ -442,14 +442,14 @@ class DistHybridGreedyInferenceTokePipeSync:
                     if step != self.generate_seq_length - 1:
                         # Send
                         self.profile_mark_forward_token_send_start(i)
-                        self.cpu_comm.send(self.send_new_tokens[i], dst=0)
+                        # self.cpu_comm.send(self.send_new_tokens[i], dst=0)
                         self.profile_mark_forward_token_send_end(i)
             # Rank-0 node:
             elif self.pp_rank == 0:
                 if step != self.generate_seq_length - 1:
                     # Receive
                     self.profile_mark_forward_token_recv_start(i)
-                    self.cpu_comm.recv(self.recv_new_token[i], src=self.pipeline_group_size - 1)
+                    # self.cpu_comm.recv(self.recv_new_token[i], src=self.pipeline_group_size - 1)
                     self.profile_mark_forward_token_recv_end(i)
                     # Compute
                     self.profile_mark_forward_token_comp_start(i)
@@ -457,13 +457,13 @@ class DistHybridGreedyInferenceTokePipeSync:
                     self.profile_mark_forward_token_comp_end(i)
                     # Send
                     self.profile_mark_forward_token_send_start(i)
-                    self.cpu_comm.send(self.output_token_emb[i], dst=self.post_node_rank)
+                    # self.cpu_comm.send(self.output_token_emb[i], dst=self.post_node_rank)
                     self.profile_mark_forward_token_send_end(i)
             else:  # Middle nodes:
                 if step != self.generate_seq_length - 1:
                     # Receive
                     self.profile_mark_forward_token_recv_start(i)
-                    self.cpu_comm.recv(self.input_token_emb[i], src=self.pre_node_rank)
+                    # self.cpu_comm.recv(self.input_token_emb[i], src=self.pre_node_rank)
                     self.profile_mark_forward_token_recv_end(i)
                     # Compute
                     self.profile_mark_forward_token_comp_start(i)
@@ -471,7 +471,7 @@ class DistHybridGreedyInferenceTokePipeSync:
                     self.profile_mark_forward_token_comp_end(i)
                     # Send
                     self.profile_mark_forward_token_send_start(i)
-                    self.cpu_comm.send(self.output_token_emb[i], dst=self.post_node_rank)
+                    # self.cpu_comm.send(self.output_token_emb[i], dst=self.post_node_rank)
                     self.profile_mark_forward_token_send_end(i)
 
         if self.enable_tidy_profiling:
