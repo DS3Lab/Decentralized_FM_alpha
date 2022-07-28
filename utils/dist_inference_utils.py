@@ -24,7 +24,7 @@ def distributed_inference_foo_iter(args, pipeline, device, request_processor):
         print("Finished running ", args.num_iters,
               " iterations, averaged (exclude the first iter) run time:", averaged_time)
         
-        request_processor.write_scenario_state()
+        # request_processor.write_scenario_state()
             
     else:
         i = 0
