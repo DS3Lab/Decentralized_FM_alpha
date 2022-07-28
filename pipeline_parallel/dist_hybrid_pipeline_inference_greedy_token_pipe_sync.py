@@ -18,7 +18,7 @@ class DistHybridGreedyInferenceTokePipeSync:
         else:
             self.use_fp16 = False
             print("=======Hybrid use FP32=======")
-        self.device = torch.float16 if self.use_fp16 else torch.float32
+        self.cuda_dtype = torch.float16 if self.use_fp16 else torch.float32
         self.cpu_dtype = torch.float32
 
         if rank is None:
@@ -56,7 +56,7 @@ class DistHybridGreedyInferenceTokePipeSync:
         # self.vocab_size = vocab_size
 
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
-        self.cuda_device = device
+        self.device = device
 
         if self.enable_tidy_profiling:
             self.profiling_log = []
@@ -96,10 +96,10 @@ class DistHybridGreedyInferenceTokePipeSync:
                                     for _ in range(self.token_micro_batch_num)]
 
         self.input_seq_emb = [torch.zeros((self.prompt_micro_batch_size, self.input_seq_length, self.embedding_dim),
-                                          requires_grad=False, device=self.cuda_device, dtype=self.device)
+                                          requires_grad=False, device=self.device, dtype=self.cuda_dtype)
                               for _ in range(self.prompt_micro_batch_num)]
         self.output_seq_emb = [torch.zeros((self.prompt_micro_batch_size, self.input_seq_length, self.embedding_dim),
-                                           requires_grad=False, device=self.cuda_device, dtype=self.device)
+                                           requires_grad=False, device=self.device, dtype=self.cuda_dtype)
                                for _ in range(self.prompt_micro_batch_num)]
         self.input_token_emb = [torch.zeros((self.token_micro_batch_size, 1, self.embedding_dim),
                                             requires_grad=False, device='cpu', dtype=self.cpu_dtype)
@@ -189,7 +189,7 @@ class DistHybridGreedyInferenceTokePipeSync:
         if self.pp_rank == 0:
             self.gpu_layers['emb'] = GPTEmbeddings.from_pretrained(
                 self.model_name
-            ).to(self.device).eval().to(self.cuda_device)
+            ).to(self.cuda_dtype).eval().to(self.device)
             self.cpu_layers['emb'] = GPTEmbeddings.from_pretrained(
                 self.model_name
             ).to(self.cpu_dtype).eval()
@@ -199,7 +199,7 @@ class DistHybridGreedyInferenceTokePipeSync:
             print(f'loading layer {global_layer_index}')
             self.gpu_layers['block' + str(layer_index)] = GPTBlock.from_pretrained(
                 self.model_name, layer_index=global_layer_index
-            ).to(self.device).eval().to(self.cuda_device)
+            ).to(self.cuda_dtype).eval().to(self.device)
             self.cpu_layers['block' + str(layer_index)] = GPTBlock.from_pretrained(
                 self.model_name, layer_index=global_layer_index
             ).to(self.cpu_dtype).eval()
