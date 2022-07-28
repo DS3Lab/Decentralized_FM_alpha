@@ -215,10 +215,10 @@ class DistHybridGreedyInferenceTokePipeSync:
         print("_merge_cached_seqs_and_attentions, # layers:", self.num_layers)
         self.merge_switch_start_time = time.time()
         for layer_index in range(self.num_layers):
-            self.consumer_key[layer_index] = torch.split(torch.cat(self.producer_key[layer_index], dim=0),
-                                                         self.token_micro_batch_size, dim=0)
-            self.consumer_value[layer_index] = torch.split(torch.cat(self.producer_value[layer_index], dim=0),
-                                                           self.token_micro_batch_size, dim=0)
+            self.consumer_key[layer_index] = list(torch.split(torch.cat(self.producer_key[layer_index], dim=0),
+                                                         self.token_micro_batch_size, dim=0))
+            self.consumer_value[layer_index] = list(torch.split(torch.cat(self.producer_value[layer_index], dim=0),
+                                                           self.token_micro_batch_size, dim=0))
             self.producer_key[layer_index].clear()
             self.producer_value[layer_index].clear()
 
