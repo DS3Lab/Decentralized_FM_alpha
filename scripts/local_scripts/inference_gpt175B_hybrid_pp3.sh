@@ -19,4 +19,4 @@ then
   exit 1
 fi
 
-python dist_inference_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF $INFERENCE_CONF>> "./logs/${timestamp}_token_${token_mbs}_rank_${rank}_inference_hybrid_175B_pp3_default.log"
+python dist_inference_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF $INFERENCE_CONF #>> "./logs/${timestamp}_token_${token_mbs}_rank_${rank}_inference_hybrid_175B_pp3_default.log"
