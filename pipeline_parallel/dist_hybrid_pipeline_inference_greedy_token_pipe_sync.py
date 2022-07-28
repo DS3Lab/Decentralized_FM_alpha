@@ -210,6 +210,7 @@ class DistHybridGreedyInferenceTokePipeSync:
             ).to(self.dtype).eval()
 
     def _merge_cached_seqs_and_attentions(self):
+        print("_merge_cached_seqs_and_attentions, # layers:", self.num_layers)
         self.merge_switch_start_time = time.time()
         for layer_index in range(self.num_layers):
             self.consumer_key[layer_index] = torch.split(torch.cat(self.producer_key[layer_index], dim=0),
