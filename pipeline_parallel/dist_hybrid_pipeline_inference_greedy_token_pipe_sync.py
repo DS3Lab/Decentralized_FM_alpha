@@ -18,7 +18,9 @@ class DistHybridGreedyInferenceTokePipeSync:
         else:
             self.use_fp16 = False
             print("=======Hybrid use FP32=======")
-        self.dtype = torch.float16 if self.use_fp16 else torch.float32
+        self.device = torch.float16 if self.use_fp16 else torch.float32
+        self.cpu_dtype = torch.float32
+
         if rank is None:
             self.global_rank = args.rank
         else:
@@ -54,7 +56,7 @@ class DistHybridGreedyInferenceTokePipeSync:
         # self.vocab_size = vocab_size
 
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
-        self.device = device
+        self.cuda_device = device
 
         if self.enable_tidy_profiling:
             self.profiling_log = []
@@ -94,16 +96,16 @@ class DistHybridGreedyInferenceTokePipeSync:
                                     for _ in range(self.token_micro_batch_num)]
 
         self.input_seq_emb = [torch.zeros((self.prompt_micro_batch_size, self.input_seq_length, self.embedding_dim),
-                                          requires_grad=False, device=self.device, dtype=self.dtype)
+                                          requires_grad=False, device=self.cuda_device, dtype=self.device)
                               for _ in range(self.prompt_micro_batch_num)]
         self.output_seq_emb = [torch.zeros((self.prompt_micro_batch_size, self.input_seq_length, self.embedding_dim),
-                                           requires_grad=False, device=self.device, dtype=self.dtype)
+                                           requires_grad=False, device=self.cuda_device, dtype=self.device)
                                for _ in range(self.prompt_micro_batch_num)]
         self.input_token_emb = [torch.zeros((self.token_micro_batch_size, 1, self.embedding_dim),
-                                            requires_grad=False, device='cpu', dtype=self.dtype)
+                                            requires_grad=False, device='cpu', dtype=self.cpu_dtype)
                                 for _ in range(self.token_micro_batch_num)]
         self.output_token_emb = [torch.zeros((self.token_micro_batch_size, 1, self.embedding_dim),
-                                             requires_grad=False, device='cpu', dtype=self.dtype)
+                                             requires_grad=False, device='cpu', dtype=self.cpu_dtype)
                                  for _ in range(self.token_micro_batch_num)]
 
         self._print_buffers()
@@ -155,14 +157,14 @@ class DistHybridGreedyInferenceTokePipeSync:
         token_emb_num = self.batch_size * self.embedding_dim
         if self.use_fp16:
             print("=======input_token_emb: {} MB shape: {} X {} (fp16)======="
-                  .format(token_emb_num * 2 // 1024 // 1024, self.input_token_emb[0].shape, self.token_micro_batch_num))
+                  .format(token_emb_num // 524288, self.input_token_emb[0].shape, self.token_micro_batch_num))
             print("=======output_seq_emb: {} MB shape: {} X {} (fp16)======="
-                  .format(token_emb_num * 2 // 1024 // 1024, self.output_token_emb[0].shape, self.token_micro_batch_num))
+                  .format(token_emb_num // 524288, self.output_token_emb[0].shape, self.token_micro_batch_num))
         else:
             print("=======input_token_emb: {} MB shape: {} X {} (fp32)======="
-                  .format(token_emb_num * 4 // 1024 // 1024, self.input_token_emb[0].shape, self.token_micro_batch_num))
+                  .format(token_emb_num // 262144, self.input_token_emb[0].shape, self.token_micro_batch_num))
             print("=======output_token_emb: {} MB shape: {} X {} (fp32)======="
-                  .format(token_emb_num * 4 // 1024 // 1024, self.output_token_emb[0].shape, self.token_micro_batch_num))
+                  .format(token_emb_num * 262144, self.output_token_emb[0].shape, self.token_micro_batch_num))
 
     def _get_embedding_size(self):
         if self.model_type == 'gpt2':
@@ -187,27 +189,27 @@ class DistHybridGreedyInferenceTokePipeSync:
         if self.pp_rank == 0:
             self.gpu_layers['emb'] = GPTEmbeddings.from_pretrained(
                 self.model_name
-            ).to(self.dtype).eval().to(self.device)
+            ).to(self.device).eval().to(self.cuda_device)
             self.cpu_layers['emb'] = GPTEmbeddings.from_pretrained(
                 self.model_name
-            ).to(self.dtype).eval()
+            ).to(self.cpu_dtype).eval()
         for layer_index in range(self.num_layers):
             # global layer indexing could be an argument
             global_layer_index = self.num_layers * self.pp_rank + layer_index
             print(f'loading layer {global_layer_index}')
             self.gpu_layers['block' + str(layer_index)] = GPTBlock.from_pretrained(
                 self.model_name, layer_index=global_layer_index
-            ).to(self.dtype).eval().to(self.device)
+            ).to(self.device).eval().to(self.cuda_device)
             self.cpu_layers['block' + str(layer_index)] = GPTBlock.from_pretrained(
                 self.model_name, layer_index=global_layer_index
-            ).to(self.dtype).eval()
+            ).to(self.cpu_dtype).eval()
         if self.pp_rank == self.pipeline_group_size - 1:
             # self.gpu_layers['lm'] = GPTLMHead.from_pretrained(
             #     self.model_name
             # ).to(self.dtype).eval().to(self.device)
             self.cpu_layers['lm'] = GPTLMHead.from_pretrained(
                 self.model_name
-            ).to(self.dtype).eval()
+            ).to(self.cpu_dtype).eval()
 
     def _merge_cached_seqs_and_attentions(self):
         print("_merge_cached_seqs_and_attentions, # layers:", self.num_layers)
@@ -221,27 +223,25 @@ class DistHybridGreedyInferenceTokePipeSync:
             self.producer_value[layer_index].clear()
 
             if self.use_fp16:
+                cached_size = torch.numel(self.consumer_key[layer_index][0]) * self.token_micro_batch_num // 524288
                 print("=======Layer {} cached key: {} MB shape: {} (fp16)======="
-                      .format(layer_index, torch.numel(self.consumer_key[layer_index][0]) * self.token_micro_batch_num * 2 // 1024 // 1024,
-                              self.consumer_key[layer_index][0].shape))
+                      .format(layer_index, cached_size, self.consumer_key[layer_index][0].shape))
                 print("=======Layer {} cached key: {} MB shape: {} (fp16)======="
-                      .format(layer_index, torch.numel(self.consumer_value[layer_index][0]) * self.token_micro_batch_num * 2 // 1024 // 1024,
-                              self.consumer_value[layer_index][0].shape))
+                      .format(layer_index, cached_size, self.consumer_value[layer_index][0].shape))
             else:
+                cached_size = torch.numel(self.consumer_key[layer_index][0]) * self.token_micro_batch_num // 262144
                 print("=======Layer {} cached key: {} MB shape: {} (fp32)======="
-                      .format(layer_index, torch.numel(self.consumer_key[layer_index][0]) * self.token_micro_batch_num * 4 // 1024 // 1024,
-                              self.consumer_key[layer_index][0].shape))
+                      .format(layer_index, cached_size, self.consumer_key[layer_index][0].shape))
                 print("=======Layer {} cached key: {} MB shape: {} (fp32)======="
-                      .format(layer_index, torch.numel(self.consumer_value[layer_index][0]) * self.token_micro_batch_num * 4 // 1024 // 1024,
-                              self.consumer_value[layer_index][0].shape))
+                      .format(layer_index, cached_size, self.consumer_value[layer_index][0].shape))
         if self.pp_rank == self.pipeline_group_size - 1:
             for i in range(self.token_micro_batch_num):
                 self._generate_new_token(i)
         self.merge_switch_end_time = time.time()
 
     def _append_producer_cached_tuples(self, layer_index, key_value_tuple):
-        self.producer_key[layer_index].append(key_value_tuple[0].detach().cpu())
-        self.producer_value[layer_index].append(key_value_tuple[1].detach().cpu())
+        self.producer_key[layer_index].append(key_value_tuple[0].detach().cpu().to(self.cpu_dtype))
+        self.producer_value[layer_index].append(key_value_tuple[1].detach().cpu().to(self.cpu_dtype))
 
     def _get_consumer_cached_tuples(self, layer_index, index):
         return self.consumer_key[layer_index][index], self.consumer_value[layer_index][index]
@@ -269,7 +269,7 @@ class DistHybridGreedyInferenceTokePipeSync:
                 self._append_producer_cached_tuples(layer_index, key_value_tuple)
             if self.pp_rank == self.pipeline_group_size - 1:
                 buff_i = index//self.token_micro_batch_size
-                pos = index%self.token_micro_batch_size
+                pos = index % self.token_micro_batch_size
                 self.output_token_emb[buff_i][pos] = self.output_seq_emb[index][:, -1:].cpu()
 
     def _forward_compute_generate_token(self, index):
@@ -601,8 +601,6 @@ class DistHybridGreedyInferenceTokePipeSync:
 
         for _ in range(5):
             self.forward_seq_pipeline_stage(input_data=input_)
-
-
             # TODO Something to make sure GPU and CPU computations are pipelined!
 
         if self.enable_tidy_profiling:
@@ -630,4 +628,3 @@ class DistHybridGreedyInferenceTokePipeSync:
         print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
         print("-------------------------------------------")
         return iter_time
-
