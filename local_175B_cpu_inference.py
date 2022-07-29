@@ -25,21 +25,23 @@ def _create_layers(args, dtype=torch.float16):
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
+    parser.add_argument('--fp16', action='store_true',
+                        help='Run model in fp16 mode.')
     parser.add_argument('--model-name', type=str, default='./pretrained_models/gpt-j-175B', metavar='S',
                         help='trained model path')
     parser.add_argument('--model-type', type=str, default='gptj', metavar='S',
                         help='trained model path')
     parser.add_argument('--batch-size', type=int, default=1, metavar='N',
                         help='input batch size for training (default: 100)')
-    parser.add_argument('--num-layers', type=int, default=2, metavar='N',
+    parser.add_argument('--num-layers', type=int, default=96, metavar='N',
                         help='-')
-    parser.add_argument('--prompt-seq-length', type=int, default=512, metavar='N',
+    parser.add_argument('--prompt-seq-length', type=int, default=1024, metavar='N',
                         help='-')
-    parser.add_argument('--gen-seq-length', type=int, default=50, metavar='N',
+    parser.add_argument('--gen-seq-length', type=int, default=100, metavar='N',
                         help='-')
     args = parser.parse_args()
 
-    dtype = torch.float32
+    dtype = torch.float16 if args.fp16 else torch.float32
     model = _create_layers(args, dtype=dtype)
 
     inputs = torch.empty((args.batch_size, args.prompt_seq_length, 12288),
