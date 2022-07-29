@@ -74,7 +74,7 @@ def main():
                     embeddings, cached_tuples[layer_index] = model[layer_index](embeddings, skip_ln=True)
             prompt_end_time = time()
             print("Prompt <{}> takes {:3.2f}s".format(args.prompt_seq_length, prompt_end_time-start_time))
-            print("Shape of key:", cached_tuples[0][0], "Shape of value:", cached_tuples[0][1])
+            print("Shape of key:", cached_tuples[0][0].shape, "Shape of value:", cached_tuples[0][1].shape)
 
     with torch.no_grad():
         total_time = 0
