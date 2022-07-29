@@ -9,8 +9,9 @@ from transformers.modeling_outputs import (
     BaseModelOutputWithPastAndCrossAttentions,
     CausalLMOutputWithCrossAttentions,
 )
+from transformers.models.gptj.modeling_gptj import ACT2FN
 from transformers.models.gptj.modeling_gptj import GPTJAttention as _GPTJAttention
-from transformers.models.gptj.modeling_gptj import GPTJMLP as GPTJMLP
+from transformers.models.gptj.modeling_gptj import GPTJMLP as _GPTJMLP
 from transformers.models.gptj.modeling_gptj import GPTJBlock as _GPTJBlock
 from transformers.models.gptj.modeling_gptj import GPTJModel as _GPTJModel
 from transformers.models.gptj.configuration_gptj import GPTJConfig as GPTConfig
@@ -49,7 +50,72 @@ def apply_rotary_pos_emb(x, sincos, offset=0):
     return (x * cos) + (rotate_every_two(x) * sin)
 
 
+class GPTEmbeddings(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        
+        self.config = config
+        self.embed_dim = config.hidden_size
+        self.wte = nn.Embedding(config.vocab_size, self.embed_dim)
+        self.drop = nn.Dropout(config.embd_pdrop)
+        
+    def forward(self, input_ids, *args, **kargs):
+        
+        # input ids
+        input_shape = input_ids.size()
+        input_ids = input_ids.view(-1, input_shape[-1])
+        hidden_states = self.wte(input_ids)
+        hidden_states = self.drop(hidden_states)
+        return hidden_states
+    
+            
+
+class GPTJMLP(_GPTJMLP):
+    def __init__(self, intermediate_size, config, device='cpu'):  # in MLP: intermediate_size= 4 * embed_dim
+        super(_GPTJMLP, self).__init__()
+        embed_dim = config.n_embd
+
+        self.fc_in = nn.Linear(embed_dim, intermediate_size, device=device)
+        self.fc_out = nn.Linear(intermediate_size, embed_dim, device=device)
+
+        self.act = ACT2FN[config.activation_function]
+        self.dropout = nn.Dropout(config.resid_pdrop)
+
+
 class GPTJAttention(_GPTJAttention):
+    
+    def __init__(self, config, device='cpu'):
+        super(_GPTJAttention, self).__init__()
+
+        max_positions = config.max_position_embeddings
+        self.register_buffer(
+            "bias",
+            torch.tril(torch.ones((max_positions, max_positions), dtype=torch.uint8)).view(
+                1, 1, max_positions, max_positions
+            ),
+        )
+        self.register_buffer("masked_bias", torch.tensor(-1e9))
+
+        self.attn_dropout = nn.Dropout(config.attn_pdrop)
+        self.resid_dropout = nn.Dropout(config.resid_pdrop)
+
+        self.embed_dim = config.hidden_size
+        self.num_attention_heads = config.num_attention_heads
+        self.head_dim = self.embed_dim // self.num_attention_heads
+        if self.head_dim * self.num_attention_heads != self.embed_dim:
+            raise ValueError(
+                f"embed_dim must be divisible by num_attention_heads (got `embed_dim`: {self.embed_dim} and"
+                f" `num_attention_heads`: {self.num_attention_heads})."
+            )
+        self.scale_attn = torch.sqrt(torch.tensor(self.head_dim, dtype=torch.float32)).to(torch.get_default_dtype())
+
+        self.k_proj = nn.Linear(self.embed_dim, self.embed_dim, bias=False, device=device)
+        self.v_proj = nn.Linear(self.embed_dim, self.embed_dim, bias=False, device=device)
+        self.q_proj = nn.Linear(self.embed_dim, self.embed_dim, bias=False, device=device)
+        self.out_proj = nn.Linear(self.embed_dim, self.embed_dim, bias=False, device=device)
+        self.rotary_dim = None
+        if config.rotary_dim is not None:
+            self.rotary_dim = config.rotary_dim
 
     def forward(
         self,
@@ -127,18 +193,19 @@ class GPTJAttention(_GPTJAttention):
 
 
 class GPTEmbeddings(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, device='cpu'):
         super().__init__()
         
         self.config = config
         self.embed_dim = config.hidden_size
-        self.wte = nn.Embedding(config.vocab_size, self.embed_dim)
+        self.wte = nn.Embedding(config.vocab_size, self.embed_dim, device=device)
         
     @classmethod
     def from_pretrained(cls, model_path, config=None):
         if config is None:
             config = GPTConfig.from_pretrained(model_path)
-        module = cls(config).eval()
+        # module = cls(config).eval()
+        module = torch.nn.utils.skip_init(cls, config).eval() # fast init
         try:
             module.load_state_dict(torch.load(os.path.join(
                 model_path, 'pytorch_embs.pt',
@@ -157,13 +224,12 @@ class GPTEmbeddings(nn.Module):
     
 
 class GPTBlock(_GPTJBlock):
-    def __init__(self, config, *args, use_checkpoint=True, **kargs):
+    def __init__(self, config, *args, use_checkpoint=True, device='cpu', **kargs):
         super(_GPTJBlock, self).__init__()
         inner_dim = config.n_inner if config.n_inner is not None else 4 * config.n_embd
-        self.ln_1 = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
-        self.attn = GPTJAttention(config)
-        self.mlp = GPTJMLP(inner_dim, config)
-        # super().__init__(config=config, *args, **kargs)
+        self.ln_1 = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon, device=device)
+        self.attn = GPTJAttention(config, device=device)
+        self.mlp = GPTJMLP(inner_dim, config, device=device)
         self.config = config
         self.use_checkpoint = use_checkpoint
 
@@ -173,7 +239,8 @@ class GPTBlock(_GPTJBlock):
         assert layer_index is not None
         if config is None:
             config = GPTConfig.from_pretrained(model_path)
-        module = cls(config).eval()
+        # module = cls(config).eval()
+        module = torch.nn.utils.skip_init(cls, config).eval() # fast init
         try:
             module.load_state_dict(torch.load(os.path.join(
                 model_path, f'pytorch_{layer_index}.pt',
@@ -210,16 +277,17 @@ class GPTBlock(_GPTJBlock):
     
     
 class GPTLMHead(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, device='cpu'):
         super().__init__()
-        self.ln_f = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
-        self.lm_head = nn.Linear(config.n_embd, config.vocab_size)
+        self.ln_f = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon, device=device)
+        self.lm_head = nn.Linear(config.n_embd, config.vocab_size, device=device)
         
     @classmethod
     def from_pretrained(cls, model_path, config=None):
         if config is None:
             config = GPTConfig.from_pretrained(model_path)
-        module = cls(config).eval()
+        # module = cls(config).eval()
+        module = torch.nn.utils.skip_init(cls, config).eval() # fast init
         try:
             module.load_state_dict(torch.load(os.path.join(
                 model_path, 'pytorch_lm_head.pt',
