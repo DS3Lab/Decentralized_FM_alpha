@@ -87,7 +87,7 @@
 
 | Batch size | Prompt time  | Prompt FLOPS | Generate time per token per batch | Token throughput | Token FLOPS |
 |------------|--------------|--------------|-----------------------------------|------------------|-------------|
-| 1          | -            | -            |                                   |                  |             |
+| 1          | -            | -            | 2.30 s                            |                  |             |
 | 4          | -            | -            |                                   |                  |             |      
 | 8          | -            | -            |                                   |                  |             |            
 | 16         | -            | -            |                                   |                  |             |            
