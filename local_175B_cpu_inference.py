@@ -25,7 +25,7 @@ def _create_layers(args, dtype=torch.float16):
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
-    parser.add_argument('--model-name', type=str, default='../pretrained_models/gpt-j-175B', metavar='S',
+    parser.add_argument('--model-name', type=str, default='./pretrained_models/gpt-j-175B', metavar='S',
                         help='trained model path')
     parser.add_argument('--model-type', type=str, default='gptj', metavar='S',
                         help='trained model path')
