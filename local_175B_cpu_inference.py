@@ -103,8 +103,9 @@ def main():
                                                                                 skip_ln=True)
             token_end_time = time()
             print("Token <{}> takes {:3.2f}s".format(i, token_end_time - token_start_time))
-            total_time += (token_end_time - token_start_time)
-        avg_time = total_time/args.gen_seq_length
+            if i > 1:
+                total_time += (token_end_time - token_start_time)
+        avg_time = total_time/(args.gen_seq_length-2)
         print("Averaged token generate time: {:3.2f}s".format(avg_time))
 
 

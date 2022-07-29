@@ -60,7 +60,8 @@
 - Tested on a single m6i.32xlarge with 128 vCPU 512 GB RAM.
 - Configure
   - 96 Layers in bfloat16; Intel_extension_for_pytorch enabled
-  - Removed batchNorm (not supported in CPU, this need to be fixed for real run.)
+  - ~~Removed batchNorm (not supported in CPU, this need to be fixed for real run.)~~
+  - Use torch.cpu.amp.autocast_mode() for batchNorm. 
 
 - Setting 1.
   - Input sequence length: 1024
