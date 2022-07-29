@@ -38,27 +38,34 @@ def main():
                         help='input batch size for training (default: 100)')
     parser.add_argument('--num-layers', type=int, default=96, metavar='N',
                         help='-')
-    parser.add_argument('--prompt-seq-length', type=int, default=1024, metavar='N',
+    parser.add_argument('--prompt-seq-length', type=int, default=512, metavar='N',
                         help='-')
-    parser.add_argument('--gen-seq-length', type=int, default=100, metavar='N',
+    parser.add_argument('--gen-seq-length', type=int, default=50, metavar='N',
                         help='-')
     args = parser.parse_args()
 
-    dtype = torch.bfloat16 if args.fp16 else torch.float32
+    assert args.fp16
+    dtype = torch.bfloat16
+    # dtype = torch.bfloat16 if args.fp16 else torch.float32
     model = _create_layers(args, dtype=dtype)
 
-    inputs = torch.empty((args.batch_size, args.prompt_seq_length, 12288),
-                         requires_grad=False, dtype=dtype).normal_(mean=0.1, std=0.2)
+    # inputs = torch.empty((args.batch_size, args.prompt_seq_length, 12288),
+    #                     requires_grad=False, dtype=dtype).normal_(mean=0.1, std=0.2)
+    inputs = torch.ones((args.batch_size, args.prompt_seq_length, 12288), requires_grad=False, dtype=dtype)
     # inputs = inputs.to(memory_format=torch.channels_last)
 
     if args.skip_prompt:
         cached_tuples = []
         fill_start_time = time()
         for i in range(args.num_layers):
-            cached_key = torch.empty((args.batch_size, 96, args.prompt_seq_length, 128),
-                                     requires_grad=False, dtype=dtype).normal_(mean=0.1, std=0.2)
-            cached_value = torch.empty((args.batch_size, 96, args.prompt_seq_length, 128),
-                                       requires_grad=False, dtype=dtype).normal_(mean=0.1, std=0.2)
+            # cached_key = torch.empty((args.batch_size, 96, args.prompt_seq_length, 128),
+            #                          requires_grad=False, dtype=dtype).normal_(mean=0.1, std=0.2)
+            # cached_value = torch.empty((args.batch_size, 96, args.prompt_seq_length, 128),
+            #                           requires_grad=False, dtype=dtype).normal_(mean=0.1, std=0.2)
+            cached_key = torch.ones((args.batch_size, 96, args.prompt_seq_length, 128),
+                                    requires_grad=False, dtype=dtype)
+            cached_value=torch.ones((args.batch_size, 96, args.prompt_seq_length, 128),
+                                    requires_grad=False, dtype=dtype).normal_(mean=0.1, std=0.2)
             cached_tuples.append((cached_key, cached_value))
             print("Fill key value for layer <{}>".format(i))
         fill_end_time = time()
@@ -66,16 +73,17 @@ def main():
     else:
         cached_tuples = [None for _ in range(args.num_layers)]
         with torch.no_grad():
-            start_time = time()
-            # prompt phase
-            for layer_index in range(args.num_layers):
-                if layer_index == 0:
-                    embeddings, cached_tuples[layer_index] = model[layer_index](inputs, skip_ln=True)
-                else:
-                    embeddings, cached_tuples[layer_index] = model[layer_index](embeddings, skip_ln=True)
-            prompt_end_time = time()
-            print("Prompt <{}> takes {:3.2f}s".format(args.prompt_seq_length, prompt_end_time-start_time))
-            print("Shape of key:", cached_tuples[0][0].shape, "Shape of value:", cached_tuples[0][1].shape)
+            with torch.cpu.amp.autocast_mode():
+                start_time = time()
+                # prompt phase
+                for layer_index in range(args.num_layers):
+                    if layer_index == 0:
+                        embeddings, cached_tuples[layer_index] = model[layer_index](inputs, skip_ln=False)
+                    else:
+                        embeddings, cached_tuples[layer_index] = model[layer_index](embeddings, skip_ln=False)
+                prompt_end_time = time()
+                print("Prompt <{}> takes {:3.2f}s".format(args.prompt_seq_length, prompt_end_time-start_time))
+                print("Shape of key:", cached_tuples[0][0].shape, "Shape of value:", cached_tuples[0][1].shape)
 
     with torch.no_grad():
         total_time = 0
