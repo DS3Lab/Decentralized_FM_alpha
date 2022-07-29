@@ -7,16 +7,14 @@ import intel_extension_for_pytorch as ipex
 
 
 def _create_layers(args, dtype=torch.float16):
-    if args.model_type == 'gpt2':
-        from modules.hf_gpt2_module import GPTBlock
-    elif args.model_type == 'gptj':
+    if args.model_type == 'gptj':
         from modules.hf_gptj_module import GPTBlock
     else:
         raise Exception(f'unknown model type {args.model_type}')
     cpu_layers = []
     for layer_index in range(args.num_layers):
         print(f'loading layer {layer_index}')
-        current_layer = GPTBlock.from_pretrained(args.model_name, layer_index=layer_index).to(dtype).eval()
+        current_layer = GPTBlock.from_pretrained(args.model_name, layer_index=layer_index, skip_ln=True).to(dtype).eval()
         current_layer = current_layer.to(memory_format=torch.channels_last)
         current_layer = ipex.optimize(current_layer)
         cpu_layers.append(current_layer)
@@ -41,7 +39,7 @@ def main():
                         help='-')
     args = parser.parse_args()
 
-    dtype = torch.bfloat16 if args.fp16 else torch.float32
+    dtype = torch.float16 if args.fp16 else torch.float32
     model = _create_layers(args, dtype=dtype)
 
     inputs = torch.empty((args.batch_size, args.prompt_seq_length, 12288),
@@ -54,9 +52,9 @@ def main():
         # prompt phase
         for layer_index in range(args.num_layers):
             if layer_index == 0:
-                embeddings, cached_tuples[layer_index] = model[layer_index](inputs)
+                embeddings, cached_tuples[layer_index] = model[layer_index](inputs, skip_ln=True)
             else:
-                embeddings, cached_tuples[layer_index] = model[layer_index](embeddings)
+                embeddings, cached_tuples[layer_index] = model[layer_index](embeddings, skip_ln=True)
 
         prompt_end_time = time()
         print("Prompt phase takes {:3.2f}s".format(prompt_end_time-start_time))
@@ -70,9 +68,11 @@ def main():
             # print(inputs.shape)
             for layer_index in range(args.num_layers):
                 if layer_index == 0:
-                    embeddings, cached_tuples[layer_index] = model[layer_index](inputs, cached_tuples[layer_index])
+                    embeddings, cached_tuples[layer_index] = model[layer_index](inputs, cached_tuples[layer_index],
+                                                                                skip_ln=True)
                 else:
-                    embeddings, cached_tuples[layer_index] = model[layer_index](embeddings, cached_tuples[layer_index])
+                    embeddings, cached_tuples[layer_index] = model[layer_index](embeddings, cached_tuples[layer_index],
+                                                                                skip_ln=True)
             token_end_time = time()
             print("Token <{}> takes {:3.2f}s".format(i, token_end_time - token_start_time))
 

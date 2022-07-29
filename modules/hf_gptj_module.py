@@ -160,13 +160,13 @@ class GPTBlock(_GPTJBlock):
     def __init__(self, config, *args, use_checkpoint=True, **kargs):
         super(_GPTJBlock, self).__init__()
         inner_dim = config.n_inner if config.n_inner is not None else 4 * config.n_embd
-        # self.ln_1 = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
-        self.ln_1 = nn.LayerNorm(config.n_embd) # TODO change this back later.
+        self.ln_1 = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
         self.attn = GPTJAttention(config)
         self.mlp = GPTJMLP(inner_dim, config)
         # super().__init__(config=config, *args, **kargs)
         self.config = config
         self.use_checkpoint = use_checkpoint
+
         
     @classmethod
     def from_pretrained(cls, model_path, config=None, layer_index=None):
@@ -182,7 +182,7 @@ class GPTBlock(_GPTJBlock):
             print('Cannot load from <model_name>. The model is randomly initialized.')
         return module
 
-    def forward(self, x: torch.Tensor, layer_past=None, mask=None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, layer_past=None, mask=None, skip_ln=False) -> torch.Tensor:
         
         if mask is not None:
             # bool -> float
@@ -202,7 +202,8 @@ class GPTBlock(_GPTJBlock):
                 offset += layer_past[0].size(2)
             
         res = x
-        x = self.ln_1(x)
+        if not self.skip_ln:
+            x = self.ln_1(x)
         x_a, present = self.attn(x, use_cache=True, layer_past=layer_past, attention_mask=attention_mask, offset=offset)
         x_m = self.mlp(x)
         return x_a + x_m + res, present
@@ -228,6 +229,6 @@ class GPTLMHead(nn.Module):
         return module
         
     def forward(self, x):
-        x = self.ln_f(x)
+        # x = self.ln_f(x)
         x = self.lm_head(x)
         return x
