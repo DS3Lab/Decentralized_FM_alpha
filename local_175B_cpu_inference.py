@@ -53,12 +53,15 @@ def main():
 
     if args.skip_prompt:
         cached_tuples = []
+        fill_start_time = time()
         for _ in range(args.num_layers):
             cached_key = torch.empty((args.batch_size, args.prompt_seq_length, 12288),
                          requires_grad=False, dtype=dtype).normal_(mean=0.1, std=0.2)
             cached_value = torch.empty((args.batch_size, args.prompt_seq_length, 12288),
                          requires_grad=False, dtype=dtype).normal_(mean=0.1, std=0.2)
             cached_tuples.append((cached_key, cached_value))
+        fill_end_time = time()
+        print("Fill Key value takes {:3.2f}s".format(fill_end_time-fill_start_time))
     else:
         cached_tuples = [None for _ in range(args.num_layers)]
         with torch.no_grad():
@@ -69,9 +72,9 @@ def main():
                     embeddings, cached_tuples[layer_index] = model[layer_index](inputs, skip_ln=True)
                 else:
                     embeddings, cached_tuples[layer_index] = model[layer_index](embeddings, skip_ln=True)
-
             prompt_end_time = time()
             print("Prompt <{}> takes {:3.2f}s".format(args.prompt_seq_length, prompt_end_time-start_time))
+            print("Shape of key:", cached_tuples[0][0], "Shape of value:", cached_tuples[0][1])
 
     with torch.no_grad():
         total_time = 0
