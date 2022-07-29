@@ -14,7 +14,7 @@ def _create_layers(args, dtype=torch.float16):
     cpu_layers = []
     for layer_index in range(args.num_layers):
         print(f'loading layer {layer_index}')
-        current_layer = GPTBlock.from_pretrained(args.model_name, layer_index=layer_index, skip_ln=True).to(dtype).eval()
+        current_layer = GPTBlock.from_pretrained(args.model_name, layer_index=layer_index).to(dtype).eval()
         current_layer = current_layer.to(memory_format=torch.channels_last)
         current_layer = ipex.optimize(current_layer)
         cpu_layers.append(current_layer)
