@@ -26,6 +26,8 @@ def _create_layers(args, dtype=torch.float16):
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
+    parser.add_argument('--skip-prompt', action='store_true',
+                        help='Skip the computation of prompt phase.')
     parser.add_argument('--fp16', action='store_true',
                         help='Run model in fp16 mode.')
     parser.add_argument('--model-name', type=str, default='./pretrained_models/gpt-j-175B', metavar='S',
@@ -48,20 +50,31 @@ def main():
     inputs = torch.empty((args.batch_size, args.prompt_seq_length, 12288),
                          requires_grad=False, dtype=dtype).normal_(mean=0.1, std=0.2)
     # inputs = inputs.to(memory_format=torch.channels_last)
-    cached_tuples = [None for _ in range(args.num_layers)]
+
+    if args.skip_prompt:
+        cached_tuples = []
+        for _ in range(args.num_layers):
+            cached_key = torch.empty((args.batch_size, args.prompt_seq_length, 12288),
+                         requires_grad=False, dtype=dtype).normal_(mean=0.1, std=0.2)
+            cached_value = torch.empty((args.batch_size, args.prompt_seq_length, 12288),
+                         requires_grad=False, dtype=dtype).normal_(mean=0.1, std=0.2)
+            cached_tuples.append((cached_key, cached_value))
+    else:
+        cached_tuples = [None for _ in range(args.num_layers)]
+        with torch.no_grad():
+            start_time = time()
+            # prompt phase
+            for layer_index in range(args.num_layers):
+                if layer_index == 0:
+                    embeddings, cached_tuples[layer_index] = model[layer_index](inputs, skip_ln=True)
+                else:
+                    embeddings, cached_tuples[layer_index] = model[layer_index](embeddings, skip_ln=True)
+
+            prompt_end_time = time()
+            print("Prompt <{}> takes {:3.2f}s".format(args.prompt_seq_length, prompt_end_time-start_time))
 
     with torch.no_grad():
-        start_time = time()
-        # prompt phase
-        for layer_index in range(args.num_layers):
-            if layer_index == 0:
-                embeddings, cached_tuples[layer_index] = model[layer_index](inputs, skip_ln=True)
-            else:
-                embeddings, cached_tuples[layer_index] = model[layer_index](embeddings, skip_ln=True)
-
-        prompt_end_time = time()
-        print("Prompt <{}> takes {:3.2f}s".format(args.prompt_seq_length, prompt_end_time-start_time))
-
+        total_time = 0
         for i in range(args.gen_seq_length):
             inputs = torch.empty((args.batch_size, 1, 12288),
                                  requires_grad=False, dtype=dtype).normal_(mean=0.1, std=0.2)
@@ -78,6 +91,9 @@ def main():
                                                                                 skip_ln=True)
             token_end_time = time()
             print("Token <{}> takes {:3.2f}s".format(i, token_end_time - token_start_time))
+            total_time += (token_end_time - token_start_time)
+        avg_time = total_time/args.gen_seq_length
+        print("Averaged token generate time: {:3.2f}s".format(avg_time))
 
 
 if __name__ == '__main__':

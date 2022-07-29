@@ -53,3 +53,20 @@
 | 20                     | 2.14 s      | 29.58 s        | 31.72 s      | 95.16 s                  | 6.94 TFLOPS   |
 | 10                     | 2.14 s      | 25.89 s        | 28.03 s      | 84.09 s                  | 7.86 TFLOPS   |
 | 4                      | 2.14 s      | 66.34 s        | 68.48  s     | 205.44 s                 | 3.22 TFLOPS   |
+
+
+## GPT-175B CPU Token Generation
+
+- Tested on a single m6i.32xlarge with 128 vCPU 512 GB RAM.
+- Configure
+  - 96 Layers in bfloat16; Intel_extension_for_pytorch enabled
+  - Removed batchNorm (not supported in CPU)
+  - Input sequence length: 1024
+  - Generate sequence length: 100
+  - FLOPs for a token:  0.35 TFLOPs
+
+| Batch size | Prompt time | Generate time per token | Token FLOPS |
+|------------|-------------|-------------------------|-------------|
+| 1          | 449.27 s    | 5.19 s                  |             |
+| 4          | 1431.55 s   | 11.76 s                 |             |
+| 8          | -           |                         |             |
