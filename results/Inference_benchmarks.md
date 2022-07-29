@@ -61,6 +61,8 @@
 - Configure
   - 96 Layers in bfloat16; Intel_extension_for_pytorch enabled
   - Removed batchNorm (not supported in CPU, this need to be fixed for real run.)
+
+- Setting 1.
   - Input sequence length: 1024
   - Generate sequence length: 100
   - FLOPs for a token:  0.35 TFLOPs
@@ -71,5 +73,22 @@
 | 1          | 449.27 s    | 0.80         | 5.19 s                            | 0.19             | 0.067 TFLOPS |
 | 4          | 1431.55 s   | 1.01         | 11.76 s                           | 0.34             | 0.11 TFLOPS  |
 | 8          | -           | -            | 17.18 s                           | 0.45             | 0.16 TFLOPS  |
-| 16         | -           | -            |                                   |                  |              |
-| 24         | -           | -            |                                   |                  |              |
+| 16         | -           | -            | 24.37 s                           | 0.65             | 0.22 TFLOPS  |
+| 20         | -           | -            | 28.57 s                           | 0.70             | 0.25 TFLOPS  |
+| 24         | -           | -            | OOM                               |                  |              |
+
+
+- Setting 2.
+  - Input sequence length: 512
+  - Generate sequence length: 50
+  - FLOPs for a token:  0. TFLOPs
+  - FLOPs for a seq prompt:  TFLOPs
+
+| Batch size | Prompt time  | Prompt FLOPS | Generate time per token per batch | Token throughput | Token FLOPS |
+|------------|--------------|--------------|-----------------------------------|------------------|-------------|
+| 1          | -            | -            |                                   |                  |             |
+| 4          | -            | -            |                                   |                  |             |      
+| 8          | -            | -            |                                   |                  |             |            
+| 16         | -            | -            |                                   |                  |             |            
+| 20         | -            | -            |                                   |                  |             |            
+| 24         | -            | -            |                                   |                  |             |
