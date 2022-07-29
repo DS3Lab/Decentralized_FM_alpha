@@ -12,12 +12,15 @@ def _create_layers(args, dtype=torch.float16):
     else:
         raise Exception(f'unknown model type {args.model_type}')
     cpu_layers = []
+    start_time = time()
     for layer_index in range(args.num_layers):
         print(f'loading layer {layer_index}')
         current_layer = GPTBlock.from_pretrained(args.model_name, layer_index=layer_index).to(dtype).eval()
         current_layer = current_layer.to(memory_format=torch.channels_last)
         current_layer = ipex.optimize(current_layer)
         cpu_layers.append(current_layer)
+    end_time = time()
+    print("Init model takes: {:3.2f}s".format(end_time-start_time))
     return cpu_layers
 
 
@@ -57,7 +60,7 @@ def main():
                 embeddings, cached_tuples[layer_index] = model[layer_index](embeddings, skip_ln=True)
 
         prompt_end_time = time()
-        print("Prompt phase takes {:3.2f}s".format(prompt_end_time-start_time))
+        print("Prompt <{}> takes {:3.2f}s".format(args.prompt_seq_length, prompt_end_time-start_time))
 
         for i in range(args.gen_seq_length):
             inputs = torch.empty((args.batch_size, 1, 12288),
