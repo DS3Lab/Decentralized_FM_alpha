@@ -39,7 +39,7 @@ def main():
                         help='-')
     args = parser.parse_args()
 
-    dtype = torch.float16 if args.fp16 else torch.float32
+    dtype = torch.bfloat16 if args.fp16 else torch.float32
     model = _create_layers(args, dtype=dtype)
 
     inputs = torch.empty((args.batch_size, args.prompt_seq_length, 12288),
