@@ -54,12 +54,13 @@ def main():
     if args.skip_prompt:
         cached_tuples = []
         fill_start_time = time()
-        for _ in range(args.num_layers):
+        for i in range(args.num_layers):
             cached_key = torch.empty((args.batch_size, 96, args.prompt_seq_length, 128),
                                      requires_grad=False, dtype=dtype).normal_(mean=0.1, std=0.2)
             cached_value = torch.empty((args.batch_size, 96, args.prompt_seq_length, 128),
                                        requires_grad=False, dtype=dtype).normal_(mean=0.1, std=0.2)
             cached_tuples.append((cached_key, cached_value))
+            print("Fill key value for layer <{}>".format(i))
         fill_end_time = time()
         print("Fill Key value takes {:3.2f}s".format(fill_end_time-fill_start_time))
     else:
