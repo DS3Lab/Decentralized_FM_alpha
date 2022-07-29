@@ -39,11 +39,9 @@ def main():
     model = GlueSeqClassificationModel(args, tokenizer.vocab_size, num_classes)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 
-    model_engine, optimizer, train_dataloader, _ = deepspeed.initialize(args=args, model=model,  optimizer=optimizer,
-                                                                        model_parameters=model.parameters(),
-                                                                        training_data=train_dataset,
-                                                                        dist_init_required=None)
-
+    model_engine, optimizer, train_dataloader, _ = \
+        deepspeed.initialize(args=args, model=model, model_parameters=model.parameters(),
+                             training_data=train_dataset, config='./scripts/deepspeed_scripts/ds_config.json')
 
     for i, data in enumerate(train_dataloader):
         start_time = time.time()
