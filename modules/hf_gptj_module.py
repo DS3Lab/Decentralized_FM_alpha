@@ -202,7 +202,7 @@ class GPTBlock(_GPTJBlock):
                 offset += layer_past[0].size(2)
             
         res = x
-        if not self.skip_ln:
+        if not skip_ln:
             x = self.ln_1(x)
         x_a, present = self.attn(x, use_cache=True, layer_past=layer_past, attention_mask=attention_mask, offset=offset)
         x_m = self.mlp(x)
