@@ -6,6 +6,18 @@ import torch.distributed as dist
 from comm.nccl_backend import NCCLCommunicator
 
 
+def test_send_recv_cpu(args, device, communicator):
+    print("<==== Test delay ====>")
+    if args.rank == 0:
+        send_tensor = torch.ones(1, dtype=torch.float32, device=device)
+        communicator.send(send_tensor, dst=1)
+        print('Send tensor is done.')
+    elif args.rank == 1:
+        recv_tensor = torch.zeros(1, dtype=torch.float32, device=device)
+        communicator.recv(recv_tensor, src=0)
+        print('Recv tensor is done. recv tensor:', recv_tensor)
+
+
 def test_sync_send_recv_delay(args, device, communicator):
     print("<==== Test delay ====>")
     if args.rank == 0:
@@ -124,13 +136,18 @@ def main():
     else:
         device = torch.device('cpu')
     if args.dist_backend == 'cupy_nccl':
-        communicator = NCCLCommunicator(rank=args.rank, intra_gpu_rank=args.cuda_id,
-                                        world_size=args.world_size, master_ip=args.dist_url)
+        dist.init_process_group(backend='gloo', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
+        communicator = NCCLCommunicator(comm_rank=args.rank, cuda_id=args.cuda_id,
+                                        comm_group_size=args.world_size, comm_name="foo")
     else:
         dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
                                 rank=args.rank, world_size=args.world_size)
         communicator = dist
 
+    for i in range(args.iter):
+        test_send_recv_cpu(args, device, communicator)
+
+    '''
     estimated_delay = 0
     for i in range(args.iter + 1):
         if i == 0:
@@ -155,6 +172,7 @@ def main():
     print("<=====Averaged estimated bandwidth: ", estimated_bandwidth, "Gbps=====>")
     print("<=====Averaged end to end time: ", e2e_time, "s for sending <", 4 * args.dim / 1024/1024,
           "> MB data=====>")
+    '''
 
 
 if __name__ == '__main__':

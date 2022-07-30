@@ -4,7 +4,9 @@ import os
 import torch
 from torch import nn
 import torch.nn.functional as F
+from transformers.models.opt.modeling_opt import ACT2FN
 from transformers.models.opt.modeling_opt import OPTDecoderLayer
+from transformers.models.opt.modeling_opt import OPTAttention as _OPTAttention
 from transformers.models.opt.modeling_opt import OPTLearnedPositionalEmbedding
 from transformers.models.opt.configuration_opt import OPTConfig as GPTConfig
 
@@ -67,15 +69,15 @@ def _prepare_decoder_attention_mask(attention_mask, input_shape, inputs_embeds, 
 
 
 class GPTEmbeddings(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, device='cpu'):
         super().__init__()
         self.config = config
         self.padding_idx = config.pad_token_id
-        self.embed_tokens = nn.Embedding(config.vocab_size, config.word_embed_proj_dim, self.padding_idx)
+        self.embed_tokens = nn.Embedding(config.vocab_size, config.word_embed_proj_dim, self.padding_idx, device=device)
         self.embed_positions = OPTLearnedPositionalEmbedding(config.max_position_embeddings, config.hidden_size)
 
         if config.word_embed_proj_dim != config.hidden_size:
-            self.project_in = nn.Linear(config.word_embed_proj_dim, config.hidden_size, bias=False)
+            self.project_in = nn.Linear(config.word_embed_proj_dim, config.hidden_size, bias=False, device=device)
         else:
             self.project_in = None
         
@@ -83,7 +85,8 @@ class GPTEmbeddings(nn.Module):
     def from_pretrained(cls, model_path, config=None):
         if config is None:
             config = GPTConfig.from_pretrained(model_path)
-        module = cls(config).eval()
+        # module = cls(config).eval()
+        module = torch.nn.utils.skip_init(cls, config).eval() # fast init
         try:
             module.load_state_dict(torch.load(os.path.join(
                 model_path, 'pytorch_embs.pt',
@@ -134,11 +137,61 @@ class GPTEmbeddings(nn.Module):
         # hidden_states = self.drop(hidden_states)
 
         return hidden_states
+    
+
+class OPTAttention(_OPTAttention):
+    def __init__(
+        self,
+        embed_dim: int,
+        num_heads: int,
+        dropout: float = 0.0,
+        is_decoder: bool = False,
+        bias: bool = True,
+        device='cpu',
+    ):
+        super(_OPTAttention, self).__init__()
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+        self.dropout = dropout
+        self.head_dim = embed_dim // num_heads
+
+        if (self.head_dim * num_heads) != self.embed_dim:
+            raise ValueError(
+                f"embed_dim must be divisible by num_heads (got `embed_dim`: {self.embed_dim}"
+                f" and `num_heads`: {num_heads})."
+            )
+        self.scaling = self.head_dim**-0.5
+        self.is_decoder = is_decoder
+
+        self.k_proj = nn.Linear(embed_dim, embed_dim, bias=bias, device=device)
+        self.v_proj = nn.Linear(embed_dim, embed_dim, bias=bias, device=device)
+        self.q_proj = nn.Linear(embed_dim, embed_dim, bias=bias, device=device)
+        self.out_proj = nn.Linear(embed_dim, embed_dim, bias=bias, device=device)
 
 
 class GPTBlock(OPTDecoderLayer):
-    def __init__(self, config, *args, use_checkpoint=True, **kargs):
-        super().__init__(config=config, *args, **kargs)
+    def __init__(self, config, *args, use_checkpoint=True, device='cpu', **kargs):
+        # super().__init__(config=config, *args, **kargs)
+        super(OPTDecoderLayer, self).__init__()
+        self.embed_dim = config.hidden_size
+        self.self_attn = OPTAttention(
+            embed_dim=self.embed_dim,
+            num_heads=config.num_attention_heads,
+            dropout=config.attention_dropout,
+            is_decoder=True,
+            device=device,
+        )
+        self.do_layer_norm_before = config.do_layer_norm_before
+        self.dropout = config.dropout
+        self.activation_fn = ACT2FN[config.activation_function]
+
+        self.activation_dropout = config.activation_dropout
+
+        self.self_attn_layer_norm = nn.LayerNorm(self.embed_dim, device=device)
+        self.fc1 = nn.Linear(self.embed_dim, config.ffn_dim, device=device)
+        self.fc2 = nn.Linear(config.ffn_dim, self.embed_dim, device=device)
+        self.final_layer_norm = nn.LayerNorm(self.embed_dim, device=device)
+        
         self.config = config
         self.use_checkpoint = use_checkpoint
         
@@ -147,7 +200,9 @@ class GPTBlock(OPTDecoderLayer):
         assert layer_index is not None
         if config is None:
             config = GPTConfig.from_pretrained(model_path)
-        module = cls(config).eval()
+        # module = cls(config).eval()
+        # module = cls(config).eval()
+        module = torch.nn.utils.skip_init(cls, config).eval() # fast init
         try:
             module.load_state_dict(torch.load(os.path.join(
                 model_path, f'pytorch_{layer_index}.pt',
@@ -208,26 +263,27 @@ class GPTBlock(OPTDecoderLayer):
 
 
 class GPTLMHead(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, device='cpu'):
         super().__init__()
         
         if config.do_layer_norm_before and not config._remove_final_layer_norm:
-            self.final_layer_norm = nn.LayerNorm(config.hidden_size)
+            self.final_layer_norm = nn.LayerNorm(config.hidden_size, device=device)
         else:
             self.final_layer_norm = None
             
         if config.word_embed_proj_dim != config.hidden_size:
-            self.project_out = nn.Linear(config.hidden_size, config.word_embed_proj_dim, bias=False)
+            self.project_out = nn.Linear(config.hidden_size, config.word_embed_proj_dim, bias=False, device=device)
         else:
             self.project_out = None
         
-        self.lm_head = nn.Linear(config.word_embed_proj_dim, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(config.word_embed_proj_dim, config.vocab_size, bias=False, device=device)
         
     @classmethod
     def from_pretrained(cls, model_path, config=None):
         if config is None:
             config = GPTConfig.from_pretrained(model_path)
-        module = cls(config).eval()
+        # module = cls(config).eval()
+        module = torch.nn.utils.skip_init(cls, config).eval() # fast init
         try:
             module.load_state_dict(torch.load(os.path.join(
                 model_path, 'pytorch_lm_head.pt',

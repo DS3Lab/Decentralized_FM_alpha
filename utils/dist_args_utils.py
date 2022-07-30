@@ -200,6 +200,8 @@ def add_inference_details_arguments(parser):
                         help='temperature on logits')
     parser.add_argument('--token-micro-batch-size', type=int, default=1, metavar='S',
                         help='token generation micro batch size.')
+    parser.add_argument('--prompt-micro-batch-size', type=int, default=1, metavar='S',
+                        help='token generation micro batch size.')
     parser.add_argument('--echo-prompt', type=lambda x: (str(x).lower() == 'true'),
                         default=False, metavar='S',
                         help='append prompt to the generated text')

@@ -53,3 +53,44 @@
 | 20                     | 2.14 s      | 29.58 s        | 31.72 s      | 95.16 s                  | 6.94 TFLOPS   |
 | 10                     | 2.14 s      | 25.89 s        | 28.03 s      | 84.09 s                  | 7.86 TFLOPS   |
 | 4                      | 2.14 s      | 66.34 s        | 68.48  s     | 205.44 s                 | 3.22 TFLOPS   |
+
+
+## GPT-175B CPU Token Generation
+
+- Tested on a single m6i.32xlarge with 128 vCPU 512 GB RAM.
+- Configure
+  - 96 Layers in bfloat16; Intel_extension_for_pytorch enabled
+  - ~~Removed batchNorm (not supported in CPU, this need to be fixed for real run.)~~
+  - Use torch.cpu.amp.autocast_mode() for batchNorm. 
+
+- Setting 1.
+  - Input sequence length: 1024
+  - Generate sequence length: 100
+  - FLOPs for a token:  0.35 TFLOPs
+  - FLOPs for a seq prompt: 361.19 TFLOPs
+
+| Batch size | Prompt time | Prompt FLOPS | Generate time per token per batch | Token throughput | Token FLOPS  |
+|------------|-------------|--------------|-----------------------------------|------------------|--------------|
+| 1          | 449.27 s    | 0.80         | 5.19 s                            | 0.19             | 0.067 TFLOPS |
+| 4          | 1431.55 s   | 1.01         | 11.76 s                           | 0.34             | 0.11 TFLOPS  |
+| 8          | -           | -            | 17.18 s                           | 0.45             | 0.16 TFLOPS  |
+| 16         | -           | -            | 24.37 s                           | 0.65             | 0.22 TFLOPS  |
+| 20         | -           | -            | 28.57 s                           | 0.70             | 0.25 TFLOPS  |
+| 24         | -           | -            | OOM                               |                  |              |
+
+
+- Setting 2.
+  - Input sequence length: 512
+  - Generate sequence length: 50
+  - FLOPs for a token:  179.35 TFLOPs
+  - FLOPs for a seq prompt:  0.35 TFLOPs
+
+| Batch size | Prompt time  | Prompt FLOPS | Generate time per token per batch | Token throughput | Token FLOPS |
+|------------|--------------|--------------|-----------------------------------|------------------|-------------|
+| 1          | -            | -            | 2.30 s                            | 0.43             | 0.15        |
+| 4          | -            | -            | 8.44 s                            | 0.47             | 0.16        |      
+| 8          | -            | -            | 10.73 s                           | 0.74             | 0.26        |            
+| 16         | -            | -            | 14.77 s                           | 1.08             | 0.38        |            
+| 32         | -            | -            | 24.95 s                           | 1.28             | 0.49        |            
+| 40         | -            | -            | 26.09 s                           | 1.53             | 0.54        |
+| 48         | -            | -            | OOM                               |                  |             |
