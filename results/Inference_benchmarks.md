@@ -60,7 +60,8 @@
 - Tested on a single m6i.32xlarge with 128 vCPU 512 GB RAM.
 - Configure
   - 96 Layers in bfloat16; Intel_extension_for_pytorch enabled
-  - Removed batchNorm (not supported in CPU, this need to be fixed for real run.)
+  - ~~Removed batchNorm (not supported in CPU, this need to be fixed for real run.)~~
+  - Use torch.cpu.amp.autocast_mode() for batchNorm. 
 
 - Setting 1.
   - Input sequence length: 1024
@@ -81,14 +82,15 @@
 - Setting 2.
   - Input sequence length: 512
   - Generate sequence length: 50
-  - FLOPs for a token:  0. TFLOPs
-  - FLOPs for a seq prompt:  TFLOPs
+  - FLOPs for a token:  179.35 TFLOPs
+  - FLOPs for a seq prompt:  0.35 TFLOPs
 
 | Batch size | Prompt time  | Prompt FLOPS | Generate time per token per batch | Token throughput | Token FLOPS |
 |------------|--------------|--------------|-----------------------------------|------------------|-------------|
-| 1          | -            | -            |                                   |                  |             |
-| 4          | -            | -            |                                   |                  |             |      
-| 8          | -            | -            |                                   |                  |             |            
-| 16         | -            | -            |                                   |                  |             |            
-| 20         | -            | -            |                                   |                  |             |            
-| 24         | -            | -            |                                   |                  |             |
+| 1          | -            | -            | 2.30 s                            | 0.43             | 0.15        |
+| 4          | -            | -            | 8.44 s                            | 0.47             | 0.16        |      
+| 8          | -            | -            | 10.73 s                           | 0.74             | 0.26        |            
+| 16         | -            | -            | 14.77 s                           | 1.08             | 0.38        |            
+| 32         | -            | -            | 24.95 s                           | 1.28             | 0.49        |            
+| 40         | -            | -            | 26.09 s                           | 1.53             | 0.54        |
+| 48         | -            | -            | OOM                               |                  |             |
