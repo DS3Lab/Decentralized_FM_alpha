@@ -99,9 +99,9 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         elif self.model_type == 'gptneox':
             from modules.hf_gptneox_module import GPTEmbeddings, GPTBlock, GPTLMHead
         elif self.model_type == 'opt':
-            from modules.hf_gptneox_module import GPTEmbeddings, GPTBlock, GPTLMHead
+            from modules.hf_opt_module import GPTEmbeddings, GPTBlock, GPTLMHead
         elif self.model_type == 'bloom':
-            from modules.hf_gptneox_module import GPTEmbeddings, GPTBlock, GPTLMHead
+            from modules.hf_bloom_module import GPTEmbeddings, GPTBlock, GPTLMHead
         else:
             raise Exception(f'unknown model type {self.model_type}')
         
