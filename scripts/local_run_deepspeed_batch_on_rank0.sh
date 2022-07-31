@@ -1,5 +1,6 @@
 cd ~/GPT-home-private
 source activate pytorch_p38
+export NCCL_SOCKET_IFNAME=ens3
 
 batches=(1024 2048 4096)
 layers=(24 32 40)
