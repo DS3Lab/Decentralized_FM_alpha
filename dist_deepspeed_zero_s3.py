@@ -60,6 +60,10 @@ def main():
         deepspeed.initialize(args=args, model=model, model_parameters=model.parameters(), optimizer=optimizer,
                              training_data=train_dataset, config=ds_config)
 
+    if deepspeed.comm.get_rank() == 0:
+        print("Batch size:{}, World size: {}.".format(args.batch_size, deepspeed.comm.get_world_size()))
+        print("Model dim:{}, Num of Layers:{}, Seq length".format(args.embedding_dim, args.num_layers, args.seq_length))
+
     for i, data in enumerate(train_dataloader):
         start_time = time.time()
         input_ids = data['text'].to(device)

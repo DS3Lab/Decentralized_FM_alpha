@@ -48,6 +48,17 @@
       
       python dist_pipeline_runner.py --dist-url tcp://XXX.XXX.XXX.XXX:9000 --world-size N --rank i (i=0,...,N-1)
 
+
+
+## Run deepspeed benchmark:
+
+- On rank-0 node, run:
+
+deepspeed --hostfile=./scripts/ds_hostnames dist_deepspeed_zero_s3.py
+
+
+
+
 ## Run with Advanced Scripts (under scripts directory):
 
 - First update the public IPs and private IP of the rank-0 node in ip_list.sh.
