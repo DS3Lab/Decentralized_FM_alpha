@@ -69,16 +69,16 @@
 
 - A sample run:
 
-    
 
-- 
+    deepspeed --hostfile=./scripts/ds_hostnames dist_deepspeed_zero_s3.py --embedding-dim 2048 --seq-length 2048 --batch-size 1024 --num-layers 40 --micro-batch-size 4
+
+- Batch run all settings:
 
     cd ./scripts
     bash local_run_deepspeed_batch_on_rank0.sh
 
 
-
-
+  
 ## Run with Advanced Scripts (under scripts directory):
 
 - First update the public IPs and private IP of the rank-0 node in ip_list.sh.
@@ -95,9 +95,9 @@
 
       bash aws_foo_load_lib.sh
 
-- Setup heterogeneous network (update the private IPs in generate_heterogeneous_tc.py, sync the code to AWS!):
+- Setup heterogeneous network (update the private IPs in ./scheduler/generate_heterogeneous_tc.py, sync the code to AWS!):
 
-      bash aws_generate_heter_tc.sh #HETER_CASE (2/3/4)
+      bash aws_generate_heter_tc.sh #HETER_CASE (3/4/5)
 
 - Run Schedulers (under scheduler/heuristic_evolutionary_solver directory) to get assignments and estimated cost
 
