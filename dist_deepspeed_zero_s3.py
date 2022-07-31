@@ -36,12 +36,29 @@ def main():
     train_dataset = QQPDataset('training', args.train_data, tokenizer, args.seq_length)
 
     num_classes = 2
-    model = GlueSeqClassificationModel(args, tokenizer.vocab_size, num_classes)
+    model = GlueSeqClassificationModel(args, tokenizer.vocab_size, num_classes).half()
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 
+    ds_config = {
+        "train_batch_size": args.batch_size,
+        "train_micro_batch_size_per_gpu": 16,
+        "zero_allow_untested_optimizer": True,
+        "fp16": {
+            "enabled": True
+        },
+        "zero_optimization": {
+            "stage": 3
+        },
+        "offload_optimizer": {
+            "device": "cpu",
+            "buffer_count": 4,
+            "fast_init": False
+        }
+    }
+
     model_engine, optimizer, train_dataloader, _ = \
-        deepspeed.initialize(args=args, model=model, model_parameters=model.parameters(),
-                             training_data=train_dataset, config='./scripts/deepspeed_scripts/ds_config.json')
+        deepspeed.initialize(args=args, model=model, model_parameters=model.parameters(), optimizer=optimizer,
+                             training_data=train_dataset, config=ds_config)
 
     for i, data in enumerate(train_dataloader):
         start_time = time.time()

@@ -1,6 +1,6 @@
 source ./ip_list.sh
 
-rm ./ds_pwfree_ssh/id_rsa*
+rm ./ds_pwfree_ssh/id_rsa.pub
 
 echo "Issue command in "${ips[0]}" to generate rsa_key"
 ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[0]}" "bash -s" < ./local_scripts/local_ssh_key_gen.sh
@@ -15,7 +15,6 @@ do
 done
 wait
 
-world_size=${#ips[@]}
 for rank in "${!ips[@]}"
 do
   echo "Issue command in "${ips[rank]}" to generate setup ssh"
@@ -24,4 +23,9 @@ done
 wait
 
 echo "Issue command in "${ips[0]}" to accept hostnames"
-ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[0]}" "bash -s" < ./local_scripts/local_ssh_rank0_accept_hostname.sh $hostnames
+for hostname in "${hostnames[@]}"
+do
+  echo "Add "$hostname" in ssh known hosts"
+  ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[0]}" "ssh-keyscan -H "$hostname" >> ~/.ssh/known_hosts" &
+done
+wait
