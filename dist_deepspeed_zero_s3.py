@@ -41,7 +41,7 @@ def main():
 
     ds_config = {
         "train_batch_size": args.batch_size,
-        "train_micro_batch_size_per_gpu": 16,
+        "train_micro_batch_size_per_gpu": 4,
         "zero_allow_untested_optimizer": True,
         "fp16": {
             "enabled": True
