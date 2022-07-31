@@ -64,7 +64,7 @@ def main():
                              training_data=train_dataset, config=ds_config)
 
     if deepspeed.comm.get_rank() == 0:
-        print("World size: {}, Batch size: {}/{}, .".format(deepspeed.comm.get_world_size(), args.micro_batch_size,
+        print("World size: {}, Batch size: {}/{}.".format(deepspeed.comm.get_world_size(), args.micro_batch_size,
                                                             args.batch_size))
         print("Model dim:{}, Num of Layers:{}, Seq length: {}"
               .format(args.embedding_dim, args.num_layers, args.seq_length))

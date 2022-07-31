@@ -99,6 +99,10 @@
 
       bash aws_generate_heter_tc.sh #HETER_CASE (3/4/5)
 
+- Optional(Play with it by starting TC, this is not needed if you use the next block of cmds to start benchmarks):
+
+      bash aws_start_heter_tc.sh #HETER_CASE (3/4/5)
+
 - Run Schedulers (under scheduler/heuristic_evolutionary_solver directory) to get assignments and estimated cost
 
       python scheduler.py
