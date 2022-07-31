@@ -66,6 +66,13 @@
 
 
     source activate pytorch_p38
+
+- A sample run:
+
+    
+
+- 
+
     cd ./scripts
     bash local_run_deepspeed_batch_on_rank0.sh
 

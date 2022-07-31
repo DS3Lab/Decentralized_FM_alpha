@@ -11,21 +11,20 @@ scp -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[0]}":~/.ssh/id_rsa.pub ./ds_p
 for rank in "${!ips[@]}"
 do
   echo "Upload key file"
-  scp -i ../binhang_ds3_aws_oregon.pem ./ds_pwfree_ssh/id_rsa.pub ubuntu@"${ips[rank]}":~/.ssh/ &
+  scp -i ../binhang_ds3_aws_oregon.pem ./ds_pwfree_ssh/id_rsa.pub ubuntu@"${ips[rank]}":~/.ssh/
 done
-wait
+
 
 for rank in "${!ips[@]}"
 do
   echo "Issue command in "${ips[rank]}" to generate setup ssh"
-  ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}" "bash -s" < ./local_scripts/local_ssh_key_setup.sh &
+  ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[rank]}" "bash -s" < ./local_scripts/local_ssh_key_setup.sh
 done
-wait
+
 
 echo "Issue command in "${ips[0]}" to accept hostnames"
 for hostname in "${hostnames[@]}"
 do
   echo "Add "$hostname" in ssh known hosts"
-  ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[0]}" "ssh-keyscan -H "$hostname" >> ~/.ssh/known_hosts" &
+  ssh -i ../binhang_ds3_aws_oregon.pem ubuntu@"${ips[0]}" "ssh-keyscan -H "$hostname" >> ~/.ssh/known_hosts"
 done
-wait
