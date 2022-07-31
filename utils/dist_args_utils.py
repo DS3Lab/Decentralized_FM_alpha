@@ -65,9 +65,9 @@ def add_training_model_arguments(parser):
                         help='-')
     parser.add_argument('--generate-seq-length', type=int, default=16, metavar='N',
                         help='-')
-    parser.add_argument('--embedding-dim', type=int, default=768, metavar='N',
+    parser.add_argument('--embedding-dim', type=int, default=2048, metavar='N',
                         help='-')
-    parser.add_argument('--num-layers', type=int, default=4, metavar='N',
+    parser.add_argument('--num-layers', type=int, default=24, metavar='N',
                         help='-')
     parser.add_argument('--num-heads', type=int, default=16, metavar='N',
                         help='-')
