@@ -7,6 +7,8 @@ case=$1
 batches=(1024 2048 4096)
 layers=(24 32 40)
 
+echo "Running case ${case}"
+
 for batch in "${batches[@]}"
 do
   for layer in "${layers[@]}"

@@ -75,7 +75,7 @@
 - Batch run all settings:
 
     cd ./scripts
-    bash local_run_deepspeed_batch_on_rank0.sh
+    bash local_run_deepspeed_batch_on_rank0.sh #CASE
 
 
   
