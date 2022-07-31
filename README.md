@@ -52,9 +52,21 @@
 
 ## Run deepspeed benchmark:
 
-- On rank-0 node, run:
+- Update public-ip and hostname in the ./scripts/ip_list.sh file
 
-deepspeed --hostfile=./scripts/ds_hostnames dist_deepspeed_zero_s3.py
+- Update the host name with slots (number of GPUs) in ./scripts/ds_hostnames.sh file
+
+- Sync code to all nodes
+
+- Setup password free ssh cluster by executing (under the ./script/ directory):
+
+      bash ssh_pass_free.sh
+
+- SSH to the rank-0 node, on that node run:
+
+
+    source activate pytorch_p38
+    deepspeed --hostfile=./scripts/ds_hostnames dist_deepspeed_zero_s3.py --
 
 
 

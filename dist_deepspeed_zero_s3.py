@@ -73,13 +73,18 @@ def main():
         output = model_engine(input_ids, position_ids)
         loss = torch.nn.functional.cross_entropy(output, labels)
         forward_time = time.time()
-        print("Forward pass takes {:3.2f}s".format(forward_time - start_time))
+        if deepspeed.comm.get_rank() == 0:
+            print("Forward pass takes {:3.2f}s".format(forward_time - start_time))
         model_engine.backward(loss)
         backward_time = time.time()
-        print("Backward pass takes {:3.2f}s".format(backward_time - forward_time))
+        if deepspeed.comm.get_rank() == 0:
+            print("Backward pass takes {:3.2f}s".format(backward_time - forward_time))
         model_engine.step()
+        torch.cuda.synchronize()
+        deepspeed.comm.barrier()
         end_time = time.time()
-        print("Whole iteration takes {:3.2f}s".format(end_time - start_time))
+        if deepspeed.comm.get_rank() == 0:
+            print("Whole iteration takes {:3.2f}s".format(end_time - start_time))
         # print(data)
         if i >= args.num_iters - 1:
             break
