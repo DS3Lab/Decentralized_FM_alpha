@@ -74,6 +74,7 @@ def main():
         loss = torch.nn.functional.cross_entropy(output, labels)
         forward_time = time.time()
         if deepspeed.comm.get_rank() == 0:
+            print("Input shape: ", input_ids.shape)
             print("Forward pass takes {:3.2f}s".format(forward_time - start_time))
         model_engine.backward(loss)
         backward_time = time.time()
