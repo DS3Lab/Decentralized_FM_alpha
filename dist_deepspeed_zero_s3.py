@@ -41,7 +41,7 @@ def main():
 
     ds_config = {
         "train_batch_size": args.batch_size,
-        "train_micro_batch_size_per_gpu": 1,
+        "train_micro_batch_size_per_gpu": args.micro_batch_size,
         "zero_allow_untested_optimizer": True,
         "fp16": {
             "enabled": True
@@ -61,33 +61,38 @@ def main():
                              training_data=train_dataset, config=ds_config)
 
     if deepspeed.comm.get_rank() == 0:
-        print("Batch size:{}, World size: {}.".format(args.batch_size, deepspeed.comm.get_world_size()))
+        print("World size: {}, Batch size: {}/{}, .".format(deepspeed.comm.get_world_size(), args.micro_batch_size,
+                                                            args.batch_size))
         print("Model dim:{}, Num of Layers:{}, Seq length: {}"
               .format(args.embedding_dim, args.num_layers, args.seq_length))
 
+    ga_steps = args.batch_size // args.micro_batch_size
+
     for i, data in enumerate(train_dataloader):
         start_time = time.time()
-        input_ids = data['text'].to(device)
-        position_ids = get_position_id(args.seq_length, input_ids.size(0), device)
-        labels = data['label'].to(device)
-        output = model_engine(input_ids, position_ids)
-        loss = torch.nn.functional.cross_entropy(output, labels)
-        forward_time = time.time()
-        if deepspeed.comm.get_rank() == 0:
-            print("Input shape: ", input_ids.shape)
-            print("Forward pass takes {:3.2f}s".format(forward_time - start_time))
-        model_engine.backward(loss)
-        backward_time = time.time()
-        if deepspeed.comm.get_rank() == 0:
-            print("Backward pass takes {:3.2f}s".format(backward_time - forward_time))
-        model_engine.step()
-        torch.cuda.synchronize()
-        deepspeed.comm.barrier()
+        for j in range(ga_steps):
+            micro_start_time = time.time()
+            input_ids = data['text'].to(device)
+            position_ids = get_position_id(args.seq_length, input_ids.size(0), device)
+            labels = data['label'].to(device)
+            output = model_engine(input_ids, position_ids)
+            loss = torch.nn.functional.cross_entropy(output, labels)
+            micro_forward_time = time.time()
+            if deepspeed.comm.get_rank() == 0:
+                print("Input shape: ", input_ids.shape)
+                print("{}/{} Forward pass takes {:3.2f}s".format(j,ga_steps, micro_forward_time - micro_start_time))
+            model_engine.backward(loss)
+            micro_backward_time = time.time()
+            if deepspeed.comm.get_rank() == 0:
+                print("{}/{} Backward pass takes {:3.2f}s".format(j,ga_steps, micro_backward_time - micro_forward_time))
+            model_engine.step()
+            torch.cuda.synchronize()
+            deepspeed.comm.barrier()
         end_time = time.time()
         if deepspeed.comm.get_rank() == 0:
             print("Whole iteration takes {:3.2f}s".format(end_time - start_time))
         # print(data)
-        if i >= args.num_iters - 1:
+        if i//ga_steps >= args.num_iters - 1:
             break
 
 
