@@ -66,7 +66,8 @@
 
 
     source activate pytorch_p38
-    deepspeed --hostfile=./scripts/ds_hostnames dist_deepspeed_zero_s3.py --
+    cd ./scripts
+    bash local_run_deepspeed_batch_on_rank0.sh
 
 
 

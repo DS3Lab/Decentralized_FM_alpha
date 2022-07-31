@@ -49,9 +49,9 @@ def main():
         "zero_optimization": {
             "stage": 3
         },
-        "offload_param": {
-            "device": "cpu"
-        },
+        #"offload_param": {
+        #    "device": "cpu"
+        #},
         "offload_optimizer": {
             "device": "cpu",
             "buffer_count": 4,
