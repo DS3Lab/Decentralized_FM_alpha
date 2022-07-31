@@ -86,11 +86,11 @@ def main():
             if deepspeed.comm.get_rank() == 0:
                 print("{}/{} Backward pass takes {:3.2f}s".format(j,ga_steps, micro_backward_time - micro_forward_time))
             model_engine.step()
-            torch.cuda.synchronize()
-            deepspeed.comm.barrier()
+            # torch.cuda.synchronize()
+            # deepspeed.comm.barrier()
         end_time = time.time()
         if deepspeed.comm.get_rank() == 0:
-            print("Whole iteration takes {:3.2f}s".format(end_time - start_time))
+            print("========<{}> Whole iteration takes {:3.2f}s========".format(i//ga_steps, end_time - start_time))
         # print(data)
         if i//ga_steps >= args.num_iters - 1:
             break
