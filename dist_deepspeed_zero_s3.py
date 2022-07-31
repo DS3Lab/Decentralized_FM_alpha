@@ -41,7 +41,7 @@ def main():
 
     ds_config = {
         "train_batch_size": args.batch_size,
-        "train_micro_batch_size_per_gpu": 4,
+        "train_micro_batch_size_per_gpu": 1,
         "zero_allow_untested_optimizer": True,
         "fp16": {
             "enabled": True
@@ -62,7 +62,8 @@ def main():
 
     if deepspeed.comm.get_rank() == 0:
         print("Batch size:{}, World size: {}.".format(args.batch_size, deepspeed.comm.get_world_size()))
-        print("Model dim:{}, Num of Layers:{}, Seq length".format(args.embedding_dim, args.num_layers, args.seq_length))
+        print("Model dim:{}, Num of Layers:{}, Seq length: {}"
+              .format(args.embedding_dim, args.num_layers, args.seq_length))
 
     for i, data in enumerate(train_dataloader):
         start_time = time.time()
