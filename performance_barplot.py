@@ -854,7 +854,7 @@ def plot_performance(subfig=None):
     axes = subfig.subplots(nrows=5, ncols=1, sharex=True)
     for i, df in enumerate(cases_df):
         ax = sns.barplot(ax=axes[i], data=df, x='pflop', y='runtime', hue="system", hue_order=[
-            "Megatron", "Ours (w/o Scheduler)", "Ours (w/ Scheduler)", "DeepSpeed"], alpha=0.8, ci="sd", errwidth=0.6, capsize=0.2)
+            "Ours (w/o Scheduler)", "Megatron", "Ours (w/ Scheduler)", "DeepSpeed"], alpha=0.8, ci="sd", errwidth=0.6, capsize=0.2)
         ax.set_ylabel('Runtime per iteration (s)')
         ax.set_xlabel(None)
         if i == 0:

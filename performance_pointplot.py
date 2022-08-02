@@ -278,7 +278,7 @@ def plot_performance(subfig=None):
     axes = subfig.subplots(nrows=5, ncols=1, sharex=True)
     for i, df in enumerate(cases_df):
         ax = sns.pointplot(ax=axes[i], data=df, x='pflop', y="pflops", hue="system", hue_order=[
-            "Megatron", "Ours (w/o Scheduler)", "Ours (w/ Scheduler)", "DeepSpeed"])
+            "Ours (w/o Scheduler)", "Megatron", "Ours (w/ Scheduler)", "DeepSpeed"])
         ax.set(ylim=(0, 3.1))
         ax.set_xlabel(None)
         ax.set_ylabel('PFLOPS')
