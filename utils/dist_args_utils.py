@@ -65,9 +65,9 @@ def add_training_model_arguments(parser):
                         help='-')
     parser.add_argument('--generate-seq-length', type=int, default=16, metavar='N',
                         help='-')
-    parser.add_argument('--embedding-dim', type=int, default=768, metavar='N',
+    parser.add_argument('--embedding-dim', type=int, default=2048, metavar='N',
                         help='-')
-    parser.add_argument('--num-layers', type=int, default=4, metavar='N',
+    parser.add_argument('--num-layers', type=int, default=2, metavar='N',
                         help='-')
     parser.add_argument('--num-heads', type=int, default=16, metavar='N',
                         help='-')
@@ -80,9 +80,9 @@ def add_training_hyper_parameter_arguments(parser):
                         help='input batch size for training (default: 100)')
     parser.add_argument('--micro-batch-size', type=int, default=4, metavar='N',
                         help='input micro batch size for training (default: 100)')
-    parser.add_argument('--lr', type=float, default=0.01, metavar='N',
+    parser.add_argument('--lr', type=float, default=0.0001, metavar='N',
                         help='-')
-    parser.add_argument('--num-iters', type=int, default=5, metavar='N',
+    parser.add_argument('--num-iters', type=int, default=4, metavar='N',
                         help='-')
 
 
