@@ -12,7 +12,7 @@
       # Magic, not sure why cupy-cuda111 would not work, it seems that cupy-cuda111 will use different PTX from torch.
       pip3 install cupy-cuda110==8.6.0
 
-      pip install transformers
+      pip3 install transformers
 
 - Install deepspeed for some micro-benchmark (optional)
 
