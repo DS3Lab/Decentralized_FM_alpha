@@ -42,30 +42,30 @@ for case_idx in range(5):
     if case_idx == 0:
         ax.set(ylim=(0, 25))
         ax.set_yticks([0, 5, 10, 15, 20, 25])
-        ax.set_yticklabels([0, 5, 10, 15, 20, 25], fontsize=15)
+        ax.set_yticklabels([0, 5, 10, 15, 20, 25], fontsize=12)
     elif case_idx == 1:
         ax.set(ylim=(0, 80))
         ax.set_yticks([0, 20, 40, 60, 80])
-        ax.set_yticklabels([0, 20, 40, 60, 80], fontsize=15)
+        ax.set_yticklabels([0, 20, 40, 60, 80], fontsize=12)
     elif case_idx == 2:
         ax.set(ylim=(0, 80))
         ax.set_yticks([0, 20, 40, 60, 80])
-        ax.set_yticklabels([0, 20, 40, 60, 80], fontsize=15)
+        ax.set_yticklabels([0, 20, 40, 60, 80], fontsize=12)
     elif case_idx == 3:
         ax.set(ylim=(0, 80))
         ax.set_yticks([0, 20, 40, 60, 80])
-        ax.set_yticklabels([0, 20, 40, 60, 80], fontsize=15)
+        ax.set_yticklabels([0, 20, 40, 60, 80], fontsize=12)
     elif case_idx == 4:
         ax.set(ylim=(0, 200))
         ax.set_yticks([0, 50, 100, 150, 200])
-        ax.set_yticklabels([0, 50, 100, 150, 200], fontsize=15)
+        ax.set_yticklabels([0, 50, 100, 150, 200], fontsize=12)
 
     if case_idx == 1:
         ax.set_xticks([0, 5000, 10000, 15000])
-        ax.set_xticklabels([0, 5000, 10000, 15000], fontsize=15)
+        ax.set_xticklabels([0, 5000, 10000, 15000], fontsize=12)
     else:
         ax.set_xticks([0, 500, 1000, 1500])
-        ax.set_xticklabels([0, 500, 1000, 1500], fontsize=15)
+        ax.set_xticklabels([0, 500, 1000, 1500], fontsize=12)
 
     if case_idx == 4:
         ax.get_legend().set_title(None)
@@ -74,7 +74,7 @@ for case_idx in range(5):
         handles = [handles[2], handles[1], handles[0]]
         labels = [labels[2], labels[1], labels[0]]
         ax.legend(handles, labels, ncol=1, handletextpad=0.3,
-                  loc='upper left', bbox_to_anchor=(1.2, 1), fontsize=15)
+                  loc='upper left', bbox_to_anchor=(1.2, 1), fontsize=12)
     else:
         ax.get_legend().remove()
 axes[1, 2].remove()

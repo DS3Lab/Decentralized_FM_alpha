@@ -15,6 +15,16 @@ case_0_df = pd.DataFrame(data=[[0, 23.64, 1.888, 12.52, 'Megatron'],
                                [0, 78.82, 2.138, 36.87, 'Megatron'],
                                [0, 157.64, 2.161, 72.96, 'Megatron'],
 
+                               [0, 23.64, 1.604, 14.74, 'DeepSpeed'],
+                               [0, 47.28, 1.649, 28.68, 'DeepSpeed'],
+                               [0, 94.56, 1.613, 58.61, 'DeepSpeed'],
+                               [0, 31.52, 1.245, 25.31, 'DeepSpeed'],
+                               [0, 63.04, 1.360, 46.35, 'DeepSpeed'],
+                               [0, 126.08, 1.391, 90.62, 'DeepSpeed'],
+                               [0, 39.41, 1.027, 38.38, 'DeepSpeed'],
+                               [0, 78.82, 1.065, 73.98, 'DeepSpeed'],
+                               [0, 157.64, 1.062, 148.49, 'DeepSpeed'],
+
                                [0, 23.64, 2.331, 10.14, 'Ours (w/ Scheduler)'],
                                [0, 47.28, 2.683, 17.62, 'Ours (w/ Scheduler)'],
                                [0, 94.56, 2.866, 32.99, 'Ours (w/ Scheduler)'],
@@ -57,6 +67,16 @@ case_1_df = pd.DataFrame(data=[[1, 23.64, 1.109, 21.31, 'Megatron'],
                                [1, 39.41, 1.558, 25.29, 'Megatron'],
                                [1, 78.82, 1.595, 49.41, 'Megatron'],
                                [1, 157.64, 1.639, 96.16, 'Megatron'],
+
+                               [1, 23.64, 0.843, 28.05, 'DeepSpeed'],
+                               [1, 47.28, 0.757, 62.44, 'DeepSpeed'],
+                               [1, 94.56, 0.796, 118.75, 'DeepSpeed'],
+                               [1, 31.52, 0.686, 45.92, 'DeepSpeed'],
+                               [1, 63.04, 0.728, 86.57, 'DeepSpeed'],
+                               [1, 126.08, 0.740, 170.38, 'DeepSpeed'],
+                               [1, 39.41, 0.678, 58.12, 'DeepSpeed'],
+                               [1, 78.82, 0.656, 120.21, 'DeepSpeed'],
+                               [1, 157.64, 0.656, 242.96, 'DeepSpeed'],
 
                                [1, 23.64, 1.917, 12.33, 'Ours (w/ Scheduler)'],
                                [1, 47.28, 2.063, 22.92, 'Ours (w/ Scheduler)'],
@@ -101,6 +121,16 @@ case_2_df = pd.DataFrame(data=[[2, 23.64, 0.701, 33.72, 'Megatron'],
                                [2, 78.82, 1.211, 65.06, 'Megatron'],
                                [2, 157.64, 1.292, 121.98, 'Megatron'],
 
+                               [2, 23.64, 0.145, 163.43, 'DeepSpeed'],
+                               [2, 47.28, 0.145, 326.26, 'DeepSpeed'],
+                               [2, 94.56, 0.143, 659.02, 'DeepSpeed'],
+                               [2, 31.52, 0.129, 244.57, 'DeepSpeed'],
+                               [2, 63.04, 0.129, 486.98, 'DeepSpeed'],
+                               [2, 126.08, 0.130, 973.39, 'DeepSpeed'],
+                               [2, 39.41, 0.119, 332.12, 'DeepSpeed'],
+                               [2, 78.82, 0.119, 660.87, 'DeepSpeed'],
+                               [2, 157.64, 0.119, 1325.28, 'DeepSpeed'],
+
                                [2, 23.64, 1.240, 19.06, 'Ours (w/ Scheduler)'],
                                [2, 47.28, 1.447, 32.67, 'Ours (w/ Scheduler)'],
                                [2, 94.56, 1.735, 54.50, 'Ours (w/ Scheduler)'],
@@ -143,6 +173,16 @@ case_3_df = pd.DataFrame(data=[[3, 23.64, 0.421, 56.20, 'Megatron'],
                                [3, 39.41, 0.617, 63.86, 'Megatron'],
                                [3, 78.82, 0.689, 114.33, 'Megatron'],
                                [3, 157.64, 0.729, 216.38, 'Megatron'],
+
+                               [3, 23.64, 0.098, 240.28, 'DeepSpeed'],
+                               [3, 47.28, 0.099, 479.44, 'DeepSpeed'],
+                               [3, 94.56, 0.099, 958.07, 'DeepSpeed'],
+                               [3, 31.52, 0.057, 552.99, 'DeepSpeed'],
+                               [3, 63.04, 0.057, 1103.04, 'DeepSpeed'],
+                               [3, 126.08, 0.057, 2202.46, 'DeepSpeed'],
+                               [3, 39.41, 0.047, 845.31, 'DeepSpeed'],
+                               [3, 78.82, 0.047, 1673.22, 'DeepSpeed'],
+                               [3, 157.64, 0.047, 3364.53, 'DeepSpeed'],
 
                                [3, 23.64, 1.063, 22.24, 'Ours (w/ Scheduler)'],
                                [3, 47.28, 1.222, 38.68, 'Ours (w/ Scheduler)'],
@@ -187,6 +227,16 @@ case_4_df = pd.DataFrame(data=[[4, 23.64, 0.141, 167.74, 'Megatron'],
                                [4, 78.82, 0.242, 326.02, 'Megatron'],
                                [4, 157.64, 0.265, 595.64, 'Megatron'],
 
+                               [4, 23.64, 0.040, 583.71, 'DeepSpeed'],
+                               [4, 47.28, 0.040, 1170.45, 'DeepSpeed'],
+                               [4, 94.56, 0.040, 2378.79, 'DeepSpeed'],
+                               [4, 31.52, 0.029, 1103.88, 'DeepSpeed'],
+                               [4, 63.04, 0.029, 2197.83, 'DeepSpeed'],
+                               [4, 126.08, 0.029, 4394.91, 'DeepSpeed'],
+                               [4, 39.41, 0.024, 1656.86, 'DeepSpeed'],
+                               [4, 78.82, 0.024, 3222.48, 'DeepSpeed'],
+                               [4, 157.64, 0.024, 6679.11, 'DeepSpeed'],
+
                                [4, 23.64, 0.540, 43.78, 'Ours (w/ Scheduler)'],
                                [4, 47.28, 0.759, 62.27, 'Ours (w/ Scheduler)'],
                                [4, 94.56, 0.909, 104.06,
@@ -228,7 +278,7 @@ def plot_performance(subfig=None):
     axes = subfig.subplots(nrows=5, ncols=1, sharex=True)
     for i, df in enumerate(cases_df):
         ax = sns.pointplot(ax=axes[i], data=df, x='pflop', y="pflops", hue="system", hue_order=[
-            "Megatron", "Ours (w/o Scheduler)", "Ours (w/ Scheduler)"])
+            "Megatron", "Ours (w/o Scheduler)", "Ours (w/ Scheduler)", "DeepSpeed"])
         ax.set(ylim=(0, 3.1))
         ax.set_xlabel(None)
         ax.set_ylabel('PFLOPS')
@@ -240,6 +290,6 @@ def plot_performance(subfig=None):
                                 'L40\nB1k', 'L40\nB2k', 'L40\nB4k', ])
             ax.get_legend().set_title(None)
             ax.legend(loc='lower center', handletextpad=0.1, columnspacing=0.1, bbox_to_anchor=(
-                0.48, -0.5), ncol=3, prop={'size': 9}, facecolor='white')
+                0.48, -0.5), ncol=2, prop={'size': 9}, facecolor='white')
         else:
             ax.get_legend().remove()
