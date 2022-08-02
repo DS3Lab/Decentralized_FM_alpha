@@ -1,5 +1,7 @@
 source ./ip_list.sh
 
+
+
 for ip in "${ips[@]}"
 do
   echo "Issue command in $ip"
@@ -8,7 +10,7 @@ do
     sshpass -p password ssh fsuser@"$ip" "bash -s" < ./local_scripts/local_git_pull.sh &
   else
     token=$1
-    ssshpass -p password ssh fsuser@"$ip" "bash -s" < ./local_scripts/local_git_pull.sh "$token" &
+    sshpass -p password ssh fsuser@"$ip" "bash -s" < ./local_scripts/local_git_pull.sh "$token" &
   fi
 done
 wait

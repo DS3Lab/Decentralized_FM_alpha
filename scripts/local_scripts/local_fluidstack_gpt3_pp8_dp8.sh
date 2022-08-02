@@ -1,5 +1,7 @@
 cd ~/GPT-home-private
 
+export NCCL_SOCKET_IFNAME=enp1s0
+
 ip=$1
 world_size=$2
 rank=$3
