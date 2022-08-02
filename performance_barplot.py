@@ -853,8 +853,10 @@ cases_df = [case_0_df, case_1_df, case_2_df, case_3_df, case_4_df]
 def plot_performance(subfig=None):
     axes = subfig.subplots(nrows=5, ncols=1, sharex=True)
     for i, df in enumerate(cases_df):
-        ax = sns.barplot(ax=axes[i], data=df, x='pflop', y='runtime', hue="system", hue_order=[
-            "Ours (w/o Scheduler)", "Megatron", "Ours (w/ Scheduler)", "DeepSpeed"], alpha=0.8, ci="sd", errwidth=0.6, capsize=0.2)
+        ax = sns.barplot(ax=axes[i], data=df, x='pflop', y='runtime',
+                         hue="system", hue_order=["Ours (w/ Scheduler)", "Ours (w/o Scheduler)", "Megatron", "DeepSpeed"],
+                         palette=["C2", "C1", "C0", "C3"],
+                         alpha=0.8, ci="sd", errwidth=0.6, capsize=0.2)
         ax.set_ylabel('Runtime per iteration (s)')
         ax.set_xlabel(None)
         if i == 0:
@@ -874,7 +876,9 @@ def plot_performance(subfig=None):
                                 'L32\nB1k', 'L32\nB2k', 'L32\nB4k',
                                 'L40\nB1k', 'L40\nB2k', 'L40\nB4k', ])
             ax.get_legend().set_title(None)
-            ax.legend(loc='lower center', handletextpad=0.1, columnspacing=0.1, bbox_to_anchor=(
+            handles, labels = ax.get_legend_handles_labels()
+            ax.legend(handles=[handles[0], handles[2], handles[1], handles[3]], labels=[labels[0], labels[2], labels[1], labels[3]],
+                      loc='lower center', handletextpad=0.1, columnspacing=0.1, bbox_to_anchor=(
                 0.48, -0.5), ncol=2, prop={'size': 9}, facecolor='white')
         else:
             ax.get_legend().remove()
