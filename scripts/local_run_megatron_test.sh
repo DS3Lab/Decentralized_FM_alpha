@@ -1,8 +1,8 @@
 #!/bin/bash
 
-TRAIN_DATA="~/GPT-home-private/task_datasets/data/QQP/train.tsv"
-VALID_DATA="~/GPT-home-private/task_datasets/data/QQP/test.tsv"
-VOCAB_FILE="~/GPT-home-private/task_datasets/data/bert-large-cased-vocab.txt"
+TRAIN_DATA=~/GPT-home-private/task_datasets/data/QQP/train.tsv
+VALID_DATA=~/GPT-home-private/task_datasets/data/QQP/test.tsv
+VOCAB_FILE=~/GPT-home-private/task_datasets/data/bert-large-cased-vocab.txt
 
 # Assume Megatron-LM exists at ~/Megatron-LM.
 
