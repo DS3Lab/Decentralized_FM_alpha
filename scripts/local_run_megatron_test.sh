@@ -6,7 +6,14 @@ VOCAB_FILE=~/GPT-home-private/task_datasets/data/bert-large-cased-vocab.txt
 
 # Assume Megatron-LM exists at ~/Megatron-LM.
 
+" $GPUS_PER_NODE --nnodes $NNODES --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT"
+
 python3 ../../Megatron-LM/tasks/main.py \
+       --master-addr localhost \
+       --master-port 9000 \
+       --nproc-per-node 2 \
+       --nnodes 1 \
+       --dist-url tcp:localhost\
        --fp16 \
        --task QQP \
        --num-layers 24 \
