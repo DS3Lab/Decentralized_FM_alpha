@@ -1,10 +1,13 @@
 #!/bin/bash
 
-TRAIN_DATA=glue_dataset/data/QQP/train.tsv
-VALID_DATA=glue_dataset/data/QQP/test.tsv
-VOCAB_FILE=glue_dataset/data/bert-large-cased-vocab.txt
+TRAIN_DATA=../task_dataset/data/QQP/train.tsv
+VALID_DATA=../task_dataset/data/QQP/test.tsv
+VOCAB_FILE=../task_dataset/data/bert-large-cased-vocab.txt
 
-python ../Megatron-LM/tasks/main.py \
+# Assume Megatron-LM exists at ~/Megatron-LM.
+
+python3 ../../Megatron-LM/tasks/main.py \
+       --fp16 \
        --task QQP \
        --num-layers 24 \
        --hidden-size 1024 \

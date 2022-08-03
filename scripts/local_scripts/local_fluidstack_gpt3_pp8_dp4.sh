@@ -14,22 +14,19 @@ dp_mode=central_ps
 # Change the script here for different settings.
 ############################################################
 ga_step=2
-num_layers=24
-batch_size=1024
+num_layers=3
+batch_size=128
 ############################################################
 
-let "global_batch_size = $ga_step*$batch_size*8"
+let "global_batch_size = $ga_step*$batch_size*4"
+echo "Batch size: $global_batch_size"
 
-DIST_CONF="--rank $rank --cuda-id $cuda_id --pp-mode gpipe --dp-mode $dp_mode --gradient-accumulate-step $ga_step --world-size $world_size --pipeline-group-size 2 --data-group-size 2"
+DIST_CONF="--rank $rank --cuda-id $cuda_id --pp-mode gpipe --dp-mode $dp_mode --gradient-accumulate-step $ga_step --world-size $world_size --pipeline-group-size 8 --data-group-size 4"
 MODEL_CONF="--embedding-dim 2048 --num-heads 16 --num-layers $num_layers --batch-size $batch_size --micro-batch-size 1"
 
-if [ "$world_size" -ne 4 ]
-then
-  echo "Not correct number of nodes"
-  exit 1
-fi
+
 
 log_mode=$8
 log_path="./logs/${timestamp}_gpt3_xl_pp8_dp8_l${num_layers}_b${global_batch_size}_rank${rank}_${log_mode}"
 
-python3 dist_training_runner.py --dist-url tcp://"$ip":9000 $DIST_CONF $MODEL_CONF
+python3 dist_training_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF >> "./logs/${timestamp}_rank${rank}_GPTJ_default.log"
