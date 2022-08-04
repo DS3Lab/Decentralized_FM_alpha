@@ -1,10 +1,20 @@
 #!/bin/bash
 
-TRAIN_DATA=glue_dataset/data/QQP/train.tsv
-VALID_DATA=glue_dataset/data/QQP/test.tsv
-VOCAB_FILE=glue_dataset/data/bert-large-cased-vocab.txt
+TRAIN_DATA=~/GPT-home-private/task_datasets/data/QQP/train.tsv
+VALID_DATA=~/GPT-home-private/task_datasets/data/QQP/test.tsv
+VOCAB_FILE=~/GPT-home-private/task_datasets/data/bert-large-cased-vocab.txt
 
-python ../Megatron-LM/tasks/main.py \
+# Assume Megatron-LM exists at ~/Megatron-LM.
+
+" $GPUS_PER_NODE --nnodes $NNODES --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT"
+
+python3 ../../Megatron-LM/tasks/main.py \
+       --master-addr localhost \
+       --master-port 9000 \
+       --nproc-per-node 2 \
+       --nnodes 1 \
+       --dist-url tcp:localhost\
+       --fp16 \
        --task QQP \
        --num-layers 24 \
        --hidden-size 1024 \
