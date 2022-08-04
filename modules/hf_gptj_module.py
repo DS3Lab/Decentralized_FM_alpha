@@ -297,6 +297,6 @@ class GPTLMHead(nn.Module):
         return module
         
     def forward(self, x):
-        # x = self.ln_f(x)
+        x = self.ln_f(x)
         x = self.lm_head(x)
         return x
