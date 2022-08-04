@@ -1,22 +1,21 @@
 #!/bin/bash
 cd ~/GPT-home-private
 
-MICRO_BATCH_SIZE=$1
+MASTER_ADDR=$1
 PIPELINE_PARALLEL_SIZE=$2
 TENSOR_PARALLEL_SIZE=$3
 
 GPUS_PER_NODE=2
 # Change for multinode config
-MASTER_ADDR=$4
-MASTER_ADDR=localhost
 MASTER_PORT=9000
-NNODES=$5
-NODE_RANK=$6
+NNODES=$4
+NODE_RANK=$5
 WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
 
-num_layers=$7
-global_batch_size=$8
+num_layers=$6
+global_batch_size=$7
 
+MICRO_BATCH_SIZE=4
 
 export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
@@ -31,10 +30,10 @@ VALID_FILE=task_datasets/data/QQP/dev.tsv
 TEST_FILE=task_datasets/data/QQP/test.tsv
 
 DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT"
-MODEL_ARGS="--num-layers 12 --hidden-size 2048 --num-attention-heads 16 --micro-batch-size $MICRO_BATCH_SIZE --global-batch-size 1024 --seq-length 1024 --max-position-embeddings 1024"
+MODEL_ARGS="--num-layers $num_layers --hidden-size 2048 --num-attention-heads 16 --micro-batch-size $MICRO_BATCH_SIZE --global-batch-size $global_batch_size --seq-length 2048 --max-position-embeddings 2048"
 PARALLEL_ARGS="--distributed-backend nccl --tensor-model-parallel-size $TENSOR_PARALLEL_SIZE  --pipeline-model-parallel-size $PIPELINE_PARALLEL_SIZE --DDP-impl local --no-bias-dropout-fusion"
 NLP_ARGS="--tokenizer-type BertWordPieceLowerCase --vocab-file $VOCAB_FILE  --train-data-path $TRAIN_FILE  --valid-data-path $VALID_FILE  --test-data-path $TEST_FILE"
-HYPER_PARA_ARGS="--optimizer sgd --lr 0.0001 --train-iters 5"
+HYPER_PARA_ARGS="--optimizer sgd --lr 0.0001 --train-iters 3"
 OPTION_ARGS="--fp16 --checkpoint-activations"
 timestamp=$(date +%Y_%m_%d_%H_%M)
 

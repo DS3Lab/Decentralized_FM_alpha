@@ -239,3 +239,23 @@ Shared settings (GPT-XL):
 | L40 B2048  | 0.458                | 0.242                      | 0.977            | 0.435             |              |
 | L40 B4096  | 0.467                | 0.265                      | 1.271            | 0.476             |              |
 
+
+## FluidStack Run
+
+- Communication Matrix
+- Delay:
+
+|      | East    | Mid      | West     |
+|------|---------|----------|----------|
+| East | -       | 21.8 ms  | 60.2 ms  |
+| Mid  | 21.8 ms | -        | 39.7 ms  |
+| West | 60.2 ms | 39.7 ms  | -        |
+
+
+- Bandwidth:
+
+|             | East (send) | Mid (send) | West  (send) |
+|-------------|-------------|------------|--------------|
+| East (recv) | -           | 3.04 Gbps  | 1.17 Gbps    |
+| Mid (recv)  | 3.10 Gbps   | -          | 1.78 Gbps    |
+| West(recv)  | 0.15 Gbps   | 0.16 Gbps  | -            |
