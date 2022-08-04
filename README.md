@@ -8,11 +8,12 @@
 - Install PyTorch env: 
 
       pip3 install torch==1.9.0+cu111 torchtext -f https://download.pytorch.org/whl/torch_stable.html
+      pip3 install torch==1.9.0+cu111 -f https://download.pytorch.org/whl/torch_stable.html
 
       # Magic, not sure why cupy-cuda111 would not work, it seems that cupy-cuda111 will use different PTX from torch.
-      pip3 install cupy-cuda110==8.6.0
+      pip3 install cupy-cuda111==8.6.0
 
-      pip install transformers
+      pip3 install transformers
 
 - Install deepspeed for some micro-benchmark (optional)
 
@@ -48,6 +49,37 @@
       
       python dist_pipeline_runner.py --dist-url tcp://XXX.XXX.XXX.XXX:9000 --world-size N --rank i (i=0,...,N-1)
 
+
+
+## Run deepspeed benchmark:
+
+- Update public-ip and hostname in the ./scripts/ip_list.sh file
+
+- Update the host name with slots (number of GPUs) in ./scripts/ds_hostnames.sh file
+
+- Sync code to all nodes
+
+- Setup password free ssh cluster by executing (under the ./script/ directory):
+
+      bash ssh_pass_free.sh
+
+- SSH to the rank-0 node, on that node run:
+
+
+    source activate pytorch_p38
+
+- A sample run:
+
+
+    deepspeed --hostfile=./scripts/ds_hostnames dist_deepspeed_zero_s3.py --embedding-dim 2048 --seq-length 2048 --batch-size 1024 --num-layers 40 --micro-batch-size 4
+
+- Batch run all settings:
+
+    cd ./scripts
+    bash local_run_deepspeed_batch_on_rank0.sh #CASE
+
+
+  
 ## Run with Advanced Scripts (under scripts directory):
 
 - First update the public IPs and private IP of the rank-0 node in ip_list.sh.
@@ -64,9 +96,13 @@
 
       bash aws_foo_load_lib.sh
 
-- Setup heterogeneous network (update the private IPs in generate_heterogeneous_tc.py, sync the code to AWS!):
+- Setup heterogeneous network (update the private IPs in ./scheduler/generate_heterogeneous_tc.py, sync the code to AWS!):
 
-      bash aws_generate_heter_tc.sh #HETER_CASE (2/3/4)
+      bash aws_generate_heter_tc.sh #HETER_CASE (3/4/5)
+
+- Optional(Play with it by starting TC, this is not needed if you use the next block of cmds to start benchmarks):
+
+      bash aws_start_heter_tc.sh #HETER_CASE (3/4/5)
 
 - Run Schedulers (under scheduler/heuristic_evolutionary_solver directory) to get assignments and estimated cost
 

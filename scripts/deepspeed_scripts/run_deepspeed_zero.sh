@@ -1,3 +1,0 @@
-deepspeed --hostfile='./deepspeed_scripts/hostfile' --master_addr 172.31.33.164 --master_port=8000 dist_deepspeed_zero_s3.py --num-layers 12 --embedding-dim 768 --deepspeed --deepspeed_config './deepspeed_scripts/ds_config.json'
-NCCL_SOCKET_IFNAME=ens3  deepspeed --hostfile='./deepspeed_scripts/hostfile' --master_addr='172.31.35.33' --num_nodes=2 --master_port=8000 dist_deepspeed_zero_s3.py --num-layers 12 --embedding-dim 768 --deepspeed --deepspeed_config './deepspeed_scripts/ds_config.json'
-NCCL_SOCKET_IFNAME=ens3  deepspeed --hostfile='./deepspeed_scripts/hostfile' --master_addr='172.31.35.33' --num_nodes=2 --num_gpus=1 --master_port=8000 dist_deepspeed_zero_s3.py --num-layers 12 --embedding-dim 768 --deepspeed --deepspeed_config './deepspeed_scripts/ds_config.json'
