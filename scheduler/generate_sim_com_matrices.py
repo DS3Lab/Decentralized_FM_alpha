@@ -284,7 +284,7 @@ def simulate_6_2_debug_pipeline(nodes=8):
 
 
 def main():
-    simulate_5_1_worldwide_geo_distributed()
+    simulate_5_worldwide_geo_distributed()
 
 
 if __name__ == '__main__':

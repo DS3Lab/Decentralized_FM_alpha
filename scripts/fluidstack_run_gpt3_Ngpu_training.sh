@@ -5,6 +5,8 @@ nodes_per_node=(2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2)
 world_size=32
 
 script=$1
+num_layer=$2
+ga_step=$3
 
 declare -i rank=0
 for node_rank in "${!ips[@]}"
@@ -13,7 +15,7 @@ do
   for (( i=0; i<${nodes_per_node[$node_rank]}; i++))
   do
     echo "$i"
-    ssh fsuser@"${ips[node_rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" "$i" &
+    ssh fsuser@"${ips[node_rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$world_size" "$rank" "$i" "$num_layer" "$ga_step" &
     rank+=1
   done
 done

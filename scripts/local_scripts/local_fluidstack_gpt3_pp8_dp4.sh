@@ -1,6 +1,6 @@
 cd ~/GPT-home-private
 
-export NCCL_DEBUG=INFO
+# export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export NCCL_SOCKET_IFNAME=enp1s0
@@ -16,20 +16,23 @@ dp_mode=central_ps
 
 # Change the script here for different settings.
 ############################################################
-ga_step=1
-num_layers=3
+num_layers=$5
+ga_step=$6
 batch_size=128
 ############################################################
 
-let "global_batch_size = $ga_step*$batch_size*4"
-echo "Batch size: $global_batch_size"
+if [ $# -eq 7 ]
+then
+  mode=$7
+else
+  mode='default'
+fi
 
-DIST_CONF="--rank $rank --cuda-id $cuda_id --pp-mode gpipe --dp-mode $dp_mode --gradient-accumulate-step $ga_step --world-size $world_size --pipeline-group-size 2 --data-group-size 3"
+let "global_batch_size = $ga_step*$batch_size*4"
+echo "Global Batch size: $global_batch_size, Num of Layer: $num_layers. Mode: $mode"
+
+DIST_CONF="--rank $rank --cuda-id $cuda_id --pp-mode gpipe --dp-mode $dp_mode --gradient-accumulate-step $ga_step --world-size $world_size --pipeline-group-size 8 --data-group-size 4"
 MODEL_CONF="--seq-length 2048 --embedding-dim 2048 --num-heads 16 --num-layers $num_layers --batch-size $batch_size --micro-batch-size 1"
 
 
-
-log_mode=$8
-log_path="./logs/${timestamp}_gpt3_xl_pp8_dp8_l${num_layers}_b${global_batch_size}_rank${rank}_${log_mode}"
-
-python3 dist_training_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF #>> "./logs/${timestamp}_rank${rank}_GPTJ_default.log"
+python3 dist_training_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF >> "./logs/${timestamp}_GPT3xl_world32_rank${rank}_L${num_layers}_B${global_batch_size}_fluidStack_${mode}.log"
