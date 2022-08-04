@@ -109,7 +109,8 @@ def benchmark_transformer_layer_inference(args, device):
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
-    parser.add_argument('--use-checkpoint', default=True, type=lambda x: (str(x).lower() == 'true'),
+    # Notice you cannot use checkpoint to compute FLOPS!!!!
+    parser.add_argument('--use-checkpoint', default=False, type=lambda x: (str(x).lower() == 'true'),
                         help='if this is set to True, will use check point for activation recompute')
     parser.add_argument('--use-cuda', default=True, type=lambda x: (str(x).lower() == 'true'),
                         help='if this is set to True, will use cuda to train')
