@@ -76,12 +76,13 @@ def optimal_assignment_2_multi_university(nodes):
 
 
 def main():
-    print("------------------------------------")
-    random_assignment_0_datacenter()
-    print("------------------------------------")
-    random_assignment_1_datacenter_spot()
-    print("------------------------------------")
-    optimal_assignment_1_datacenter_spot()
+    random_assignment(16)
+    # print("------------------------------------")
+    # random_assignment_0_datacenter()
+    # print("------------------------------------")
+    # random_assignment_1_datacenter_spot()
+    # print("------------------------------------")
+    # optimal_assignment_1_datacenter_spot()
 
 
 if __name__ == '__main__':
