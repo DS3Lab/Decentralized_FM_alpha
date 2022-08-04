@@ -16,8 +16,7 @@ for i in "${!ips[@]}"
 do
   rank=${rank_map[$i]}
   ip=${ips[$i]}
-  echo "Issue command $script in Rank-$rank node: ${ips[$rank]}"
-  ssh fsuser@"${ips[rank]}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$PIPELINE_PARALLEL_SIZE" "$TENSOR_PARALLEL_SIZE" "$world_size" "$rank" "$num_layers" "$global_batch_size"&
-
+  echo "Issue command $script in Rank-$rank node: ${ip}"
+  ssh fsuser@"${ip}" "bash -s" < ./local_scripts/"${script}" "$master_ip" "$PIPELINE_PARALLEL_SIZE" "$TENSOR_PARALLEL_SIZE" "$world_size" "$rank" "$num_layers" "$global_batch_size"&
 done
 wait
