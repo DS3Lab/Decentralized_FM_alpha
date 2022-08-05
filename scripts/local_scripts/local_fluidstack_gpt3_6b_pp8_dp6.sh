@@ -28,10 +28,10 @@ else
   mode='default'
 fi
 
-let "global_batch_size = $ga_step*$batch_size*4"
+let "global_batch_size = $ga_step*$batch_size*6"
 echo "Global Batch size: $global_batch_size, Num of Layer: $num_layers. Mode: $mode"
 
-DIST_CONF="--rank $rank --cuda-id $cuda_id --pp-mode gpipe --dp-mode $dp_mode --gradient-accumulate-step $ga_step --world-size $world_size --pipeline-group-size 8 --data-group-size 4"
+DIST_CONF="--rank $rank --cuda-id $cuda_id --pp-mode gpipe --dp-mode $dp_mode --gradient-accumulate-step $ga_step --world-size $world_size --pipeline-group-size 8 --data-group-size 6"
 MODEL_CONF="--seq-length 2048 --embedding-dim 4096 --num-heads 32 --num-layers $num_layers --batch-size $batch_size --micro-batch-size 1"
 
 python3 dist_training_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF >> "./logs/${timestamp}_GPT3_6B_world32_rank${rank}_L${num_layers}_B${global_batch_size}_fluidStack_${mode}.log"

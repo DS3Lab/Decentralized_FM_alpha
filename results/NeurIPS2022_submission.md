@@ -266,6 +266,7 @@ Shared settings (GPT-XL):
     - mid to east: 3.34 Gbps
     - east to mid: 3.03 Gbps
 
+- Running time:
 
 | Setting         | Megatron-P8 (Default) | Megatron-P8 (wo Scheduler) |        |        | Ours w scheduler |         |         | Ours wo Scheduler-Fair |         |         | Ours wo Scheduler-complete |        |        |
 |-----------------|-----------------------|----------------------------|--------|--------|------------------|---------|---------|------------------------|---------|---------|----------------------------|--------|--------|
@@ -303,6 +304,10 @@ Shared settings (GPT-XL):
 
 ## FluidStack Run (Three Region)
 
+- Notes:
+  - Same machine setup as above
+  - 
+
 - Communication Matrix
 - Delay:
 
@@ -320,3 +325,38 @@ Shared settings (GPT-XL):
 | East (recv) | -           | 3.04 Gbps  | 1.17 Gbps    |
 | Mid (recv)  | 3.10 Gbps   | -          | 1.78 Gbps    |
 | West(recv)  | 0.15 Gbps   | 0.16 Gbps  | -            |
+
+
+- Running time:
+
+| Setting          | Ours w scheduler |         |         | Ours wo Scheduler |      |      |
+|------------------|------------------|---------|---------|-------------------|------|------|
+| Seed             | 2022             | 2023    | 2024    | 2022              | 2023 | 2024 |
+| L24 B1536        | 42.24            | 45.83   | 44.18   |                   |      |      |
+| L24 B3072        | 70.64            | 65.35   | 59.24   |                   |      |      |
+| L24 B6144        | 104.13           | 96.67   | 97.13   |                   |      |      |
+| L32 B1536        | 58.48            | 51.35   | 49.67   |                   |      |      | 
+| L32 B3072        | 124.22           | 118.08  | 120.69  |                   |      |      |
+| L32 B6144        | 120.69           | 130.76  | 124.22  |                   |      |      |
+| L40 B1536        | 64.21            | 61.79   | 69.86   |                   |      |      |
+| L40 B3072        |                  |         |         |                   |      |      |
+| L40 B6144        | 149.06           | 140.05  | 142.51  |                   |      |      | 
+ | GPT3-6.7B B1536  |                  |         |         |                   |      |      | 
+ | GPT3-13B B1536   | 269.22           | 264.43  | 288.27  |                   |      |      | 
+
+
+- Hardware Efficiency (by PFlops):
+
+| Setting          | Ours w scheduler | Ours wo Scheduler |
+|------------------|------------------|-------------------|
+| L24 B1536        | 0.804            |                   |
+| L24 B3072        | 1.089            |                   |
+| L24 B6144        | 1.428            |                   |
+| L32 B1536        | 0.889            |                   |
+| L32 B3072        |                  |                   |  
+| L32 B6144        |                  |                   | 
+| L40 B1536        | 0.905            |                   |
+| L40 B3072        |                  |                   |
+| L40 B6144        |                  |                   | 
+ | GPT3-6.7B B1536  |                  |                   | 
+ | GPT3-13B B1536   | 1.23             |                   |

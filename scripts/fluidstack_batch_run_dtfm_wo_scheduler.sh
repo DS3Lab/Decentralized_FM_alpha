@@ -1,4 +1,4 @@
-# bash fluidstack_run_gpt3_Ngpu_shuffled_training.sh local_fluidstack_gpt3_pp8_dp4.sh 3 2
+# bash fluidstack_run_gpt3_Ngpu_shuffled_training.sh local_fluidstack_gpt3_pp8_dp6.sh 3 2
 # sleep 10s
 
 bash fluidstack_run_gpt3_Ngpu_shuffled_training.sh local_fluidstack_gpt3_pp8_dp4.sh 4 2
