@@ -300,6 +300,15 @@ Shared settings (GPT-XL):
 | GPT3-13B B1024  | 0.781                      | 1.42             | 0.815             |
 
 
+- Communication Matrices:
+
+| 	          | Average  | Std   |
+|------------|----------|-------|
+| Intra-mid  | 10.40    | 1.11  |
+| Intra-east | 11.98    | 1.98  |
+| mid-east   | 3.87     | 1.07  |
+| east-mid   | 3.72     | 1.38  |
+
 
 
 ## FluidStack Run (Three Region)
