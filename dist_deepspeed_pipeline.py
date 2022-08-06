@@ -46,7 +46,8 @@ def main():
     model = PipelineModule(
         layers=model.to_layers_for_deepspeed_pipeline(),
         loss_fn = torch.nn.CrossEntropyLoss(),
-        num_stages=args.pipeline_parallel_size
+        num_stages=args.pipeline_parallel_size,
+        partition_method='uniform'
     )
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 
@@ -85,25 +86,15 @@ def main():
     if deepspeed.comm.get_rank() == 0:
         print("World size: {}, Batch size: {}/{}.".format(deepspeed.comm.get_world_size(), args.micro_batch_size,
                                                             args.batch_size))
-        print("Model dim:{}, Num of Layers:{}, Seq length: {}"
-              .format(args.embedding_dim, args.num_layers, args.seq_length))
+        print("Model dim:{}, Num of Layers:{}, Seq length: {}, gradient_accumulation_steps: {}"
+              .format(args.embedding_dim, args.num_layers, args.seq_length, model_engine.gradient_accumulation_steps()))
 
-    ga_steps = args.batch_size // args.micro_batch_size // deepspeed.comm.get_world_size()
-
-    for i, data in enumerate(train_dataloader):
+    for i in enumerate(args.num_iters):
         start_time = time.time()
-        for j in range(ga_steps):
-            iter_start_time = time.time()
-            loss = model_engine.train_batch()
-            iter_end_time = time.time()
-            if deepspeed.comm.get_rank() == 0:
-                print("Iter: {}/{} takes {:3.2f}s".format(j, ga_steps, iter_end_time-iter_start_time))
+        _ = model_engine.train_batch()
         end_time = time.time()
         if deepspeed.comm.get_rank() == 0:
             print("========<{}> Whole iteration takes {:3.2f}s========".format(i, end_time - start_time))
-        # print(data)
-        if i >= args.num_iters - 1:
-            break
 
 
 if __name__ == '__main__':
