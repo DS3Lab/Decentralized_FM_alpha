@@ -93,8 +93,11 @@ def main():
     for i, data in enumerate(train_dataloader):
         start_time = time.time()
         for j in range(ga_steps):
+            iter_start_time = time.time()
             loss = model_engine.train_batch()
-
+            iter_end_time = time.time()
+            if deepspeed.comm.get_rank() == 0:
+                print("Iter: {}/{} takes {:3.2f}s".format(j, ga_steps, iter_end_time-iter_start_time))
         end_time = time.time()
         if deepspeed.comm.get_rank() == 0:
             print("========<{}> Whole iteration takes {:3.2f}s========".format(i, end_time - start_time))
