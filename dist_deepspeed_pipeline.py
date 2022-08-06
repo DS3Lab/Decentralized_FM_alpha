@@ -54,7 +54,6 @@ def main():
     # deepspeed only allows ZeRO-1 to combine with pipeline parallelism.
     assert args.dp_zero_stage == 1
 
-
     ds_config = {
         "train_batch_size": args.batch_size,
         "train_micro_batch_size_per_gpu": args.micro_batch_size,
@@ -88,6 +87,8 @@ def main():
                                                             args.batch_size))
         print("<===========Model dim:{}, Num of Layers:{}, Seq length: {}, gradient_accumulation_steps: {}.===========>"
               .format(args.embedding_dim, args.num_layers, args.seq_length, model_engine.gradient_accumulation_steps()))
+
+    print("<++++++++++++++++++ Training start, my rank: {} ++++++++++++++++++>".format(deepspeed.comm.get_rank()))
 
     for i in range(args.num_iters):
         start_time = time.time()
