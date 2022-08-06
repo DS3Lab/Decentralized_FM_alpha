@@ -89,7 +89,7 @@ def main():
         print("Model dim:{}, Num of Layers:{}, Seq length: {}, gradient_accumulation_steps: {}"
               .format(args.embedding_dim, args.num_layers, args.seq_length, model_engine.gradient_accumulation_steps()))
 
-    for i in enumerate(args.num_iters):
+    for i in range(args.num_iters):
         start_time = time.time()
         _ = model_engine.train_batch()
         end_time = time.time()
