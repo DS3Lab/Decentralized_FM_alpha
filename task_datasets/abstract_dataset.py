@@ -11,12 +11,13 @@ class GLUEAbstractDataset(ABC, Dataset):
     """GLUE base dataset class."""
 
     def __init__(self, task_name, dataset_name, datapaths,
-                 tokenizer, max_seq_length):
+                 tokenizer, max_seq_length, sample_as_tuple=False):
         # Store inputs.
         self.task_name = task_name
         self.dataset_name = dataset_name
         self.tokenizer = tokenizer
         self.max_seq_length = max_seq_length
+        self.sample_as_tuple = sample_as_tuple
         print(' > building {} dataset for {}:'.format(self.task_name, self.dataset_name))
         # Process the files.
         string = '  > paths:'
@@ -37,7 +38,7 @@ class GLUEAbstractDataset(ABC, Dataset):
             raw_sample['text_a'], raw_sample['text_b'],
             self.tokenizer, self.max_seq_length)
         sample = build_sample(ids, types, paddings,
-                              raw_sample['label'], raw_sample['uid'])
+                              raw_sample['label'], raw_sample['uid'], self.sample_as_tuple)
         return sample
 
     @abstractmethod

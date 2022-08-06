@@ -19,8 +19,8 @@ class GlueSeqClassificationPipeModel(torch.nn.Module):
 
     def forward(self, inputs):
         print("Pipe model take input:", inputs)
-        input_ids=inputs[0], position_ids = None
-        input_emb = self.embedding(input_ids, position_ids)
+        input_ids=inputs[0]
+        input_emb = self.embedding(input_ids, None)
         output_emb = self.transformers(input_emb)
         return self.classifier(output_emb)
 
