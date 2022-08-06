@@ -19,8 +19,8 @@ def main():
     # add_torch_distributed_arguments(parser)
     add_training_hyper_parameter_arguments(parser)
     parser.add_argument('--local_rank', type=int, default=0, metavar='N', help='rank of the node')
-    parser.add_argument('--pipeline-parallel-size', type=int, default=2, help='pipeline parallelism')
-    parser.add_argument('--dp-zero-stage', type=int, default=3, help='pipeline parallelism')
+    parser.add_argument('--pipeline-parallel-size', type=int, default=8, help='pipeline parallelism')
+    parser.add_argument('--dp-zero-stage', type=int, default=1, help='pipeline parallelism')
     parser = deepspeed.add_config_arguments(parser)
     args = parser.parse_args()
 
@@ -49,6 +49,10 @@ def main():
         num_stages=args.pipeline_parallel_size
     )
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+
+    # deepspeed only allows ZeRO-1 to combine with pipeline parallelism.
+    assert args.dp_zero_stage == 1
+
 
     ds_config = {
         "train_batch_size": args.batch_size,
