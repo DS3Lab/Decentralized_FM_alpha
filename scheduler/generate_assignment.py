@@ -1,5 +1,5 @@
 import numpy as np
-seed=2024
+seed=2022
 
 def random_assignment(nodes=64):
     arr = np.arange(1, nodes)

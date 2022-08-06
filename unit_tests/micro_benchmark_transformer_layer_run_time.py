@@ -109,7 +109,8 @@ def benchmark_transformer_layer_inference(args, device):
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
-    parser.add_argument('--use-checkpoint', default=True, type=lambda x: (str(x).lower() == 'true'),
+    # Notice you cannot use checkpoint to compute FLOPS!!!!
+    parser.add_argument('--use-checkpoint', default=False, type=lambda x: (str(x).lower() == 'true'),
                         help='if this is set to True, will use check point for activation recompute')
     parser.add_argument('--use-cuda', default=True, type=lambda x: (str(x).lower() == 'true'),
                         help='if this is set to True, will use cuda to train')
@@ -119,11 +120,11 @@ def main():
                         help='input batch size for training (default: 100)')
     parser.add_argument('--num-layers', type=int, default=1, metavar='N',
                         help='-')
-    parser.add_argument('--seq-length', type=int, default=562, metavar='N',
+    parser.add_argument('--seq-length', type=int, default=2048, metavar='N',
                         help='-')
-    parser.add_argument('--embedding-dim', type=int, default=12288, metavar='N',
+    parser.add_argument('--embedding-dim', type=int, default=4096, metavar='N',
                         help='-')
-    parser.add_argument('--num-heads', type=int, default=96, metavar='N',
+    parser.add_argument('--num-heads', type=int, default=32, metavar='N',
                         help='-')
     args = parser.parse_args()
     print(hasattr(args, 'foo'))

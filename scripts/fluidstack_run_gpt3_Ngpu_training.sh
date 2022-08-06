@@ -1,8 +1,8 @@
 source ./ip_list.sh
 
 #nodes_per_node=(8 8 8 8 8 8 8 8)
-nodes_per_node=(2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2)
-world_size=32
+nodes_per_node=(2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2)
+world_size=48
 
 script=$1
 num_layer=$2

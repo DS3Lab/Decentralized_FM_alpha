@@ -23,6 +23,7 @@ class DistSampleInferenceMaskTokenPipeSync(DistGreedyInferenceMaskTokenPipeSync)
     def _generate_new_token(self, index):
         assert self.pp_rank == self.pipeline_group_size - 1
         z = self.layers['lm'](self.output_token_emb[index])
+        z = z.float() # test if fp32 whether cause inf
         z = torch.nn.functional.log_softmax(z, -1)
         
         if self.top_k_per_token > 0:
