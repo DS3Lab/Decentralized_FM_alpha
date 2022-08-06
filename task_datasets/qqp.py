@@ -10,8 +10,9 @@ LABELS = [0, 1]
 class QQPDataset(GLUEAbstractDataset):
 
     def __init__(self, name, datapaths, tokenizer, max_seq_length,
-                 test_label=0):
+                 test_label=0, data_as_tuple=False):
         self.test_label = test_label
+        self.data_as_tuple = data_as_tuple
         super().__init__('QQP', name, datapaths,
                          tokenizer, max_seq_length)
 
@@ -67,11 +68,13 @@ class QQPDataset(GLUEAbstractDataset):
                         continue
                 assert label in LABELS
                 assert uid >= 0
-
-                sample = {'uid': uid,
-                          'text_a': text_a,
-                          'text_b': text_b,
-                          'label': label}
+                if self.data_as_tuple:
+                    sample = (uid, text_a, text_b, label)
+                else:
+                    sample = {'uid': uid,
+                              'text_a': text_a,
+                              'text_b': text_b,
+                              'label': label}
                 total += 1
                 samples.append(sample)
 

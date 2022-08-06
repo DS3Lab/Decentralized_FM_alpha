@@ -7,7 +7,7 @@ import torch
 from task_datasets.qqp import QQPDataset
 from task_datasets.tokenizer import build_tokenizer
 from utils.dist_args_utils import *
-from modules.gpt_modules import GlueSeqClassificationModel, get_position_id
+from modules.dist_gpt_ds_module import GlueSeqClassificationPipeModel
 from deepspeed.pipe import PipelineModule
 from deepspeed.utils import RepeatingLoader
 
@@ -39,10 +39,10 @@ def main():
 
     tokenizer = build_tokenizer(args)
     print("token vocab size:", tokenizer.vocab_size)
-    train_dataset = QQPDataset('training', args.train_data, tokenizer, args.seq_length)
+    train_dataset = QQPDataset('training', args.train_data, tokenizer, args.seq_length, data_as_tuple=True)
 
     num_classes = 2
-    model = GlueSeqClassificationModel(args, tokenizer.vocab_size, num_classes).half()
+    model = GlueSeqClassificationPipeModel(args, tokenizer.vocab_size, num_classes).half()
     model = PipelineModule(
         layers=model.to_layers_for_deepspeed_pipeline(),
         loss_fn = torch.nn.CrossEntropyLoss(),
