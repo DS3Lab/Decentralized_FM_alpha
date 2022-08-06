@@ -93,23 +93,8 @@ def main():
     for i, data in enumerate(train_dataloader):
         start_time = time.time()
         for j in range(ga_steps):
-            micro_start_time = time.time()
-            input_ids = data['text'].to(device)
-            position_ids = get_position_id(args.seq_length, input_ids.size(0), device)
-            labels = data['label'].to(device)
-            output = model_engine(input_ids, position_ids)
-            loss = torch.nn.functional.cross_entropy(output, labels)
-            micro_forward_time = time.time()
-            if deepspeed.comm.get_rank() == 0:
-                print("Input shape: ", input_ids.shape)
-                print("{}/{} Forward pass takes {:3.2f}s".format(j, ga_steps, micro_forward_time - micro_start_time))
-            model_engine.backward(loss)
-            micro_backward_time = time.time()
-            if deepspeed.comm.get_rank() == 0:
-                print("{}/{} Backward pass takes {:3.2f}s".format(j, ga_steps, micro_backward_time - micro_forward_time))
-            model_engine.step()
-            # torch.cuda.synchronize()
-            # deepspeed.comm.barrier()
+            loss = model_engine.train_batch()
+
         end_time = time.time()
         if deepspeed.comm.get_rank() == 0:
             print("========<{}> Whole iteration takes {:3.2f}s========".format(i, end_time - start_time))
