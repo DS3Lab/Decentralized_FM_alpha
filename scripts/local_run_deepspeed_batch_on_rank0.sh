@@ -16,5 +16,6 @@ do
     echo "Run task of layer ${layer} batch ${batch} .."
     timestamp=$(date +%Y_%m_%d_%H_%M)
     deepspeed --hostfile=./scripts/ds_hostnames dist_deepspeed_pipeline.py --pipeline-parallel-size 8 --micro-batch-size 4 --embedding-dim 2048 --seq-length 2048 --batch-size $batch --num-layers $layer >> "./logs/${timestamp}_deepspeed_case${case}_L${layer}_B${batch}.log"
+    sleep 10s
   done
 done
