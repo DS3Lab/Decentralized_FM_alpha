@@ -11,7 +11,7 @@ ips=(
 )
 
 # private IP of Rank-0 instances.
-master_ip="172.31.1.5"
+master_ip="172.31.31.94"
 #master_ip="172.31.47.82"
 
 hostnames=(
