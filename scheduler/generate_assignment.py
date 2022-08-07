@@ -76,7 +76,7 @@ def optimal_assignment_2_multi_university(nodes):
 
 
 def main():
-    random_assignment(16)
+    random_assignment(40)
     # print("------------------------------------")
     # random_assignment_0_datacenter()
     # print("------------------------------------")
