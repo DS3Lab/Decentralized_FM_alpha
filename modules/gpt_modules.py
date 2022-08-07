@@ -149,14 +149,6 @@ class GlueSeqClassificationModel(torch.nn.Module):
         output_emb = self.transformers(input_emb)
         return self.classifier(output_emb)
 
-    def to_layers_for_deepspeed_pipeline(self):
-        layers = [
-            self.embedding,
-            *self.transformers,
-            self.classifier
-        ]
-        return layers
-
 
 class GlueSeq2SeqClassificationModel(torch.nn.Module):
     def __init__(self, args, vocab_size, use_checkpoint=True):

@@ -65,18 +65,16 @@
 
 - SSH to the rank-0 node, on that node run:
 
-
-    source activate pytorch_p38
+      source activate pytorch_p38
 
 - A sample run:
 
-
-    deepspeed --hostfile=./scripts/ds_hostnames dist_deepspeed_zero_s3.py --embedding-dim 2048 --seq-length 2048 --batch-size 1024 --num-layers 40 --micro-batch-size 4
+      deepspeed --hostfile=./scripts/ds_hostnames dist_deepspeed_zero_s3.py --embedding-dim 2048 --seq-length 2048 --batch-size 1024 --num-layers 40 --micro-batch-size 4
 
 - Batch run all settings:
 
-    cd ./scripts
-    bash local_run_deepspeed_batch_on_rank0.sh #CASE
+       cd ./scripts
+       bash local_run_deepspeed_batch_on_rank0.sh #CASE
 
 
   

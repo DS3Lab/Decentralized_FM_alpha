@@ -7,7 +7,7 @@ import torch
 from task_datasets.qqp import QQPDataset
 from task_datasets.tokenizer import build_tokenizer
 from utils.dist_args_utils import *
-from modules.gpt_modules import GlueSeqClassificationModel, get_position_id
+from modules.dist_gpt_ds_module import GlueSeqClassificationPipeModel
 from deepspeed.pipe import PipelineModule
 from deepspeed.utils import RepeatingLoader
 
@@ -19,8 +19,8 @@ def main():
     # add_torch_distributed_arguments(parser)
     add_training_hyper_parameter_arguments(parser)
     parser.add_argument('--local_rank', type=int, default=0, metavar='N', help='rank of the node')
-    parser.add_argument('--pipeline-parallel-size', type=int, default=2, help='pipeline parallelism')
-    parser.add_argument('--dp-zero-stage', type=int, default=3, help='pipeline parallelism')
+    parser.add_argument('--pipeline-parallel-size', type=int, default=8, help='pipeline parallelism')
+    parser.add_argument('--dp-zero-stage', type=int, default=1, help='pipeline parallelism')
     parser = deepspeed.add_config_arguments(parser)
     args = parser.parse_args()
 
@@ -39,16 +39,20 @@ def main():
 
     tokenizer = build_tokenizer(args)
     print("token vocab size:", tokenizer.vocab_size)
-    train_dataset = QQPDataset('training', args.train_data, tokenizer, args.seq_length)
+    train_dataset = QQPDataset('training', args.train_data, tokenizer, args.seq_length, data_as_tuple=True)
 
     num_classes = 2
-    model = GlueSeqClassificationModel(args, tokenizer.vocab_size, num_classes).half()
+    model = GlueSeqClassificationPipeModel(args, tokenizer.vocab_size, num_classes).half()
     model = PipelineModule(
         layers=model.to_layers_for_deepspeed_pipeline(),
         loss_fn = torch.nn.CrossEntropyLoss(),
-        num_stages=args.pipeline_parallel_size
+        num_stages=args.pipeline_parallel_size,
+        partition_method='uniform'
     )
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+
+    # deepspeed only allows ZeRO-1 to combine with pipeline parallelism.
+    assert args.dp_zero_stage == 1
 
     ds_config = {
         "train_batch_size": args.batch_size,
@@ -79,39 +83,19 @@ def main():
                              config=ds_config)
 
     if deepspeed.comm.get_rank() == 0:
-        print("World size: {}, Batch size: {}/{}.".format(deepspeed.comm.get_world_size(), args.micro_batch_size,
+        print("<===========World size: {}, Batch size: {}/{}.===========>".format(deepspeed.comm.get_world_size(), args.micro_batch_size,
                                                             args.batch_size))
-        print("Model dim:{}, Num of Layers:{}, Seq length: {}"
-              .format(args.embedding_dim, args.num_layers, args.seq_length))
+        print("<===========Model dim:{}, Num of Layers:{}, Seq length: {}, gradient_accumulation_steps: {}.===========>"
+              .format(args.embedding_dim, args.num_layers, args.seq_length, model_engine.gradient_accumulation_steps()))
 
-    ga_steps = args.batch_size // args.micro_batch_size // deepspeed.comm.get_world_size()
+    print("<++++++++++++++++++ Training start, my rank: {} ++++++++++++++++++>".format(deepspeed.comm.get_rank()))
 
-    for i, data in enumerate(train_dataloader):
+    for i in range(args.num_iters):
         start_time = time.time()
-        for j in range(ga_steps):
-            micro_start_time = time.time()
-            input_ids = data['text'].to(device)
-            position_ids = get_position_id(args.seq_length, input_ids.size(0), device)
-            labels = data['label'].to(device)
-            output = model_engine(input_ids, position_ids)
-            loss = torch.nn.functional.cross_entropy(output, labels)
-            micro_forward_time = time.time()
-            if deepspeed.comm.get_rank() == 0:
-                print("Input shape: ", input_ids.shape)
-                print("{}/{} Forward pass takes {:3.2f}s".format(j, ga_steps, micro_forward_time - micro_start_time))
-            model_engine.backward(loss)
-            micro_backward_time = time.time()
-            if deepspeed.comm.get_rank() == 0:
-                print("{}/{} Backward pass takes {:3.2f}s".format(j, ga_steps, micro_backward_time - micro_forward_time))
-            model_engine.step()
-            # torch.cuda.synchronize()
-            # deepspeed.comm.barrier()
+        _ = model_engine.train_batch()
         end_time = time.time()
         if deepspeed.comm.get_rank() == 0:
             print("========<{}> Whole iteration takes {:3.2f}s========".format(i, end_time - start_time))
-        # print(data)
-        if i >= args.num_iters - 1:
-            break
 
 
 if __name__ == '__main__':

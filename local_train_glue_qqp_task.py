@@ -73,7 +73,7 @@ def main():
     for i, data in enumerate(data_loader):
         if i == 1:
             prof.start_profile()
-
+        print("Check data:", data)
         input_ids = data['text'].to(device)
         # position_ids = get_position_id(args.seq_length, args.batch_size, device)
         if args.task == 'SeqClassification':

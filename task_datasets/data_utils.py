@@ -12,17 +12,20 @@ def clean_text(text):
     return text
 
 
-def build_sample(ids, types, paddings, label, unique_id):
+def build_sample(ids, types, paddings, label, unique_id, sample_as_tuple=False):
     """Convert to numpy and return a sample consumed by the batch producer."""
 
     ids_np = np.array(ids, dtype=np.int64)
     types_np = np.array(types, dtype=np.int64)
     paddings_np = np.array(paddings, dtype=np.int64)
-    sample = ({'text': ids_np,
-               'types': types_np,
-               'padding_mask': paddings_np,
-               'label': int(label),
-               'uid': int(unique_id)})
+    if sample_as_tuple:
+        sample = (ids_np, label)
+    else:
+        sample = ({'text': ids_np,
+                   'types': types_np,
+                   'padding_mask': paddings_np,
+                   'label': int(label),
+                   'uid': int(unique_id)})
 
     return sample
 

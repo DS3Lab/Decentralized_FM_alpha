@@ -9,11 +9,11 @@ LABELS = [0, 1]
 
 class QQPDataset(GLUEAbstractDataset):
 
-    def __init__(self, name, datapaths, tokenizer, max_seq_length,
+    def __init__(self, name, datapaths, tokenizer, max_seq_length, data_as_tuple=False,
                  test_label=0):
         self.test_label = test_label
         super().__init__('QQP', name, datapaths,
-                         tokenizer, max_seq_length)
+                         tokenizer, max_seq_length, data_as_tuple)
 
     def process_samples_from_single_path(self, filename):
         """"Implement abstract method."""
@@ -67,7 +67,6 @@ class QQPDataset(GLUEAbstractDataset):
                         continue
                 assert label in LABELS
                 assert uid >= 0
-
                 sample = {'uid': uid,
                           'text_a': text_a,
                           'text_b': text_b,

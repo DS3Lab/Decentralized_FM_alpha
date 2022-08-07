@@ -496,6 +496,10 @@ class DistGreedyInferenceMaskAsync:
                         self.profile_mark_forward_token_send_start(i+1)
                         self.comm.send(self.send_new_tokens[i], dst=0, stream=cupy_send_stream) # Note: i+1 is wrong. tiny up tomorrow
                         self.profile_mark_forward_token_send_end(i+1)
+                elif self.model_type in ['t5']: # added for t5
+                    with torch.cuda.stream(self.torch_comp_stream):
+                        self.torch_comp_stream.wait_event(self.forward_token_recv_ready_events[i])
+                        self._forward_compute_generate_token(step=i, mask=attention_mask) # last token
             else:
                 with torch.cuda.stream(self.torch_recv_stream):
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
