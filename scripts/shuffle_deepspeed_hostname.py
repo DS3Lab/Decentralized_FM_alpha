@@ -76,5 +76,5 @@ def shuffle_hostnames_case345():
 
 
 # shuffle_hostnames_case345()
-# shuffle_hostnames_case2()
-no_shuffle_hostnames_case2()
+shuffle_hostnames_case2()
+# no_shuffle_hostnames_case2()
