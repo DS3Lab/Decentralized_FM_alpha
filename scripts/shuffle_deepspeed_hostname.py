@@ -58,6 +58,16 @@ def shuffle_hostnames_case2():
                 output.write(hostnames[rank] + ' slots=1\n')
 
 
+def no_shuffle_hostnames_case2():
+    assert (len(hostnames) == 40)
+    with open("./ds_hostnames_shuffled", 'w') as output:
+        for rank in range(40):
+            if rank < 8:
+                output.write(hostnames[rank] + ' slots=4\n')
+            else:
+                output.write(hostnames[rank] + ' slots=1\n')
+
+
 def shuffle_hostnames_case345():
     assert(len(hostnames) == 64)
     with open("./ds_hostnames_shuffled", 'w') as output:
@@ -66,4 +76,5 @@ def shuffle_hostnames_case345():
 
 
 # shuffle_hostnames_case345()
-shuffle_hostnames_case2()
+# shuffle_hostnames_case2()
+no_shuffle_hostnames_case2()
