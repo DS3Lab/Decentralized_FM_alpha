@@ -732,8 +732,8 @@ case_4_df = pd.DataFrame(data=[[4, 23.64, 0.141, 167.74, 2022, 'Megatron'],
                                [4, 78.82, 2.138, 258.57, 2023, 'Deepspeed'],
                                [4, 78.82, 2.138, 255.64, 2024, 'Deepspeed'],
                                [4, 157.64, 2.161, 449.67, 2022, 'Deepspeed'],
-                               [4, 157.64, 2.161, 258.57, 2023, 'Deepspeed'],
-                               [4, 157.64, 2.161, 255.64, 2024, 'Deepspeed'],
+                               [4, 157.64, 2.161, 446.91, 2023, 'Deepspeed'],
+                               [4, 157.64, 2.161, 439.55, 2024, 'Deepspeed'],
 
                                [4, 23.64, 0.540, 43.78, 2022,
                                    'Ours (w/ Scheduler)'],
@@ -862,13 +862,13 @@ def plot_performance(subfig=None):
         if i == 0:
             ax.set(ylim=(0, 200))
         if i == 1:
-            ax.set(ylim=(0, 300))
+            ax.set(ylim=(0, 200))
         if i == 2:
-            ax.set(ylim=(0, 1500))
+            ax.set(ylim=(0, 200))
         elif i == 3:
-            ax.set(ylim=(0, 4000))
+            ax.set(ylim=(0, 600))
         elif i == 4:
-            ax.set(ylim=(0, 8000))
+            ax.set(ylim=(0, 600))
 
         if i == 4:
             axes[i].set_xlabel('Model Architectures')

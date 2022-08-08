@@ -6,7 +6,7 @@ import seaborn as sns
 import pandas as pd
 
 import config
-from performance_pointplot import plot_performance
+from performance_barplot import plot_performance
 
 simulate_cases = [
     config.simulate_0_datacenter,
