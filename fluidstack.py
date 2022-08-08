@@ -183,7 +183,7 @@ plt.subplots_adjust(wspace=0.2)
 ax = sns.pointplot(ax=axes[0], data=cases_df[0], x='pflop', y="pflops", hue="system", hue_order=[
     "Ours (w/ Scheduler)", "Ours (w/o Scheduler)", "Megatron"], palette=["C2", "C1", "C0"])
 ax.set(ylim=(0, 1.6))
-ax.set_xlabel('Model Architectures')
+ax.set_xlabel(None)
 ax.set(xticklabels=['L24\nB1k', 'L24\nB2k', 'L24\nB4k',
                     'L32\nB1k', 'L32\nB2k', 'L32\nB4k',
                     'L40\nB1k', 'L40\nB2k', 'L40\nB4k',
@@ -196,7 +196,7 @@ ax = sns.barplot(ax=axes[1], data=cases_df[0], x='pflop', y='runtime',
                  palette=["C2", "C1", "C0"],
                  alpha=0.8, ci="sd", errwidth=0.6, capsize=0.2)
 ax.set_ylabel('Runtime per iteration (s)')
-ax.set_xlabel('Model Architectures')
+ax.set_xlabel(None)
 ax.set(xticklabels=['L24\nB1k', 'L24\nB2k', 'L24\nB4k',
                     'L32\nB1k', 'L32\nB2k', 'L32\nB4k',
                     'L40\nB1k', 'L40\nB2k', 'L40\nB4k',
@@ -205,5 +205,5 @@ ax.set(xticklabels=['L24\nB1k', 'L24\nB2k', 'L24\nB4k',
 ax.set(ylim=(0, 400))
 ax.get_legend().set_title(None)
 ax.legend(loc='lower center', handletextpad=0.1, columnspacing=0.5, bbox_to_anchor=(
-    -0.15, 1.05), ncol=3, prop={'size': 9}, facecolor='white')
+    -0.1, -0.15), ncol=3, prop={'size': 9}, facecolor='white')
 plt.savefig("fluidstack.pdf", dpi=1000)
