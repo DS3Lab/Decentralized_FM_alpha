@@ -17,7 +17,8 @@ sudo apt-get -y install cuda-11-1
 # Install Python package that is needed.
 sudo apt install python3-pip -y
 pip3 install cupy-cuda111==8.6.0
-pip3 install torch==1.9.0+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+# pip3 install torch==1.9.0+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+pip3 install torch==1.10.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
 pip3 install "pybind11[global]"
 pip3 install transformers
 pip install deepspeed==0.6.7
