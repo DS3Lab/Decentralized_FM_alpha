@@ -55,9 +55,25 @@
 | 4                      | 2.14 s      | 66.34 s        | 68.48  s     | 205.44 s                 | 3.22 TFLOPS   |
 
 
+## GPT-175B A40 Run
+
+- Tested on two machine on FluidStack, each has
+  - 8 A40 GPU: 48GB RAM; 149 TFLOPS
+  - Total FLOPS of the cluster: 2.387 PFLOPS
+  - Notice the number reported in the deepspeed blog is about 19.2 token/s in 16 A100
+  - Results:
+
+| Prompt Length | Token Generation Length | Token Throughput | Total FPLOPS  | Cluster Efficiency |
+|---------------|-------------------------|------------------|---------------|--------------------|
+| 512           | 50                      | 66.2 token/s     | 226.35 TFLOPS | 9.4%               |
+| 1900          | 100                     | 19.0 token/s     | 420.82 TFLOPS | 17.6%              |
+
+
+
+
 ## GPT-175B CPU Token Generation
 
-- Tested on a single m6i.32xlarge with 128 vCPU 512 GB RAM.
+- Tested on a single m6i.32xlarge with 128 vCPU 512 GB RAM. ($6.1/hour)
 - Configure
   - 96 Layers in bfloat16; Intel_extension_for_pytorch enabled
   - ~~Removed batchNorm (not supported in CPU, this need to be fixed for real run.)~~
