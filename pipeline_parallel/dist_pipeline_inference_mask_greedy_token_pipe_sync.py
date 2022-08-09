@@ -24,6 +24,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         
         ##########
         self.stop = args.stop
+        # self.stop = None
         
         if self.stop is not None:
             from transformers import AutoTokenizer
@@ -245,24 +246,6 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
                 
         if self.pp_rank == self.pipeline_group_size - 1:
             self._generate_new_token(index)
-            self._judge_stop(index)
-            
-    def _judge_stop(self, index):
-        
-        if (self.stop is not None) and (index == self.token_micro_batch_num - 1) and (self.i_current_token % 4 == 0): # check every 10 tokens
-                
-            self.stop_flag[:] = 1
-            for tokens in self.ret_tokens:
-                tokens = tokens[:self.i_current_token]
-                text = self.tokenizer.decode(tokens)
-                is_stopped = False
-                for _stop in self.stop:
-                    if _stop in text:
-                        is_stopped = True
-                        break
-                if not is_stopped:
-                    self.stop_flag[:] = 0
-                    break
 
     def _generate_new_token(self, index):
         assert self.pp_rank == self.pipeline_group_size - 1
@@ -366,9 +349,30 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             
             # sync and check early stop
             if self.stop is not None:
-                self.comm.broadcast(self.stop_flag, src=self.pipeline_group_size - 1)
+                self._check_stop(step)
                 if self.stop_flag.item() == 1:
                     break
+                    
+    def _check_stop(self, step):
+        
+        if step % 4 == 0: # check every 4 tokens
+            # check
+            if self.pp_rank == self.pipeline_group_size - 1:
+                self.stop_flag[:] = 1
+                for tokens in self.ret_tokens:
+                    tokens = tokens[:self.i_current_token]
+                    text = self.tokenizer.decode(tokens)
+                    is_stopped = False
+                    for _stop in self.stop:
+                        if _stop in text:
+                            is_stopped = True
+                            break
+                    if not is_stopped:
+                        self.stop_flag[:] = 0
+                        break
+            # sync
+            self.comm.broadcast(self.stop_flag, src=self.pipeline_group_size - 1)
+            
         
     def forward_new_token_pipeline_step(self, step: int, attention_mask=None):
         attention_masks = torch.split(
