@@ -75,6 +75,8 @@ class GPTBlock(_BloomBlock):
             mask = torch.ones((x.size(0), x.size(1)+past_length), 
                 dtype=torch.bool, device=x.device)
             
+        attention_mask = mask
+            
         alibi = build_alibi_tensor(current_sequence_length, self.n_head, hidden_states.dtype)
             
         layernorm_output = self.input_layernorm(hidden_states)

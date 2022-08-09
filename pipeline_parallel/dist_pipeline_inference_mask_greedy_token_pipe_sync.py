@@ -22,6 +22,15 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         self.top_k_per_token = args.top_k_per_token
         self.micro_batch_size = 1
         
+        ##########
+        self.stop = args.stop
+        
+        if self.stop is not None:
+            from transformers import AutoTokenizer
+            self.tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+            self.stop_flag = torch.zeros(1, requires_grad=False, device=device).long()
+        ##########
+        
         super().__init__(args, device, rank=rank)
         
         self.torch_comp_stream = torch.cuda.default_stream(device=device)
@@ -60,6 +69,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             self.output_seq_emb = [torch.zeros((1, self.input_seq_length-1, self.embedding_dim),
                                                requires_grad=False, device=self.device, dtype=self.dtype)
                                    for _ in range(self.seq_num)]
+            
 
     def _print_buffers(self):
         if self.generate_seq_length == 0:
@@ -130,6 +140,9 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         self.cached_attention.clear()
         for _ in range(self.num_layers):
             self.cached_attention.append([None for _ in range(self.seq_num)])
+            
+        if self.stop is not None:
+            self.stop_flag[:] = 0
 
     def _merge_cached_seqs_and_attentions(self):
         if not self.echo_prompt:
@@ -151,6 +164,9 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         else:
             super()._merge_cached_seqs_and_attentions()
             self._is_merged = True
+            
+        if self.stop is not None:
+            self.stop_flag[:] = 0
 
     def _forward_compute_prompt_seq(self, index, seq=None, mask=None):
         print("Compute prompt seq<", index, ">.")
@@ -229,6 +245,24 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
                 
         if self.pp_rank == self.pipeline_group_size - 1:
             self._generate_new_token(index)
+            self._judge_stop(index)
+            
+    def _judge_stop(self, index):
+        
+        if (self.stop is not None) and (index == self.token_micro_batch_num - 1) and (self.i_current_token % 4 == 0): # check every 10 tokens
+                
+            self.stop_flag[:] = 1
+            for tokens in self.ret_tokens:
+                tokens = tokens[:self.i_current_token]
+                text = self.tokenizer.decode(tokens)
+                is_stopped = False
+                for _stop in self.stop:
+                    if _stop in text:
+                        is_stopped = True
+                        break
+                if not is_stopped:
+                    self.stop_flag[:] = 0
+                    break
 
     def _generate_new_token(self, index):
         assert self.pp_rank == self.pipeline_group_size - 1
@@ -329,6 +363,12 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             if step != 0 or self.pp_rank != self.pipeline_group_size - 1:
                 attention_mask = self._process_mask_during_generation(attention_mask)
             self.forward_new_token_pipeline_step(step, attention_mask=attention_mask)
+            
+            # sync and check early stop
+            if self.stop is not None:
+                self.comm.broadcast(self.stop_flag, src=self.pipeline_group_size - 1)
+                if self.stop_flag.item() == 1:
+                    break
         
     def forward_new_token_pipeline_step(self, step: int, attention_mask=None):
         attention_masks = torch.split(
@@ -406,12 +446,12 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         if self.pp_rank == self.pipeline_group_size - 1 and output_ is not None:
             print(self.ret_token_logprobs.cpu().shape)
             item = {
-                'token_ids': self.ret_tokens.cpu(),
-                'token_logprobs': self.ret_token_logprobs.cpu(),
+                'token_ids': self.ret_tokens[:, :self.i_current_token].cpu(),
+                'token_logprobs': self.ret_token_logprobs[:, :self.i_current_token].cpu(),
             }
             if self.top_k_per_token > 0:
-                item['topk_ids'] = self.ret_topk_tokens.cpu()
-                item['topk_logprobs'] = self.ret_topk_token_logprobs.cpu()
+                item['topk_ids'] = self.ret_topk_tokens[:, :self.i_current_token].cpu()
+                item['topk_logprobs'] = self.ret_topk_token_logprobs[:, :self.i_current_token].cpu()
             output_.append(item)
         end_time = time.time()
         iter_time = end_time - start_time

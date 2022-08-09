@@ -60,7 +60,7 @@ class DummyRequestProcessor:
     def get_dataloader(self, batch_size, num_workers=0):
         
         dataset = JsonDataset(
-            ['you are not a', 'I am not a']*1000, 
+            ['you are', 'Translate to French: I am a student.']*1000, 
             self.tokenizer, batch_size=batch_size,
         )
         
@@ -151,6 +151,7 @@ class RequestProcessor:
         self.num_completions = first_request.get('n', 1)
         self.max_tokens = first_request.get('max_tokens', 1)
         self.best_of = first_request.get('best_of', 1)
+        self.stop = first_request.get('stop', None)
         
     def set_arguments(self, args):
         if hasattr(args, 'overwrite_request_args') and args.overwrite_request_args:
@@ -172,17 +173,51 @@ class RequestProcessor:
             args.num_completions = self.num_completions
             args.generate_seq_length = self.max_tokens
             args.best_of = self.best_of
+            args.stop = self.stop
         
             max_input_seq_length = 1
             for i, x in enumerate(self.data):
                 seq_length = len(self.tokenizer(x['request']['prompt'])['input_ids'])
+                
                 if seq_length > max_input_seq_length:
                     max_input_seq_length = seq_length
-                    
-            args.input_seq_length = min(
-                max_input_seq_length + 1, 
-                self.tokenizer.model_max_length - args.generate_seq_length,
-            )
+                if i > 100:
+                    # first 100 is enough
+                    break
+
+            if args.model_type != 't5':
+                if self.tokenizer.model_max_length > 10000:
+                    self.tokenizer.model_max_length = 2048
+                if args.model_type == 'bloom':
+                    # hf's default value for bloom is wrong
+                    self.tokenizer.model_max_length = 2048
+                args.input_seq_length = min(
+                    max_input_seq_length + 1,
+                    self.tokenizer.model_max_length - args.generate_seq_length,
+                )
+
+                if args.budget is not None:
+                    budget = args.budget
+                else:
+                    budget = 1300*8
+
+                args.batch_size = max(budget // (args.input_seq_length + args.generate_seq_length), 1)
+                args.token_micro_batch_size = args.batch_size
+
+            else:
+                if self.tokenizer.model_max_length > 10000:
+                    self.tokenizer.model_max_length = 512
+                
+                # T5 does not have length limit
+                args.input_seq_length = max_input_seq_length
+
+                if args.budget is not None:
+                    budget = args.budget
+                else:
+                    budget = 1300*16
+
+                args.batch_size = max(budget // (args.input_seq_length + args.generate_seq_length), 1)
+                args.token_micro_batch_size = args.batch_size
         
         if (args.echo_prompt and max_input_seq_length == self.tokenizer.model_max_length+1 and args.generate_seq_length==0):
             # special case! to support 2049 tokens
@@ -232,6 +267,7 @@ class RequestProcessor:
                 }
             }
             
+            # print(tokenizer.decode(outputs[0]['token_ids'][0]))
             for i_ret, output_dict in enumerate(outputs):
                 choice = {
                     "text": (tokenizer.decode(output_dict['token_ids'][i][n_pads:]) if 'token_ids' in output_dict else ''),
@@ -287,7 +323,7 @@ def get_request_processor(args):
         tokenizer.bos_token = tokenizer.eos_token
     if args.model_type in ['t5']:
         tokenizer.padding_side = 'right'
-        tokenizer.truncation_side = 'right'
+        tokenizer.truncation_side = 'left'
     else:
         tokenizer.padding_side = 'left'
         tokenizer.truncation_side = 'left'
