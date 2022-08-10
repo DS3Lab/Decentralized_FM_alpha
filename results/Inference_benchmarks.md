@@ -69,6 +69,8 @@
 | 1900          | 100                     | 19.0 token/s     | 420.82 TFLOPS | 17.6%              |
 
 
+- Tested on one machine on FluidStack that has:
+  - 8 A100 GPU: 80 GB RAM
 
 
 ## GPT-175B CPU Token Generation
