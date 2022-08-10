@@ -55,7 +55,7 @@
 | 4                      | 2.14 s      | 66.34 s        | 68.48  s     | 205.44 s                 | 3.22 TFLOPS   |
 
 
-## GPT-175B A40 Run
+## GPT-175B A40/A100 80G Run
 
 - Tested on two machine on FluidStack, each has
   - 8 A40 GPU: 48GB RAM; 149 TFLOPS
