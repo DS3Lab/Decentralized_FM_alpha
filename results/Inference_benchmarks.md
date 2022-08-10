@@ -63,14 +63,21 @@
   - Notice the number reported in the deepspeed blog is about 19.2 token/s in 16 A100
   - Results:
 
-| Prompt Length | Token Generation Length | Token Throughput | Total FPLOPS  | Cluster Efficiency |
-|---------------|-------------------------|------------------|---------------|--------------------|
-| 512           | 50                      | 66.2 token/s     | 226.35 TFLOPS | 9.4%               |
-| 1900          | 100                     | 19.0 token/s     | 420.82 TFLOPS | 17.6%              |
+| Prompt Length | Token Generation Length | Batch Size | Batch Time | Token Throughput | Total FPLOPS  | Cluster Efficiency |
+|---------------|-------------------------|------------|------------|------------------|---------------|--------------------|
+| 512           | 50                      | 56         | 42.3 s     | 66.2 token/s     | 226.35 TFLOPS | 9.4%               |
+| 1900          | 100                     | 18         | 95.1 s     | 19.0 token/s     | 135.25 TFLOPS | 5.6%               |
 
 
 - Tested on one machine on FluidStack that has:
-  - 8 A100 GPU: 80 GB RAM
+  - 8 A100 GPU: 80 GB RAM, 312 TFLOPS
+  - Total FLOPS of the cluster: 2.496 PFLOPS
+  
+| Prompt Length | Token Generation Length | Batch size | Batch Time | Token Throughput | Total FPLOPS  | Cluster Efficiency |
+|---------------|-------------------------|------------|------------|------------------|---------------|--------------------|
+| 512           | 50                      | 42         | 20.9 s     | 100.4 token/s    | 395.88 TFLOPS | 15.9%              |
+| 1900          | 100                     | 14         | 42.7 s     | 32.8 token/s     | 234.19 TFLOPS | 9.3%               |
+
 
 
 ## GPT-175B CPU Token Generation
