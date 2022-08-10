@@ -292,7 +292,7 @@ class SelfAttention(nn.Module):
                                    output_size[0] * output_size[1], -1)
 
         # preallocting result tensor: [b * np, sq, sk]
-        matmul_result = torch.empty(
+        matmul_result = torch.zeros( # empty sometimes gives nan
             output_size[0]*output_size[1], 
             output_size[2], 
             output_size[3],
@@ -323,7 +323,6 @@ class SelfAttention(nn.Module):
             
         # causal
         causal_mask = self.bias[:, :, key_length - query_length : key_length, :key_length].bool()
-        print(causal_mask[0,0])
         mask_value = torch.finfo(attention_scores.dtype).min
         mask_value = torch.tensor(mask_value, dtype=attention_scores.dtype, device=attention_scores.device)
         attention_scores = torch.where(causal_mask, attention_scores, mask_value)
@@ -472,20 +471,22 @@ class GPTBlock(nn.Module):
         assert layer_index is not None
         if config is None:
             config = GPTConfig()
-        # module = cls(config, layer_number=layer_index).eval()
-        module = torch.nn.utils.skip_init(cls, config, layer_index).eval() # fast init
+            
+        _reset_parameters = nn.Linear.reset_parameters
+        def dummy(*args, **kargs):
+            pass
+        nn.Linear.reset_parameters = dummy # disable init
+        module = cls(config, layer_number=layer_index).eval()
+        nn.Linear.reset_parameters = _reset_parameters
+        
+        # !!! cannot use skip_init, it will skip init non-persisitent buffer, e.g. causal mask and sin/cos
+        # module = torch.nn.utils.skip_init(cls, config, layer_index).eval() # fast init
         try:
             module.load_state_dict(torch.load(os.path.join(
                 model_path, f'pytorch_{layer_index}.pt',
             )))
         except:
             print('Cannot load from <model_name>. The model is randomly initialized.')
-            
-        ### skip init will skip bias as well
-        max_positions = config.max_position_embeddings
-        module.attention.bias[:] = torch.tril(
-            torch.ones((max_positions, max_positions), dtype=torch.uint8)
-        ).view(1, 1, max_positions, max_positions)
             
         return module
 
