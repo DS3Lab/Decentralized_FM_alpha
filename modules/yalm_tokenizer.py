@@ -86,7 +86,7 @@ class YalmTokenizer:
     def mask(self):
         return self.MASK
     
-    def __call__(self, text, return_tensors='pt', padding='max_length', truncation=True):
+    def __call__(self, text, return_tensors='pt', padding='max_length', truncation=True, add_bos=True):
         
         assert return_tensors == 'pt'
         assert padding == 'max_length' or padding == True
@@ -98,6 +98,8 @@ class YalmTokenizer:
         ids = []
         for t in text:
             t_ids = self.tokenize(t)
+            if add_bos:
+                t_ids = [1] + t_ids # append <s>
             
             if self.truncation_side == 'left':
                 t_ids = t_ids[-self.model_max_length:]
@@ -108,7 +110,7 @@ class YalmTokenizer:
         
         max_len = max([len(t_ids) for t_ids in ids])
         
-        attention_mask = torch.ones(len(ids), max_len)
+        attention_mask = torch.ones(len(ids), max_len, dtype=torch.long)
         
         if self.padding_side == 'left':
             new_ids = []
