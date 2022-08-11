@@ -1,7 +1,5 @@
 from .dist_gpipe_pipeline_async import GpipeAsync
 from .dist_gpipe_pipeline_finetune_async import GpipeAsync as GpipeFinetuneAsync
-from .dist_gpipe_pipeline_async_offload import GpipeAsyncOffload
-from .dist_1f1b_pipeline_async import Pipe1F1BAsync
 from .dist_pipeline_inference_greedy import DistGreedyInferenceAsync
 from .dist_pipeline_inference_greedy_sync import DistGreedyInferenceSync
 from .dist_pipeline_inference_mask_greedy import DistGreedyInferenceMaskAsync
@@ -10,7 +8,7 @@ from .dist_pipeline_enc_dec_inference_mask_sample import DistSampleEncDecInferen
 from .dist_pipeline_inference_greedy_token_pipe_sync import DistGreedyInferenceTokePipeSync
 from .dist_pipeline_inference_mask_greedy_token_pipe_sync import DistGreedyInferenceMaskTokenPipeSync
 from .dist_pipeline_inference_mask_sample_token_pipe_sync import DistSampleInferenceMaskTokenPipeSync
-from .dist_hybrid_pipeline_inference_greedy_token_pipe_sync import DistHybridGreedyInferenceTokePipeSync
+from .dist_hybrid_inference_greedy_token import DistHybridGreedyInference
 
 
 def get_pp_module(args, vocab_size, num_classes, device, use_dp, rank=None):
@@ -51,7 +49,7 @@ def get_pp_inference_module(args, device, rank=None):
     elif args.pp_mode == 'pipe_async_sample_enc_dec_mask':
         return DistSampleEncDecInferenceMaskAsync(args, device, rank=rank)
     elif args.pp_mode == 'pipe_hybrid_greedy':
-        return DistHybridGreedyInferenceTokePipeSync(args, device, rank=rank)
+        return DistHybridGreedyInference(args, device, rank=rank)
     else:
         print("Not recognize this pipeline parallel mode.")
         assert False
