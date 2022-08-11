@@ -6,23 +6,23 @@ from torch import nn
 class GPTConfig:
     def __init__(self):
         # hard code for yalm
-#         self.num_layers = 80
-#         self.embedding_size = 2048
-#         self.hidden_size = 10240
-#         self.num_attention_heads = 128
-#         self.intermediate_size = 27308
-#         self.padded_vocab_size = 128000
-#         self.layernorm_epsilon = 1e-6
-#         self.max_position_embeddings = 1024 # for rotation embeddings
-        
-        self.num_layers = 3
-        self.embedding_size = 512
-        self.hidden_size = 1024
-        self.num_attention_heads = 16
-        self.intermediate_size = 4096
-        self.padded_vocab_size = 50304
+        self.num_layers = 80
+        self.embedding_size = 2048
+        self.hidden_size = 10240
+        self.num_attention_heads = 128
+        self.intermediate_size = 27308
+        self.padded_vocab_size = 128000
         self.layernorm_epsilon = 1e-5
-        self.max_position_embeddings = 1024 # for rotation embeddings
+        self.max_position_embeddings = 2048 # for rotation embeddings
+        
+        # self.num_layers = 3
+        # self.embedding_size = 512
+        # self.hidden_size = 1024
+        # self.num_attention_heads = 16
+        # self.intermediate_size = 4096
+        # self.padded_vocab_size = 50304
+        # self.layernorm_epsilon = 1e-5
+        # self.max_position_embeddings = 1024 # for rotation embeddings
         
         ## share
         self.hidden_size_per_attention_head = self.hidden_size // self.num_attention_heads
@@ -214,11 +214,11 @@ class RotaryPositionEncoding(nn.Module):
     
 
 class SelfAttention(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, device='cpu'):
         super().__init__()
 
-        self.query_key_value = nn.Linear(config.hidden_size, config.hidden_size*3)
-        self.dense = nn.Linear(config.hidden_size, config.hidden_size)
+        self.query_key_value = nn.Linear(config.hidden_size, config.hidden_size*3, device=device)
+        self.dense = nn.Linear(config.hidden_size, config.hidden_size, device=device)
 
         self.hidden_size_per_partition = config.hidden_size_per_partition
         self.num_attention_heads_per_partition = config.num_attention_heads_per_partition
@@ -292,7 +292,7 @@ class SelfAttention(nn.Module):
                                    output_size[0] * output_size[1], -1)
 
         # preallocting result tensor: [b * np, sq, sk]
-        matmul_result = torch.empty(
+        matmul_result = torch.zeros( # empty sometimes gives nan
             output_size[0]*output_size[1], 
             output_size[2], 
             output_size[3],
@@ -330,7 +330,12 @@ class SelfAttention(nn.Module):
             
         attention_scores = attention_scores + attention_mask
         
-        attention_probs = attention_scores.softmax(-1)
+        dtype_attn_weights = attention_scores.dtype
+        # upcast to fp32 if the weights are in fp16. Please see https://github.com/huggingface/transformers/pull/17437
+        if dtype_attn_weights == torch.float16:
+            attention_probs = nn.functional.softmax(attention_scores, dim=-1, dtype=torch.float32).to(dtype_attn_weights)
+        else:
+            attention_probs = nn.functional.softmax(attention_scores, dim=-1)
         
         # context layer shape: [b, np, sq, hn]
         output_size = (value_layer.size(1), 
@@ -376,11 +381,11 @@ class SelfAttention(nn.Module):
     
     
 class MLP(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, device='cpu'):
         super().__init__()
-        self.dense_ffn_hidden = nn.Linear(config.hidden_size, config.intermediate_size)
-        self.dense_ffn_gate = nn.Linear(config.hidden_size, config.intermediate_size)
-        self.dense_ffn_output = nn.Linear(config.intermediate_size, config.hidden_size)
+        self.dense_ffn_hidden = nn.Linear(config.hidden_size, config.intermediate_size, device=device)
+        self.dense_ffn_gate = nn.Linear(config.hidden_size, config.intermediate_size, device=device)
+        self.dense_ffn_output = nn.Linear(config.intermediate_size, config.hidden_size, device=device)
         self.act = nn.functional.gelu
             
     def forward(self, hidden_states):
@@ -438,7 +443,7 @@ class GPTEmbeddings(nn.Module):
 
 
 class GPTBlock(nn.Module):
-    def __init__(self, config, layer_number, *args, use_checkpoint=True, **kargs):
+    def __init__(self, config, layer_number, *args, use_checkpoint=True, device='cpu', **kargs):
         super().__init__()
         self.config = config
         self.use_checkpoint = use_checkpoint
@@ -447,31 +452,45 @@ class GPTBlock(nn.Module):
         if self.layer_number >= 1:
             self.input_layernorm = nn.LayerNorm(
                 config.hidden_size,
-                eps=config.layernorm_epsilon
+                eps=config.layernorm_epsilon,
+                device=device,
             )
             
-        self.attention = SelfAttention(config)
+        self.attention = SelfAttention(config, device=device)
         
         self.post_attention_layernorm = nn.LayerNorm(
             config.hidden_size,
-            eps=config.layernorm_epsilon)
+            eps=config.layernorm_epsilon,
+            device=device,
+        )
         
-        self.mlp = MLP(config)
+        self.mlp = MLP(config, device=device)
         
     @classmethod
     def from_pretrained(cls, model_path, config=None, layer_index=None):
         assert layer_index is not None
         if config is None:
             config = GPTConfig()
+            
+        _reset_parameters = nn.Linear.reset_parameters
+        def dummy(*args, **kargs):
+            pass
+        nn.Linear.reset_parameters = dummy # disable init
         module = cls(config, layer_number=layer_index).eval()
+        nn.Linear.reset_parameters = _reset_parameters
+        
+        # !!! cannot use skip_init, it will skip init non-persisitent buffer, e.g. causal mask and sin/cos
+        # module = torch.nn.utils.skip_init(cls, config, layer_index).eval() # fast init
         try:
             module.load_state_dict(torch.load(os.path.join(
                 model_path, f'pytorch_{layer_index}.pt',
             )))
         except:
             print('Cannot load from <model_name>. The model is randomly initialized.')
+            
         return module
 
+    
     def forward(self, hidden_states: torch.Tensor, layer_past=None, mask=None) -> torch.Tensor:
         
         if mask is not None:

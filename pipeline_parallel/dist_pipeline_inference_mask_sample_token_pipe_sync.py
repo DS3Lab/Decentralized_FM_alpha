@@ -74,12 +74,12 @@ class DistSampleInferenceMaskTokenPipeSync(DistGreedyInferenceMaskTokenPipeSync)
                 if self.pp_rank == self.pipeline_group_size - 1 and output_ is not None:
                     assert isinstance(output_, list)
                     item = {
-                        'token_ids': self.ret_tokens.cpu(),
-                        'token_logprobs': self.ret_token_logprobs.cpu(),
+                        'token_ids': self.ret_tokens[:, :self.i_current_token].cpu(),
+                        'token_logprobs': self.ret_token_logprobs[:, :self.i_current_token].cpu(),
                     }
                     if self.top_k_per_token > 0:
-                        item['topk_ids'] = self.ret_topk_tokens.cpu()
-                        item['topk_logprobs'] = self.ret_topk_token_logprobs.cpu()
+                        item['topk_ids'] = self.ret_topk_tokens[:, :self.i_current_token].cpu()
+                        item['topk_logprobs'] = self.ret_topk_token_logprobs[:, :self.i_current_token].cpu()
                     output_.append(item)
 
         end_time = time.time()

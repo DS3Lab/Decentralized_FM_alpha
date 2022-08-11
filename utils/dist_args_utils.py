@@ -192,9 +192,9 @@ def add_inference_details_arguments(parser):
                         help='trained model path')
     parser.add_argument('--infer-data', type=str, default='', metavar='S',
                         help='data path')
-    parser.add_argument('--top-k', type=int, default=1, metavar='S',
+    parser.add_argument('--top-k', type=int, default=None, metavar='S',
                         help='sample from top k')
-    parser.add_argument('--top-p', type=float, default=1, metavar='S',
+    parser.add_argument('--top-p', type=float, default=None, metavar='S',
                         help='sample from top p')
     parser.add_argument('--temperature', type=float, default=1, metavar='S',
                         help='temperature on logits')
@@ -211,6 +211,10 @@ def add_inference_details_arguments(parser):
                         help='num of best of completions')
     parser.add_argument('--top-k-per-token', type=int, default=0, metavar='S',
                         help='return top k candidate for each token')
+    parser.add_argument('--budget', type=int, default=None, metavar='S',
+                        help='budget: for each batch, auto-assign max(n_seq * n_tokens)')
+    parser.add_argument('--stop', nargs='+', type=str, default=None,
+                        help='stop words')
 
 
 def get_inference_arguments_str(args, add_rank=True, rank=None):
