@@ -187,11 +187,20 @@ class RotaryPositionEncoding(nn.Module):
         self.register_buffer("cos_cached", cos_cached.unsqueeze(1).unsqueeze(2), persistent=False)
         self.register_buffer("sin_cached", sin_cached.unsqueeze(1).unsqueeze(2), persistent=False)
 
-    def forward(self, hidden_state, context_position):
+    def forward(self, hidden_state, offset):
         seq_length = hidden_state.shape[0]
-        cache_slice = slice(context_position, context_position + seq_length)
+        if isinstance(offset, torch.Tensor):
+            realidx = torch.arange(seq_length, device=hidden_state.device).view(1, seq_length) + offset[:, None]
+            cos = self.cos_cached[realidx].view(offset.size(0), seq_length, 1, self.cos_cached.size(-1))
+            cos = cos.transpose(0, 1)
+            sin = self.sin_cached[realidx].view(offset.size(0), seq_length, 1, self.cos_cached.size(-1))
+            sin = sin.transpose(0, 1)
+        else:
+            # cos = cos[..., offset : q.shape[-2] + offset, :]
+            cache_slice = slice(offset, offset + seq_length)
+            cos, sin = self.cos_cached[cache_slice], self.sin_cached[cache_slice]
         return self.apply_rotary_position_encoding(
-            hidden_state, self.cos_cached[cache_slice], self.sin_cached[cache_slice]
+            hidden_state, cos, sin,
         )
 
     @staticmethod
@@ -241,12 +250,13 @@ class SelfAttention(nn.Module):
         )
 
     def forward(self, hidden_states, attention_mask, layer_past=None,
+            offset=None,
             get_key_value=True):
         
         # do transpose 
         hidden_states = hidden_states.transpose(0, 1)
         if layer_past is not None:
-            layer_past = (layer_past[0].transpose(0, 2), layer_past[1].transpose(0, 2))
+            layer_past = (layer_past[0].permute(2, 0, 1, 3), layer_past[1].permute(2, 0, 1, 3))
         
         # hidden_states: [sq, b, h]
     
@@ -263,9 +273,12 @@ class SelfAttention(nn.Module):
         query_layer, key_layer, value_layer = mixed_x_layer.chunk(3, dim=-1)
 
         # if self.pos_encoding_type == 'rotary':
-        context_position = 0 if layer_past is None else layer_past[0].size(0)
-        query_layer = self.rotary_position_encoding(query_layer, context_position)
-        key_layer = self.rotary_position_encoding(key_layer, context_position)
+        
+        if offset is None:
+            offset = 0 if layer_past is None else layer_past[0].size(0)
+        
+        query_layer = self.rotary_position_encoding(query_layer, offset)
+        key_layer = self.rotary_position_encoding(key_layer, offset)
 
         if layer_past is not None:
             past_key, past_value = layer_past
@@ -309,17 +322,17 @@ class SelfAttention(nn.Module):
         attention_scores = matmul_result.view(*output_size)
         
         # update mask for inference
-        if layer_past is not None:
-            # keep last item at dim=2
-            attention_mask = attention_mask[
-                ...,
-                attention_scores.size(3) - 1,
-                :attention_scores.size(3)].unsqueeze(2)
-        else:
-            attention_mask = attention_mask[
-                ...,
-                :attention_scores.size(3),
-                :attention_scores.size(3)]
+        # if layer_past is not None:
+        #     # keep last item at dim=2
+        #     attention_mask = attention_mask[
+        #         ...,
+        #         attention_scores.size(3) - 1,
+        #         :attention_scores.size(3)].unsqueeze(2)
+        # else:
+        #     attention_mask = attention_mask[
+        #         ...,
+        #         :attention_scores.size(3),
+        #         :attention_scores.size(3)]
             
         # causal
         causal_mask = self.bias[:, :, key_length - query_length : key_length, :key_length].bool()
@@ -375,7 +388,7 @@ class SelfAttention(nn.Module):
         
         # transpose back
         output = output.transpose(0, 1)
-        present = (present[0].transpose(0, 2), present[1].transpose(0, 2))
+        present = (present[0].permute(1, 2, 0, 3), present[1].permute(1, 2, 0, 3))
 
         return output, present
     
@@ -497,10 +510,17 @@ class GPTBlock(nn.Module):
             # bool -> float
             attention_mask = 1e4 *(mask[:, None, None, :]-1)
         else:
-            attention_mask = torch.ones(
+            attention_mask = torch.zeros(
                 (hidden_states.size(0), 1, 1, hidden_states.size(1)), 
                 dtype=hidden_states.dtype, device=hidden_states.device)
-            
+           
+        offset = None
+        if mask is not None:                
+            # masked tokens
+            offset = (mask-1).sum(-1, keepdims=False).long()
+            if layer_past is not None:
+                offset += layer_past[0].size(2)
+                
         residual = hidden_states
         
         if self.layer_number >= 1:
@@ -513,6 +533,7 @@ class GPTBlock(nn.Module):
             attention_input,
             attention_mask,
             layer_past=layer_past,
+            offset=offset,
             get_key_value=True
         )
         
