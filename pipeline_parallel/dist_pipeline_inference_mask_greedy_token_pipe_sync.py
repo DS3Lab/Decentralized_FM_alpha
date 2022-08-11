@@ -24,7 +24,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         
         ##########
         self.stop = args.stop
-        # self.stop = None
+        #self.stop = None
         
         if self.stop is not None:
             from transformers import AutoTokenizer
@@ -341,6 +341,11 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             return
         self._merge_cached_seqs_and_attentions()
         for step in range(self.generate_seq_length):
+            
+            # check early stop
+            if self.stop is not None:
+                self._check_stop(step)
+
             print("Compute generate token step <", step, ">.")
             # for last node, the first step does not compute
             if step != 0 or self.pp_rank != self.pipeline_group_size - 1:
@@ -349,13 +354,12 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             
             # sync and check early stop
             if self.stop is not None:
-                self._check_stop(step)
-                if self.stop_flag.item() == 1:
+                if self.stop_flag.item():
                     break
                     
     def _check_stop(self, step):
         
-        if step % 4 == 0: # check every 4 tokens
+        if step % 4 == 0 and step > 0: # check every 4 tokens
             # check
             if self.pp_rank == self.pipeline_group_size - 1:
                 self.stop_flag[:] = 1
@@ -372,8 +376,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
                         break
             # sync
             self.comm.broadcast(self.stop_flag, src=self.pipeline_group_size - 1)
-            
-        
+
     def forward_new_token_pipeline_step(self, step: int, attention_mask=None):
         attention_masks = torch.split(
             attention_mask, self.token_micro_batch_size, dim=0
@@ -395,14 +398,14 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
                     self.profile_mark_forward_token_comp_start(i)
                     self._forward_compute_generate_token(i, mask=attention_masks[i])
                     self.profile_mark_forward_token_comp_end(i)
-                    if step != self.generate_seq_length - 1:
+                    if step != self.generate_seq_length - 1 and (self.stop is not None and self.stop_flag.item()==0):
                         # Send
                         self.profile_mark_forward_token_send_start(i)
                         self.comm.send(self.send_new_tokens[i], dst=0)
                         self.profile_mark_forward_token_send_end(i)
             # Rank-0 node:
             elif self.pp_rank == 0:
-                if step != self.generate_seq_length - 1:
+                if step != self.generate_seq_length - 1 and (self.stop is not None and self.stop_flag.item()==0):
                     # Receive
                     self.profile_mark_forward_token_recv_start(i)
                     self.comm.recv(self.recv_new_token[i], src=self.pipeline_group_size - 1)
@@ -416,7 +419,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
                     self.comm.send(self.output_token_emb[i], dst=self.post_node_rank)
                     self.profile_mark_forward_token_send_end(i)
             else:  # Middle nodes:
-                if step != self.generate_seq_length - 1:
+                if step != self.generate_seq_length - 1 and (self.stop is not None and self.stop_flag.item()==0):
                     # Receive
                     self.profile_mark_forward_token_recv_start(i)
                     self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank)

@@ -46,7 +46,7 @@ class GPTEmbeddings(nn.Module):
     
 
 class GPTBlock(_BloomBlock):
-    def __init__(self, config, *args, use_checkpoint=True, **kargs):
+    def __init__(self, config, *args, use_checkpoint=True, device='cpu', **kargs):
         super().__init__(config=config, *args, **kargs)
         self.config = config
         self.use_checkpoint = use_checkpoint
@@ -56,7 +56,14 @@ class GPTBlock(_BloomBlock):
         assert layer_index is not None
         if config is None:
             config = GPTConfig.from_pretrained(model_path)
+        
+        _reset_parameters = nn.Linear.reset_parameters
+        def dummy(*args, **kargs):
+            pass
+        nn.Linear.reset_parameters = dummy # disable init
         module = cls(config, layer_number=layer_index).eval()
+        nn.Linear.reset_parameters = _reset_parameters
+        # module = torch.nn.utils.skip_init(cls, config).eval() # fast init
         try:
             module.load_state_dict(torch.load(os.path.join(
                 model_path, f'pytorch_{layer_index}.pt',

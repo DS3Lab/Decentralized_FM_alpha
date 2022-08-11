@@ -70,7 +70,7 @@ class CoordinatorTrainServer:
                 os.system(f"rm {self.bsub_script_path}/submit_cache/*.bsub")
                 os.system(f"cp {self.bsub_script_path}/{job_name}.bsub "
                           f"{self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
-                os.system(f"echo \' {i+1}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
+                os.system(f"echo \'--lsf-job-no {i+1}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
                 os.system(f"cd {self.bsub_script_path}/submit_cache && "
                           f"bsub < {job_name}_{i+1}.bsub")
             os.system("bjobs")
@@ -160,6 +160,8 @@ class CoordinatorInferenceServer:
             self.submit_locked = True
             if job_name == 'lsf_gptJ_inf_4RTX2080Ti' or job_name == 'lsf_gptJ_inf_4RTXTitan.bsub':
                 self.inference_pipeline_demand_worker_num = 4
+            elif job_name == 'lsf_gptneox':
+                self.inference_pipeline_demand_worker_num = 11
             else:
                 return f'This job is not recognized on coordinate - {job_name}'
             for i in range(self.inference_pipeline_demand_worker_num):
