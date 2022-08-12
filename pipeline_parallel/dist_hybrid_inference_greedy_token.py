@@ -133,10 +133,10 @@ class DistHybridGreedyInference:
             print("=======value_seq_emb: {} MB shape: {} X {} (fp16)======="
                   .format(kv_tensor_total // 524288, self.input_seq_emb.shape, kv_tensor_num))
         else:
-            print("=======input_token_emb: {} MB shape: {} X {} (fp32)======="
+            print("=======key_tensor_emb: {} MB shape: {} X {} (fp32)======="
                   .format(kv_tensor_total // 262144, self.input_seq_emb.shape, kv_tensor_num))
-            print("=======output_token_emb: {} MB shape: {} X {} (fp32)======="
-                  .format(kv_tensor_total * 262144, self.input_seq_emb.shape, kv_tensor_num))
+            print("=======value_seq_emb: {} MB shape: {} X {} (fp32)======="
+                  .format(kv_tensor_total // 262144, self.input_seq_emb.shape, kv_tensor_num))
 
     def _print_buffers_cpu_node(self):
         print("Rank-{} Print buffers meta-info on CPU-node.".format(self.global_rank))
