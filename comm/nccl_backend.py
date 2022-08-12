@@ -13,6 +13,7 @@ def _type_torch_to_cupy(torch_type: torch.dtype):
         torch.int64: cupy.cuda.nccl.NCCL_INT64,
         torch.int: cupy.cuda.nccl.NCCL_INT,
         torch.float16: cupy.cuda.nccl.NCCL_FLOAT16,
+        # torch.bfloat16: cupy.cuda.nccl.NCCL_FLOAT16,
         torch.float32: cupy.cuda.nccl.NCCL_FLOAT32,
         torch.float64: cupy.cuda.nccl.NCCL_FLOAT64,
         torch.float: cupy.cuda.nccl.NCCL_FLOAT

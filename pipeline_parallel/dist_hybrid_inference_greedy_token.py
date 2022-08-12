@@ -270,7 +270,7 @@ class DistHybridGreedyInference:
         with torch.no_grad():
             z = self.cpu_layers['lm'](output_emb)
             new_token = z.argmax(-1)
-            print("Generate new token: ", new_token)
+            print("Generate new token: ", new_token.shape)
             return new_token
 
     def _gpu_send_key_value(self, buf_index):
