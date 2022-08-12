@@ -20,7 +20,7 @@ fi
 
 MODEL_CONF="--model-type gptj --model-name ./pretrained_models/gpt-j-6B"
 INFERENCE_CONF="--input-seq-length 512 --generate-seq-length 32 --prompt-micro-batch-size 1 --token-micro-batch-size 1 --stage-num-layers $stage_num_layers --global-num-layers $global_num_layers"
-BUF_CONF="--producer-buffer-size 1 --consumer-buffer-size 1"
+BUF_CONF="--producer-buffer-size 4 --consumer-buffer-size 2"
 
 if [ "$world_size" -ne 5 ]
 then
