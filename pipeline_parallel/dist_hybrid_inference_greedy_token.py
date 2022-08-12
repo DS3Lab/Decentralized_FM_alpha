@@ -419,7 +419,7 @@ class DistHybridGreedyInference:
             self._cpu_recv_key_value(buf_index)
             self.profile_mark_forward_token_recv_end()
             if self.enable_tidy_profiling:
-                self._profile_token_pipeline_recv_slot()
+                self._profile_token_pipeline_recv_slot(buf_index)
             new_token = self._cpu_generate_new_token(self.consumer_prompt_output[buf_index])
             for step in range(self.generate_seq_length):
                 self.profile_mark_forward_token_comp_start()
