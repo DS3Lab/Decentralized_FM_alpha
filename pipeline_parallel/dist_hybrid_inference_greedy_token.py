@@ -57,6 +57,9 @@ class DistHybridGreedyInference:
             self.producer_value = [[torch.zeros(key_value_shape, requires_grad=False, device='cpu', dtype=self.dtype)
                                     for _ in range(self.stage_num_layers)]
                                    for _ in range(self.producer_buffer_size)]
+            if self.pp_rank == self.pipeline_group_size -1:
+                self.producer_output = [torch.zeros(temp_shape, requires_grad=False, device='cpu', dtype=self.dtype)
+                                        for _ in range(self.producer_buffer_size)]
             self.gpu_layers = {}
             self._create_gpu_layers()
             self._print_buffers_gpu_node()
@@ -108,7 +111,7 @@ class DistHybridGreedyInference:
         return layer_index // self.stage_num_layers
 
     def _print_buffers_gpu_node(self):
-        print("Print buffers meta-info on GPU-node.")
+        print("Rank-{} Print buffers meta-info on GPU-node.".format(self.global_rank))
         seq_emb_num = self.prompt_micro_batch_size * self.input_seq_length * self.emb_dim
         if self.use_fp16:
             print("=======input_seq_emb: {} MB shape: {} X 1 (fp16)======="
@@ -135,7 +138,7 @@ class DistHybridGreedyInference:
                   .format(kv_tensor_total * 262144, self.input_seq_emb.shape, kv_tensor_num))
 
     def _print_buffers_cpu_node(self):
-        print("Print buffers meta-info on CPU-node.")
+        print("Rank-[} Print buffers meta-info on CPU-node.".format(self.global_rank))
         kv_tensor_dim = self.prompt_micro_batch_size * self.input_seq_length * self.emb_dim
         kv_tensor_num = self.consumer_buffer_size * self.global_num_layers
         kv_tensor_total = kv_tensor_num * kv_tensor_dim
@@ -219,6 +222,9 @@ class DistHybridGreedyInference:
         self.producer_key[buf_index][layer_index].copy_(key_value_tuple[0], non_blocking=True)
         self.producer_value[buf_index][layer_index].copy_(key_value_tuple[1], non_blocking=True)
 
+    def _add_producer_output_emb(self, buf_index):
+        self.producer_output[buf_index].copy_(self.output_seq_emb, non_blocking=True)
+
     def _get_consumer_cached_tuples(self, layer_index, buf_index):
         return self.consumer_key[buf_index][layer_index], self.consumer_value[buf_index][layer_index]
 
@@ -243,6 +249,8 @@ class DistHybridGreedyInference:
                     current_emb, key_value_tuple = \
                         self.gpu_layers['block' + str(layer_index)](current_emb)
                 self._add_producer_cached_tuples(layer_index, buf_index, key_value_tuple)
+            if self.pp_rank == self.pipeline_group_size -1:
+                self._add_producer_output_emb(layer_index)
 
     def _cpu_forward_compute_generate_token(self, buf_index, last_token):
         # print("Compute generate seq micro-batch <", index, ">.")
@@ -276,7 +284,7 @@ class DistHybridGreedyInference:
         if self.pp_rank == self.pipeline_group_size - 1:
             print("Rank-{} GPU node send output-emb to Rank-{} CPU node (Buffer-index: {})."
                   .format(self.global_rank, self._get_cpu_dst_rank(), buf_index))
-            self.cpu_comm.send(self.output_seq_emb, self._get_cpu_dst_rank())
+            self.cpu_comm.send(self.producer_output[buf_index], self._get_cpu_dst_rank())
 
     def _cpu_recv_key_value(self, buf_index):
         for layer_index in range(self.global_num_layers):
