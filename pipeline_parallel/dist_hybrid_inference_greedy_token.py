@@ -421,11 +421,12 @@ class DistHybridGreedyInference:
             self.profile_mark_forward_token_recv_end()
             if self.enable_tidy_profiling:
                 self._profile_token_pipeline_recv_slot(buf_index)
-            print("Rank-{} cpu_forward_new_token_pipeline_step, generate token 0.".format(self.global_rank))
+            print("Rank-{} cpu_forward_new_token_pipeline_step, generate token 0 <buf-index:{}>."
+                  .format(self.global_rank, buf_index))
             new_token = self._cpu_generate_new_token(self.consumer_prompt_output[buf_index])
             for step in range(self.generate_seq_length):
-                print("Rank-{} cpu_forward_new_token_pipeline_step, generate token {}."
-                      .format(self.global_rank, step+1))
+                print("Rank-{} cpu_forward_new_token_pipeline_step, generate token {} <buf-index:{}>."
+                      .format(self.global_rank, step+1, buf_index))
                 self.profile_mark_forward_token_comp_start()
                 new_token = self._cpu_forward_compute_generate_token(buf_index, new_token)
                 self.profile_mark_forward_token_comp_end()
