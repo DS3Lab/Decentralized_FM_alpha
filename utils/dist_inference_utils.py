@@ -96,7 +96,8 @@ def distributed_hybrid_inference_foo_iter(args, pipeline, device, request_proces
     total_time = 0
     if args.node_type == 'GPU' and get_gpu_pipeline_rank() == 0:
         output_requests = []
-        infer_data_loader = request_processor.get_dataloader(args.batch_size)
+        batch_size = args.prompt_micro_batch_size * args.producer_buffer_size
+        infer_data_loader = request_processor.get_dataloader(batch_size)
         for i, inputs in enumerate(infer_data_loader):
             input_ids = inputs['text'].to(device)
             output_ids_list = []

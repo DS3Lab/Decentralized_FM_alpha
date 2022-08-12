@@ -409,7 +409,7 @@ class DistHybridGreedyInference:
 
     # Sequential debug mode.
     def inference_batch(self, input_=None, output_=None, **kargs):
-        self.gpu_comm.barrier()
+        self.cpu_comm.barrier()
         start_time = time.time()
         if self.enable_tidy_profiling:
             torch.cuda.synchronize()
@@ -421,7 +421,7 @@ class DistHybridGreedyInference:
         elif self.node_type == 'CPU':
             self.cpu_forward_new_token_pipeline_step()
 
-        self.gpu_comm.barrier()
+        self.cpu_comm.barrier()
         prompt_time = time.time()
         print("Rank {} node INFERENCE prompt takes {:3.2f}s".format(self.global_rank, prompt_time - start_time))
 
