@@ -104,6 +104,7 @@ class DistHybridGreedyInference:
         return layer_index // self.stage_num_layers
 
     def _print_buffers_gpu_node(self):
+        print("Print buffers meta-info on GPU-node.")
         seq_emb_num = self.prompt_micro_batch_size * self.input_seq_length * self.emb_dim
         if self.use_fp16:
             print("=======input_seq_emb: {} MB shape: {} X 1 (fp16)======="
@@ -115,7 +116,7 @@ class DistHybridGreedyInference:
                   .format(seq_emb_num * 4 // 1024 // 1024, self.input_seq_emb.shape, 1))
             print("=======output_seq_emb: {} MB shape: {} X 1 (fp32)======="
                   .format(seq_emb_num * 4 // 1024 // 1024, self.input_seq_emb.shape, 1))
-        kv_tensor_dim = self.prompt_micro_batch_size * self.input_seq_emb * self.emb_dim
+        kv_tensor_dim = self.prompt_micro_batch_size * self.input_seq_length * self.emb_dim
         kv_tensor_num = self.producer_buffer_size * self.stage_num_layers
         kv_tensor_total = kv_tensor_num * kv_tensor_dim
         if self.use_fp16:
@@ -130,7 +131,8 @@ class DistHybridGreedyInference:
                   .format(kv_tensor_total * 262144, self.input_seq_emb.shape, kv_tensor_num))
 
     def _print_buffers_cpu_node(self):
-        kv_tensor_dim = self.prompt_micro_batch_size * self.input_seq_emb * self.emb_dim
+        print("Print buffers meta-info on CPU-node.")
+        kv_tensor_dim = self.prompt_micro_batch_size * self.input_seq_length * self.emb_dim
         kv_tensor_num = self.consumer_buffer_size * self.global_num_layers
         kv_tensor_total = kv_tensor_num * kv_tensor_dim
         if self.use_fp16:
