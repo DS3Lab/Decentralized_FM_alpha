@@ -42,8 +42,8 @@ def main():
         distributed_inference_mask_iter(args, pipe, device, request_processor)
     else:
         prefix = './trace_json/inference_' + args.pp_mode
-        trace_file = prefix + get_inference_arguments_str(args) + '_' + args.profiling + '_' + args.trace_postfix + \
-                     '.json'
+        trace_file = prefix + get_hybrid_inference_arguments_str(args) + '_' + args.profiling + '_' + \
+                     args.trace_postfix + '.json'
         if args.profiling == 'tidy_profiling':
             # distributed_inference_mask_iter(args, pipe, device, request_processor)
             distributed_inference_foo_iter(args, pipe, device, request_processor)
