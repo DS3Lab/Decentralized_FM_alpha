@@ -139,7 +139,7 @@ class DistHybridGreedyInference:
             print("=======key_tensor_emb: {} MB shape: {} X {} (fp16)======="
                   .format(kv_tensor_total // 524288, self.consumer_prompt_output[0].shape, kv_tensor_num))
             print("=======value_seq_emb: {} MB shape: {} X {} (fp16)======="
-                  .format(kv_tensor_total // 524288, self.input_seq_emb[0].shape, kv_tensor_num))
+                  .format(kv_tensor_total // 524288, self.consumer_prompt_output[0].shape, kv_tensor_num))
         else:
             print("=======input_token_emb: {} MB shape: {} X {} (fp32)======="
                   .format(kv_tensor_total // 262144, self.consumer_prompt_output[0].shape, kv_tensor_num))
