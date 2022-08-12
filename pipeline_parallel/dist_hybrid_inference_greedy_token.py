@@ -138,7 +138,7 @@ class DistHybridGreedyInference:
                   .format(kv_tensor_total * 262144, self.input_seq_emb.shape, kv_tensor_num))
 
     def _print_buffers_cpu_node(self):
-        print("Rank-[} Print buffers meta-info on CPU-node.".format(self.global_rank))
+        print("Rank-{} Print buffers meta-info on CPU-node.".format(self.global_rank))
         kv_tensor_dim = self.prompt_micro_batch_size * self.input_seq_length * self.emb_dim
         kv_tensor_num = self.consumer_buffer_size * self.global_num_layers
         kv_tensor_total = kv_tensor_num * kv_tensor_dim
