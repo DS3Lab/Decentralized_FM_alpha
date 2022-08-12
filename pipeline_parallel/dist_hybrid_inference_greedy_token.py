@@ -255,22 +255,25 @@ class DistHybridGreedyInference:
     def _cpu_forward_compute_generate_token(self, buf_index, last_token):
         # print("Compute generate seq micro-batch <", index, ">.")
         with torch.no_grad():
-            current_emb = self.cpu_layers['emb'](last_token)  # TODO, modify the emb interface to pass length.
-            for layer_index in range(self.global_num_layers):
-                if layer_index != self.global_num_layers - 1:
-                    current_emb, key_value_tuple = self.cpu_layers['block' + str(layer_index)](
-                        current_emb, self._get_consumer_cached_tuples(layer_index, buf_index))
-                else:
-                    output_emb, key_value_tuple = self.cpu_layers['block' + str(layer_index)](
-                        current_emb, self._get_consumer_cached_tuples(layer_index, buf_index))
-                self._update_consumer_cached_tuples(layer_index, buf_index, key_value_tuple)
-            return self._cpu_generate_new_token(output_emb)
+            with torch.cpu.amp.autocast_mode():
+                current_emb = self.cpu_layers['emb'](last_token)  # TODO, modify the emb interface to pass length.
+                for layer_index in range(self.global_num_layers):
+                    if layer_index != self.global_num_layers - 1:
+                        current_emb, key_value_tuple = self.cpu_layers['block' + str(layer_index)](
+                            current_emb, self._get_consumer_cached_tuples(layer_index, buf_index))
+                    else:
+                        output_emb, key_value_tuple = self.cpu_layers['block' + str(layer_index)](
+                            current_emb, self._get_consumer_cached_tuples(layer_index, buf_index))
+                    self._update_consumer_cached_tuples(layer_index, buf_index, key_value_tuple)
+                return self._cpu_generate_new_token(output_emb)
 
     def _cpu_generate_new_token(self, output_emb):
-        z = self.cpu_layers['lm'](output_emb)
-        new_token = z.argmax(-1)
-        print("Generate new token: ", new_token)
-        return new_token
+        with torch.no_grad():
+            with torch.cpu.amp.autocast_mode():
+                z = self.cpu_layers['lm'](output_emb)
+                new_token = z.argmax(-1)
+                print("Generate new token: ", new_token)
+                return new_token
 
     def _gpu_send_key_value(self, buf_index):
         torch.cuda.synchronize()
