@@ -107,27 +107,27 @@ class DistHybridGreedyInference:
         seq_emb_num = self.prompt_micro_batch_size * self.input_seq_length * self.emb_dim
         if self.use_fp16:
             print("=======input_seq_emb: {} MB shape: {} X 1 (fp16)======="
-                  .format(seq_emb_num * 2 // 1024 // 1024, self.input_seq_emb[0].shape))
+                  .format(seq_emb_num * 2 // 1024 // 1024, self.input_seq_emb.shape))
             print("=======output_seq_emb: {} MB shape: {} X 1 (fp16)======="
-                  .format(seq_emb_num * 2 // 1024 // 1024, self.input_seq_emb[0].shape))
+                  .format(seq_emb_num * 2 // 1024 // 1024, self.input_seq_emb.shape))
         else:
             print("=======input_seq_emb: {} MB shape: {} X 1 (fp32)======="
-                  .format(seq_emb_num * 4 // 1024 // 1024, self.input_seq_emb[0].shape, 1))
+                  .format(seq_emb_num * 4 // 1024 // 1024, self.input_seq_emb.shape, 1))
             print("=======output_seq_emb: {} MB shape: {} X 1 (fp32)======="
-                  .format(seq_emb_num * 4 // 1024 // 1024, self.input_seq_emb[0].shape, 1))
+                  .format(seq_emb_num * 4 // 1024 // 1024, self.input_seq_emb.shape, 1))
         kv_tensor_dim = self.prompt_micro_batch_size * self.input_seq_emb * self.emb_dim
         kv_tensor_num = self.producer_buffer_size * self.stage_num_layers
         kv_tensor_total = kv_tensor_num * kv_tensor_dim
         if self.use_fp16:
             print("=======key_tensor_emb: {} MB shape: {} X {} (fp16)======="
-                  .format(kv_tensor_total // 524288, self.input_seq_emb[0].shape, kv_tensor_num))
+                  .format(kv_tensor_total // 524288, self.input_seq_emb.shape, kv_tensor_num))
             print("=======value_seq_emb: {} MB shape: {} X {} (fp16)======="
-                  .format(kv_tensor_total // 524288, self.input_seq_emb[0].shape, kv_tensor_num))
+                  .format(kv_tensor_total // 524288, self.input_seq_emb.shape, kv_tensor_num))
         else:
             print("=======input_token_emb: {} MB shape: {} X {} (fp32)======="
-                  .format(kv_tensor_total // 262144, self.input_seq_emb[0].shape, kv_tensor_num))
+                  .format(kv_tensor_total // 262144, self.input_seq_emb.shape, kv_tensor_num))
             print("=======output_token_emb: {} MB shape: {} X {} (fp32)======="
-                  .format(kv_tensor_total * 262144, self.input_seq_emb[0].shape, kv_tensor_num))
+                  .format(kv_tensor_total * 262144, self.input_seq_emb.shape, kv_tensor_num))
 
     def _print_buffers_cpu_node(self):
         kv_tensor_dim = self.prompt_micro_batch_size * self.input_seq_emb * self.emb_dim
@@ -135,14 +135,14 @@ class DistHybridGreedyInference:
         kv_tensor_total = kv_tensor_num * kv_tensor_dim
         if self.use_fp16:
             print("=======key_tensor_emb: {} MB shape: {} X {} (fp16)======="
-                  .format(kv_tensor_total // 524288, self.input_seq_emb[0].shape, kv_tensor_num))
+                  .format(kv_tensor_total // 524288, self.consumer_prompt_output[0].shape, kv_tensor_num))
             print("=======value_seq_emb: {} MB shape: {} X {} (fp16)======="
                   .format(kv_tensor_total // 524288, self.input_seq_emb[0].shape, kv_tensor_num))
         else:
             print("=======input_token_emb: {} MB shape: {} X {} (fp32)======="
-                  .format(kv_tensor_total // 262144, self.input_seq_emb[0].shape, kv_tensor_num))
+                  .format(kv_tensor_total // 262144, self.consumer_prompt_output[0].shape, kv_tensor_num))
             print("=======output_token_emb: {} MB shape: {} X {} (fp32)======="
-                  .format(kv_tensor_total * 262144, self.input_seq_emb[0].shape, kv_tensor_num))
+                  .format(kv_tensor_total * 262144, self.consumer_prompt_output[0].shape, kv_tensor_num))
 
     def _get_embedding_size(self):
         if self.model_type == 'gpt2':

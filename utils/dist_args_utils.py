@@ -258,6 +258,24 @@ def get_inference_arguments_str(args, add_rank=True, rank=None):
     return arg_str
 
 
+def get_hybrid_inference_arguments_str(args, add_rank=True, rank=None):
+    arg_str = ''
+    if args.fp16:
+        arg_str += '_fp16'
+    arg_str += '_b' + str(args.prompt_micro_batch_size) + '_' + str(args.token_micro_batch_size)
+    if hasattr(args, 'token_micro_batch_size'):
+        arg_str += '_' + str(args.token_micro_batch_size)
+
+    arg_str += '_s' + str(args.input_seq_length) + '_' + str(args.generate_seq_length)
+    arg_str += '_p' + str(args.pipeline_group_size)
+    if add_rank:
+        if rank is not None:
+            arg_str += '_' + str(rank)
+        else:
+            arg_str += '_' + str(args.rank)
+    return arg_str
+
+
 def print_arguments(args):
     args_dict = vars(args)
     print("======================Input Arguments=========================")
