@@ -1,33 +1,25 @@
-import os
 import torch
-import deepspeed
 import time
 
 from transformers import OPTForCausalLM, AutoTokenizer, OPTConfig
-from transformers.models.opt.modeling_opt  import OPTDecoderLayer
+
+from parallelformers import parallelize
 
 def main():
 
-    local_rank = int(os.getenv('LOCAL_RANK', '0'))
-    world_size = int(os.getenv('WORLD_SIZE', '1'))
-    print(f'rank: {local_rank}/{world_size}')
-    
-    batch_size = 4
+    batch_size = 32
     prompt_length = 512
     token_length = 50
     model_name_or_path = 'facebook/opt-1.3b'
+    num_gpus = 8
     fp16 = False
-
+    
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
     config = OPTConfig.from_pretrained(model_name_or_path)
-    model = OPTForCausalLM(config) # not load checkpoint
+    model = OPTForCausalLM(config)
 
-    model = deepspeed.init_inference(model,
-                                     mp_size=world_size,
-                                     dtype=torch.float16 if fp16 else torch.float32,
-                                     replace_with_kernel_inject=False,
-                                     injection_policy={OPTDecoderLayer: ('self_attn.out_proj', '.fc2')}
-                                    )
+    parallelize(model, num_gpus=num_gpus, fp16=fp16, verbose='detail')
+
     torch.cuda.empty_cache()
 
     with torch.no_grad():
