@@ -198,8 +198,8 @@ class DistHybridGreedyInference:
                                               .to(dtype=self.dtype, memory_format=torch.channels_last).eval())
 
     def _add_producer_cached_tuples(self, layer_index, buf_index, key_value_tuple):
-        self.producer_key[buf_index][layer_index] = key_value_tuple[0].detach().cpu()
-        self.producer_value[buf_index][layer_index] = key_value_tuple[1].detach().cpu()
+        self.producer_key[buf_index][layer_index].copy_(key_value_tuple[0], non_blocking=True)
+        self.producer_value[buf_index][layer_index].copy_(key_value_tuple[1], non_blocking=True)
 
     def _get_consumer_cached_tuples(self, layer_index, buf_index):
         return self.consumer_key[buf_index][layer_index], self.consumer_value[buf_index][layer_index]
@@ -247,6 +247,7 @@ class DistHybridGreedyInference:
         return new_token
 
     def _gpu_send_key_value(self, buf_index):
+        torch.cuda.synchronize()
         for layer_index in range(self.stage_num_layers):
             self.cpu_comm.send(self.producer_key[buf_index][layer_index], self._get_cpu_dst_rank())
             self.cpu_comm.send(self.producer_value[buf_index][layer_index], self._get_cpu_dst_rank())
