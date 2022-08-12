@@ -27,6 +27,8 @@ class DistHybridGreedyInference:
         self.cpu_comm = get_hybrid_dispatch_comm()  # This is the default pytorch gloo backend.
         self.input_seq_length = args.input_seq_length
         self.emb_dim = self._get_embedding_size()
+        self.num_head = self._get_num_heads()
+        self.head_dim = self.emb_dim // self.num_head
         self.prompt_micro_batch_size = args.prompt_micro_batch_size
         self.device = device
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
@@ -48,10 +50,11 @@ class DistHybridGreedyInference:
             self.input_seq_emb = torch.zeros(temp_shape, requires_grad=False, device=self.device, dtype=self.dtype)
             self.output_seq_emb = torch.zeros(temp_shape, requires_grad=False, device=self.device, dtype=self.dtype)
             self.producer_buffer_size = args.producer_buffer_size
-            self.producer_key = [[torch.zeros(temp_shape, requires_grad=False, device='cpu', dtype=self.dtype)
+            key_value_shape = (self.prompt_micro_batch_size, self.num_head, self.input_seq_length, self.head_dim)
+            self.producer_key = [[torch.zeros(key_value_shape, requires_grad=False, device='cpu', dtype=self.dtype)
                                   for _ in range(self.stage_num_layers)]
                                  for _ in range(self.producer_buffer_size)]
-            self.producer_value = [[torch.zeros(temp_shape, requires_grad=False, device='cpu', dtype=self.dtype)
+            self.producer_value = [[torch.zeros(key_value_shape, requires_grad=False, device='cpu', dtype=self.dtype)
                                     for _ in range(self.stage_num_layers)]
                                    for _ in range(self.producer_buffer_size)]
             self.gpu_layers = {}
@@ -67,10 +70,11 @@ class DistHybridGreedyInference:
             temp_shape = (self.prompt_micro_batch_size, self.input_seq_length, self.emb_dim)
             self.consumer_prompt_output = [torch.zeros(temp_shape, requires_grad=False, device='cpu', dtype=self.dtype)
                                            for _ in range(self.consumer_buffer_size)]
-            self.consumer_key = [[torch.zeros(temp_shape, requires_grad=False, device='cpu', dtype=self.dtype)
+            key_value_shape = (self.prompt_micro_batch_size, self.num_head, self.input_seq_length, self.head_dim)
+            self.consumer_key = [[torch.zeros(key_value_shape, requires_grad=False, device='cpu', dtype=self.dtype)
                                   for _ in range(self.global_num_layers)]
                                  for _ in range(self.consumer_buffer_size)]
-            self.consumer_value = [[torch.zeros(temp_shape, requires_grad=False, device='cpu', dtype=self.dtype)
+            self.consumer_value = [[torch.zeros(key_value_shape, requires_grad=False, device='cpu', dtype=self.dtype)
                                     for _ in range(self.global_num_layers)]
                                    for _ in range(self.consumer_buffer_size)]
             self.cpu_layers = {}
@@ -158,6 +162,18 @@ class DistHybridGreedyInference:
         else:
             raise Exception(f'unknown model type {self.model_type}')
 
+    def _get_num_heads(self):
+        if self.model_type == 'gpt2':
+            from modules.hf_gpt2_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.n_head
+        elif self.model_type == 'gptj':
+            from modules.hf_gptj_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.n_head
+        else:
+            raise Exception(f'unknown model type {self.model_type}')
+
     def _create_gpu_layers(self):
         if self.model_type == 'gpt2':
             from modules.hf_gpt2_module import GPTEmbeddings, GPTBlock, GPTLMHead
@@ -198,8 +214,10 @@ class DistHybridGreedyInference:
                                               .to(dtype=self.dtype, memory_format=torch.channels_last).eval())
 
     def _add_producer_cached_tuples(self, layer_index, buf_index, key_value_tuple):
-        self.producer_key[buf_index][layer_index] = key_value_tuple[0].detach().cpu()
-        self.producer_value[buf_index][layer_index] = key_value_tuple[1].detach().cpu()
+        print(self.producer_key[buf_index][layer_index].shape)
+        print(key_value_tuple[0].shape)
+        self.producer_key[buf_index][layer_index].copy_(key_value_tuple[0], non_blocking=True)
+        self.producer_value[buf_index][layer_index].copy_(key_value_tuple[1], non_blocking=True)
 
     def _get_consumer_cached_tuples(self, layer_index, buf_index):
         return self.consumer_key[buf_index][layer_index], self.consumer_value[buf_index][layer_index]
@@ -247,6 +265,7 @@ class DistHybridGreedyInference:
         return new_token
 
     def _gpu_send_key_value(self, buf_index):
+        torch.cuda.synchronize()
         for layer_index in range(self.stage_num_layers):
             self.cpu_comm.send(self.producer_key[buf_index][layer_index], self._get_cpu_dst_rank())
             self.cpu_comm.send(self.producer_value[buf_index][layer_index], self._get_cpu_dst_rank())
