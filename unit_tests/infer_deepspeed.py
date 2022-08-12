@@ -1,3 +1,11 @@
+'''
+Please ensure deepspeed version >= 0.7.1.
+Launch with the following command:
+
+$ deepspeed --num_gpus 8 infer_deepspeed.py
+
+'''
+
 import os
 import torch
 import deepspeed
