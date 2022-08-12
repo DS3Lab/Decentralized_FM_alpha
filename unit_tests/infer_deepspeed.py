@@ -30,12 +30,16 @@ def main():
     config = OPTConfig.from_pretrained(model_name_or_path)
     model = OPTForCausalLM(config) # not load checkpoint
 
-    model = deepspeed.init_inference(model,
-                                     mp_size=world_size,
-                                     dtype=torch.float16 if fp16 else torch.float32,
-                                     replace_with_kernel_inject=False,
-                                     injection_policy={OPTDecoderLayer: ('self_attn.out_proj', '.fc2')}
-                                    )
+    model = deepspeed.init_inference(
+        model,
+        mp_size=world_size,
+        dtype=torch.float16 if fp16 else torch.float32,
+        replace_with_kernel_inject=False,
+        ##########################################################################
+        # This parameter defines which part of the model needs to be parallelized.
+        injection_policy={OPTDecoderLayer: ('self_attn.out_proj', '.fc2')}
+        ##########################################################################
+    )
     torch.cuda.empty_cache()
 
     with torch.no_grad():
