@@ -24,7 +24,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         
         ##########
         self.stop = args.stop
-        #self.stop = None
+        # self.stop = None
         
         if self.stop is not None:
             from transformers import AutoTokenizer
@@ -398,14 +398,14 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
                     self.profile_mark_forward_token_comp_start(i)
                     self._forward_compute_generate_token(i, mask=attention_masks[i])
                     self.profile_mark_forward_token_comp_end(i)
-                    if step != self.generate_seq_length - 1 and (self.stop is not None and self.stop_flag.item()==0):
+                    if step != self.generate_seq_length - 1 and (self.stop is None or self.stop_flag.item()==0):
                         # Send
                         self.profile_mark_forward_token_send_start(i)
                         self.comm.send(self.send_new_tokens[i], dst=0)
                         self.profile_mark_forward_token_send_end(i)
             # Rank-0 node:
             elif self.pp_rank == 0:
-                if step != self.generate_seq_length - 1 and (self.stop is not None and self.stop_flag.item()==0):
+                if step != self.generate_seq_length - 1 and (self.stop is None or self.stop_flag.item()==0):
                     # Receive
                     self.profile_mark_forward_token_recv_start(i)
                     self.comm.recv(self.recv_new_token[i], src=self.pipeline_group_size - 1)
@@ -419,7 +419,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
                     self.comm.send(self.output_token_emb[i], dst=self.post_node_rank)
                     self.profile_mark_forward_token_send_end(i)
             else:  # Middle nodes:
-                if step != self.generate_seq_length - 1 and (self.stop is not None and self.stop_flag.item()==0):
+                if step != self.generate_seq_length - 1 and (self.stop is None or self.stop_flag.item()==0):
                     # Receive
                     self.profile_mark_forward_token_recv_start(i)
                     self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank)
