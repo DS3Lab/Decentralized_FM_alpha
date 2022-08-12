@@ -1,3 +1,10 @@
+'''
+Lauch inference with the following command:
+
+$ python infer_parallelformers.py
+
+'''
+
 import torch
 import time
 
