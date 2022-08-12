@@ -2,7 +2,6 @@ import time
 import json
 import torch.nn.functional
 from comm.hybrid_comm_utils import *
-import intel_extension_for_pytorch as ipex
 
 
 class DistHybridGreedyInference:
@@ -184,7 +183,7 @@ class DistHybridGreedyInference:
             from modules.hf_gptj_module import GPTEmbeddings, GPTBlock, GPTLMHead
         else:
             raise Exception(f'unknown model type {self.model_type}')
-
+        import intel_extension_for_pytorch as ipex
         self.cpu_layers['emb'] = ipex.optimize(GPTEmbeddings.from_pretrained(self.model_name)
                                                .to(dtype=self.dtype, memory_format=torch.channels_last).eval())
         for global_layer_index in range(self.global_num_layers):
