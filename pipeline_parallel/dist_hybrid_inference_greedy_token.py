@@ -412,9 +412,10 @@ class DistHybridGreedyInference:
         self.cpu_comm.barrier()
         start_time = time.time()
         if self.enable_tidy_profiling:
-            torch.cuda.synchronize()
+            if self.node_type == 'GPU':
+                torch.cuda.synchronize()
+                self.init_event.record()
             self.init_time_stamp = time.time() * 1e+6
-            self.init_event.record()
 
         if self.node_type == 'GPU':
             self.gpu_forward_seq_pipeline_stage(input_data=input_)
@@ -425,7 +426,7 @@ class DistHybridGreedyInference:
         prompt_time = time.time()
         print("Rank {} node INFERENCE prompt takes {:3.2f}s".format(self.global_rank, prompt_time - start_time))
 
-        self.gpu_comm.barrier()
+        self.cpu_comm.barrier()
         # TODO fix this later.
         # if self.pp_rank == 0 and output_ is not None:
         #    assert isinstance(output_, list)
