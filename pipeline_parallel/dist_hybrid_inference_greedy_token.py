@@ -2,6 +2,7 @@ import time
 import json
 import torch.nn.functional
 from comm.hybrid_comm_utils import *
+import intel_extension_for_pytorch as ipex
 
 
 class DistHybridGreedyInference:
@@ -10,7 +11,7 @@ class DistHybridGreedyInference:
     GPU: prompt
     CPU: token generation
     """
-    def __init__(self, args, device, global_rank=None):
+    def __init__(self, args, device, rank=None):
         print("=======Initialize Hybrid Dist Inference(Sync).=======")
         if args.fp16:
             self.use_fp16 = True
@@ -31,10 +32,10 @@ class DistHybridGreedyInference:
         self.device = device
         self.enable_tidy_profiling = (args.profiling == 'tidy_profiling')
 
-        if global_rank is None:
-            self.global_rank = args.global_rank
+        if rank is None:
+            self.global_rank = args.rank
         else:
-            self.global_rank = global_rank
+            self.global_rank = rank
 
         self.stage_num_layers = args.stage_num_layers
         if self.node_type == 'GPU':
@@ -184,14 +185,16 @@ class DistHybridGreedyInference:
         else:
             raise Exception(f'unknown model type {self.model_type}')
 
-        self.cpu_layers['emb'] = GPTEmbeddings.from_pretrained(self.model_name).to(self.dtype).eval()
+        self.cpu_layers['emb'] = ipex.optimize(GPTEmbeddings.from_pretrained(self.model_name)
+                                               .to(dtype=self.dtype, memory_format=torch.channels_last).eval())
         for global_layer_index in range(self.global_num_layers):
             # global layer indexing could be an argument
             print(f'loading layer {global_layer_index}')
-            self.cpu_layers['block' + str(global_layer_index)] = GPTBlock.from_pretrained(
+            self.cpu_layers['block' + str(global_layer_index)] = ipex.optimize(GPTBlock.from_pretrained(
                 self.model_name, layer_index=global_layer_index
-            ).to(self.dtype).eval()
-        self.cpu_layers['lm'] = GPTLMHead.from_pretrained(self.model_name).to(self.dtype).eval()
+            ).to(dtype=self.dtype, memory_format=torch.channels_last).eval())
+        self.cpu_layers['lm'] = ipex.optimize(GPTLMHead.from_pretrained(self.model_name)
+                                              .to(dtype=self.dtype, memory_format=torch.channels_last).eval())
 
     def _add_producer_cached_tuples(self, layer_index, buf_index, key_value_tuple):
         self.producer_key[buf_index][layer_index] = key_value_tuple[0].detach().cpu()

@@ -172,6 +172,31 @@ def add_inference_arguments(parser):
                         help='Run model in fp16 mode.')
 
 
+def add_hybrid_inference_arguments(parser):
+    parser.add_argument('--node-type', type=str, default='CPU', metavar='S',
+                        help='-')
+    parser.add_argument('--producer-buffer-size', type=int, default=4, metavar='N',
+                        help='-')
+    parser.add_argument('--consumer-buffer-size', type=int, default=4, metavar='N',
+                        help='-')
+    parser.add_argument('--input-seq-length', type=int, default=16, metavar='N',
+                        help='-')
+    parser.add_argument('--input-seq-length', type=int, default=16, metavar='N',
+                        help='-')
+    parser.add_argument('--generate-seq-length', type=int, default=16, metavar='N',
+                        help='-')
+    parser.add_argument('--stage-num-layers', type=int, default=4, metavar='N',
+                        help='-')
+    parser.add_argument('--global-num-layers', type=int, default=64, metavar='N',
+                        help='-')
+    parser.add_argument('--pp-mode', type=str, default='pipe_greedy', metavar='S',
+                        help='use which pipeline parallel mode: gpipe or 1f1b.')
+    parser.add_argument('--num-iters', type=int, default=5, metavar='N',
+                        help='-')
+    parser.add_argument('--fp16', action='store_true',
+                        help='Run model in fp16 mode.')
+
+
 def add_torch_distributed_inference_w_coordinator_arguments(parser):
     parser.add_argument('--dist-backend', type=str, default='cupy_nccl', metavar='S',
                         help='backend type for distributed PyTorch (default: cupy_nccl)')

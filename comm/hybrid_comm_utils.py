@@ -56,3 +56,6 @@ def _init_hybrid_communicators(args):
                                               "pipeline_GPU_group")
     _CPU_RANKS = [i for i in range(args.pipeline_group_size, args.world_size)]
 
+
+def init_hybrid_communicators(args):
+    _init_hybrid_communicators(args)
