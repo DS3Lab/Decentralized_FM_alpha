@@ -214,8 +214,8 @@ class DistHybridGreedyInference:
                                               .to(dtype=self.dtype, memory_format=torch.channels_last).eval())
 
     def _add_producer_cached_tuples(self, layer_index, buf_index, key_value_tuple):
-        print(self.producer_key[buf_index][layer_index].shape)
-        print(key_value_tuple[0].shape)
+        # print(self.producer_key[buf_index][layer_index].shape)
+        # print(key_value_tuple[0].shape)
         self.producer_key[buf_index][layer_index].copy_(key_value_tuple[0], non_blocking=True)
         self.producer_value[buf_index][layer_index].copy_(key_value_tuple[1], non_blocking=True)
 
@@ -267,15 +267,27 @@ class DistHybridGreedyInference:
     def _gpu_send_key_value(self, buf_index):
         torch.cuda.synchronize()
         for layer_index in range(self.stage_num_layers):
+            print("Rank-{} GPU node send Local Layer-{} key to Rank-{} CPU node (Buffer-index: {})."
+                  .format(self.global_rank, layer_index, self._get_cpu_dst_rank(), buf_index))
             self.cpu_comm.send(self.producer_key[buf_index][layer_index], self._get_cpu_dst_rank())
+            print("Rank-{} GPU node send Local Layer-{} value to Rank-{} CPU node (Buffer-index: {})."
+                  .format(self.global_rank, layer_index, self._get_cpu_dst_rank(), buf_index))
             self.cpu_comm.send(self.producer_value[buf_index][layer_index], self._get_cpu_dst_rank())
         if self.pp_rank == self.pipeline_group_size - 1:
+            print("Rank-{} GPU node send output-emb to Rank-{} CPU node (Buffer-index: {})."
+                  .format(self.global_rank, self._get_cpu_dst_rank(), buf_index))
             self.cpu_comm.send(self.output_seq_emb, self._get_cpu_dst_rank())
 
     def _cpu_recv_key_value(self, buf_index):
         for layer_index in range(self.global_num_layers):
+            print("Rank-{} CPU node recv Layer-{} key from Rank-{} GPU node (Buffer-index: {})"
+                  .format(self.global_rank, layer_index, self._get_gpu_src_rank(layer_index), buf_index))
             self.cpu_comm.recv(self.consumer_key[buf_index][layer_index], self._get_gpu_src_rank(layer_index))
+            print("Rank-{} CPU node recv Layer-{} value from Rank-{} GPU node (Buffer-index: {})"
+                  .format(self.global_rank, layer_index, self._get_gpu_src_rank(layer_index), buf_index))
             self.cpu_comm.recv(self.consumer_value[buf_index][layer_index], self._get_gpu_src_rank(layer_index))
+        print("Rank-{} CPU node recv output-emb from Rank-{} GPU node (Buffer-index: {})"
+              .format(self.global_rank, self._get_gpu_src_rank(self.global_num_layers-1), buf_index))
         self.cpu_comm.recv(self.consumer_prompt_output[buf_index], self._get_gpu_src_rank(self.global_num_layers-1))
 
     def profile_mark_forward_seq_recv_start(self):
