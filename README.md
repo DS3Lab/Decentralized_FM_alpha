@@ -9,6 +9,7 @@
 
       pip3 install torch==1.9.0+cu111 torchtext -f https://download.pytorch.org/whl/torch_stable.html
       pip3 install torch==1.9.0+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+      pip install torch==1.10.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
 
       # Magic, not sure why cupy-cuda111 would not work, it seems that cupy-cuda111 will use different PTX from torch.
       pip3 install cupy-cuda111==8.6.0

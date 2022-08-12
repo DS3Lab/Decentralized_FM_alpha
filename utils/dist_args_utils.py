@@ -181,8 +181,6 @@ def add_hybrid_inference_arguments(parser):
                         help='-')
     parser.add_argument('--input-seq-length', type=int, default=16, metavar='N',
                         help='-')
-    parser.add_argument('--input-seq-length', type=int, default=16, metavar='N',
-                        help='-')
     parser.add_argument('--generate-seq-length', type=int, default=16, metavar='N',
                         help='-')
     parser.add_argument('--stage-num-layers', type=int, default=4, metavar='N',
