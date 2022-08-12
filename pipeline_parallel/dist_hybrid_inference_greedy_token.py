@@ -57,8 +57,9 @@ class DistHybridGreedyInference:
             self.producer_value = [[torch.zeros(key_value_shape, requires_grad=False, device='cpu', dtype=self.dtype)
                                     for _ in range(self.stage_num_layers)]
                                    for _ in range(self.producer_buffer_size)]
-            if self.pp_rank == self.pipeline_group_size -1:
-                self.producer_output = [torch.zeros(temp_shape, requires_grad=False, device='cpu', dtype=self.dtype)
+            if self.pp_rank == self.pipeline_group_size - 1:
+                self.producer_output = [torch.zeros((self.prompt_micro_batch_size, 1, self.emb_dim),
+                                                    requires_grad=False, device='cpu', dtype=self.dtype)
                                         for _ in range(self.producer_buffer_size)]
             self.gpu_layers = {}
             self._create_gpu_layers()
@@ -70,8 +71,8 @@ class DistHybridGreedyInference:
             self.token_micro_batch_size = args.token_micro_batch_size
             self.global_num_layers = args.global_num_layers
             self.consumer_buffer_size = args.consumer_buffer_size
-            temp_shape = (self.prompt_micro_batch_size, self.input_seq_length, self.emb_dim)
-            self.consumer_prompt_output = [torch.zeros(temp_shape, requires_grad=False, device='cpu', dtype=self.dtype)
+            self.consumer_prompt_output = [torch.zeros((self.prompt_micro_batch_size, 1, self.emb_dim),
+                                                       requires_grad=False, device='cpu', dtype=self.dtype)
                                            for _ in range(self.consumer_buffer_size)]
             key_value_shape = (self.prompt_micro_batch_size, self.num_head, self.input_seq_length, self.head_dim)
             self.consumer_key = [[torch.zeros(key_value_shape, requires_grad=False, device='cpu', dtype=self.dtype)
@@ -223,7 +224,7 @@ class DistHybridGreedyInference:
         self.producer_value[buf_index][layer_index].copy_(key_value_tuple[1], non_blocking=True)
 
     def _add_producer_output_emb(self, buf_index):
-        self.producer_output[buf_index].copy_(self.output_seq_emb, non_blocking=True)
+        self.producer_output[buf_index].copy_(self.output_seq_emb[:, -1:], non_blocking=True)
 
     def _get_consumer_cached_tuples(self, layer_index, buf_index):
         return self.consumer_key[buf_index][layer_index], self.consumer_value[buf_index][layer_index]
@@ -253,7 +254,6 @@ class DistHybridGreedyInference:
                 self._add_producer_output_emb(layer_index)
 
     def _cpu_forward_compute_generate_token(self, buf_index, last_token):
-        # print("Compute generate seq micro-batch <", index, ">.")
         with torch.no_grad():
             current_emb = self.cpu_layers['emb'](last_token)  # TODO, modify the emb interface to pass length.
             for layer_index in range(self.global_num_layers):
@@ -421,8 +421,11 @@ class DistHybridGreedyInference:
             self.profile_mark_forward_token_recv_end()
             if self.enable_tidy_profiling:
                 self._profile_token_pipeline_recv_slot(buf_index)
+            print("Rank-{} cpu_forward_new_token_pipeline_step, generate token 0.".format(self.global_rank))
             new_token = self._cpu_generate_new_token(self.consumer_prompt_output[buf_index])
             for step in range(self.generate_seq_length):
+                print("Rank-{} cpu_forward_new_token_pipeline_step, generate token {}."
+                      .format(self.global_rank, step+1))
                 self.profile_mark_forward_token_comp_start()
                 new_token = self._cpu_forward_compute_generate_token(buf_index, new_token)
                 self.profile_mark_forward_token_comp_end()
