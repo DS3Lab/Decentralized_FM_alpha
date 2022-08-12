@@ -198,6 +198,8 @@ class DistHybridGreedyInference:
                                               .to(dtype=self.dtype, memory_format=torch.channels_last).eval())
 
     def _add_producer_cached_tuples(self, layer_index, buf_index, key_value_tuple):
+        print(self.producer_key[buf_index][layer_index].shape)
+        print(key_value_tuple[0].shape)
         self.producer_key[buf_index][layer_index].copy_(key_value_tuple[0], non_blocking=True)
         self.producer_value[buf_index][layer_index].copy_(key_value_tuple[1], non_blocking=True)
 
