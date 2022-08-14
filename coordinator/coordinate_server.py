@@ -29,8 +29,8 @@ def server_message_parser(msg: bytes):
     return arg_dict
 
 
-def inference_latency_job_parser(job_detail_msg: bytes):
-    return json.loads(job_detail_msg.decode())
+def inference_latency_job_parser(job_detail_msg: str):
+    return json.loads(job_detail_msg)
 
 
 class CoordinatorTrainServer:
@@ -168,8 +168,20 @@ class CoordinatorInferenceServer:
             self.submit_locked = True
             if job_name == 'lsf_gptJ_inf_4RTX2080Ti' or job_name == 'lsf_gptJ_inf_4RTXTitan.bsub':
                 self.inference_pipeline_demand_worker_num = 4
+            elif job_name == 'lsf_gptj':
+                self.inference_pipeline_demand_worker_num = 2
             elif job_name == 'lsf_gptneox':
                 self.inference_pipeline_demand_worker_num = 11
+            elif job_name == 'lsf_opt66':
+                self.inference_pipeline_demand_worker_num = 32
+            elif job_name == 'lsf_opt66_16':
+                self.inference_pipeline_demand_worker_num = 16
+            elif job_name == 'lsf_t5':
+                self.inference_pipeline_demand_worker_num = 6
+            elif job_name == 'lsf_t0pp':
+                self.inference_pipeline_demand_worker_num = 6
+            elif job_name == 'lsf_ul2':
+                self.inference_pipeline_demand_worker_num = 16
             else:
                 return f'This job is not recognized on coordinate - {job_name}'
             for i in range(self.inference_pipeline_demand_worker_num):
