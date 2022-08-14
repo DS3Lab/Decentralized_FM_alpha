@@ -314,7 +314,7 @@ class RequestProcessor:
                 f.write(json.dumps(line) + '\n')
             
             
-def get_request_processor(args):
+def get_tokenizer(args):
     
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
     if tokenizer.pad_token is None:
@@ -331,6 +331,12 @@ def get_request_processor(args):
     
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+    
+    return tokenizer
+            
+def get_request_processor(args):
+    
+    tokenizer = get_tokenizer(args)
     
     if args.infer_data.strip() == '':
         return DummyRequestProcessor(tokenizer)
