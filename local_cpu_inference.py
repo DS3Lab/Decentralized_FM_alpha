@@ -55,7 +55,7 @@ def main():
                         help='Skip the computation of prompt phase.')
     parser.add_argument('--fp16', action='store_true',
                         help='Run model in fp16 mode.')
-    parser.add_argument('--model-name', type=str, default='./pretrained_models/gpt-j-175B', metavar='S',
+    parser.add_argument('--model-name', type=str, default='./pretrained_models/gpt-j-6B', metavar='S',
                         help='trained model path')
     parser.add_argument('--model-type', type=str, default='gptj', metavar='S',
                         help='trained model path')
