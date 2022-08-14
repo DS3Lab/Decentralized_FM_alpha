@@ -142,22 +142,13 @@ def distributed_inference_mask_server(args, pipeline, device):
     
     total_time = 0
     if get_pipeline_parallel_rank() == 0:
-        # infer_data_loader = request_processor.get_dataloader(args.batch_size)
-        # for i, inputs in enumerate(infer_data_loader):
-        
-        # s = socket.socket(socket.AF_INET, 
-        #                   socket.SOCK_STREAM)          # Socket will create with TCP and IP protocols
-        # s.bind(('127.0.0.1', 9999))   # This method will bind the sockets with server and port no
-        # s.listen(1)
-        # c, addr = s.accept()
-        # print("CONNECTION FROM:", str(addr)) #Will display the address of the client
         
         app = Flask(__name__)
         sem = threading.Semaphore()
         
         @app.route('/', methods=['GET'])
         def hello_world():
-            return '<h1>Hello World!</h1>'
+            return '<p>The inference system is up.</p>'
         
         @app.route('/', methods=['POST'])
         def process_input():
@@ -173,9 +164,37 @@ def distributed_inference_mask_server(args, pipeline, device):
             temperature = parameters.get('temperature', 1)
             top_p = parameters.get('top_p', 1.0)
             num_return_sequences = parameters.get('num_return_sequences', 1)
-            # 
             
-            inputs = tokenizer(query['prompt'], return_tensors='pt', 
+            _tmp = torch.zeros(1, dtype=torch.int64, device=device)
+            _tmp[:] = num_return_sequences
+            pipeline.comm.broadcast(_tmp, src=0)
+            pipeline.num_completions = _tmp.item()
+            
+            _tmp = torch.zeros(1, dtype=torch.int64, device=device)
+            _tmp[:] = generate_token_length
+            pipeline.comm.broadcast(_tmp, src=0)
+            pipeline.generate_seq_length = _tmp.item()
+            
+            _tmp = torch.zeros(1, dtype=torch.float32, device=device)
+            _tmp[:] = temperature
+            pipeline.comm.broadcast(_tmp, src=0)
+            args.temperature = _tmp.item()
+            
+            _tmp = torch.zeros(1, dtype=torch.float32, device=device)
+            _tmp[:] = top_p
+            pipeline.comm.broadcast(_tmp, src=0)
+            args.top_p = _tmp.item()
+            
+            _tmp = torch.zeros(1, dtype=torch.uint8, device=device)
+            _tmp[:] = do_sample
+            pipeline.comm.broadcast(_tmp, src=0)
+            if _tmp.item() == 0:
+                args.temperature = 0
+                
+            pipeline.update_processors(args)
+            #####
+            
+            inputs = tokenizer(query['inputs'], return_tensors='pt', 
                                padding='max_length', truncation=True,)
             
             input_ids = inputs['input_ids'].long().to(device)
@@ -194,7 +213,10 @@ def distributed_inference_mask_server(args, pipeline, device):
                 pipeline.comm.recv(token_len, src=pipeline.pipeline_group_size - 1)
                 result = torch.empty((1, token_len.item()), dtype=torch.long).cuda()
                 pipeline.comm.recv(result, src=pipeline.pipeline_group_size - 1)
-                results.append(tokenizer.decode(result[0]))
+                if return_full_text:
+                    results.append(query['inputs'] + tokenizer.decode(result[0]))
+                else:
+                    results.append(tokenizer.decode(result[0]))
             
             sem.release() # unlock
             
@@ -203,17 +225,32 @@ def distributed_inference_mask_server(args, pipeline, device):
         app.run(host='0.0.0.0', port=5001)
             
     elif get_pipeline_parallel_rank() == pipeline.pipeline_group_size - 1:
-        
-        # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)              
-        # # Socket will create with TCP and, IP protocols
-        # while True:
-        #     try:
-        #         s.connect(('127.0.0.1', 9999))
-        #         break
-        #     except Exception as e:
-        #         time.sleep(1)
 
         while True:
+
+            _tmp = torch.zeros(1, dtype=torch.int64, device=device)
+            pipeline.comm.broadcast(_tmp, src=0)
+            pipeline.num_completions = _tmp.item()
+
+            _tmp = torch.zeros(1, dtype=torch.int64, device=device)
+            pipeline.comm.broadcast(_tmp, src=0)
+            pipeline.generate_seq_length = _tmp.item()
+
+            _tmp = torch.zeros(1, dtype=torch.float32, device=device)
+            pipeline.comm.broadcast(_tmp, src=0)
+            args.temperature = _tmp.item()
+
+            _tmp = torch.zeros(1, dtype=torch.float32, device=device)
+            pipeline.comm.broadcast(_tmp, src=0)
+            args.top_p = _tmp.item()
+
+            _tmp = torch.zeros(1, dtype=torch.uint8, device=device)
+            pipeline.comm.broadcast(_tmp, src=0)
+            if _tmp.item() == 0:
+                args.temperature = 0
+
+            pipeline.update_processors(args)
+            
             pipeline.comm.broadcast(input_ids, src=0)
             pipeline.comm.broadcast(attention_mask, src=0)
             
@@ -229,6 +266,30 @@ def distributed_inference_mask_server(args, pipeline, device):
             
     else:
         while True:
+
+            _tmp = torch.zeros(1, dtype=torch.int64, device=device)
+            pipeline.comm.broadcast(_tmp, src=0)
+            pipeline.num_completions = _tmp.item()
+
+            _tmp = torch.zeros(1, dtype=torch.int64, device=device)
+            pipeline.comm.broadcast(_tmp, src=0)
+            pipeline.generate_seq_length = _tmp.item()
+
+            _tmp = torch.zeros(1, dtype=torch.float32, device=device)
+            pipeline.comm.broadcast(_tmp, src=0)
+            args.temperature = _tmp.item()
+
+            _tmp = torch.zeros(1, dtype=torch.float32, device=device)
+            pipeline.comm.broadcast(_tmp, src=0)
+            args.top_p = _tmp.item()
+
+            _tmp = torch.zeros(1, dtype=torch.uint8, device=device)
+            pipeline.comm.broadcast(_tmp, src=0)
+            if _tmp.item() == 0:
+                args.temperature = 0
+
+            pipeline.update_processors(args)
+            
             pipeline.comm.broadcast(input_ids, src=0)
             pipeline.comm.broadcast(attention_mask, src=0)
             current_iter_time = pipeline.inference_batch(input_ids, attention_mask=attention_mask)

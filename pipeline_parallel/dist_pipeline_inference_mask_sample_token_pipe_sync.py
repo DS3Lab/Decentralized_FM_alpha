@@ -12,6 +12,9 @@ class DistSampleInferenceMaskTokenPipeSync(DistGreedyInferenceMaskTokenPipeSync)
     
     def __init__(self, args, device, rank=None):
         super().__init__(args, device, rank=rank)
+        self.update_processors(args)
+        
+    def update_processors(self, args):
         self.logits_processor = get_logits_processor()
         self.logits_warper = get_logits_warper(
             top_k = (None if args.top_k is None or args.top_k == 0 else args.top_k),
