@@ -10,8 +10,9 @@ def main():
     # dtype = torch.bfloat16 if args.fp16 else torch.float32
     batch, sentence_length, embedding_dim = 20, 5, 10
     embedding = torch.randn(batch, sentence_length, embedding_dim).to(dtype)
-
+    print("input type:", embedding.dtype)
     layer_norm = torch.nn.LayerNorm(embedding_dim, dtype=dtype).eval()
+    print("layer norm weight type:", layer_norm.weight.data.dtype)
     layer_norm = layer_norm.to(memory_format=torch.channels_last)
     layer_norm = ipex.optimize(layer_norm, dtype=dtype)
 
