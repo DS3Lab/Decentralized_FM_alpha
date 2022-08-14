@@ -29,4 +29,4 @@ then
 fi
 
 
-python dist_inference_hybrid_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF $INFERENCE_CONF $BUF_CONF # >> "./logs/${timestamp}_GPTJ_hybrid_inference_pp14_default.log"
+python dist_inference_hybrid_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF $INFERENCE_CONF $BUF_CONF  >> "./logs/${timestamp}_GPTJ_hybrid_inference_pp5_default.log"
