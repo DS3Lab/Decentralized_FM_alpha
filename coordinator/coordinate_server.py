@@ -29,8 +29,8 @@ def server_message_parser(msg: bytes):
     return arg_dict
 
 
-def inference_latency_job_parser(job_detail_msg: bytes):
-    return json.loads(job_detail_msg.decode())
+def inference_latency_job_parser(job_detail_msg: str):
+    return json.loads(job_detail_msg)
 
 
 class CoordinatorTrainServer:
