@@ -428,9 +428,9 @@ class DistHybridGreedyInference:
             self.profiling_log.append(send_log)
 
         dispatch_slot = (self.forward_gpu2cpu_send_end_time - self.forward_gpu2cpu_send_start_time) * 1e+6
-        dispatch_log = {"name": "send-GPU2CPU", "ph": "X", "pid": self.global_rank, "tid": "4. GPU2CPU-dispatch",
+        dispatch_log = {"name": "dispatch", "ph": "X", "pid": self.global_rank, "tid": "4. GPU2CPU-dispatch",
                     "ts": self._get_cpu_ts(self.forward_gpu2cpu_send_start_time), "dur": dispatch_slot,
-                    "args": {"buf-index": buf_index}, "cname": "startup"}
+                    "args": {"buf-index": buf_index}, "cname": "thread_state_iowait"}
         self.profiling_log.append(dispatch_log)
 
     def profile_gpu2cpu_mark_forward_token_recv_start(self):
@@ -470,7 +470,7 @@ class DistHybridGreedyInference:
 
     def _profile_gpu2cpu_token_pipeline_recv_slot(self, buf_index: int):
         recv_slot = (self.forward_token_recv_end_time - self.forward_token_recv_start_time) * 1e+6
-        recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. GPU2CPU-Collect",
+        recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. GPU2CPU-collect",
                     "ts": self._get_cpu_ts(self.forward_token_recv_start_time), "dur": recv_slot,
                     "args": {"buf-index": buf_index}, "cname": "startup"}
         self.profiling_log.append(recv_log)
