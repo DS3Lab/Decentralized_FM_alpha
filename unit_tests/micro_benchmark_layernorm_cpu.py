@@ -11,7 +11,8 @@ def main():
     batch, sentence_length, embedding_dim = 20, 5, 10
     embedding = torch.randn(batch, sentence_length, embedding_dim).to(dtype)
 
-    layer_norm = torch.nn.LayerNorm(embedding_dim, dtype=dtype)
+    layer_norm = torch.nn.LayerNorm(embedding_dim, dtype=dtype).eval()
+    layer_norm = layer_norm.to(memory_format=torch.channels_last)
     layer_norm = ipex.optimize(layer_norm)
 
     with torch.no_grad():

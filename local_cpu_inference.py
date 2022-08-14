@@ -36,6 +36,7 @@ def _get_embedding_size(args):
     else:
         raise Exception(f'unknown model type {args.model_type}')
 
+
 def _get_num_heads(args):
     if args.model_type == 'gpt2':
         from modules.hf_gpt2_module import GPTConfig
