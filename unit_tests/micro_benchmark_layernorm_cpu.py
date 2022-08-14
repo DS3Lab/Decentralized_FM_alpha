@@ -13,7 +13,7 @@ def main():
 
     layer_norm = torch.nn.LayerNorm(embedding_dim, dtype=dtype).eval()
     layer_norm = layer_norm.to(memory_format=torch.channels_last)
-    layer_norm = ipex.optimize(layer_norm)
+    layer_norm = ipex.optimize(layer_norm, dtype=dtype)
 
     with torch.no_grad():
         with torch.autocast(device_type='cpu', dtype=dtype):
