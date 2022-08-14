@@ -101,7 +101,7 @@ def main():
     else:
         cached_tuples = [None for _ in range(args.num_layers)]
         with torch.no_grad():
-            with torch.cpu.amp.autocast_mode():
+            with torch.autocast(device_type='cpu', dtype=dtype):
                 start_time = time()
                 # prompt phase
                 for layer_index in range(args.num_layers):
@@ -114,7 +114,7 @@ def main():
                 print("Shape of key:", cached_tuples[0][0].shape, "Shape of value:", cached_tuples[0][1].shape)
 
     with torch.no_grad():
-        with torch.cpu.amp.autocast_mode():
+        with torch.autocast(device_type='cpu', dtype=dtype):
             total_time = 0
             for i in range(args.gen_seq_length):
                 inputs = torch.empty((args.batch_size, 1, emb_dim),
