@@ -74,7 +74,7 @@ def main():
     # dtype = torch.bfloat16 if args.fp16 else torch.float32
     model = _create_layers(args, dtype=dtype)
     emb_dim = _get_embedding_size(args)
-    num_heads = _get_num_heads()
+    num_heads = _get_num_heads(args)
     head_dim = emb_dim // num_heads
 
     # inputs = torch.empty((args.batch_size, args.prompt_seq_length, 12288),
