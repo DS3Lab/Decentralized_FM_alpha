@@ -3,12 +3,14 @@ import socket
 import argparse
 from collections import OrderedDict
 import os
+import requests
+import json
 
 
 def server_message_parser(msg: bytes):
     msg_arg = msg.decode().split('#')
     arg_dict = {'task': msg_arg[0],
-                'state': msg_arg[1],}
+                'state': msg_arg[1]}
     if arg_dict['task'] == 'train':
         if arg_dict['state'] == 'finish':
             arg_dict['rank'] = int(msg_arg[2])
@@ -21,8 +23,14 @@ def server_message_parser(msg: bytes):
             arg_dict['iter_time'] = float(msg_arg[3])
         elif arg_dict['state'] == 'submit':
             arg_dict['job_name'] = msg_arg[2]
-            arg_dict['infer_data'] = msg_arg[3] 
+            arg_dict['infer_data'] = msg_arg[3]
+        elif arg_dict['state'] == 'latency_job':
+            arg_dict['job_details'] = msg_arg[2]
     return arg_dict
+
+
+def inference_latency_job_parser(job_detail_msg: bytes):
+    return json.loads(job_detail_msg.decode())
 
 
 class CoordinatorTrainServer:
@@ -226,6 +234,27 @@ class CoordinatorInferenceServer:
         return_msg = 'done'
         return return_msg
 
+
+    def _handle_inference_job_latency(self, job_details) -> str:
+        print("<<<<<<<<<<<<<<<<<<<<< Get Inference Job >>>>>>>>>>>>>>>>>>>>>>")
+        # parser the inference job like
+        '''
+        url = 'http://10.205.11.33:5001'
+        myobj = {
+            'inputs': "you are not",
+            "parameters": {
+                "max_new_tokens": 20, "return_full_text": True,
+                "do_sample": True, "temperature": 0.8, "top_p": 0.95,
+                "max_time": 10.0, "num_return_sequences": 2,
+                "use_gpu": True,
+            }
+        }
+        '''
+        inference_latency_job = inference_latency_job_parser(job_details)
+        url = 'http://' + self.prime_worker_ips[0] + ':5001'
+        x = requests.post(url, json=inference_latency_job)
+        return x.text
+
     def execute_server(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind((self.host, self.port))
@@ -244,11 +273,14 @@ class CoordinatorInferenceServer:
                             return_msg = self._handle_inference_join(worker_ip, port)
                         elif msg_arg['state'] == 'finish':
                             return_msg = self._handle_inference_finish(worker_ip, port, msg_arg)
+                        elif msg_arg['state'] == 'latency_job':
+                            return_msg = self._handle_inference_job_latency(msg_arg['job_details'])
                         else:
                             assert False, f"Not valid operator for training ({msg_arg['state']})"
                     connection.sendall(return_msg.encode())
                     connection.close()
                     self._print_current_working_nodes()
+
 
 
 def main():
