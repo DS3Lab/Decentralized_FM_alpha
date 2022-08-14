@@ -66,6 +66,11 @@ class DistHybridGreedyInference:
             self._print_buffers_gpu_node()
             self.dispatch_ranks = get_cpu_ranks()
             self.current_dispatch_index = 0
+            assert args.producer_buffer_size == self.cpu_pool_size * args.consumer_buffer_size, \
+                f"Producer and consumer buffer size are set incorrectly. " \
+                f"CPU pool: {self.cpu_pool_size}, " \
+                f"producer buffer size: {args.producer_buffer_size}, consumer buffer size: {args.consumer_buffer_size}"
+
         elif self.node_type == 'CPU':
             self.generate_seq_length = args.generate_seq_length
             self.token_micro_batch_size = args.token_micro_batch_size
@@ -97,6 +102,8 @@ class DistHybridGreedyInference:
                 self.forward_seq_comp_end_event = torch.cuda.Event(enable_timing=True, blocking=False)
                 self.forward_seq_send_start_event = torch.cuda.Event(enable_timing=True, blocking=False)
                 self.forward_seq_send_end_event = torch.cuda.Event(enable_timing=True, blocking=False)
+                self.forward_gpu2cpu_send_start_time = None
+                self.forward_gpu2cpu_send_end_time = None
             elif self.node_type == 'CPU':
                 self.forward_token_recv_start_time = None
                 self.forward_token_recv_end_time = None
@@ -205,17 +212,27 @@ class DistHybridGreedyInference:
             from modules.hf_gptj_module import GPTEmbeddings, GPTBlock, GPTLMHead
         else:
             raise Exception(f'unknown model type {self.model_type}')
+        '''
         import intel_extension_for_pytorch as ipex
         self.cpu_layers['emb'] = ipex.optimize(GPTEmbeddings.from_pretrained(self.model_name)
                                                .to(dtype=self.dtype, memory_format=torch.channels_last).eval())
         for global_layer_index in range(self.global_num_layers):
             # global layer indexing could be an argument
-            print(f'loading layer {global_layer_index}')
+            print(f' loading layer {global_layer_index}')
             self.cpu_layers['block' + str(global_layer_index)] = ipex.optimize(GPTBlock.from_pretrained(
                 self.model_name, layer_index=global_layer_index
             ).to(dtype=self.dtype, memory_format=torch.channels_last).eval())
         self.cpu_layers['lm'] = ipex.optimize(GPTLMHead.from_pretrained(self.model_name)
                                               .to(dtype=self.dtype, memory_format=torch.channels_last).eval())
+        '''
+        self.cpu_layers['emb'] = GPTEmbeddings.from_pretrained(self.model_name).to(dtype=self.dtype).eval()
+        for global_layer_index in range(self.global_num_layers):
+            # global layer indexing could be an argument
+            print(f'loading layer {global_layer_index}')
+            self.cpu_layers['block' + str(global_layer_index)] = GPTBlock.from_pretrained(
+                self.model_name, layer_index=global_layer_index
+            ).to(dtype=self.dtype).eval()
+        self.cpu_layers['lm'] = GPTLMHead.from_pretrained(self.model_name).to(dtype=self.dtype).eval()
 
     def _add_producer_cached_tuples(self, layer_index, buf_index, key_value_tuple):
         # print(self.producer_key[buf_index][layer_index].shape)
@@ -250,7 +267,7 @@ class DistHybridGreedyInference:
                     current_emb, key_value_tuple = \
                         self.gpu_layers['block' + str(layer_index)](current_emb)
                 self._add_producer_cached_tuples(layer_index, buf_index, key_value_tuple)
-            if self.pp_rank == self.pipeline_group_size -1:
+            if self.pp_rank == self.pipeline_group_size - 1:
                 self._add_producer_output_emb(layer_index)
 
     def _cpu_forward_compute_generate_token(self, buf_index, last_token):
@@ -263,6 +280,7 @@ class DistHybridGreedyInference:
                 else:
                     output_emb, key_value_tuple = self.cpu_layers['block' + str(layer_index)](
                         current_emb, self._get_consumer_cached_tuples(layer_index, buf_index))
+                current_emb = current_emb.to(self.dtype)
                 self._update_consumer_cached_tuples(layer_index, buf_index, key_value_tuple)
             return self._cpu_generate_new_token(output_emb)
 
@@ -299,31 +317,39 @@ class DistHybridGreedyInference:
               .format(self.global_rank, self._get_gpu_src_rank(self.global_num_layers-1), buf_index))
         self.cpu_comm.recv(self.consumer_prompt_output[buf_index], self._get_gpu_src_rank(self.global_num_layers-1))
 
-    def profile_mark_forward_seq_recv_start(self):
+    def profile_gpu_mark_forward_seq_recv_start(self):
         if self.enable_tidy_profiling:
             self.forward_seq_recv_start_event.record()
 
-    def profile_mark_forward_seq_recv_end(self):
+    def profile_gpu_mark_forward_seq_recv_end(self):
         if self.enable_tidy_profiling:
             self.forward_seq_recv_end_event.record()
 
-    def profile_mark_forward_seq_comp_start(self):
+    def profile_gpu_mark_forward_seq_comp_start(self):
         if self.enable_tidy_profiling:
             self.forward_seq_comp_start_event.record()
 
-    def profile_mark_forward_seq_comp_end(self):
+    def profile_gpu_mark_forward_seq_comp_end(self):
         if self.enable_tidy_profiling:
             self.forward_seq_comp_end_event.record()
 
-    def profile_mark_forward_seq_send_start(self):
+    def profile_gpu_mark_forward_seq_send_start(self):
         if self.enable_tidy_profiling:
             self.forward_seq_send_start_event.record()
 
-    def profile_mark_forward_seq_send_end(self):
+    def profile_gpu_mark_forward_seq_send_end(self):
         if self.enable_tidy_profiling:
             self.forward_seq_send_end_event.record()
 
-    def _get_event_ts(self, event: torch.cuda.Event):
+    def profile_gpu2cpu_mark_forward_seq_send_start(self):
+        if self.enable_tidy_profiling:
+            self.forward_gpu2cpu_send_start_time = time.time()
+
+    def profile_gpu2cpu_mark_forward_seq_send_end(self):
+        if self.enable_tidy_profiling:
+            self.forward_gpu2cpu_send_end_time = time.time()
+
+    def _get_gpu_event_ts(self, event: torch.cuda.Event):
         return self.init_time_stamp + self.init_event.elapsed_time(event) * 1e+3
 
     def _get_cpu_ts(self, ts: float):
@@ -339,53 +365,56 @@ class DistHybridGreedyInference:
         for i in range(self.producer_buffer_size):
             if self.pp_rank == 0:  # Only send output to next node, do not receive
                 # Compute
-                self.profile_mark_forward_seq_comp_start()
+                self.profile_gpu_mark_forward_seq_comp_start()
                 self._gpu_forward_compute_prompt_seq(buf_index=i, seq=input_seqs[i])
-                self.profile_mark_forward_seq_comp_end()
+                self.profile_gpu_mark_forward_seq_comp_end()
                 # Send
-                self.profile_mark_forward_seq_send_start()
+                self.profile_gpu_mark_forward_seq_send_start()
                 self.gpu_comm.send(self.output_seq_emb, dst=self.post_node_rank)
-                self.profile_mark_forward_seq_send_end()
+                self.profile_gpu_mark_forward_seq_send_end()
             elif self.pp_rank == self.pipeline_group_size - 1:  # Only receive input from last node, do not send
                 # Receive
-                self.profile_mark_forward_seq_recv_start()
+                self.profile_gpu_mark_forward_seq_recv_start()
                 self.gpu_comm.recv(self.input_seq_emb, src=self.pre_node_rank)
-                self.profile_mark_forward_seq_recv_end()
+                self.profile_gpu_mark_forward_seq_recv_end()
                 # Compute
-                self.profile_mark_forward_seq_comp_start()
+                self.profile_gpu_mark_forward_seq_comp_start()
                 self._gpu_forward_compute_prompt_seq(buf_index=i, seq=None)
-                self.profile_mark_forward_seq_comp_end()
+                self.profile_gpu_mark_forward_seq_comp_end()
             else:  # receive, compute, and send
                 # Receive
-                self.profile_mark_forward_seq_recv_start()
+                self.profile_gpu_mark_forward_seq_recv_start()
                 self.gpu_comm.recv(self.input_seq_emb, src=self.pre_node_rank)
-                self.profile_mark_forward_seq_recv_end()
+                self.profile_gpu_mark_forward_seq_recv_end()
                 # Compute
-                self.profile_mark_forward_seq_comp_start()
+                self.profile_gpu_mark_forward_seq_comp_start()
                 self._gpu_forward_compute_prompt_seq(buf_index=i, seq=None)
-                self.profile_mark_forward_seq_comp_end()
+                self.profile_gpu_mark_forward_seq_comp_end()
                 # Send
-                self.profile_mark_forward_seq_send_start()
+                self.profile_gpu_mark_forward_seq_send_start()
                 self.gpu_comm.send(self.output_seq_emb, dst=self.post_node_rank)
-                self.profile_mark_forward_seq_send_end()
+                self.profile_gpu_mark_forward_seq_send_end()
+
+            self.profile_gpu2cpu_mark_forward_seq_send_start()
+            self._gpu_send_key_value(buf_index=i)
+            self.profile_gpu2cpu_mark_forward_seq_send_end()
+            self.current_dispatch_index = (self.current_dispatch_index + 1) % self.cpu_pool_size
             if self.enable_tidy_profiling:
                 self._profile_seq_pipeline_stage(buf_index=i)
-            self._gpu_send_key_value(buf_index=i)
-            self.current_dispatch_index = (self.current_dispatch_index + 1) % self.cpu_pool_size
 
     def _profile_seq_pipeline_stage(self, buf_index):
         torch.cuda.synchronize()
         if self.pp_rank != 0:
             recv_slot = self.forward_seq_recv_start_event.elapsed_time(self.forward_seq_recv_end_event) * 1e+3
             recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. forward-recv",
-                        "ts": self._get_event_ts(self.forward_seq_recv_start_event), "dur": recv_slot,
+                        "ts": self._get_gpu_event_ts(self.forward_seq_recv_start_event), "dur": recv_slot,
                         "args": {"buf-index": buf_index}, "cname": "startup"}  # cname is for color, a little silly.
             # print(recv_log)
             self.profiling_log.append(recv_log)
 
         comp_slot = self.forward_seq_comp_start_event.elapsed_time(self.forward_seq_comp_end_event) * 1e+3
         comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. forward-compute",
-                    "ts": self._get_event_ts(self.forward_seq_comp_start_event), "dur": comp_slot,
+                    "ts": self._get_gpu_event_ts(self.forward_seq_comp_start_event), "dur": comp_slot,
                     "args": {"buf-index": buf_index}, "cname": "good"}
         # print(comp_log)
         self.profiling_log.append(comp_log)
@@ -393,54 +422,60 @@ class DistHybridGreedyInference:
         if self.pp_rank != self.pipeline_group_size - 1:
             send_slot = self.forward_seq_send_start_event.elapsed_time(self.forward_seq_send_end_event) * 1e+3
             send_log = {"name": "send", "ph": "X", "pid": self.global_rank, "tid": "3. forward-send",
-                        "ts": self._get_event_ts(self.forward_seq_send_start_event), "dur": send_slot,
+                        "ts": self._get_gpu_event_ts(self.forward_seq_send_start_event), "dur": send_slot,
                         "args": {"buf-index": buf_index}, "cname": "thread_state_iowait"}
             # print(send_log)
             self.profiling_log.append(send_log)
 
-    def profile_mark_forward_token_recv_start(self):
+        send_slot = (self.forward_gpu2cpu_send_end_time - self.forward_gpu2cpu_send_start_time) * 1e+3
+        send_log = {"name": "send-GPU2CPU", "ph": "X", "pid": self.global_rank, "tid": "4. forward-dispatch",
+                    "ts": self._get_cpu_ts(self.forward_gpu2cpu_send_start_time), "dur": send_slot,
+                    "args": {"buf-index": buf_index}, "cname": "startup"}
+        self.profiling_log.append(send_log)
+
+    def profile_gpu2cpu_mark_forward_token_recv_start(self):
         if self.enable_tidy_profiling:
             self.forward_token_recv_start_time = time.time()
 
-    def profile_mark_forward_token_recv_end(self):
+    def profile_gpu2cpu_mark_forward_token_recv_end(self):
         if self.enable_tidy_profiling:
             self.forward_token_recv_end_time = time.time()
 
-    def profile_mark_forward_token_comp_start(self):
+    def profile_cpu_mark_forward_token_comp_start(self):
         if self.enable_tidy_profiling:
             self.forward_token_comp_start_time = time.time()
 
-    def profile_mark_forward_token_comp_end(self):
+    def profile_cpu_mark_forward_token_comp_end(self):
         if self.enable_tidy_profiling:
             self.forward_token_comp_end_time = time.time()
 
     def cpu_forward_new_token_pipeline_step(self):
         for buf_index in range(self.consumer_buffer_size):
-            self.profile_mark_forward_token_recv_start()
+            self.profile_gpu2cpu_mark_forward_token_recv_start()
             self._cpu_recv_key_value(buf_index)
-            self.profile_mark_forward_token_recv_end()
+            self.profile_gpu2cpu_mark_forward_token_recv_end()
             if self.enable_tidy_profiling:
-                self._profile_token_pipeline_recv_slot(buf_index)
+                self._profile_gpu2cpu_token_pipeline_recv_slot(buf_index)
             print("Rank-{} cpu_forward_new_token_pipeline_step, generate token 0 <buf-index:{}>."
                   .format(self.global_rank, buf_index))
             new_token = self._cpu_generate_new_token(self.consumer_prompt_output[buf_index])
             for step in range(self.generate_seq_length):
                 print("Rank-{} cpu_forward_new_token_pipeline_step, generate token {} <buf-index:{}>."
                       .format(self.global_rank, step+1, buf_index))
-                self.profile_mark_forward_token_comp_start()
+                self.profile_cpu_mark_forward_token_comp_start()
                 new_token = self._cpu_forward_compute_generate_token(buf_index, new_token)
-                self.profile_mark_forward_token_comp_end()
+                self.profile_cpu_mark_forward_token_comp_end()
                 if self.enable_tidy_profiling:
-                    self._profile_token_pipeline_step_comp_slot(step, buf_index)
+                    self._profile_cpu_token_pipeline_step_comp_slot(step, buf_index)
 
-    def _profile_token_pipeline_recv_slot(self, buf_index: int):
+    def _profile_gpu2cpu_token_pipeline_recv_slot(self, buf_index: int):
         recv_slot = (self.forward_token_recv_end_time - self.forward_token_recv_start_time) * 1e+3
         recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. forward-recv",
                     "ts": self._get_cpu_ts(self.forward_token_recv_start_time), "dur": recv_slot,
                     "args": {"buf-index": buf_index}, "cname": "startup"}
         self.profiling_log.append(recv_log)
 
-    def _profile_token_pipeline_step_comp_slot(self, step: int, buf_index: int):
+    def _profile_cpu_token_pipeline_step_comp_slot(self, step: int, buf_index: int):
         comp_slot = (self.forward_token_comp_end_time - self.forward_token_comp_start_time) * 1e+3
         comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. forward-compute",
                     "ts": self._get_cpu_ts(self.forward_token_comp_start_time), "dur": comp_slot,
