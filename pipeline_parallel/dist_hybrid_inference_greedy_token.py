@@ -353,7 +353,7 @@ class DistHybridGreedyInference:
         return self.init_time_stamp + self.init_event.elapsed_time(event) * 1e+3
 
     def _get_cpu_ts(self, ts: float):
-        return (ts - self.init_time_stamp) * 1e+6
+        return ts* 1e+6 - self.init_time_stamp
 
     def gpu_forward_seq_pipeline_stage(self, input_data=None):
         if self.pp_rank == 0:
