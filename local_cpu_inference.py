@@ -3,7 +3,7 @@
 import argparse
 import torch
 from time import time
-import intel_extension_for_pytorch as ipex
+# import intel_extension_for_pytorch as ipex
 
 
 def _create_layers(args, dtype=torch.float16):
@@ -16,8 +16,8 @@ def _create_layers(args, dtype=torch.float16):
     for layer_index in range(args.num_layers):
         print(f'loading layer {layer_index}')
         current_layer = GPTBlock.from_pretrained(args.model_name, layer_index=layer_index).to(dtype).eval()
-        current_layer = current_layer.to(memory_format=torch.channels_last)
-        current_layer = ipex.optimize(current_layer)
+        # current_layer = current_layer.to(memory_format=torch.channels_last)
+        # current_layer = ipex.optimize(current_layer)
         cpu_layers.append(current_layer)
     end_time = time()
     print("Init model takes: {:3.2f}s".format(end_time-start_time))
@@ -62,7 +62,7 @@ def main():
                         help='trained model path')
     parser.add_argument('--batch-size', type=int, default=1, metavar='N',
                         help='input batch size for training (default: 100)')
-    parser.add_argument('--num-layers', type=int, default=10, metavar='N',
+    parser.add_argument('--num-layers', type=int, default=3, metavar='N',
                         help='-')
     parser.add_argument('--prompt-seq-length', type=int, default=512, metavar='N',
                         help='-')
@@ -110,6 +110,7 @@ def main():
                         embeddings, cached_tuples[layer_index] = model[layer_index](inputs, skip_ln=False)
                     else:
                         embeddings, cached_tuples[layer_index] = model[layer_index](embeddings, skip_ln=False)
+                    embeddings = embeddings.to(dtype)
                 prompt_end_time = time()
                 print("Prompt <{}> takes {:3.2f}s".format(args.prompt_seq_length, prompt_end_time-start_time))
                 print("Shape of key:", cached_tuples[0][0].shape, "Shape of value:", cached_tuples[0][1].shape)
@@ -122,7 +123,7 @@ def main():
                                      requires_grad=False, dtype=dtype)
                 # inputs = inputs.to(memory_format=torch.channels_last)
                 token_start_time = time()
-                embeddings = None
+                embeddings = torch.zeros((args.batch_size, 1, emb_dim), dtype=dtype)
                 # print(inputs.shape)
                 for layer_index in range(args.num_layers):
                     if layer_index == 0:
@@ -131,6 +132,8 @@ def main():
                     else:
                         embeddings, cached_tuples[layer_index] = model[layer_index](embeddings, cached_tuples[layer_index],
                                                                                     skip_ln=False)
+                    embeddings = embeddings.to(dtype)
+                    print(embeddings.dtype)
                 token_end_time = time()
                 print("Token <{}> takes {:3.2f}s".format(i, token_end_time - token_start_time))
                 if i > 1:
