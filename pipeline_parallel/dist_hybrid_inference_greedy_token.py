@@ -406,14 +406,14 @@ class DistHybridGreedyInference:
         torch.cuda.synchronize()
         if self.pp_rank != 0:
             recv_slot = self.forward_seq_recv_start_event.elapsed_time(self.forward_seq_recv_end_event) * 1e+3
-            recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. forward-recv",
+            recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. GPU-recv",
                         "ts": self._get_gpu_event_ts(self.forward_seq_recv_start_event), "dur": recv_slot,
                         "args": {"buf-index": buf_index}, "cname": "startup"}  # cname is for color, a little silly.
             # print(recv_log)
             self.profiling_log.append(recv_log)
 
         comp_slot = self.forward_seq_comp_start_event.elapsed_time(self.forward_seq_comp_end_event) * 1e+3
-        comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. forward-compute",
+        comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. GPU-compute",
                     "ts": self._get_gpu_event_ts(self.forward_seq_comp_start_event), "dur": comp_slot,
                     "args": {"buf-index": buf_index}, "cname": "good"}
         # print(comp_log)
@@ -421,17 +421,17 @@ class DistHybridGreedyInference:
 
         if self.pp_rank != self.pipeline_group_size - 1:
             send_slot = self.forward_seq_send_start_event.elapsed_time(self.forward_seq_send_end_event) * 1e+3
-            send_log = {"name": "send", "ph": "X", "pid": self.global_rank, "tid": "3. forward-send",
+            send_log = {"name": "send", "ph": "X", "pid": self.global_rank, "tid": "3. GPU-send",
                         "ts": self._get_gpu_event_ts(self.forward_seq_send_start_event), "dur": send_slot,
                         "args": {"buf-index": buf_index}, "cname": "thread_state_iowait"}
             # print(send_log)
             self.profiling_log.append(send_log)
 
-        send_slot = (self.forward_gpu2cpu_send_end_time - self.forward_gpu2cpu_send_start_time) * 1e+3
-        send_log = {"name": "send-GPU2CPU", "ph": "X", "pid": self.global_rank, "tid": "4. forward-dispatch",
-                    "ts": self._get_cpu_ts(self.forward_gpu2cpu_send_start_time), "dur": send_slot,
+        dispatch_slot = (self.forward_gpu2cpu_send_end_time - self.forward_gpu2cpu_send_start_time) * 1e+6
+        dispatch_log = {"name": "send-GPU2CPU", "ph": "X", "pid": self.global_rank, "tid": "4. GPU2CPU-dispatch",
+                    "ts": self._get_cpu_ts(self.forward_gpu2cpu_send_start_time), "dur": dispatch_slot,
                     "args": {"buf-index": buf_index}, "cname": "startup"}
-        self.profiling_log.append(send_log)
+        self.profiling_log.append(dispatch_log)
 
     def profile_gpu2cpu_mark_forward_token_recv_start(self):
         if self.enable_tidy_profiling:
@@ -469,15 +469,15 @@ class DistHybridGreedyInference:
                     self._profile_cpu_token_pipeline_step_comp_slot(step, buf_index)
 
     def _profile_gpu2cpu_token_pipeline_recv_slot(self, buf_index: int):
-        recv_slot = (self.forward_token_recv_end_time - self.forward_token_recv_start_time) * 1e+3
-        recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. forward-recv",
+        recv_slot = (self.forward_token_recv_end_time - self.forward_token_recv_start_time) * 1e+6
+        recv_log = {"name": "recv", "ph": "X", "pid": self.global_rank, "tid": "1. GPU2CPU-Collect",
                     "ts": self._get_cpu_ts(self.forward_token_recv_start_time), "dur": recv_slot,
                     "args": {"buf-index": buf_index}, "cname": "startup"}
         self.profiling_log.append(recv_log)
 
     def _profile_cpu_token_pipeline_step_comp_slot(self, step: int, buf_index: int):
-        comp_slot = (self.forward_token_comp_end_time - self.forward_token_comp_start_time) * 1e+3
-        comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. forward-compute",
+        comp_slot = (self.forward_token_comp_end_time - self.forward_token_comp_start_time) * 1e+6
+        comp_log = {"name": "comp", "ph": "X", "pid": self.global_rank, "tid": "2. CPU-compute",
                     "ts": self._get_cpu_ts(self.forward_token_comp_start_time), "dur": comp_slot,
                     "args": {"token-step": step, "buf-index": buf_index}, "cname": "good"}
         self.profiling_log.append(comp_log)
@@ -494,7 +494,7 @@ class DistHybridGreedyInference:
             if self.node_type == 'GPU':
                 torch.cuda.synchronize()
                 self.init_event.record()
-            self.init_time_stamp = time.time()
+            self.init_time_stamp = time.time() * 1e+6
 
         if self.node_type == 'GPU':
             self.gpu_forward_seq_pipeline_stage(input_data=input_)
