@@ -494,7 +494,7 @@ class DistHybridGreedyInference:
             if self.node_type == 'GPU':
                 torch.cuda.synchronize()
                 self.init_event.record()
-            self.init_time_stamp = time.time() * 1e+6
+            self.init_time_stamp = time.time()
 
         if self.node_type == 'GPU':
             self.gpu_forward_seq_pipeline_stage(input_data=input_)
