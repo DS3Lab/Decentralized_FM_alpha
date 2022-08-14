@@ -6,7 +6,7 @@ pipeline_size=$3
 rank=$4
 node_type=$5
 
-stage_num_layers=8
+stage_num_layers=4
 global_num_layers=$(($stage_num_layers*$pipeline_size))
 
 timestamp=$(date +%Y_%m_%d_%H_%M)
