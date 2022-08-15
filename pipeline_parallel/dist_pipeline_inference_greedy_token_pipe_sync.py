@@ -79,13 +79,16 @@ class DistGreedyInferenceTokePipeSync:
             self.merge_switch_start_event = torch.cuda.Event(enable_timing=True, blocking=False)
             self.merge_switch_end_event = torch.cuda.Event(enable_timing=True, blocking=False)
 
+            
+        num_completions = getattr(self, 'num_completions', 1)
+        
         if self.pp_rank == 0:
-            self.recv_new_token = [torch.zeros((self.token_micro_batch_size, 1),
+            self.recv_new_token = [torch.zeros((self.token_micro_batch_size * num_completions, 1),
                                                requires_grad=False, device=self.device, dtype=torch.int64)
                                    for _ in range(self.token_micro_batch_num)]
 
         if self.pp_rank == self.pipeline_group_size - 1:
-            self.send_new_tokens = [torch.zeros((self.token_micro_batch_size, 1),
+            self.send_new_tokens = [torch.zeros((self.token_micro_batch_size * num_completions, 1),
                                                 requires_grad=False, device=self.device, dtype=torch.int64)
                                     for _ in range(self.token_micro_batch_num)]
 
@@ -95,10 +98,10 @@ class DistGreedyInferenceTokePipeSync:
         self.output_seq_emb = [torch.zeros((1, self.input_seq_length, self.embedding_dim),
                                            requires_grad=False, device=self.device, dtype=self.dtype)
                                for _ in range(self.seq_num)]
-        self.input_token_emb = [torch.zeros((self.token_micro_batch_size, 1, self.embedding_dim),
+        self.input_token_emb = [torch.zeros((self.token_micro_batch_size * num_completions, 1, self.embedding_dim),
                                             requires_grad=False, device=self.device, dtype=self.dtype)
                                 for _ in range(self.token_micro_batch_num)]
-        self.output_token_emb = [torch.zeros((self.token_micro_batch_size, 1, self.embedding_dim),
+        self.output_token_emb = [torch.zeros((self.token_micro_batch_size * num_completions, 1, self.embedding_dim),
                                              requires_grad=False, device=self.device, dtype=self.dtype)
                                  for _ in range(self.token_micro_batch_num)]
 
@@ -201,7 +204,8 @@ class DistGreedyInferenceTokePipeSync:
             self.cached_attention.append([None for _ in range(self.seq_num)])
 
     def _merge_cached_seqs_and_attentions(self):
-        self.merge_switch_start_event.record()
+        if self.enable_tidy_profiling:
+            self.merge_switch_start_event.record()
         for layer_index in range(self.num_layers):
             key = torch.split(torch.cat([kv[0] for kv in self.cached_attention[layer_index]], dim=0),
                               self.token_micro_batch_size, dim=0)
@@ -225,7 +229,8 @@ class DistGreedyInferenceTokePipeSync:
         if self.pp_rank == self.pipeline_group_size - 1:
             for i in range(self.token_micro_batch_num):
                 self._generate_new_token(i)
-        self.merge_switch_end_event.record()
+        if self.enable_tidy_profiling:
+            self.merge_switch_end_event.record()
         if self.enable_tidy_profiling:
             torch.cuda.synchronize()
             comp_slot = self.merge_switch_start_event.elapsed_time(

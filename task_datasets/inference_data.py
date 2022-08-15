@@ -60,7 +60,7 @@ class DummyRequestProcessor:
     def get_dataloader(self, batch_size, num_workers=0):
         
         dataset = JsonDataset(
-            ['you are', 'Translate to French: I am a student.']*1000, 
+            ['you are', 'hello world', '1 2 3 4', 'a b c d']*1000, 
             self.tokenizer, batch_size=batch_size,
         )
         
@@ -123,7 +123,7 @@ class DummyRequestProcessor:
                         if choice['logprobs']['top_logprobs'] is not None:
                             choice['logprobs']['top_logprobs'][0] = None    
                 item['choices'].append(choice)
-            print(json.dumps(item, indent=4))
+                print([choice['text']])
         
     def write_scenario_state(self):
         pass
