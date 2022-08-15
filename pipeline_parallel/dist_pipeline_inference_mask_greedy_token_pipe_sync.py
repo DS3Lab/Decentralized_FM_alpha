@@ -42,23 +42,23 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             ret_seq_length = self.generate_seq_length if not self.echo_prompt else self.input_seq_length + self.generate_seq_length
             
             self.ret_tokens = torch.zeros(
-                (self.seq_num, ret_seq_length),
+                (self.seq_num * self.num_completions, ret_seq_length),
                 requires_grad=False, device=self.device, dtype=torch.int64
             )
             
             self.ret_token_logprobs = torch.zeros(
-                (self.seq_num, ret_seq_length),
+                (self.seq_num * self.num_completions, ret_seq_length),
                 requires_grad=False, device=self.device, dtype=self.dtype
             )
             
             if self.top_k_per_token > 0:
                 self.ret_topk_tokens = torch.zeros(
-                    (self.seq_num, ret_seq_length, self.top_k_per_token),
+                    (self.seq_num * self.num_completions, ret_seq_length, self.top_k_per_token),
                     requires_grad=False, device=self.device, dtype=torch.int64
                 )
                 
                 self.ret_topk_token_logprobs = torch.zeros(
-                    (self.seq_num, ret_seq_length, self.top_k_per_token),
+                    (self.seq_num * self.num_completions, ret_seq_length, self.top_k_per_token),
                     requires_grad=False, device=self.device, dtype=self.dtype
                 )
                 
@@ -138,9 +138,15 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             self.i_current_token = 0
         else:
             self.i_current_token = self.input_seq_length
+        
         self.cached_attention.clear()
         for _ in range(self.num_layers):
             self.cached_attention.append([None for _ in range(self.seq_num)])
+            
+        # useful for num_completions > 1
+        self.token_cached_attention = []
+        for _ in range(self.num_layers):
+            self.token_cached_attention.append([None for _ in range(self.seq_num)])
             
         if self.stop is not None:
             self.stop_flag[:] = 0
@@ -193,6 +199,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             
     def _generate_echo_token_logprobs(self, index, indices):
         assert self.pp_rank == self.pipeline_group_size - 1
+        assert self.num_completions == 1
         
         if self.generate_seq_length == 0:
             z = self.layers['lm'](self.output_seq_emb[index])
@@ -226,23 +233,65 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         assert self.pp_rank == self.pipeline_group_size - 1
         buff_i = index//self.token_micro_batch_size
         pos = index%self.token_micro_batch_size
-        self.output_token_emb[buff_i][pos] = self.output_seq_emb[index][:, -1:]
+        for k in range(self.num_completions):
+            self.output_token_emb[buff_i][pos + k * self.token_micro_batch_size] = self.output_seq_emb[index][:, -1:]
+        
+    def _get_cached_attention(self, layer_index, token_batch_index):
+        
+        if self.num_completions == 1:
+            return self.cached_attention[layer_index][token_batch_index]
+        
+        # else:
+        #     cache = self.cached_attention[layer_index][token_batch_index]
+        #     if cache[0].size(0) == self.seq_num:
+        #         cache = [cache[0].repeat(self.num_completions, 1, 1, 1), 
+        #                  cache[1].repeat(self.num_completions, 1, 1, 1)]
+        #     return cache
+                
+            
+        else:
+            prompt_cache = self.cached_attention[layer_index][token_batch_index] # 2* (token_bs, ., seq_len, .)
+            token_cache = self.token_cached_attention[layer_index][token_batch_index] # 2* (token_bs * num_compl, ., seq_len, .)
+            prompt_cache = [prompt_cache[0].repeat(self.num_completions, 1, 1, 1), 
+                            prompt_cache[1].repeat(self.num_completions, 1, 1, 1)] # 2*(token_bs * num_compl, ., seq_len, .)
+            if token_cache is not None:
+                token_cache = [torch.cat([prompt_cache[0], token_cache[0]], dim=2),
+                               torch.cat([prompt_cache[1], token_cache[1]], dim=2)]
+            else:
+                token_cache = prompt_cache
+                
+            return token_cache
+        
+    def _set_cached_attention(self, cache, layer_index, token_batch_index):
+        # self.cached_attention[layer_index][token_batch_index] = cache
+        
+        if self.num_completions == 1:
+            self.cached_attention[layer_index][token_batch_index] = cache
+        else:
+            self.token_cached_attention[layer_index][token_batch_index] = [cache[0][:, :, self.input_seq_length:], cache[1][:, :, self.input_seq_length:]]
 
     def _forward_compute_generate_token(self, index, mask=None):
         
+        if mask is not None and self.num_completions > 1:
+            # repeat n times
+            mask = mask.repeat(self.num_completions, 1)
+        
         # print("Compute generate seq micro-batch <", index, ">.")
         if self.pp_rank == 0:
+            cache = self._get_cached_attention(0, index)
             current_emb = self.layers['emb'](self.recv_new_token[index], self.cached_attention[0][index], mask=mask)
         else:
             current_emb = self.input_token_emb[index]
             
         for layer_index in range(self.num_layers):
+            cache = self._get_cached_attention(layer_index, index)
             if layer_index != self.num_layers - 1:
-                current_emb, self.cached_attention[layer_index][index] = \
-                    self.layers['block' + str(layer_index)](current_emb, self.cached_attention[layer_index][index], mask=mask)
+                current_emb, cache = \
+                    self.layers['block' + str(layer_index)](current_emb, cache, mask=mask)
             else:
-                self.output_token_emb[index], self.cached_attention[layer_index][index] = \
-                    self.layers['block' + str(layer_index)](current_emb, self.cached_attention[layer_index][index], mask=mask)
+                self.output_token_emb[index], cache = \
+                    self.layers['block' + str(layer_index)](current_emb, cache, mask=mask)
+            self._set_cached_attention(cache, layer_index, index)
                 
         if self.pp_rank == self.pipeline_group_size - 1:
             self._generate_new_token(index)
@@ -250,25 +299,26 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
     def _generate_new_token(self, index):
         assert self.pp_rank == self.pipeline_group_size - 1
         z = self.layers['lm'](self.output_token_emb[index])
+        z = z.float()
         z = torch.nn.functional.log_softmax(z, -1)
         logprobs, indices = z.topk(k=1, dim=-1)
         self.send_new_tokens[index] = indices
         self.ret_tokens[
-            index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
+            index*self.token_micro_batch_size*self.num_completions:(index+1)*self.token_micro_batch_size*self.num_completions,
             self.i_current_token
         ] = indices.squeeze(-1).squeeze(-1)
         self.ret_token_logprobs[
-            index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
+            index*self.token_micro_batch_size*self.num_completions:(index+1)*self.token_micro_batch_size*self.num_completions,
             self.i_current_token
         ] =logprobs.squeeze(-1).squeeze(-1)
         if self.top_k_per_token > 0:
             logprobs, indices = z.topk(k=self.top_k_per_token, dim=-1)
             self.ret_topk_tokens[
-                index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
+                index*self.token_micro_batch_size*self.num_completions:(index+1)*self.token_micro_batch_size*self.num_completions,
                 self.i_current_token
             ] = indices.squeeze(1)
             self.ret_topk_token_logprobs[
-                index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size,
+                index*self.token_micro_batch_size*self.num_completions:(index+1)*self.token_micro_batch_size*self.num_completions,
                 self.i_current_token
             ] = logprobs.squeeze(1)
             
@@ -279,6 +329,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         if attention_mask is not None:
             # increase one for the new token
             attention_mask = torch.nn.functional.pad(attention_mask, pad=(0, 1), mode='constant', value=1)
+            
         return attention_mask
 
     def forward_seq_pipeline_stage(self, input_data=None, attention_mask=None):
@@ -340,6 +391,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             # handle seq_length == 0
             return
         self._merge_cached_seqs_and_attentions()
+            
         for step in range(self.generate_seq_length):
             
             # check early stop
@@ -451,15 +503,23 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
 
         self.comm.barrier()
         if self.pp_rank == self.pipeline_group_size - 1 and output_ is not None:
-            print(self.ret_token_logprobs.cpu().shape)
-            item = {
-                'token_ids': self.ret_tokens[:, :self.i_current_token].cpu(),
-                'token_logprobs': self.ret_token_logprobs[:, :self.i_current_token].cpu(),
-            }
+            
+            # token_micro_batch_num * num_completions
+            ret_tokens = self.ret_tokens[:, :self.i_current_token].cpu().split(self.token_micro_batch_size)
+            ret_token_logprobs = self.ret_token_logprobs[:, :self.i_current_token].cpu().split(self.token_micro_batch_size)
             if self.top_k_per_token > 0:
-                item['topk_ids'] = self.ret_topk_tokens[:, :self.i_current_token].cpu()
-                item['topk_logprobs'] = self.ret_topk_token_logprobs[:, :self.i_current_token].cpu()
-            output_.append(item)
+                ret_topk_tokens = self.ret_topk_tokens[:, :self.i_current_token].cpu().split(self.token_micro_batch_size)
+                ret_topk_token_logprobs = self.ret_topk_token_logprobs[:, :self.i_current_token].cpu().split(self.token_micro_batch_size)
+            
+            for i in range(self.num_completions):
+                item = {
+                    'token_ids': torch.cat(ret_tokens[i::self.num_completions], 0),
+                    'token_logprobs': torch.cat(ret_token_logprobs[i::self.num_completions], 0),
+                }
+                if self.top_k_per_token > 0:
+                    item['topk_ids'] = torch.cat(ret_topk_tokens[i::self.num_completions], 0)
+                    item['topk_logprobs'] = torch.cat(ret_topk_token_logprobs[i::self.num_completions], 0)
+                output_.append(item)
         end_time = time.time()
         iter_time = end_time - start_time
         print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
