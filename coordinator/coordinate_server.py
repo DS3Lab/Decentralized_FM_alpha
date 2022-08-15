@@ -147,7 +147,10 @@ class CoordinatorInferenceServer:
         self.prime_worker_ips = []
         self.active_inference_pipeline = 0
         self.bsub_script_path = args.bsub_script_path
+        self.is_hybrid_task = False
         self.inference_pipeline_demand_worker_num = 0
+        self.inference_pipeline_demand_GPU_worker_num = 0
+        self.inference_pipeline_demand_CPU_worker_num = 0
         self.submit_locked = False
 
     def _allocate_index(self):
@@ -182,19 +185,40 @@ class CoordinatorInferenceServer:
                 self.inference_pipeline_demand_worker_num = 6
             elif job_name == 'lsf_ul2':
                 self.inference_pipeline_demand_worker_num = 16
+            elif job_name == 'lsf_hybrid_opt175b':
+                self.is_hybrid_task = True
+                self.inference_pipeline_demand_worker_num = 46
+                self.inference_pipeline_demand_GPU_worker_num = 16
+                self.inference_pipeline_demand_CPU_worker_num = 30
             else:
                 return f'This job is not recognized on coordinate - {job_name}'
-            for i in range(self.inference_pipeline_demand_worker_num):
-                os.system(f"rm {self.bsub_script_path}/submit_cache/*.bsub")
-                os.system(f"cp {self.bsub_script_path}/{job_name}.bsub "
-                          f"{self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
-                os.system(f"echo \'--lsf-job-no {self._allocate_index()} --infer-data {infer_data}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
-                os.system(f"cd {self.bsub_script_path}/submit_cache && "
-                          f"bsub < {job_name}_{i+1}.bsub")
-            os.system("bjobs")
-            self.working_pipelines.append(OrderedDict())
-            self.active_inference_pipeline += 1
-            return f'Succeed to submit job - {job_name}'
+
+            if self.is_hybrid_task:
+                for i in range(self.inference_pipeline_demand_worker_num):
+                    os.system(f"rm {self.bsub_script_path}/submit_cache/*.bsub")
+                    hardware = "gpu" if i < self.inference_pipeline_demand_GPU_worker_num else "cpu"
+                    os.system(f"cp {self.bsub_script_path}/{job_name}_{hardware}.bsub "
+                              f"{self.bsub_script_path}/submit_cache/{job_name}_{hardware}_{i+1}.bsub")
+                    os.system(f"echo \'--lsf-job-no {self._allocate_index()} --infer-data {infer_data}\' "
+                              f">> {self.bsub_script_path}/submit_cache/{job_name}_{hardware}_{i+1}.bsub")
+                    os.system(f"cd {self.bsub_script_path}/submit_cache && "
+                              f"bsub < {job_name}_{hardware}_{i+1}.bsub")
+                os.system("bjobs")
+                self.working_pipelines.append(OrderedDict())
+                self.active_inference_pipeline += 1
+                return f'Succeed to submit job - {job_name}'
+            else:
+                for i in range(self.inference_pipeline_demand_worker_num):
+                    os.system(f"rm {self.bsub_script_path}/submit_cache/*.bsub")
+                    os.system(f"cp {self.bsub_script_path}/{job_name}.bsub "
+                              f"{self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
+                    os.system(f"echo \'--lsf-job-no {self._allocate_index()} --infer-data {infer_data}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
+                    os.system(f"cd {self.bsub_script_path}/submit_cache && "
+                              f"bsub < {job_name}_{i+1}.bsub")
+                os.system("bjobs")
+                self.working_pipelines.append(OrderedDict())
+                self.active_inference_pipeline += 1
+                return f'Succeed to submit job - {job_name}'
         else:
             return f'Fail to submit job - {job_name}, coordinator server is handling other submission'
 
