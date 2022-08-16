@@ -365,8 +365,8 @@ class GpipeAsync:
                     loss = loss_func(input=cached_output_micro_batches[i], target=target_as_micro_batches[i])
                     tr_loss.append(loss.item())
                     if self.use_fp16:
-                        # self.optimizer.scale(loss).backward()
-                        loss.backward()
+                        self.optimizer.scale(loss).backward()
+                        # loss.backward()
                     else:
                         loss.backward()
                     self.torch_comp_stream.record_event(self.backward_comp_ready_events[i])

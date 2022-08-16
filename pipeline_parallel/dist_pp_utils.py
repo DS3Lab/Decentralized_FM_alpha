@@ -24,8 +24,18 @@ def get_pp_module(args, vocab_size, num_classes, device, use_dp, rank=None):
         
         
 def get_pp_finetune_module(args, config, device, use_dp, rank=None):
+    
+    if args.model_type == 'gpt2':
+        from modules.dist_hf_gpt2_pp_train_module import GPTStageFirst, GPTStageLast, GPTStageMiddle
+    elif args.model_type == 'gptneo':
+        from modules.dist_hf_gptneo_pp_train_module import GPTStageFirst, GPTStageLast, GPTStageMiddle
+    else:
+        print(f"Not recognize this model type {args.model_type}")
+        assert False
+    
     if args.pp_mode == 'gpipe':
-        return GpipeFinetuneAsync(args, config, device, use_dp)
+        return GpipeFinetuneAsync(args, config, device, use_dp,
+                                  _StageFirst=GPTStageFirst, _StageLast=GPTStageLast, _StageMiddle=GPTStageMiddle)
     else:
         print("Not recognize this pipeline parallel mode.")
         assert False
