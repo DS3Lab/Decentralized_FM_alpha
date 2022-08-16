@@ -202,7 +202,7 @@ class RequestProcessor:
                     budget = 1300*8
 
                 args.token_micro_batch_size = 2 # TODO: hard code
-                args.batch_size = max(budget // (args.input_seq_length + args.generate_seq_length), 2) // args.token_micro_batch_size * args.token_micro_batch_size
+                args.batch_size = max(budget // ((args.input_seq_length + args.generate_seq_length)*self.num_completions), 2) // args.token_micro_batch_size * args.token_micro_batch_size
                 #args.token_micro_batch_size = args.batch_size
 
             else:

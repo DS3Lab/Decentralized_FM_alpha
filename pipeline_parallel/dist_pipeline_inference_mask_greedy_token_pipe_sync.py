@@ -21,6 +21,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         self.num_completions = args.num_completions
         self.top_k_per_token = args.top_k_per_token
         self.micro_batch_size = 1
+        self.max_layers = args.max_layers
         
         ##########
         self.stop = args.stop
@@ -123,6 +124,8 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         for layer_index in range(self.num_layers):
             # global layer indexing could be an argument
             global_layer_index = self.num_layers * self.pp_rank + layer_index
+            # if self.max_layers is not None and global_layer_index >= self.max_layers:
+            #     break
             print(f'loading layer {global_layer_index}')
             self.layers['block'+str(layer_index)] = GPTBlock.from_pretrained(
                 self.model_name, layer_index=global_layer_index
@@ -391,6 +394,10 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             # handle seq_length == 0
             return
         self._merge_cached_seqs_and_attentions()
+        
+        if self.generate_seq_length == 1:
+            # skip token pipelin when generate_seq_length == 1
+            return
             
         for step in range(self.generate_seq_length):
             
@@ -430,6 +437,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             self.comm.broadcast(self.stop_flag, src=self.pipeline_group_size - 1)
 
     def forward_new_token_pipeline_step(self, step: int, attention_mask=None):
+        
         attention_masks = torch.split(
             attention_mask, self.token_micro_batch_size, dim=0
         )

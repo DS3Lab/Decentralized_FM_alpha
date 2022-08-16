@@ -164,6 +164,8 @@ def add_inference_arguments(parser):
                         help='-')
     parser.add_argument('--num-layers', type=int, default=4, metavar='N',
                         help='-')
+    parser.add_argument('--max-layers', type=int, default=None, metavar='N',
+                        help='-')
     parser.add_argument('--pp-mode', type=str, default='pipe_greedy', metavar='S',
                         help='use which pipeline parallel mode: gpipe or 1f1b.')
     parser.add_argument('--num-iters', type=int, default=5, metavar='N',
