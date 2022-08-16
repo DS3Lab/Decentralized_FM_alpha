@@ -52,10 +52,13 @@ class EncBlock(_T5Block):
             config = EncDecConfig.from_pretrained(model_path)
         module = cls(config).eval()
         try:
-            module.load_state_dict(torch.load(os.path.join(
-                model_path, f'pytorch_enc_{layer_index}.pt',
-            )))
-        except:
+            module.load_state_dict(
+                {k.replace('encoder.block.0.', ''): v for k, v in torch.load(os.path.join(
+                    model_path, f'pytorch_enc_{layer_index}.pt',
+                )).items()}
+            )
+        except Exception as e:
+            raise e
             print('Cannot load from <model_name>. The model is randomly initialized.')
         return module
 
@@ -111,10 +114,13 @@ class DecBlock(_T5Block):
             config = EncDecConfig.from_pretrained(model_path)
         module = cls(config).eval()
         try:
-            module.load_state_dict(torch.load(os.path.join(
-                model_path, f'pytorch_dec_{layer_index}.pt',
-            )))
-        except:
+            module.load_state_dict(
+                {k.replace('decoder.block.0.', ''): v for k, v in torch.load(os.path.join(
+                    model_path, f'pytorch_dec_{layer_index}.pt',
+                )).items()}
+            )
+        except Exception as e:
+            raise e
             print('Cannot load from <model_name>. The model is randomly initialized.')
         return module
 
