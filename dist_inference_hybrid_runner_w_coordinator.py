@@ -12,11 +12,8 @@ from transformers import AutoTokenizer
 def main():
     parser = argparse.ArgumentParser(description='Inference Runner')
     add_device_arguments(parser)
-    add_torch_distributed_arguments(parser)
-
+    add_torch_distributed_hybrid_inference_w_coordinator_arguments(parser)
     add_hybrid_inference_arguments(parser)
-    add_torch_distributed_inference_w_coordinator_arguments(parser)
-
     add_inference_details_arguments(parser)
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')

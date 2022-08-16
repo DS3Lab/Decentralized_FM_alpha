@@ -208,6 +208,21 @@ def add_torch_distributed_inference_w_coordinator_arguments(parser):
                         help='world-size (default: 4)')
 
 
+def add_torch_distributed_hybrid_inference_w_coordinator_arguments(parser):
+    parser.add_argument('--dist-backend', type=str, default='cupy_nccl', metavar='S',
+                        help='backend type for distributed PyTorch (default: cupy_nccl)')
+    parser.add_argument('--coordinator-server-port', type=int, default=9002, metavar='N',
+                        help='The port of coordinator-server.')
+    parser.add_argument('--coordinator-server-ip', type=str, default='localhost', metavar='S',
+                        help='The IP of coordinator-server.')
+    parser.add_argument('--lsf-job-no', type=str, default='100', metavar='S',
+                        help='Job-<ID> assigned by LSF.')
+    parser.add_argument('--world-size', type=int, default=4, metavar='D',
+                        help='world-size (default: 4)')
+    parser.add_argument('--pipeline-group-size', type=int, default=4, metavar='D',
+                        help='world-size (default: 4)')
+
+
 def add_inference_details_arguments(parser):
     parser.add_argument('--model-name', type=str, default='./pretrained_models/gpt2', metavar='S',
                         help='trained model path')
