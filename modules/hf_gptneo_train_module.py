@@ -28,7 +28,7 @@ class GPTEmbeddings(nn.Module):
         self.embed_dim = config.hidden_size
         self.wte = nn.Embedding(config.vocab_size, self.embed_dim)
         self.wpe = nn.Embedding(config.max_position_embeddings, self.embed_dim)
-        self.drop = nn.Dropout(config.embd_pdrop)
+        self.drop = nn.Dropout(config.embed_dropout)
         
     def forward(self, input_ids):
         
@@ -96,8 +96,8 @@ class GPTBlock(_GPTNeoBlock):
 class GPTLMHead(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.ln_f = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
-        self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
+        self.ln_f = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_epsilon)
+        self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
         
     def forward(self, x, input_ids=None):
         x = self.ln_f(x)
@@ -109,8 +109,8 @@ class GPTClassificationHead(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.config = config
-        self.ln_f = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
-        self.score = nn.Linear(config.n_embd, config.num_labels, bias=False)
+        self.ln_f = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_epsilon)
+        self.score = nn.Linear(config.hidden_size, config.num_labels, bias=False)
         
     def forward(self, hidden_states, input_ids=None):
         

@@ -32,12 +32,12 @@ def distributed_test_lm_iter(args, pipeline, device, test_data_loader):
     if get_pipeline_parallel_rank() == 0:
         for i, data in enumerate(test_data_loader):
             input_ids = data['text'].to(device)
-            current_iter_time = pipeline.infer_iter(input_ids, None, None)
+            current_iter_time = pipeline.infer_iter(input_ids, None)
     elif get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
         metrics = get_metric(args)
         for i, data in enumerate(test_data_loader):
             labels = data['text'].to(device)
-            pipeline.infer_iter(None, labels, None, 
+            pipeline.infer_iter(None, labels, 
                                 metrics=metrics, pred_func=_lm_pred_func)
         
         wandb.log(
@@ -46,5 +46,5 @@ def distributed_test_lm_iter(args, pipeline, device, test_data_loader):
         )
     else:
         for i, data in enumerate(test_data_loader):
-            pipeline.infer_iter(None, None, None)
+            pipeline.infer_iter(None, None)
             
