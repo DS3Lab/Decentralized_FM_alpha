@@ -23,7 +23,7 @@ def server_message_parser(msg: bytes):
             arg_dict['iter_time'] = float(msg_arg[3])
         elif arg_dict['state'] == 'submit':
             arg_dict['job_name'] = msg_arg[2]
-            if len(msg_arg) > 2:
+            if len(msg_arg) > 3:
                 arg_dict['infer_data'] = msg_arg[3]
         elif arg_dict['state'] == 'latency_job':
             arg_dict['job_details'] = msg_arg[2]
