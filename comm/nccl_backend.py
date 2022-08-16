@@ -7,17 +7,31 @@ from typing import List
 
 def _type_torch_to_cupy(torch_type: torch.dtype):
     # print(torch_type)
-    mappings = {
-        torch.uint8: cupy.cuda.nccl.NCCL_UINT8,
-        torch.int32: cupy.cuda.nccl.NCCL_INT32,
-        torch.int64: cupy.cuda.nccl.NCCL_INT64,
-        torch.int: cupy.cuda.nccl.NCCL_INT,
-        torch.float16: cupy.cuda.nccl.NCCL_FLOAT16,
-        torch.bfloat16: cupy.cuda.nccl.NCCL_FLOAT16,
-        torch.float32: cupy.cuda.nccl.NCCL_FLOAT32,
-        torch.float64: cupy.cuda.nccl.NCCL_FLOAT64,
-        torch.float: cupy.cuda.nccl.NCCL_FLOAT
-    }
+    if cupy.__version__ == '11.0.0':
+        mappings = {
+            torch.uint8: cupy.cuda.nccl.NCCL_UINT8,
+            torch.int32: cupy.cuda.nccl.NCCL_INT32,
+            torch.int64: cupy.cuda.nccl.NCCL_INT64,
+            torch.int: cupy.cuda.nccl.NCCL_INT,
+            torch.float16: cupy.cuda.nccl.NCCL_FLOAT16,
+            torch.bfloat16: cupy.cuda.nccl.NCCL_BFLOAT16,
+            torch.float32: cupy.cuda.nccl.NCCL_FLOAT32,
+            torch.float64: cupy.cuda.nccl.NCCL_FLOAT64,
+            torch.float: cupy.cuda.nccl.NCCL_FLOAT
+        }
+    else:
+        mappings = {
+            torch.uint8: cupy.cuda.nccl.NCCL_UINT8,
+            torch.int32: cupy.cuda.nccl.NCCL_INT32,
+            torch.int64: cupy.cuda.nccl.NCCL_INT64,
+            torch.int: cupy.cuda.nccl.NCCL_INT,
+            torch.float16: cupy.cuda.nccl.NCCL_FLOAT16,
+            # This is problematic, early version of NCCL does not support bfloat16
+            torch.bfloat16: cupy.cuda.nccl.NCCL_FLOAT16,
+            torch.float32: cupy.cuda.nccl.NCCL_FLOAT32,
+            torch.float64: cupy.cuda.nccl.NCCL_FLOAT64,
+            torch.float: cupy.cuda.nccl.NCCL_FLOAT
+        }
     return mappings[torch_type]
 
 
