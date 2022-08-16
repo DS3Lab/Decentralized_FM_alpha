@@ -113,7 +113,7 @@ def add_parallel_schema_arguments(parser):
 
 
 def get_model_arguments_str(args):
-    return '_s' + str(args.seq_length) + '_m' + str(args.emb_dim) + '_l' + str(args.num_layers)
+    return '_s' + str(args.seq_length) + '_m' + str(args.embedding_dim) + '_l' + str(args.num_layers)
 
 
 def get_dist_arguments_str(args, add_rank=True, rank=None):
