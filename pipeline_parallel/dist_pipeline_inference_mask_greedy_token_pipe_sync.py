@@ -22,6 +22,11 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         self.top_k_per_token = args.top_k_per_token
         self.micro_batch_size = 1
         
+        self.max_layers = args.max_layers
+        self._layer_begin = args.num_layers * get_pipeline_parallel_rank()
+        self._layer_end = args.num_layers * (get_pipeline_parallel_rank()+1)
+        
+        
         ##########
         self.stop = args.stop
         # self.stop = None
@@ -123,6 +128,10 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         for layer_index in range(self.num_layers):
             # global layer indexing could be an argument
             global_layer_index = self.num_layers * self.pp_rank + layer_index
+            if self.max_layers is not None and global_layer_index >= self.max_layers:
+                # TODO: this is a hack
+                self.num_layers = layer_index
+                break
             print(f'loading layer {global_layer_index}')
             self.layers['block'+str(layer_index)] = GPTBlock.from_pretrained(
                 self.model_name, layer_index=global_layer_index
@@ -179,17 +188,11 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         print("Compute prompt seq<", index, ">.")
         if self.pp_rank == 0:
             self.input_seq_emb[index] = self.layers['emb'](seq, mask=mask)
-        current_emb = None
+        current_emb = self.input_seq_emb[index]
         for layer_index in range(self.num_layers):
-            if layer_index == 0:
-                current_emb, self.cached_attention[layer_index][index] = \
-                    self.layers['block' + str(layer_index)](self.input_seq_emb[index], mask=mask)
-            elif layer_index == self.num_layers - 1:
-                self.output_seq_emb[index], self.cached_attention[layer_index][index] = \
-                    self.layers['block'+str(layer_index)](current_emb, mask=mask)
-            else:
-                current_emb, self.cached_attention[layer_index][index] = \
-                    self.layers['block' + str(layer_index)](current_emb, mask=mask)
+            current_emb, self.cached_attention[layer_index][index] = \
+                self.layers['block' + str(layer_index)](current_emb, mask=mask)
+        self.output_seq_emb[index] = current_emb
         
         if self.pp_rank == self.pipeline_group_size - 1:
             self._copy_initial_token_emb(index)
@@ -285,13 +288,10 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             
         for layer_index in range(self.num_layers):
             cache = self._get_cached_attention(layer_index, index)
-            if layer_index != self.num_layers - 1:
-                current_emb, cache = \
-                    self.layers['block' + str(layer_index)](current_emb, cache, mask=mask)
-            else:
-                self.output_token_emb[index], cache = \
-                    self.layers['block' + str(layer_index)](current_emb, cache, mask=mask)
+            current_emb, cache = \
+                self.layers['block' + str(layer_index)](current_emb, cache, mask=mask)
             self._set_cached_attention(cache, layer_index, index)
+        self.output_token_emb[index] = current_emb
                 
         if self.pp_rank == self.pipeline_group_size - 1:
             self._generate_new_token(index)
@@ -391,6 +391,10 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             # handle seq_length == 0
             return
         self._merge_cached_seqs_and_attentions()
+        
+        if self.generate_seq_length == 1:
+            # skip token pipelin when generate_seq_length == 1
+            return
             
         for step in range(self.generate_seq_length):
             
@@ -430,6 +434,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             self.comm.broadcast(self.stop_flag, src=self.pipeline_group_size - 1)
 
     def forward_new_token_pipeline_step(self, step: int, attention_mask=None):
+        
         attention_masks = torch.split(
             attention_mask, self.token_micro_batch_size, dim=0
         )
