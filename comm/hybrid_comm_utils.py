@@ -39,10 +39,12 @@ def get_hybrid_dispatch_world_size() -> int:
     return dist.get_world_size()
 
 
-def _init_hybrid_communicators(args):
+def _init_hybrid_communicators(args, rank=None):
     # world_size, pipeline_group_size, rank, cuda_id = 0
     assert args.world_size > args.pipeline_group_size
-    dist.init_process_group(backend='gloo', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
+    if rank is None:
+        dist.init_process_group(backend='gloo', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
+        rank = args.rank
 
     global _GPU_PIPELINE_COMM
     global _GPU_PIPELINE_RANK
@@ -50,8 +52,8 @@ def _init_hybrid_communicators(args):
     global _CPU_RANKS
 
     _GPU_PIPELINE_WORLD_SIZE = args.pipeline_group_size
-    if args.rank < args.pipeline_group_size:
-        _GPU_PIPELINE_RANK = args.rank
+    if rank < args.pipeline_group_size:
+        _GPU_PIPELINE_RANK = rank
         _GPU_PIPELINE_COMM = NCCLCommunicator(_GPU_PIPELINE_RANK, args.cuda_id, args.pipeline_group_size,
                                               "pipeline_GPU_group")
     _CPU_RANKS = [i for i in range(args.pipeline_group_size, args.world_size)]
@@ -59,3 +61,8 @@ def _init_hybrid_communicators(args):
 
 def init_hybrid_communicators(args):
     _init_hybrid_communicators(args)
+
+
+def init_hybrid_inference_communicators_with_coordinator(args, prime_ip, rank, port=9999):
+    init_with_coordinator(args, prime_ip, rank, port=port)
+    _init_hybrid_communicators(args, rank=rank)

@@ -229,6 +229,8 @@ def init_with_coordinator(args, prime_ip, rank, port=9999):
                                 world_size=args.pipeline_group_size, rank=rank)
 
 
+
+
 """
 def init_comm(args):
     if args.dist_backend == 'cupy_nccl':
