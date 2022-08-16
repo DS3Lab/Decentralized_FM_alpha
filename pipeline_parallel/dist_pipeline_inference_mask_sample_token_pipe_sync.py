@@ -26,7 +26,10 @@ class DistSampleInferenceMaskTokenPipeSync(DistGreedyInferenceMaskTokenPipeSync)
     def _generate_new_token(self, index):
         assert self.pp_rank == self.pipeline_group_size - 1
         z = self.layers['lm'](self.output_token_emb[index])
-        z = z.float() # test if fp32 whether cause inf
+        if torch.isnan(z).any():
+            print('containing nan, setting them to zero!')
+            print(z)
+        z = z.float().nan_to_num() # test if fp32 whether cause inf
         z = torch.nn.functional.log_softmax(z, -1)
         
         if self.top_k_per_token > 0:
@@ -43,7 +46,8 @@ class DistSampleInferenceMaskTokenPipeSync(DistGreedyInferenceMaskTokenPipeSync)
         # [:, -1] because multinomial only accept 1/2d tensors
         z_to_sample = z[:, -1] # bs, vocab
         z_to_sample = self.logits_warper(None, z_to_sample)
-        indices = torch.multinomial(z_to_sample.softmax(-1), num_samples=1) # bs, 1
+        p_to_sample = z_to_sample.softmax(-1).clamp(0, 1).nan_to_num() 
+        indices = torch.multinomial(p_to_sample, num_samples=1) # bs, 1
         logprobs = torch.gather(z[:, -1], -1, indices) # bs, 1
         self.send_new_tokens[index] = indices
         

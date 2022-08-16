@@ -201,8 +201,9 @@ class RequestProcessor:
                 else:
                     budget = 1300*8
 
-                args.batch_size = max(budget // (args.input_seq_length + args.generate_seq_length), 1)
-                args.token_micro_batch_size = args.batch_size
+                args.token_micro_batch_size = 2 # TODO: hard code
+                args.batch_size = max(budget // (args.input_seq_length + args.generate_seq_length), 2) // args.token_micro_batch_size * args.token_micro_batch_size
+                #args.token_micro_batch_size = args.batch_size
 
             else:
                 if self.tokenizer.model_max_length > 10000:
