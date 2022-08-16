@@ -6,6 +6,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from transformers import AutoTokenizer
 
+from modules.yalm_tokenizer import YalmTokenizer
+
 
 class JsonDataset(torch.utils.data.Dataset):
     def __init__(self, data, tokenizer, batch_size=None):
@@ -317,6 +319,13 @@ class RequestProcessor:
             
 def get_tokenizer(args):
     
+    if args.model_type in ['yalm']:
+        tokenizer = YalmTokenizer.from_pretrained(args.model_name)
+        tokenizer.padding_side = 'left'
+        tokenizer.truncation_side = 'left'
+        return tokenizer
+    
+    # default: huggingface's implementation
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token

@@ -104,6 +104,10 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             from modules.hf_bloom_module import GPTConfig
             config = GPTConfig.from_pretrained(self.model_name)
             return config.n_embed
+        elif self.model_type == 'yalm':
+            from modules.yalm_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.hidden_size
         else:
             raise Exception(f'unknown model type {self.model_type}')
 
@@ -118,6 +122,8 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             from modules.hf_opt_module import GPTEmbeddings, GPTBlock, GPTLMHead
         elif self.model_type == 'bloom':
             from modules.hf_bloom_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'yalm':
+            from modules.yalm_module import GPTEmbeddings, GPTBlock, GPTLMHead
         else:
             raise Exception(f'unknown model type {self.model_type}')
         
