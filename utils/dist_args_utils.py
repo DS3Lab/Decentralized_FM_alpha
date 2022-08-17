@@ -283,6 +283,7 @@ def get_hybrid_inference_arguments_str(args, add_rank=True, rank=None):
     arg_str += '_b' + str(args.prompt_micro_batch_size) + '_' + str(args.token_micro_batch_size)
     arg_str += '_s' + str(args.input_seq_length) + '_' + str(args.generate_seq_length)
     arg_str += '_gpu' + str(args.pipeline_group_size) + '_cpu' + str(args.world_size-args.pipeline_group_size)
+    arg_str += '_pb' + str(args.producer_buffer_size) + '_cb' + str(args.consumer_buffer_size)
     if add_rank:
         if rank is not None:
             arg_str += '_' + str(rank)
