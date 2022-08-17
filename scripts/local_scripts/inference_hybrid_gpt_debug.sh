@@ -13,9 +13,9 @@ timestamp=$(date +%Y_%m_%d_%H_%M)
 
 if [ $node_type == "GPU" ]
 then
-  DIST_CONF="--world-size $world_size --pipeline-group-size $pipeline_size --rank $rank --node-type $node_type --use-cuda True"
+  DIST_CONF="--pp-mode pipe_hybrid_greedy_async --world-size $world_size --pipeline-group-size $pipeline_size --rank $rank --node-type $node_type --use-cuda True"
 else
-  DIST_CONF="--world-size $world_size --pipeline-group-size $pipeline_size --rank $rank --node-type $node_type --use-cuda False"
+  DIST_CONF="--pp-mode pipe_hybrid_greedy_async --world-size $world_size --pipeline-group-size $pipeline_size --rank $rank --node-type $node_type --use-cuda False"
 fi
 
 MODEL_CONF="--model-type gptj --model-name ./pretrained_models/gpt-j-6B"
