@@ -103,7 +103,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         elif self.model_type == 'bloom':
             from modules.hf_bloom_module import GPTConfig
             config = GPTConfig.from_pretrained(self.model_name)
-            return config.n_embed
+            return config.hidden_size
         elif self.model_type == 'yalm':
             from modules.yalm_module import GPTConfig
             config = GPTConfig.from_pretrained(self.model_name)
