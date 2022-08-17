@@ -71,10 +71,12 @@ class DistHybridGreedyAsyncInference:
             self._print_buffers_gpu_node()
             self.dispatch_ranks = get_cpu_ranks()
             self.current_dispatch_index = 0
-            assert args.producer_buffer_size == self.cpu_pool_size * args.consumer_buffer_size, \
+            assert self.cpu_pool_size * args.consumer_buffer_size % args.producer_buffer_size == 0, \
                 f"Producer and consumer buffer size are set incorrectly. " \
                 f"CPU pool: {self.cpu_pool_size}, " \
                 f"producer buffer size: {args.producer_buffer_size}, consumer buffer size: {args.consumer_buffer_size}"
+            self.buffer_loop = self.cpu_pool_size * args.consumer_buffer_size // args.producer_buffer_size
+            print("=======GPU buffer loop: {}.=======".format(self.buffer_loop))
 
         elif self.node_type == 'CPU':
             self.generate_seq_length = args.generate_seq_length
@@ -409,46 +411,47 @@ class DistHybridGreedyAsyncInference:
         else:
             input_seqs = None
 
-        for i in range(self.producer_buffer_size):
-            self._gpu_send_key_value_wait(buf_index=i)
-            if self.pp_rank == 0:  # Only send output to next node, do not receive
-                # Compute
-                self.profile_gpu_mark_forward_seq_comp_start()
-                self._gpu_forward_compute_prompt_seq(buf_index=i, seq=input_seqs[i])
-                self.profile_gpu_mark_forward_seq_comp_end()
-                # Send
-                self.profile_gpu_mark_forward_seq_send_start()
-                self.gpu_comm.send(self.output_seq_emb, dst=self.post_node_rank)
-                self.profile_gpu_mark_forward_seq_send_end()
-            elif self.pp_rank == self.pipeline_group_size - 1:  # Only receive input from last node, do not send
-                # Receive
-                self.profile_gpu_mark_forward_seq_recv_start()
-                self.gpu_comm.recv(self.input_seq_emb, src=self.pre_node_rank)
-                self.profile_gpu_mark_forward_seq_recv_end()
-                # Compute
-                self.profile_gpu_mark_forward_seq_comp_start()
-                self._gpu_forward_compute_prompt_seq(buf_index=i, seq=None)
-                self.profile_gpu_mark_forward_seq_comp_end()
-            else:  # receive, compute, and send
-                # Receive
-                self.profile_gpu_mark_forward_seq_recv_start()
-                self.gpu_comm.recv(self.input_seq_emb, src=self.pre_node_rank)
-                self.profile_gpu_mark_forward_seq_recv_end()
-                # Compute
-                self.profile_gpu_mark_forward_seq_comp_start()
-                self._gpu_forward_compute_prompt_seq(buf_index=i, seq=None)
-                self.profile_gpu_mark_forward_seq_comp_end()
-                # Send
-                self.profile_gpu_mark_forward_seq_send_start()
-                self.gpu_comm.send(self.output_seq_emb, dst=self.post_node_rank)
-                self.profile_gpu_mark_forward_seq_send_end()
+        for _ in range(self.buffer_loop):
+            for i in range(self.producer_buffer_size):
+                self._gpu_send_key_value_wait(buf_index=i)
+                if self.pp_rank == 0:  # Only send output to next node, do not receive
+                    # Compute
+                    self.profile_gpu_mark_forward_seq_comp_start()
+                    self._gpu_forward_compute_prompt_seq(buf_index=i, seq=input_seqs[i])
+                    self.profile_gpu_mark_forward_seq_comp_end()
+                    # Send
+                    self.profile_gpu_mark_forward_seq_send_start()
+                    self.gpu_comm.send(self.output_seq_emb, dst=self.post_node_rank)
+                    self.profile_gpu_mark_forward_seq_send_end()
+                elif self.pp_rank == self.pipeline_group_size - 1:  # Only receive input from last node, do not send
+                    # Receive
+                    self.profile_gpu_mark_forward_seq_recv_start()
+                    self.gpu_comm.recv(self.input_seq_emb, src=self.pre_node_rank)
+                    self.profile_gpu_mark_forward_seq_recv_end()
+                    # Compute
+                    self.profile_gpu_mark_forward_seq_comp_start()
+                    self._gpu_forward_compute_prompt_seq(buf_index=i, seq=None)
+                    self.profile_gpu_mark_forward_seq_comp_end()
+                else:  # receive, compute, and send
+                    # Receive
+                    self.profile_gpu_mark_forward_seq_recv_start()
+                    self.gpu_comm.recv(self.input_seq_emb, src=self.pre_node_rank)
+                    self.profile_gpu_mark_forward_seq_recv_end()
+                    # Compute
+                    self.profile_gpu_mark_forward_seq_comp_start()
+                    self._gpu_forward_compute_prompt_seq(buf_index=i, seq=None)
+                    self.profile_gpu_mark_forward_seq_comp_end()
+                    # Send
+                    self.profile_gpu_mark_forward_seq_send_start()
+                    self.gpu_comm.send(self.output_seq_emb, dst=self.post_node_rank)
+                    self.profile_gpu_mark_forward_seq_send_end()
 
-            self.profile_gpu2cpu_mark_forward_seq_send_start()
-            self._gpu_send_key_value_async(buf_index=i)
-            self.profile_gpu2cpu_mark_forward_seq_send_end()
-            self.current_dispatch_index = (self.current_dispatch_index + 1) % self.cpu_pool_size
-            if self.enable_tidy_profiling:
-                self._profile_seq_pipeline_stage(buf_index=i)
+                self.profile_gpu2cpu_mark_forward_seq_send_start()
+                self._gpu_send_key_value_async(buf_index=i)
+                self.profile_gpu2cpu_mark_forward_seq_send_end()
+                self.current_dispatch_index = (self.current_dispatch_index + 1) % self.cpu_pool_size
+                if self.enable_tidy_profiling:
+                    self._profile_seq_pipeline_stage(buf_index=i)
 
     def _profile_seq_pipeline_stage(self, buf_index):
         torch.cuda.synchronize()
