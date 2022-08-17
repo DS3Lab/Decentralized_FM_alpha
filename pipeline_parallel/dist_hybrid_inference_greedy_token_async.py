@@ -499,8 +499,9 @@ class DistHybridGreedyAsyncInference:
 
     def cpu_forward_new_token_pipeline_step(self):
         for buf_index in range(self.consumer_buffer_size):
-            self.profile_gpu2cpu_mark_forward_token_recv_start()
             self._cpu_recv_key_value_async(buf_index)
+        for buf_index in range(self.consumer_buffer_size):
+            self.profile_gpu2cpu_mark_forward_token_recv_start()
             self._cpu_recv_key_value_wait(buf_index)
             self.profile_gpu2cpu_mark_forward_token_recv_end()
             if self.enable_tidy_profiling:
