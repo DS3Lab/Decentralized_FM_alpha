@@ -48,12 +48,12 @@ def main():
         request_processor = None
         print('warning: todo: arguments specified in the request will not take effect.')
 
-    pipe = DistHybridGreedyInference(args, device, rank=rank)
+    pipe =  get_pp_inference_module(args, device, rank=rank)
 
     if args.profiling == 'no-profiling':
         avg_iter_time = distributed_hybrid_inference_foo_iter(args, pipe, device, request_processor)
     else:
-        prefix = './trace_json/inference_hybrid'
+        prefix = './trace_json/inference'
         trace_file = prefix + get_hybrid_inference_arguments_str(args) + '_' + args.profiling + '_' + \
                      args.trace_postfix + '.json'
         if args.profiling == 'tidy_profiling':
