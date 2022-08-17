@@ -36,12 +36,12 @@ def main():
     request_processor = get_request_processor(args)
     request_processor.set_arguments(args)
 
-    pipe = DistHybridGreedyInference(args, device)
+    pipe = get_pp_inference_module(args, device)
 
     if args.profiling == 'no-profiling':
         distributed_hybrid_inference_foo_iter(args, pipe, device, request_processor)
     else:
-        prefix = './trace_json/inference_hybrid'
+        prefix = './trace_json/inference'
         trace_file = prefix + get_hybrid_inference_arguments_str(args) + '_' + args.profiling + '_' + \
                      args.trace_postfix + '.json'
         if args.profiling == 'tidy_profiling':

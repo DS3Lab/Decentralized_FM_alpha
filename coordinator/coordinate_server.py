@@ -188,8 +188,8 @@ class CoordinatorInferenceServer:
                 self.inference_pipeline_demand_worker_num = 16
             elif job_name == 'lsf_hybrid_opt175b':
                 self.is_hybrid_task = True
-                self.inference_pipeline_demand_worker_num = 46
-                self.inference_pipeline_demand_GPU_worker_num = 16
+                self.inference_pipeline_demand_worker_num = 62
+                self.inference_pipeline_demand_GPU_worker_num = 32
                 self.inference_pipeline_demand_CPU_worker_num = 30
             else:
                 return f'This job is not recognized on coordinate - {job_name}'

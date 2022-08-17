@@ -397,6 +397,10 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             # handle seq_length == 0
             return
         self._merge_cached_seqs_and_attentions()
+        
+        if self.generate_seq_length == 1:
+            # skip token pipelin when generate_seq_length == 1
+            return
             
         for step in range(self.generate_seq_length):
             
@@ -436,6 +440,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             self.comm.broadcast(self.stop_flag, src=self.pipeline_group_size - 1)
 
     def forward_new_token_pipeline_step(self, step: int, attention_mask=None):
+        
         attention_masks = torch.split(
             attention_mask, self.token_micro_batch_size, dim=0
         )
