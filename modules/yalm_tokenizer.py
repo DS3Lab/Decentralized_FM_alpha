@@ -48,6 +48,8 @@ class YalmTokenizer:
         return self._tokenizer.piece_to_id(tokens)
 
     def convert_ids_to_tokens(self, ids):
+        if isinstance(ids, torch.Tensor):
+            ids = ids.cpu().tolist()
         return [self.decoder[idx] for idx in ids]
 
     def get_tokens(self):
@@ -115,7 +117,10 @@ class YalmTokenizer:
             
             ids.append(t_ids)
         
-        max_len = max([len(t_ids) for t_ids in ids])
+        if padding == True:
+            max_len = max([len(t_ids) for t_ids in ids])
+        else:
+            max_len = self.model_max_length
         
         attention_mask = torch.ones(len(ids), max_len, dtype=torch.long)
         
