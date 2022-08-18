@@ -32,8 +32,10 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         # self.stop = None
         
         if self.stop is not None:
-            from transformers import AutoTokenizer
-            self.tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+            # from transformers import AutoTokenizer
+            # self.tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+            from task_datasets.inference_data import get_tokenizer
+            self.tokenizer = get_tokenizer(args)
             self.stop_flag = torch.zeros(1, requires_grad=False, device=device).long()
         ##########
         
@@ -103,7 +105,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         elif self.model_type == 'bloom':
             from modules.hf_bloom_module import GPTConfig
             config = GPTConfig.from_pretrained(self.model_name)
-            return config.n_embed
+            return config.hidden_size
         else:
             raise Exception(f'unknown model type {self.model_type}')
 
