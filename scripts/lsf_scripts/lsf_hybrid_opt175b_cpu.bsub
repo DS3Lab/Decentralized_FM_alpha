@@ -12,8 +12,8 @@ cd /nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/GPT-home-private     
 
 nvidia-smi
 
-world_size=64
-pipeline_size=4
+world_size=40
+pipeline_size=24
 stage_num_layers=2
 producer_buffer_size=16
 consumer_buffer_size=4
