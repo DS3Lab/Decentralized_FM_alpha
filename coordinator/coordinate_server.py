@@ -385,9 +385,8 @@ class CoordinatorHybridInferenceServer:
         if not self.submit_locked:
             self.submit_locked = True
             if job_name == 'lsf_hybrid_opt175b':
-                self.inference_pipeline_demand_worker_num = 62
-                self.inference_pipeline_demand_GPU_worker_num = 32
-                self.inference_pipeline_demand_CPU_worker_num = 30
+                self.inference_pipeline_demand_GPU_worker_num = 4
+                self.inference_pipeline_demand_CPU_worker_num = 8
                 self.job_name = job_name
                 self.infer_data = infer_data
             else:
