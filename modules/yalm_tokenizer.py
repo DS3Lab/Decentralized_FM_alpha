@@ -97,9 +97,16 @@ class YalmTokenizer:
             
         ids = []
         for t in text:
-            t_ids = self.tokenize(t)
-            if add_bos:
-                t_ids = [1] + t_ids # append <s>
+            if t.startswith('<s> '):
+                t_ids = self.tokenize(t[4:])
+                t_ids = [1] + t_ids
+            elif t.startswith('<s>'):
+                t_ids = self.tokenize(t[3:])
+                t_ids = [1] + t_ids
+            else:
+                t_ids = self.tokenize(t)
+                if add_bos:
+                    t_ids = [1] + t_ids # append <s>
             
             if self.truncation_side == 'left':
                 t_ids = t_ids[-self.model_max_length:]

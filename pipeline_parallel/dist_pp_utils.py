@@ -9,6 +9,7 @@ from .dist_pipeline_inference_greedy_token_pipe_sync import DistGreedyInferenceT
 from .dist_pipeline_inference_mask_greedy_token_pipe_sync import DistGreedyInferenceMaskTokenPipeSync
 from .dist_pipeline_inference_mask_sample_token_pipe_sync import DistSampleInferenceMaskTokenPipeSync
 from .dist_hybrid_inference_greedy_token import DistHybridGreedyInference
+from .dist_hybrid_inference_greedy_token_async import DistHybridGreedyAsyncInference
 
 
 def get_pp_module(args, vocab_size, num_classes, device, use_dp, rank=None):
@@ -58,8 +59,10 @@ def get_pp_inference_module(args, device, rank=None):
         return DistSampleInferenceMaskAsync(args, device, rank=rank)
     elif args.pp_mode == 'pipe_async_sample_enc_dec_mask':
         return DistSampleEncDecInferenceMaskAsync(args, device, rank=rank)
-    elif args.pp_mode == 'pipe_hybrid_greedy':
+    elif args.pp_mode == 'pipe_hybrid_greedy_sync':
         return DistHybridGreedyInference(args, device, rank=rank)
+    elif args.pp_mode == 'pipe_hybrid_greedy_async':
+        return DistHybridGreedyAsyncInference(args, device, rank=rank)
     else:
         print("Not recognize this pipeline parallel mode.")
         assert False
