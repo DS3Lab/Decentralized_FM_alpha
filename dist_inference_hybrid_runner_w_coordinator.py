@@ -3,7 +3,7 @@ import torch.autograd.profiler as profiler
 from utils.dist_args_utils import *
 from utils.dist_inference_utils import *
 from comm.hybrid_comm_utils import init_hybrid_inference_communicators_with_coordinator
-from task_datasets.inference_data import get_request_processor
+from task_datasets.inference_data import DummyRequestProcessor
 from pipeline_parallel.dist_pp_utils import *
 from coordinator.coordinate_client import *
 from transformers import AutoTokenizer
@@ -38,7 +38,9 @@ def main():
 
     init_hybrid_inference_communicators_with_coordinator(args, prime_ip, rank, port=port)
 
-    request_processor = get_request_processor(args)
+    tokenizer = get_tokenizer(args)
+
+    request_processor = DummyRequestProcessor(tokenizer)
     request_processor.set_arguments(args)
 
     pipe = get_pp_inference_module(args, device, rank=rank)
