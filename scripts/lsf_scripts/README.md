@@ -22,4 +22,6 @@ Go to this directory in the Euler cluster:
 
 
 
-- The 
+- To check what is going on in a node,
+
+       bjob_connect job_ID

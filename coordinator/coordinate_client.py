@@ -67,6 +67,32 @@ class CoordinatorInferenceClient:
             print(f"Received: {msg}")
 
 
+class CoordinatorHybridInferenceClient:
+    def __init__(self, args):
+        self.host_ip = args.coordinator_server_ip
+        self.host_port = args.coordinator_server_port
+        self.client_port = int(args.lsf_job_no) % 10000 + 10000
+        self.node_type = args.node_type
+
+    def notify_inference_join(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(('', self.client_port))
+            s.connect((self.host_ip, self.host_port))
+            s.sendall(b"inference#join#"+self.node_type.encode())
+            msg = s.recv(1024)
+            print(f"Received: {msg}")
+            msg_arg = client_message_parser(msg, 'join_inference')
+            return msg_arg['prime_ip'], msg_arg['my_rank'], msg_arg['port']
+
+    def notify_inference_finish(self, message: str):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(('', self.client_port))
+            s.connect((self.host_ip, self.host_port))
+            s.sendall(b"inference#finish#"+message.encode())
+            msg = s.recv(1024)
+            print(f"Received: {msg}")
+
+
 def main():
     parser = argparse.ArgumentParser(description='Test Coordinator-Client')
     parser.add_argument('--coordinator-type', type=str, default='train', help='train or inference')

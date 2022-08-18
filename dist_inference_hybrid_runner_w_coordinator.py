@@ -3,7 +3,7 @@ import torch.autograd.profiler as profiler
 from utils.dist_args_utils import *
 from utils.dist_inference_utils import *
 from comm.hybrid_comm_utils import init_hybrid_inference_communicators_with_coordinator
-from task_datasets.inference_data import get_request_processor
+from task_datasets.inference_data import DummyRequestProcessor
 from pipeline_parallel.dist_pp_utils import *
 from coordinator.coordinate_client import *
 from transformers import AutoTokenizer
@@ -32,29 +32,24 @@ def main():
     else:
         device = torch.device('cpu')
 
-    coord_client = CoordinatorInferenceClient(args)
+    coord_client = CoordinatorHybridInferenceClient(args)
     prime_ip, rank, port = coord_client.notify_inference_join()
     print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
 
     init_hybrid_inference_communicators_with_coordinator(args, prime_ip, rank, port=port)
 
-    if get_pipeline_parallel_rank() == 0 or True:
+    tokenizer = get_tokenizer(args)
 
-        request_processor = get_request_processor(args)
-        request_processor.set_arguments(args)
+    request_processor = DummyRequestProcessor(tokenizer)
+    request_processor.set_arguments(args)
 
-    else:
-        tokenizer = None
-        request_processor = None
-        print('warning: todo: arguments specified in the request will not take effect.')
-
-    pipe =  get_pp_inference_module(args, device, rank=rank)
+    pipe = get_pp_inference_module(args, device, rank=rank)
 
     if args.profiling == 'no-profiling':
         avg_iter_time = distributed_hybrid_inference_foo_iter(args, pipe, device, request_processor)
     else:
         prefix = './trace_json/inference'
-        trace_file = prefix + get_hybrid_inference_arguments_str(args) + '_' + args.profiling + '_' + \
+        trace_file = prefix + get_hybrid_inference_arguments_str(args, rank=rank) + '_' + args.profiling + '_' + \
                      args.trace_postfix + '.json'
         if args.profiling == 'tidy_profiling':
             # distributed_inference_mask_iter(args, pipe, device, request_processor)
