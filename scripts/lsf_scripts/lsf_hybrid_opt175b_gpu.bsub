@@ -23,7 +23,7 @@ global_num_layers=$(($stage_num_layers*$pipeline_size))
 
 DIST_CONF="--pp-mode pipe_hybrid_greedy_async --world-size $world_size --pipeline-group-size $pipeline_size --node-type GPU --use-cuda True"
 MODEL_CONF="--model-type gptj --model-name ./pretrained_models/gpt-j-175B"
-INFERENCE_CONF="--num-iters 20 --input-seq-length 512 --generate-seq-length 32 --prompt-micro-batch-size 1 --token-micro-batch-size 1 --stage-num-layers $stage_num_layers --global-num-layers $global_num_layers"
+INFERENCE_CONF="--num-iters 2 --input-seq-length 512 --generate-seq-length 32 --prompt-micro-batch-size 1 --token-micro-batch-size 1 --stage-num-layers $stage_num_layers --global-num-layers $global_num_layers"
 BUF_CONF="--producer-buffer-size $producer_buffer_size --consumer-buffer-size $consumer_buffer_size"
 
 COOR_CONF="--coordinator-server-ip 129.132.93.110"
