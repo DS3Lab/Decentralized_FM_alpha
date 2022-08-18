@@ -171,9 +171,9 @@ class GPTConfig:
         zero_stage ...................... 1.0
         '''
 
-        @classmethod
-        def from_pretrained(cls, *args, **kargs):
-            return cls()
+    @classmethod
+    def from_pretrained(cls, *args, **kargs):
+        return cls()
 
         
         
@@ -508,7 +508,7 @@ class GPTBlock(nn.Module):
         
         if mask is not None:
             # bool -> float
-            attention_mask = 1e4 *(mask[:, None, None, :]-1)
+            attention_mask = (1e4 *(mask[:, None, None, :]-1)).to(hidden_states.dtype)
         else:
             attention_mask = torch.zeros(
                 (hidden_states.size(0), 1, 1, hidden_states.size(1)), 
