@@ -25,6 +25,9 @@ def server_message_parser(msg: bytes):
             arg_dict['job_name'] = msg_arg[2]
             if len(msg_arg) > 3:
                 arg_dict['infer_data'] = msg_arg[3]
+        elif arg_dict['state'] == 'join':
+            if len(msg_arg) > 2:
+                arg_dict['node_type'] = msg_arg[2]
         elif arg_dict['state'] == 'latency_job':
             arg_dict['job_details'] = msg_arg[2]
     return arg_dict
@@ -235,7 +238,7 @@ class CoordinatorInferenceServer:
                 return i
         return -1
 
-    def _handle_inference_join(self, worker_ip, port) -> str:
+    def _handle_inference_join(self, worker_ip, port, node_type=None) -> str:
         node_key = worker_ip + ':' + str(port)
         assert not self._check_if_node_has_joined(node_key),\
             f"Worker called notify_inference_join has been joined before ({node_key})"
@@ -307,7 +310,7 @@ class CoordinatorInferenceServer:
                         if msg_arg['state'] == 'submit':
                             return_msg = self._handle_inference_submit(msg_arg['job_name'], msg_arg['infer_data'])
                         elif msg_arg['state'] == 'join':
-                            return_msg = self._handle_inference_join(worker_ip, port)
+                            return_msg = self._handle_inference_join(worker_ip, port, node_type=None)
                         elif msg_arg['state'] == 'finish':
                             return_msg = self._handle_inference_finish(worker_ip, port, msg_arg)
                         elif msg_arg['state'] == 'latency_job':
@@ -319,6 +322,157 @@ class CoordinatorInferenceServer:
                     self._print_current_working_nodes()
 
 
+class CoordinatorHybridInferenceServer:
+    def __init__(self, args):
+        self.host = args.coordinator_server_ip
+        self.port = args.coordinator_server_port
+        self.allocated_index = 0
+        self.current_nccl_port = 15000
+        # An array of dict object to store worker info
+        self.prime_worker_ip = None
+        self.gpu_nodes = {}
+        self.cpu_nodes = {}
+        self.bsub_script_path = args.bsub_script_path
+        self.inference_pipeline_demand_GPU_worker_num = 0
+        self.inference_pipeline_demand_CPU_worker_num = 0
+        self.job_name = None
+        self.infer_data = None
+        self.submit_locked = False
+
+    def _allocate_index(self):
+        self.allocated_index = (self.allocated_index + 1) % 10000
+        return self.allocated_index
+
+    def _print_current_working_nodes(self):
+        print(f"<----------------Current GPU Workers---------------->")
+        for node_key in self.gpu_nodes.keys():
+            print(f"Node rank {self.gpu_nodes[node_key]['rank']}, Address: {node_key}")
+        print("-------------------------------------------------------")
+        print(f"<----------------Current CPU Workers---------------->")
+        for node_key in self.cpu_nodes.keys():
+            print(f"Node rank {self.cpu_nodes[node_key]['rank']}, Address: {node_key}")
+        print("-------------------------------------------------------")
+
+    def _submit_gpu_tasks(self):
+        hardware = "gpu"
+        for i in range(self.inference_pipeline_demand_GPU_worker_num):
+            os.system(f"rm {self.bsub_script_path}/submit_cache/*.bsub")
+            os.system(f"cp {self.bsub_script_path}/{self.job_name}_{hardware}.bsub "
+                      f"{self.bsub_script_path}/submit_cache/{self.job_name}_{hardware}_{i + 1}.bsub")
+            os.system(f"echo \'--lsf-job-no {self._allocate_index()} --infer-data {self.infer_data}\' "
+                      f">> {self.bsub_script_path}/submit_cache/{self.job_name}_{hardware}_{i + 1}.bsub")
+            os.system(f"cd {self.bsub_script_path}/submit_cache && "
+                      f"bsub < {self.job_name}_{hardware}_{i + 1}.bsub")
+        os.system("bjobs")
+        return f'Succeed to submit GPU job - {self.job_name}'
+
+    def _submit_cpu_tasks(self):
+        hardware = "cpu"
+        total_num = self.inference_pipeline_demand_GPU_worker_num + self.inference_pipeline_demand_CPU_worker_num
+        for i in range(self.inference_pipeline_demand_GPU_worker_num, total_num):
+            os.system(f"rm {self.bsub_script_path}/submit_cache/*.bsub")
+            os.system(f"cp {self.bsub_script_path}/{self.job_name}_{hardware}.bsub "
+                      f"{self.bsub_script_path}/submit_cache/{self.job_name}_{hardware}_{i + 1}.bsub")
+            os.system(f"echo \'--lsf-job-no {self._allocate_index()} --infer-data {self.infer_data}\' "
+                      f">> {self.bsub_script_path}/submit_cache/{self.job_name}_{hardware}_{i + 1}.bsub")
+            os.system(f"cd {self.bsub_script_path}/submit_cache && "
+                      f"bsub < {self.job_name}_{hardware}_{i + 1}.bsub")
+        os.system("bjobs")
+        return f'Succeed to submit CPU job - {self.job_name}'
+
+    def _handle_inference_submit(self, job_name, infer_data) -> str:
+        print("<<<<<<<<<<<<<<<<<<<<< Submit Job >>>>>>>>>>>>>>>>>>>>>>")
+        if not self.submit_locked:
+            self.submit_locked = True
+            if job_name == 'lsf_hybrid_opt175b':
+                self.inference_pipeline_demand_worker_num = 62
+                self.inference_pipeline_demand_GPU_worker_num = 32
+                self.inference_pipeline_demand_CPU_worker_num = 30
+                self.job_name = job_name
+                self.infer_data = infer_data
+            else:
+                return f'This job is not recognized on coordinate - {job_name}'
+            return self._submit_gpu_tasks()
+        else:
+            return f'Fail to submit job - {job_name}, coordinator server is handling other submission'
+
+    def _check_if_node_has_joined(self, node_key):
+        assert node_key not in self.cpu_nodes
+        assert node_key not in self.gpu_nodes
+
+    def _handle_inference_join(self, worker_ip, port, node_type: str) -> str:
+        assert node_type in {'CPU','GPU'}
+        node_key = worker_ip + ':' + str(port)
+        assert not self._check_if_node_has_joined(node_key),\
+            f"Worker called notify_inference_join has been joined before ({node_key})"
+        print(f"Connected by +NEW+ {node_key} worker with address {worker_ip}, (port:{port}), ")
+
+        if node_type == 'GPU':
+            new_node_rank = len(self.gpu_nodes)
+            if new_node_rank == 0:
+                self.prime_worker_ip = worker_ip
+            self.gpu_nodes[node_key] = {'rank': new_node_rank, 'port': self.current_nccl_port}
+            # We only submit CPU tasks when all GPU nodes are ready.
+            if len(self.gpu_nodes) == self.inference_pipeline_demand_GPU_worker_num:
+                self._submit_cpu_tasks()
+        else:
+            assert node_type == 'CPU'
+            new_node_rank = len(self.cpu_nodes) + self.inference_pipeline_demand_GPU_worker_num
+            self.cpu_nodes[node_key] = {'rank': new_node_rank, 'port': self.current_nccl_port}
+            if len(self.cpu_nodes) == self.inference_pipeline_demand_CPU_worker_num:
+                print("All CPU and GPU nodes are ready.")
+        # all nodes have the same random port
+        # random.seed(self.allocated_index)
+        # nccl_port = 15000 + random.randint(0, 1000)
+        return_msg = self.prime_worker_ip + '#' + str(new_node_rank)
+        return_msg += '#' + str(self.current_nccl_port)
+        print(return_msg)
+        return return_msg
+
+    def _handle_inference_finish(self, worker_ip, port, msg_arg) -> str:
+        node_key = worker_ip + ':' + str(port)
+        assert node_key in self.cpu_nodes or node_key in self.gpu_nodes, \
+            f"Worker called notify_inference_finish is not recognized ({node_key})"
+        if node_key in self.gpu_nodes:
+            assigned_rank = 'gpu_' + str(self.gpu_nodes[node_key]['rank'])
+            del self.gpu_nodes[node_key]
+        else:
+            assigned_rank = 'cpu_' + str(self.cpu_nodes[node_key]['rank'])
+            del self.cpu_nodes[node_key]
+
+        print(f"Connected by known worker with address {worker_ip}, (port:{port})"
+              f" allocated rank {assigned_rank}")
+        print(f"<=====Inference finished on rank-{msg_arg['rank']} worker, "
+              f"average time {msg_arg['iter_time']} seconds.=====>")
+        if len(self.gpu_nodes) == 0 and len(self.cpu_nodes) == 0:
+            self.submit_locked = False
+        return_msg = 'done'
+        return return_msg
+
+    def execute_server(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind((self.host, self.port))
+            s.listen()
+            while True:
+                connection, address = s.accept()
+                with connection:
+                    worker_ip, port = address
+                    msg_data = connection.recv(1024)
+                    print(f"==[Recv message: {msg_data}]==")
+                    msg_arg = server_message_parser(msg_data)
+                    if msg_arg['task'] == 'inference':
+                        if msg_arg['state'] == 'submit':
+                            return_msg = self._handle_inference_submit(msg_arg['job_name'], msg_arg['infer_data'])
+                        elif msg_arg['state'] == 'join':
+                            return_msg = self._handle_inference_join(worker_ip, port, node_type=msg_arg['node_type'])
+                        elif msg_arg['state'] == 'finish':
+                            return_msg = self._handle_inference_finish(worker_ip, port, msg_arg)
+                        else:
+                            assert False, f"Not valid operator for training ({msg_arg['state']})"
+                    connection.sendall(return_msg.encode())
+                    connection.close()
+                    self._print_current_working_nodes()
+
 
 def main():
     parser = argparse.ArgumentParser(description='Test Coordinator-Server')
@@ -328,14 +482,16 @@ def main():
     parser.add_argument('--coordinator-server-ip', type=str, default='localhost', metavar='S',
                         help='The IP of coordinator-server.')
     parser.add_argument('--bsub-script-path', type=str,
-                        default='/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/GPT-home-private/scripts/lsf_scripts', metavar='S',
-                        help='Path to store the bsub scripts')
+                        default='/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/GPT-home-private/scripts/lsf_scripts',
+                        metavar='S', help='Path to store the bsub scripts')
     args = parser.parse_args()
     print(vars(args))
     if args.coordinator_type == 'train':
         coordinator = CoordinatorTrainServer(args)
     elif args.coordinator_type == 'inference':
         coordinator = CoordinatorInferenceServer(args)
+    elif args.coordinator_type == 'hybrid_inference':
+        coordinator = CoordinatorHybridInferenceServer(args)
     else:
         assert False
     coordinator.execute_server()

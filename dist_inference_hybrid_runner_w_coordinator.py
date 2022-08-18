@@ -32,7 +32,7 @@ def main():
     else:
         device = torch.device('cpu')
 
-    coord_client = CoordinatorInferenceClient(args)
+    coord_client = CoordinatorHybridInferenceClient(args)
     prime_ip, rank, port = coord_client.notify_inference_join()
     print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
 
