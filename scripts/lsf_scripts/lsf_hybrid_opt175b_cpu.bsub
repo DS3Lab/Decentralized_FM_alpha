@@ -1,7 +1,8 @@
 #!/bin/bash
-#BSUB -n 64                     # 1 cores
-#BSUB -W 0:20                   # 3-minutes run-time
-#BSUB -R "rusage[mem=8000]"     # 8 GB per core
+#BSUB -n 36                     # 36 cores
+#BSUB -R "span[ptile=36]"       # ptile means how many cores per task
+#BSUB -W 0:20                   # 20-minutes run-time
+#BSUB -R "rusage[mem=8000]"     # Memory per core.
 #BSUB -o /cluster/home/biyuan/exe_log/hybrid_cpu_opt175.out.%J
 #BSUB -e /cluster/home/biyuan/exe_log/hybrid_cpu_opt175.err.%J
 
@@ -21,7 +22,7 @@ global_num_layers=$(($stage_num_layers*$pipeline_size))
 
 DIST_CONF="--pp-mode pipe_hybrid_greedy_async --world-size $world_size --pipeline-group-size $pipeline_size --node-type CPU --use-cuda False"
 MODEL_CONF="--model-type gptj --model-name ./pretrained_models/gpt-j-175B"
-INFERENCE_CONF="--num-iters 2 --input-seq-length 512 --generate-seq-length 32 --prompt-micro-batch-size 1 --token-micro-batch-size 1 --stage-num-layers $stage_num_layers --global-num-layers $global_num_layers"
+INFERENCE_CONF="--num-iters 5 --input-seq-length 512 --generate-seq-length 32 --prompt-micro-batch-size 1 --token-micro-batch-size 1 --stage-num-layers $stage_num_layers --global-num-layers $global_num_layers"
 BUF_CONF="--producer-buffer-size $producer_buffer_size --consumer-buffer-size $consumer_buffer_size"
 
 COOR_CONF="--coordinator-server-ip 129.132.93.110"
