@@ -1,6 +1,6 @@
 #!/bin/bash
-#BSUB -n 32                     # 36 cores
-#BSUB -R "span[ptile=32]"       # ptile means how many cores per task
+#BSUB -n 32                     # 32 cores
+#BSUB -R "span[hosts=1]"       # ptile means how many cores per node
 #BSUB -W 1:00                   # 1 hour run-time
 #BSUB -R "rusage[mem=6000]"     # Memory per core.
 #BSUB -o /cluster/home/biyuan/exe_log/hybrid_cpu_opt175.out.%J
