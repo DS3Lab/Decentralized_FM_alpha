@@ -2,7 +2,7 @@
 #BSUB -n 64                     # 36 cores
 #BSUB -R "span[ptile=64]"       # ptile means how many cores per task
 #BSUB -W 1:00                   # 1 hour run-time
-#BSUB -R "rusage[mem=8000]"     # Memory per core.
+#BSUB -R "rusage[mem=4000]"     # Memory per core.
 #BSUB -o /cluster/home/biyuan/exe_log/hybrid_cpu_opt175.out.%J
 #BSUB -e /cluster/home/biyuan/exe_log/hybrid_cpu_opt175.err.%J
 
