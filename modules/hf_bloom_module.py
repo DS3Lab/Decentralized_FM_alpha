@@ -10,8 +10,23 @@ from transformers.modeling_outputs import (
     CausalLMOutputWithCrossAttentions,
 )
 from transformers.models.bloom.modeling_bloom import BloomBlock as _BloomBlock
-from transformers.models.bloom.modeling_bloom import build_alibi_tensor, _make_causal_mask, _expand_mask
+from transformers.models.bloom.modeling_bloom import build_alibi_tensor
 from transformers.models.bloom.configuration_bloom import BloomConfig as GPTConfig
+
+
+def _expand_mask(mask: torch.Tensor, dtype: torch.dtype, tgt_len: int = None):
+    """
+    Expands attention_mask from `[bsz, seq_len]` to `[bsz, 1, tgt_seq_len, src_seq_len]`.
+    """
+    batch_size, source_length = mask.size()
+    # TODO: do not expand
+    # tgt_len = tgt_len if tgt_len is not None else source_length
+    # expanded_mask = mask[:, None, None, :].expand(batch_size, 1, tgt_len, source_length).to(dtype)
+    expanded_mask = mask[:, None, None, :].to(dtype)
+
+    inverted_mask = 1.0 - expanded_mask
+
+    return inverted_mask.masked_fill(inverted_mask.to(torch.bool), torch.finfo(dtype).min)
 
 
 class GPTEmbeddings(nn.Module):
@@ -66,6 +81,14 @@ class GPTBlock(_BloomBlock):
             slopes = torch.cat([slopes, torch.pow(extra_base, extra_powers)], dim=0)
         self.slopes = slopes
         
+        dtype = torch.float32
+        mask = torch.full((3000, 3000), torch.finfo(dtype).min)
+        mask_cond = torch.arange(3000)
+        intermediate_mask = mask_cond < (mask_cond + 1).view(mask.size(-1), 1)
+        mask.masked_fill_(intermediate_mask, 0)
+        # self.cache_mask = mask
+        self.register_buffer('cache_mask', mask, persistent=False)
+        
     @classmethod
     def from_pretrained(cls, model_path, config=None, layer_index=None):
         assert layer_index is not None
@@ -87,12 +110,28 @@ class GPTBlock(_BloomBlock):
             print('Cannot load from <model_name>. The model is randomly initialized.')
         return module
     
+    def _make_causal_mask(
+        self, input_ids_shape: torch.Size, dtype: torch.dtype, past_key_values_length: int = 0
+    ):
+        """
+        Make causal mask used for bi-directional self-attention.
+        """
+        batch_size, target_length = input_ids_shape
+        mask = self.cache_mask[:target_length, :target_length].to(dtype)
+        
+        if past_key_values_length > 0:
+            mask = torch.cat([torch.zeros(target_length, past_key_values_length, dtype=dtype), mask], dim=-1)
+            
+        return mask[None, None, :, :]
+        # expanded_mask = mask[None, None, :, :].expand(batch_size, 1, target_length, target_length + past_key_values_length)
+        # return expanded_mask
+    
     def _prepare_attn_mask(self, attention_mask, input_shape, inputs_embeds, past_key_values_length):
         # create causal mask
         # [bsz, seq_len] -> [bsz, 1, tgt_seq_len, src_seq_len]
         combined_attention_mask = None
         if input_shape[-1] > 1:
-            combined_attention_mask = _make_causal_mask(
+            combined_attention_mask = self._make_causal_mask(
                 input_shape, inputs_embeds.dtype, past_key_values_length=past_key_values_length
             ).to(attention_mask.device)
 
