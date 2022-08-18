@@ -205,6 +205,7 @@ class RequestProcessor:
 
                 args.token_micro_batch_size = 2 # TODO: hard code
                 args.batch_size = max(budget // ((args.input_seq_length + args.generate_seq_length)*self.num_completions), 2) // args.token_micro_batch_size * args.token_micro_batch_size
+                args.batch_size = min(args.batch_size, 128) # TODO: if batch size is too large, the comm will stuck.
                 #args.token_micro_batch_size = args.batch_size
 
             else:
@@ -220,6 +221,7 @@ class RequestProcessor:
                     budget = 1300*16
 
                 args.batch_size = max(budget // (args.input_seq_length + args.generate_seq_length), 1)
+                args.batch_size = min(args.batch_size, 128)
                 args.token_micro_batch_size = args.batch_size
         
         if (args.echo_prompt and max_input_seq_length == self.tokenizer.model_max_length+1 and args.generate_seq_length==0):
