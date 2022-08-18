@@ -1,7 +1,7 @@
 #!/bin/bash
-#BSUB -n 36                     # 36 cores
-#BSUB -R "span[ptile=36]"       # ptile means how many cores per task
-#BSUB -W 0:20                   # 20-minutes run-time
+#BSUB -n 64                     # 36 cores
+#BSUB -R "span[ptile=64]"       # ptile means how many cores per task
+#BSUB -W 1:00                   # 1 hour run-time
 #BSUB -R "rusage[mem=8000]"     # Memory per core.
 #BSUB -o /cluster/home/biyuan/exe_log/hybrid_cpu_opt175.out.%J
 #BSUB -e /cluster/home/biyuan/exe_log/hybrid_cpu_opt175.err.%J
@@ -12,7 +12,7 @@ cd /nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/GPT-home-private     
 
 nvidia-smi
 
-world_size=12
+world_size=64
 pipeline_size=4
 stage_num_layers=2
 producer_buffer_size=16

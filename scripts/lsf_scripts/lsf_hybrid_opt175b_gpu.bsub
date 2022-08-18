@@ -1,6 +1,6 @@
 #!/bin/bash
 #BSUB -n 2                     # 1 cores
-#BSUB -W 0:20                   # 20-minutes run-time
+#BSUB -W 1:20                   # 1 hour run-time
 #BSUB -R "rusage[mem=8000]"     # 8 GB per core
 #BSUB -R "rusage[ngpus_excl_p=1]"
 #BSUB -R "select[gpu_model0==NVIDIAGeForceRTX2080Ti]"
@@ -13,7 +13,7 @@ cd /nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/GPT-home-private     
 
 nvidia-smi
 
-world_size=12
+world_size=64
 pipeline_size=4
 stage_num_layers=2
 producer_buffer_size=16
