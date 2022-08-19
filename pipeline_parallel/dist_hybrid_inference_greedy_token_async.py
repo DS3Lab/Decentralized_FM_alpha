@@ -306,63 +306,63 @@ class DistHybridGreedyAsyncInference:
     def _gpu_send_key_value_async(self, buf_index):
         torch.cuda.synchronize()
         for layer_index in range(self.stage_num_layers):
-            print("Rank-{} GPU node send Local Layer-{} key to Rank-{} CPU node (Buffer-index: {}) <Start>."
-                  .format(self.global_rank, layer_index, self._get_cpu_dst_rank(), buf_index))
+            # print("Rank-{} GPU node send Local Layer-{} key to Rank-{} CPU node (Buffer-index: {}) <Start>."
+            #      .format(self.global_rank, layer_index, self._get_cpu_dst_rank(), buf_index))
             self.producer_key_req[buf_index][layer_index] = self.cpu_comm.isend(
                 self.producer_key[buf_index][layer_index], self._get_cpu_dst_rank())
-            print("Rank-{} GPU node send Local Layer-{} value to Rank-{} CPU node (Buffer-index: {}) <Start>."
-                  .format(self.global_rank, layer_index, self._get_cpu_dst_rank(), buf_index))
+            # print("Rank-{} GPU node send Local Layer-{} value to Rank-{} CPU node (Buffer-index: {}) <Start>."
+            #      .format(self.global_rank, layer_index, self._get_cpu_dst_rank(), buf_index))
             self.producer_value_req[buf_index][layer_index] = self.cpu_comm.isend(
                 self.producer_value[buf_index][layer_index], self._get_cpu_dst_rank())
         if self.pp_rank == self.pipeline_group_size - 1:
-            print("Rank-{} GPU node send output-emb to Rank-{} CPU node (Buffer-index: {}) <Start>."
-                  .format(self.global_rank, self._get_cpu_dst_rank(), buf_index))
+            # print("Rank-{} GPU node send output-emb to Rank-{} CPU node (Buffer-index: {}) <Start>."
+            #      .format(self.global_rank, self._get_cpu_dst_rank(), buf_index))
             self.producer_output_req[buf_index] = self.cpu_comm.isend(
                 self.producer_output[buf_index], self._get_cpu_dst_rank())
 
     def _gpu_send_key_value_wait(self, buf_index):
         for layer_index in range(self.stage_num_layers):
-            print("Rank-{} GPU node send Local Layer-{} key to Rank-{} CPU node (Buffer-index: {}) <Finish>."
-                  .format(self.global_rank, layer_index, self._get_cpu_dst_rank(), buf_index))
+            # print("Rank-{} GPU node send Local Layer-{} key to Rank-{} CPU node (Buffer-index: {}) <Finish>."
+            #      .format(self.global_rank, layer_index, self._get_cpu_dst_rank(), buf_index))
             if self.producer_key_req[buf_index][layer_index] is not None:
                 self.producer_key_req[buf_index][layer_index].wait()
-            print("Rank-{} GPU node send Local Layer-{} value to Rank-{} CPU node (Buffer-index: {}) <Finish>."
-                  .format(self.global_rank, layer_index, self._get_cpu_dst_rank(), buf_index))
+            # print("Rank-{} GPU node send Local Layer-{} value to Rank-{} CPU node (Buffer-index: {}) <Finish>."
+            #      .format(self.global_rank, layer_index, self._get_cpu_dst_rank(), buf_index))
             if self.producer_value_req[buf_index][layer_index] is not None:
                 self.producer_value_req[buf_index][layer_index].wait()
         if self.pp_rank == self.pipeline_group_size - 1:
-            print("Rank-{} GPU node send output-emb to Rank-{} CPU node (Buffer-index: {}) <Finish>."
-                  .format(self.global_rank, self._get_cpu_dst_rank(), buf_index))
+            # print("Rank-{} GPU node send output-emb to Rank-{} CPU node (Buffer-index: {}) <Finish>."
+            #      .format(self.global_rank, self._get_cpu_dst_rank(), buf_index))
             if self.producer_output_req[buf_index] is not None:
                 self.producer_output_req[buf_index].wait()
 
     def _cpu_recv_key_value_async(self, buf_index):
         for layer_index in range(self.global_num_layers):
-            print("Rank-{} CPU node recv Layer-{} key from Rank-{} GPU node (Buffer-index: {}) <Start>."
-                  .format(self.global_rank, layer_index, self._get_gpu_src_rank(layer_index), buf_index))
+            # print("Rank-{} CPU node recv Layer-{} key from Rank-{} GPU node (Buffer-index: {}) <Start>."
+            #      .format(self.global_rank, layer_index, self._get_gpu_src_rank(layer_index), buf_index))
             self.consumer_key_req[buf_index][layer_index] = self.cpu_comm.irecv(
                 self.consumer_key[buf_index][layer_index], self._get_gpu_src_rank(layer_index))
-            print("Rank-{} CPU node recv Layer-{} value from Rank-{} GPU node (Buffer-index: {}) <Start>."
-                  .format(self.global_rank, layer_index, self._get_gpu_src_rank(layer_index), buf_index))
+            # print("Rank-{} CPU node recv Layer-{} value from Rank-{} GPU node (Buffer-index: {}) <Start>."
+            #      .format(self.global_rank, layer_index, self._get_gpu_src_rank(layer_index), buf_index))
             self.consumer_value_req[buf_index][layer_index] = self.cpu_comm.irecv(
                 self.consumer_value[buf_index][layer_index], self._get_gpu_src_rank(layer_index))
-        print("Rank-{} CPU node recv output-emb from Rank-{} GPU node (Buffer-index: {}) <Start>."
-              .format(self.global_rank, self._get_gpu_src_rank(self.global_num_layers-1), buf_index))
+        # print("Rank-{} CPU node recv output-emb from Rank-{} GPU node (Buffer-index: {}) <Start>."
+        #      .format(self.global_rank, self._get_gpu_src_rank(self.global_num_layers-1), buf_index))
         self.consumer_prompt_output_req[buf_index] = self.cpu_comm.irecv(
             self.consumer_prompt_output[buf_index], self._get_gpu_src_rank(self.global_num_layers-1))
 
     def _cpu_recv_key_value_wait(self, buf_index):
         for layer_index in range(self.global_num_layers):
-            print("Rank-{} CPU node recv Layer-{} key from Rank-{} GPU node (Buffer-index: {}) <Finish>."
-                  .format(self.global_rank, layer_index, self._get_gpu_src_rank(layer_index), buf_index))
+            # print("Rank-{} CPU node recv Layer-{} key from Rank-{} GPU node (Buffer-index: {}) <Finish>."
+            #      .format(self.global_rank, layer_index, self._get_gpu_src_rank(layer_index), buf_index))
             if self.consumer_key_req[buf_index][layer_index] is not None:
                 self.consumer_key_req[buf_index][layer_index].wait()
-            print("Rank-{} CPU node recv Layer-{} value from Rank-{} GPU node (Buffer-index: {}) <Finish>."
-                  .format(self.global_rank, layer_index, self._get_gpu_src_rank(layer_index), buf_index))
+            # print("Rank-{} CPU node recv Layer-{} value from Rank-{} GPU node (Buffer-index: {}) <Finish>."
+            #      .format(self.global_rank, layer_index, self._get_gpu_src_rank(layer_index), buf_index))
             if self.consumer_value_req[buf_index][layer_index] is not None:
                 self.consumer_value_req[buf_index][layer_index].wait()
-        print("Rank-{} CPU node recv output-emb from Rank-{} GPU node (Buffer-index: {}) <Finish>."
-              .format(self.global_rank, self._get_gpu_src_rank(self.global_num_layers-1), buf_index))
+        #print("Rank-{} CPU node recv output-emb from Rank-{} GPU node (Buffer-index: {}) <Finish>."
+        #      .format(self.global_rank, self._get_gpu_src_rank(self.global_num_layers-1), buf_index))
         if self.consumer_prompt_output_req[buf_index] is not None:
             self.consumer_prompt_output_req[buf_index].wait()
 
@@ -509,12 +509,12 @@ class DistHybridGreedyAsyncInference:
             self.profile_gpu2cpu_mark_forward_token_recv_end()
             if self.enable_tidy_profiling:
                 self._profile_gpu2cpu_token_pipeline_recv_slot(buf_index)
-            print("Rank-{} cpu_forward_new_token_pipeline_step, generate token 0 <buf-index:{}>."
-                  .format(self.global_rank, buf_index))
+            # print("Rank-{} cpu_forward_new_token_pipeline_step, generate token 0 <buf-index:{}>."
+            #       .format(self.global_rank, buf_index))
             new_token = self._cpu_generate_new_token(self.consumer_prompt_output[buf_index])
             for step in range(self.generate_seq_length):
-                print("Rank-{} cpu_forward_new_token_pipeline_step, generate token {} <buf-index:{}>."
-                      .format(self.global_rank, step+1, buf_index))
+                # print("Rank-{} cpu_forward_new_token_pipeline_step, generate token {} <buf-index:{}>."
+                #      .format(self.global_rank, step+1, buf_index))
                 self.profile_cpu_mark_forward_token_comp_start()
                 new_token = self._cpu_forward_compute_generate_token(buf_index, new_token)
                 self.profile_cpu_mark_forward_token_comp_end()
@@ -556,11 +556,8 @@ class DistHybridGreedyAsyncInference:
         elif self.node_type == 'CPU':
             self.cpu_forward_new_token_pipeline_step()
 
-        self.cpu_comm.barrier()
-        prompt_time = time.time()
-        print("Rank {} node INFERENCE prompt takes {:3.2f}s".format(self.global_rank, prompt_time - start_time))
 
-        self.cpu_comm.barrier()
+
         # TODO fix this later.
         # if self.pp_rank == 0 and output_ is not None:
         #    assert isinstance(output_, list)
@@ -570,10 +567,15 @@ class DistHybridGreedyAsyncInference:
         #            'token_ids': torch.cat([z.cpu() for z in self.recv_new_token], 1),
         #        }
         #    output_.append(item)
+        self.cpu_comm.barrier()
         end_time = time.time()
         iter_time = end_time - start_time
-        print("Rank {} node INFERENCE new token takes {:3.2f}s".format(self.global_rank, end_time - prompt_time))
-        print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
+        print("Rank {} node whole hybrid INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
+
+        if self.node_type == 'CPU':
+            token_tp = self.token_micro_batch_size * self.consumer_buffer_size * self.generate_seq_length / iter_time
+            print("Estimated token throughput for myself: {:3.2f}s".format(token_tp))
+
         print("-------------------------------------------")
 
         return iter_time

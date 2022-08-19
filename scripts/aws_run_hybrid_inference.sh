@@ -4,7 +4,8 @@ world_size=${#ips[@]}
 
 script=$1
 
-num_gpus=2
+num_gpus=$2
+
 
 for rank in "${!ips[@]}"
 do
