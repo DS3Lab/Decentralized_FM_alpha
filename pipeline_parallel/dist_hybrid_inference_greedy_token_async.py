@@ -574,7 +574,7 @@ class DistHybridGreedyAsyncInference:
 
         if self.node_type == 'CPU':
             token_tp = self.token_micro_batch_size * self.consumer_buffer_size * self.generate_seq_length / iter_time
-            print("Estimated token throughput for myself: {:3.2f}s".format(token_tp))
+            print("Estimated token throughput for myself: {:3.2f} token/second".format(token_tp))
 
         print("-------------------------------------------")
 
