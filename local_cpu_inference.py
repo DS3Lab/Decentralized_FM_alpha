@@ -133,7 +133,7 @@ def main():
                         embeddings, cached_tuples[layer_index] = model[layer_index](embeddings, cached_tuples[layer_index],
                                                                                     skip_ln=False)
                     embeddings = embeddings.to(dtype)
-                    print(embeddings.dtype)
+                    # print(embeddings.dtype)
                 token_end_time = time()
                 print("Token <{}> takes {:3.2f}s".format(i, token_end_time - token_start_time))
                 if i > 1:

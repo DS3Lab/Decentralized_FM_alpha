@@ -10,6 +10,10 @@ node_type=$5
 stage_num_layers=4
 global_num_layers=$(($stage_num_layers*$pipeline_size))
 
+producer_buffer_size=30
+consumer_buffer_size=2
+micro_batch_size=4
+
 timestamp=$(date +%Y_%m_%d_%H_%M)
 
 if [ $node_type == "GPU" ]
@@ -20,8 +24,8 @@ else
 fi
 
 MODEL_CONF="--model-type gptj --model-name ./pretrained_models/gpt-j-175B"
-INFERENCE_CONF="--num-iters 3 --input-seq-length 512 --generate-seq-length 32 --prompt-micro-batch-size 1 --token-micro-batch-size 1 --stage-num-layers $stage_num_layers --global-num-layers $global_num_layers"
-BUF_CONF="--producer-buffer-size 8 --consumer-buffer-size 4"
+INFERENCE_CONF="--num-iters 2 --input-seq-length 512 --generate-seq-length 32 --prompt-micro-batch-size $micro_batch_size --token-micro-batch-size $micro_batch_size --stage-num-layers $stage_num_layers --global-num-layers $global_num_layers"
+BUF_CONF="--producer-buffer-size $producer_buffer_size --consumer-buffer-size $consumer_buffer_size"
 
 if [ "$world_size" -ne 54 ]
 then
@@ -29,5 +33,6 @@ then
   exit 1
 fi
 
+log_name= ${timestamp}_175b_hybrid_inference_gpu${pipeline_size}cpu${cpu_size}_pb${producer_buffer_size}_cb${consumer_buffer_size}_mbs${micro_batch_size}_default.log
 
-python3 dist_inference_hybrid_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF $INFERENCE_CONF $BUF_CONF  >> "./logs/${timestamp}_175b_hybrid_inference_gpu${pipeline_size}cpu${cpu_size}_default.log"
+python3 dist_inference_hybrid_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF $INFERENCE_CONF $BUF_CONF  >> "./logs/$log_name"

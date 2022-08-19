@@ -22,7 +22,7 @@ MODEL_CONF="--model-type gptj --model-name ./pretrained_models/gpt-j-175B"
 INFERENCE_CONF="--num-iters 3 --input-seq-length 512 --generate-seq-length 32 --prompt-micro-batch-size 1 --token-micro-batch-size 1 --stage-num-layers $stage_num_layers --global-num-layers $global_num_layers"
 BUF_CONF="--producer-buffer-size 8 --consumer-buffer-size 4"
 
-if [ "$world_size" -ne 6 ]
+if [ "$world_size" -ne 8 ]
 then
   echo "Not correct number of nodes"
   exit 1
