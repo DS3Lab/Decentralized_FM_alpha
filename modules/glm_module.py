@@ -463,7 +463,7 @@ class GPTLMHead(nn.Module):
         
         self.final_layernorm = nn.LayerNorm(self.hidden_size, eps=self.layernorm_epsilon)
         self.lm_head = nn.Linear(
-            config.hidden_size, config.padded_vocab_size, bias=None,
+            config.hidden_size, config.vocab_size, bias=None,
         )
         
     @classmethod
