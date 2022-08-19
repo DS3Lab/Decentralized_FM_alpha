@@ -124,6 +124,17 @@
 
 ## 175B CPU-GPU Hybrid
 
-- Setting
+- Basic Setting
   - Prompt: 24 g5.2xlarge A10g 24GB. ($1.21/hour)
   - Token: m6i.32xlarge with 128 vCPU 512 GB RAM. ($6.1/hour)
+
+- Setting 1:
+  - 30 m6i.32xlarge; 
+  - Prompt length 512, token length: 32;
+  - Per token computation: 0.35 TFLOP
+
+| Micro-Batch size | Per CPU Token throughput | Cluster Throughput | CPU FLOPS per Node |
+|------------------|--------------------------|--------------------|--------------------|
+| 4                | 0.72                     | 21.6               | 0.252              |
+| 8                | 0.90                     | 27.0               | 0.315              |
+| 16               | -                        | -                  | -                  |

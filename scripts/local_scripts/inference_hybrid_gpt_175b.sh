@@ -33,6 +33,6 @@ then
   exit 1
 fi
 
-log_name= ${timestamp}_175b_hybrid_inference_gpu${pipeline_size}cpu${cpu_size}_pb${producer_buffer_size}_cb${consumer_buffer_size}_mbs${micro_batch_size}_default.log
+log_name=${timestamp}_175b_hybrid_inference_gpu${pipeline_size}cpu${cpu_size}_pb${producer_buffer_size}_cb${consumer_buffer_size}_mbs${micro_batch_size}_default.log
 
 python3 dist_inference_hybrid_runner.py --dist-url tcp://"$ip":9000 --fp16 $DIST_CONF $MODEL_CONF $INFERENCE_CONF $BUF_CONF  >> "./logs/$log_name"
