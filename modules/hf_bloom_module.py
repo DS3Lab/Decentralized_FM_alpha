@@ -158,6 +158,9 @@ class GPTBlock(_BloomBlock):
         current_sequence_length = hidden_states.shape[1]
         past_key_values_length = 0
         if layer_past is not None:
+            # permute to be compatible
+            # (bs, nhead, seq, size) => (bs, seq, nhead, size)
+            layer_past = (layer_past[0].permute(0, 2, 1, 3), layer_past[1].permute(0, 2, 1, 3))
             past_key_values_length = layer_past[0].shape[1]
             current_sequence_length += past_key_values_length
             
@@ -192,6 +195,9 @@ class GPTBlock(_BloomBlock):
 
         attention_output = attn_outputs[0]
         present = attn_outputs[1]
+        # permute to be compatible
+        # (bs, seq, nhead, size) => (bs, nhead, seq, size)
+        present = (present[0].permute(0, 2, 1, 3), present[1].permute(0, 2, 1, 3))
         
         layernorm_output = self.post_attention_layernorm(attention_output)
 
