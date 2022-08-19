@@ -120,3 +120,10 @@
 | 32         | -            | -            | 24.95 s                           | 1.28             | 0.49        |            
 | 40         | -            | -            | 26.09 s                           | 1.53             | 0.54        |
 | 48         | -            | -            | OOM                               |                  |             |
+
+
+## 175B CPU-GPU Hybrid
+
+- Setting
+  - Prompt: 24 g5.2xlarge A10g 24GB. ($1.21/hour)
+  - Token: m6i.32xlarge with 128 vCPU 512 GB RAM. ($6.1/hour)
