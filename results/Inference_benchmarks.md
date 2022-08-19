@@ -129,12 +129,24 @@
   - Token: m6i.32xlarge with 128 vCPU 512 GB RAM. ($6.1/hour)
 
 - Setting 1:
+  - 24 g5.2xlarge
   - 30 m6i.32xlarge; 
-  - Prompt length 512, token length: 32;
+  - Prompt length 512, token length: 50;
   - Per token computation: 0.35 TFLOP
 
 | Micro-Batch size | Per CPU Token throughput | Cluster Throughput | CPU FLOPS per Node |
 |------------------|--------------------------|--------------------|--------------------|
-| 4                | 0.72                     | 21.6               | 0.252              |
-| 8                | 0.90                     | 27.0               | 0.315              |
+| 4                | 0.82                     | 24.6               | 0.287              |
+| 8                | 1.01                     | 30.3               | 0.354              |
 | 16               | -                        | -                  | -                  |
+
+
+- Setting 2:
+  - 24 g5.2xlarge
+  - 30 m6i.32xlarge; 
+  - Prompt length 1900, token length: 100;
+  - Per token computation: 0.35 TFLOP
+
+| Micro-Batch size | Per CPU Token throughput | Cluster Throughput | CPU FLOPS per Node |
+|------------------|--------------------------|--------------------|--------------------|
+| 1                | 0.14                     | 4.2                | 0.05               |
