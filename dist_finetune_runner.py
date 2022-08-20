@@ -9,7 +9,7 @@ from task_datasets.wikitext import get_wikitext_train_data_loader, get_wikitext_
 from task_datasets.wiki103 import get_wiki103_train_data_loader, get_wiki103_test_data_loader
 from task_datasets.arxiv21 import get_arxiv21_train_data_loader, get_arxiv21_test_data_loader
 from task_datasets.openwebtext import get_openwebtext_train_data_loader
-# from modules.hf_gpt2_train_module import GPTConfig
+from task_datasets.fm_in_context_eval_data import get_fm_in_context_eval_train_data_loader
 from pipeline_parallel.dist_pp_utils import get_pp_finetune_module as get_pp_module
 
 from transformers import AutoTokenizer, AutoConfig
@@ -94,27 +94,7 @@ def main():
     add_training_hyper_parameter_arguments(parser)
     add_mixed_precision_arguments(parser)
     add_parallel_schema_arguments(parser)
-    parser.add_argument('--model-name', type=str, default='gpt2', metavar='S',
-                        help='model name or path')
-    parser.add_argument('--model-type', type=str, default='gpt2', metavar='S',
-                        help='model type')
-    parser.add_argument('--model-save-path', type=str, default=None, metavar='S',
-                        help='model save path')
-    parser.add_argument('--tokenizer-name', type=str, default='gpt2', metavar='S',
-                        help='tokenizer name or path')
-    parser.add_argument('--task-name', type=str, default='wikitext', metavar='S',
-                        help='task name')
-    parser.add_argument('--task-type', type=str, default='language_model', metavar='S',
-                        help='task typw')
-    parser.add_argument('--n-epochs', type=int, default=10, help='-')
-    parser.add_argument('--warmup-epochs', type=int, default=1, help='-')
-    parser.add_argument('--warmup-steps', type=int, default=None, help='-')
-    parser.add_argument('--total-steps', type=int, default=None, help='-')
-    parser.add_argument('--load-pretrained-model', 
-                        type=lambda x: x.lower()=='true', default=True, metavar='S',
-                        help='load pretrained model or not.')
-    parser.add_argument('--seed', type=int, default=1, metavar='S',
-                        help='random seed (default: 1)')
+    add_finetuning_model_arguments(parser)
     parser.add_argument('--profiling', type=str, default='tidy_profiling', metavar='S',
                         help='enable which profiling? default: tidy mode')
     parser.add_argument('--trace-postfix', type=str, default='default', metavar='S',
@@ -122,7 +102,6 @@ def main():
     parser.add_argument('--do-evaluation', 
                         type=lambda x: x.lower()=='true', default=True, metavar='S',
                         help='do evaluation or not.')
-    parser.add_argument('--max-layers', type=int, default=None, help='max layers')
     args = parser.parse_args()
     
     if args.use_cuda:
@@ -134,10 +113,9 @@ def main():
     init_communicators(args)
     
     config = AutoConfig.from_pretrained(args.model_name)
-#     config.attn_pdrop = 0.0
-#     config.embd_pdrop = 0.0
-#     config.resid_pdrop = 0.0
-#     config.summary_first_dropout = 0.0
+    for k in config.__dict__:
+        if '_pdrop' in k or '_dropout' in k:
+            config.__dict__[k] = args.dropout
     
     # config.n_layer = args.num_layers
     
@@ -165,6 +143,9 @@ def main():
     elif args.task_name == 'openwebtext':
         train_data_loader = get_openwebtext_train_data_loader(args, tokenizer)
         test_data_loader = get_wikitext_test_data_loader(args, tokenizer)
+    elif args_data_loader == 'fm_in_context_eval':
+        train_data_loader = get_fm_in_context_eval_train_data_loader(args, tokenizer)
+        test_data_loader = None
     else:
         raise Exception('unknown task.')
         

@@ -174,13 +174,15 @@ class GpipeAsync:
         if self.use_fp16:
             self.model.half()
 #             tmp_optimizer = optim.AdamW(self.model.parameters(), lr=args.lr)
-            tmp_optimizer = create_optimizer(self.model, learning_rate=args.lr)
+            tmp_optimizer = create_optimizer(
+                self.model, learning_rate=args.lr, weight_decay=args.weight_decay)
             self.optimizer = get_fp16_optimizer(args, tmp_optimizer, device)
             self.scheduler = get_linear_schedule_with_warmup(
                 tmp_optimizer, args.warmup_steps, args.total_steps, )
         else:
 #             self.optimizer = optim.AdamW(self.model.parameters(), lr=args.lr)
-            self.optimizer = create_optimizer(self.model, learning_rate=args.lr)
+            self.optimizer = create_optimizer(
+                self.model, learning_rate=args.lr, weight_decay=args.weight_decay)
             self.scheduler = get_linear_schedule_with_warmup(
                 self.optimizer, args.warmup_steps, args.total_steps, )
 
