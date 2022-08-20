@@ -137,6 +137,10 @@ class YalmTokenizer:
         ids = new_ids
         ids = torch.tensor(ids)
         
+        if add_bos:
+            # make sure starts with <s>
+            ids[:, 0] = 1
+        
         return {
             'input_ids': ids, 'attention_mask': attention_mask
         }
