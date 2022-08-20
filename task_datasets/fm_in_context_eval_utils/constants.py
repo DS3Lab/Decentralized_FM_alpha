@@ -31,47 +31,47 @@ from transformers import (
     OPTForCausalLM,
 )
 
-from fm_in_context_eval.fine_tuning.models.gpt_adaptor import (
-    GPTJAdaptorForCausalLM,
-    GPTNeoAdaptorForCausalLM,
-)
+# from fm_in_context_eval.fine_tuning.models.gpt_adaptor import (
+#     GPTJAdaptorForCausalLM,
+#     GPTNeoAdaptorForCausalLM,
+# )
 
-MODEL_REGISTRY = {
-    "gpt_adaptor-125M": GPTNeoAdaptorForCausalLM,
-    "gpt_adaptor-1.3B": GPTNeoAdaptorForCausalLM,
-    "gpt_adaptor-2.7B": GPTNeoAdaptorForCausalLM,
-    "gpt_adaptor-6B": GPTJAdaptorForCausalLM,
-    "EleutherAI/gpt-j-6B": GPTJForCausalLM,
-    "EleutherAI/gpt-neo-125M": GPTNeoForCausalLM,
-    "EleutherAI/gpt-neo-1.3B": GPTNeoForCausalLM,
-    "EleutherAI/gpt-neo-2.7B": GPTNeoForCausalLM,
-    "facebook/opt-125m": OPTForCausalLM,
-    "facebook/opt-355m": OPTForCausalLM,
-    "facebook/opt-1.3b": OPTForCausalLM,
-    "facebook/opt-2.7b": OPTForCausalLM,
-    "facebook/opt-6.7b": OPTForCausalLM,
-    "facebook/opt-13b": OPTForCausalLM,
-    "facebook/opt-30b": OPTForCausalLM,
-    "gpt2": GPT2LMHeadModel,
-}
+# MODEL_REGISTRY = {
+#     "gpt_adaptor-125M": GPTNeoAdaptorForCausalLM,
+#     "gpt_adaptor-1.3B": GPTNeoAdaptorForCausalLM,
+#     "gpt_adaptor-2.7B": GPTNeoAdaptorForCausalLM,
+#     "gpt_adaptor-6B": GPTJAdaptorForCausalLM,
+#     "EleutherAI/gpt-j-6B": GPTJForCausalLM,
+#     "EleutherAI/gpt-neo-125M": GPTNeoForCausalLM,
+#     "EleutherAI/gpt-neo-1.3B": GPTNeoForCausalLM,
+#     "EleutherAI/gpt-neo-2.7B": GPTNeoForCausalLM,
+#     "facebook/opt-125m": OPTForCausalLM,
+#     "facebook/opt-355m": OPTForCausalLM,
+#     "facebook/opt-1.3b": OPTForCausalLM,
+#     "facebook/opt-2.7b": OPTForCausalLM,
+#     "facebook/opt-6.7b": OPTForCausalLM,
+#     "facebook/opt-13b": OPTForCausalLM,
+#     "facebook/opt-30b": OPTForCausalLM,
+#     "gpt2": GPT2LMHeadModel,
+# }
 
-TOK_CONFIG_MAPPING = {
-    "gpt_adaptor-125M": "EleutherAI/gpt-neo-125M",
-    "gpt_adaptor-1.3B": "EleutherAI/gpt-neo-1.3B",
-    "gpt_adaptor-2.7B": "EleutherAI/gpt-neo-2.7B",
-    "gpt_adaptor-6B": "EleutherAI/gpt-j-6B",
-}
+# TOK_CONFIG_MAPPING = {
+#     "gpt_adaptor-125M": "EleutherAI/gpt-neo-125M",
+#     "gpt_adaptor-1.3B": "EleutherAI/gpt-neo-1.3B",
+#     "gpt_adaptor-2.7B": "EleutherAI/gpt-neo-2.7B",
+#     "gpt_adaptor-6B": "EleutherAI/gpt-j-6B",
+# }
 
-try:
-    from fm_in_context_eval.fine_tuning.models.gpt_flash_neo import (
-        GPTNeoForCausalLM as GPTNeoForCausalLMFlash,
-    )
+# try:
+#     from fm_in_context_eval.fine_tuning.models.gpt_flash_neo import (
+#         GPTNeoForCausalLM as GPTNeoForCausalLMFlash,
+#     )
 
-    MODEL_REGISTRY["EleutherAI/gpt-neo-flash-1.3B"] = GPTNeoForCausalLMFlash
-    TOK_CONFIG_MAPPING["EleutherAI/gpt-neo-flash-1.3B"] = "EleutherAI/gpt-neo-1.3B"
-except:
-    print("Flash attention not installed.")
-    pass
+#     MODEL_REGISTRY["EleutherAI/gpt-neo-flash-1.3B"] = GPTNeoForCausalLMFlash
+#     TOK_CONFIG_MAPPING["EleutherAI/gpt-neo-flash-1.3B"] = "EleutherAI/gpt-neo-1.3B"
+# except:
+#     print("Flash attention not installed.")
+#     pass
 
 
 TASK2METRICS = {
