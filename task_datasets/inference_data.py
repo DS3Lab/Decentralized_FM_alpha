@@ -6,8 +6,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from transformers import AutoTokenizer
 
-from modules.yalm_tokenizer import YalmTokenizer
-
 
 class JsonDataset(torch.utils.data.Dataset):
     def __init__(self, data, tokenizer, batch_size=None):
@@ -322,7 +320,17 @@ class RequestProcessor:
 def get_tokenizer(args):
     
     if args.model_type in ['yalm']:
+        from modules.yalm_tokenizer import YalmTokenizer
+        
         tokenizer = YalmTokenizer.from_pretrained(args.model_name)
+        tokenizer.padding_side = 'left'
+        tokenizer.truncation_side = 'left'
+        return tokenizer
+    
+    if args.model_type in ['glm']:
+        from modules.glm_tokenizer import GLMTokenizer
+        
+        tokenizer = GLMTokenizer.from_pretrained(args.model_name)
         tokenizer.padding_side = 'left'
         tokenizer.truncation_side = 'left'
         return tokenizer

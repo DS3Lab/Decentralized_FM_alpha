@@ -152,20 +152,20 @@ class SelfAttention(nn.Module):
         seq_len, b, nh, hidden_size = key_layer.shape
 
         # b, seqlen, stack, head, hidden
-        cache_kv = (
-            torch.stack((key_layer, value_layer))
-            .permute(2, 1, 0, 3, 4)
-            .detach()
-            .contiguous()
-            .view(b, seq_len, nh * hidden_size * 2)
-        )
-
+        # cache_kv = (
+        #     torch.stack((key_layer, value_layer))
+        #     .permute(2, 1, 0, 3, 4)
+        #     .detach()
+        #     .contiguous()
+        #     .view(b, seq_len, nh * hidden_size * 2)
+        # )
+        
         if mem is not None:  # the first time, mem is None
             # might change batch_size
-            # b, seqlen, stack, head, hidden -> stack, seqlen, b, head, hidden
+            # b, seqlen, head, hidden -> seqlen, b, head, hidden
             memk, memv = mem[0], mem[1] # (bs, nhead, seq_len, xxx)
-            memk.permute(2, 0, 1, 3)
-            memv.permute(2, 0, 1, 3)
+            memk = memk.permute(2, 0, 1, 3)
+            memv = memv.permute(2, 0, 1, 3)
             key_layer = torch.cat((memk, key_layer), dim=0)
             value_layer = torch.cat((memv, value_layer), dim=0)
             
@@ -407,28 +407,21 @@ class GPTBlock(nn.Module):
 
     
     def forward(self, hidden_states: torch.Tensor, layer_past=None, mask=None) -> torch.Tensor:
-        
-        # if mask is not None:
-        #     # bool -> float
-        #     attention_mask = (1e4 *(mask[:, None, None, :]-1)).to(hidden_states.dtype)
-        # else:
-        #     attention_mask = torch.zeros(
-        #         (hidden_states.size(0), 1, 1, hidden_states.size(1)), 
-        #         dtype=hidden_states.dtype, device=hidden_states.device)
            
         if mask is None:
             mask = torch.ones(hidden_states.size(0), hidden_states.size(1), device=hidden_states.device, dtype=torch.bool)
         else:
             mask = mask.bool()
-        position_ids = mask.cumsum(-1) - 1
+        position_ids = (mask.cumsum(-1) - 1).relu() # avoid negative id
         
         if layer_past is None:
             extend_mask = ~mask
-            extend_mask = extend_mask.unsqueeze(1) & extend_mask.unsqueeze(2)
+            extend_mask = extend_mask.unsqueeze(1) | extend_mask.unsqueeze(2)
             extend_mask[:, :-1, -1] = 1 # [sop] is always the first token
         else:
             extend_mask = ~mask
-            extend_mask = extend_mask.unsqueeze(1) & extend_mask[:, -1:].unsqueeze(2)
+            extend_mask = extend_mask.unsqueeze(1) | extend_mask[:, -1:].unsqueeze(2)
+            position_ids = position_ids[:, layer_past[0].size(2):]
         extend_mask = extend_mask.unsqueeze(1) # head dim
         
         hidden_states = hidden_states.transpose(0, 1) # transpose
