@@ -144,8 +144,6 @@ def main():
 #     config.resid_pdrop = 0.0
 #     config.summary_first_dropout = 0.0
     
-    # config.n_layer = args.num_layers
-    
     tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_name)
     tokenizer.model_max_length = args.seq_length
     config.vocab_size = tokenizer.vocab_size
@@ -205,6 +203,7 @@ def main():
             try:
                 train_loop(args, pipe, device, train_data_loader, test_data_loader)
             except Exception as e:
+                raise e
                 print(get_pipeline_parallel_rank(), e)
             pipe.export_profiling_result(filename=trace_file)
         elif args.profiling == 'pytorch_profiling':
