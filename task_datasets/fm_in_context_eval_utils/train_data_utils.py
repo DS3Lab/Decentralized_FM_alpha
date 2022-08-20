@@ -5,7 +5,7 @@ from functools import partial
 from itertools import chain
 from pathlib import Path
 from typing import Dict, List, Union
-from .utils.constants import DATASET_COL, INPUT_COL, OUTPUT_COL
+from .constants import DATASET_COL, INPUT_COL, OUTPUT_COL
 
 import pandas as pd
 import transformers
@@ -13,7 +13,7 @@ from datasets import Dataset, DatasetDict, concatenate_datasets
 from transformers import PretrainedConfig
 from transformers.testing_utils import CaptureLogger
 
-from fm_in_context_eval.utils.data_utils import read_raw_data, sample_train_data
+from fm_in_context_eval_utils.data_utils import read_raw_data, sample_train_data
 
 logger = logging.getLogger(__name__)
 
