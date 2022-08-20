@@ -13,7 +13,7 @@ from datasets import Dataset, DatasetDict, concatenate_datasets
 from transformers import PretrainedConfig
 from transformers.testing_utils import CaptureLogger
 
-from .fm_in_context_eval_utils.data_utils import read_raw_data, sample_train_data
+from .data_utils import read_raw_data, sample_train_data
 
 logger = logging.getLogger(__name__)
 
