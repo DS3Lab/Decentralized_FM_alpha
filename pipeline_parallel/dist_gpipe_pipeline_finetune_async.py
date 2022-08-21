@@ -376,9 +376,10 @@ class GpipeAsync:
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
                     self.torch_send_stream.wait_event(self.backward_comp_ready_events[i])
                     self.profile_mark_backward_send_start(i)
-                    # if self.use_fp16:
-                    #     self.input_micro_batches[i].grad.copy_(
-                    #         self.optimizer.unscale(self.input_micro_batches[i].grad))
+                    if self.use_fp16:
+                        self.input_micro_batches[i].grad.copy_(
+                            self.optimizer.unscale(self.input_micro_batches[i].grad)
+                        )
                     self.comm.send(self.input_micro_batches[i].grad, dst=self.pre_node_rank, stream=cupy_send_stream)
                     self.profile_mark_backward_send_end(i)
             elif self.pp_rank == 0:  # only receive grad from previous node, do not send
@@ -386,8 +387,10 @@ class GpipeAsync:
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                     self.profile_mark_backward_recv_start(i)
                     self.comm.recv(self.output_micro_batches_grad[i], src=self.post_node_rank, stream=cupy_recv_stream)
-                    # if self.use_fp16:
-                    #     self.output_micro_batches_grad[i] = self.optimizer.scale(self.output_micro_batches_grad[i])
+                    if self.use_fp16:
+                        self.output_micro_batches_grad[i].copy_(
+                            self.optimizer.scale(self.output_micro_batches_grad[i])
+                        )
                     self.torch_recv_stream.record_event(self.backward_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.backward_recv_ready_events[i])
@@ -399,8 +402,10 @@ class GpipeAsync:
                     cupy_recv_stream = cupy.cuda.ExternalStream(self.torch_recv_stream.cuda_stream)
                     self.profile_mark_backward_recv_start(i)
                     self.comm.recv(self.output_micro_batches_grad[i], src=self.post_node_rank, stream=cupy_recv_stream)
-                    # if self.use_fp16:
-                    #     self.output_micro_batches_grad[i] = self.optimizer.scale(self.output_micro_batches_grad[i])
+                    if self.use_fp16:
+                        self.output_micro_batches_grad[i].copy_(
+                            self.optimizer.scale(self.output_micro_batches_grad[i])
+                        )
                     self.torch_recv_stream.record_event(self.backward_recv_ready_events[i])
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.backward_recv_ready_events[i])
@@ -411,9 +416,10 @@ class GpipeAsync:
                     cupy_send_stream = cupy.cuda.ExternalStream(self.torch_send_stream.cuda_stream)
                     self.torch_send_stream.wait_event(self.backward_comp_ready_events[i])
                     self.profile_mark_backward_send_start(i)
-                    # if self.use_fp16:
-                    #     self.input_micro_batches[i].grad.copy_(
-                    #         self.optimizer.unscale(self.input_micro_batches[i].grad))
+                    if self.use_fp16:
+                        self.input_micro_batches[i].grad.copy_(
+                            self.optimizer.unscale(self.input_micro_batches[i].grad)
+                        )
                     self.comm.send(self.input_micro_batches[i].grad, dst=self.pre_node_rank, stream=cupy_send_stream)
                     self.profile_mark_backward_send_end(i)
         if self.enable_tidy_profiling:
