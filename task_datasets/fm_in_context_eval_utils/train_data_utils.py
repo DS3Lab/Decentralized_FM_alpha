@@ -318,19 +318,21 @@ def tokenize_data(
                         tokenize_no_group_function, split=split, mask_input=True
                     )
 
+            '''
             cache_file_name = (
                 Path(data_cache_dir)
                 / f"cached_tok_{int(ignore_label_column)}ig"
                 / f"processed_{split}.dataset"
             )
             cache_file_name.parent.mkdir(exist_ok=True, parents=True)
+            '''
             tokenized_datasets[split] = hf_datasets[split].map(
                 tokenize_func,
                 batched=True,
                 num_proc=preprocessing_num_workers,
                 remove_columns=column_names,
-                load_from_cache_file=not overwrite_cache,
-                cache_file_name=str(cache_file_name),
+                #load_from_cache_file=not overwrite_cache,
+                #cache_file_name=str(cache_file_name),
                 desc=f"Running tokenizer on dataset {split}",
             )
         tokenized_datasets = DatasetDict(tokenized_datasets)
@@ -387,19 +389,21 @@ def tokenize_data(
         with training_args.main_process_first(desc="grouping texts together"):
             lm_datasets = {}
             for split in tokenized_datasets:
+                '''
                 cache_file_name = (
                     Path(data_cache_dir)
                     / f"cached_grp_{int(ignore_label_column)}ig"
                     / f"processed_{split}.dataset"
                 )
                 cache_file_name.parent.mkdir(exist_ok=True, parents=True)
+                '''
 
                 lm_datasets[split] = tokenized_datasets[split].map(
                     group_texts,
                     batched=True,
                     num_proc=preprocessing_num_workers,
-                    load_from_cache_file=not overwrite_cache,
-                    cache_file_name=str(cache_file_name),
+                    #load_from_cache_file=not overwrite_cache,
+                    #cache_file_name=str(cache_file_name),
                     desc=f"Grouping texts in chunks of {block_size}",
                 )
             lm_datasets = DatasetDict(lm_datasets)

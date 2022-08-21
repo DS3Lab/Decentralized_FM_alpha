@@ -143,7 +143,7 @@ def main():
     elif args.task_name == 'openwebtext':
         train_data_loader = get_openwebtext_train_data_loader(args, tokenizer)
         test_data_loader = get_wikitext_test_data_loader(args, tokenizer)
-    elif args_data_loader == 'fm_in_context_eval':
+    elif args.task_name == 'fm_in_context_eval':
         train_data_loader = get_fm_in_context_eval_train_data_loader(args, tokenizer)
         test_data_loader = None
     else:

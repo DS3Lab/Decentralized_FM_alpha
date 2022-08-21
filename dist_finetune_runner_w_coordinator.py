@@ -64,8 +64,11 @@ def save_checkpoint(args, pipe, ckpt_path):
 
 def train_loop(args, pipe, device, train_data_loader, test_data_loader):
     
+    print('tarting train loop....')
     for e in range(args.n_epochs):
         
+        print(f'==== epoch {e} ====')
+
         distributed_train_lm_iter(args, pipe, device, train_data_loader)
         
         if test_data_loader is not None and args.do_evaluation:
@@ -147,7 +150,7 @@ def main():
     elif args.task_name == 'openwebtext':
         train_data_loader = get_openwebtext_train_data_loader(args, tokenizer)
         test_data_loader = get_wikitext_test_data_loader(args, tokenizer)
-    elif args_data_loader == 'fm_in_context_eval':
+    elif args.task_name == 'fm_in_context_eval':
         train_data_loader = get_fm_in_context_eval_train_data_loader(args, tokenizer)
         test_data_loader = None
     else:
@@ -201,4 +204,9 @@ def main():
     coord_client.notify_train_finish(message=train_finish_msg)
 
 if __name__ == '__main__':
+
+    import datasets
+    # euler distributed file system makes cache slow
+    datasets.disable_caching()
+
     main()
