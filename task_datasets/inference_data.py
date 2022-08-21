@@ -177,7 +177,7 @@ class RequestProcessor:
         
             max_input_seq_length = 1
             for i, x in enumerate(self.data):
-                seq_length = len(self.tokenizer(x['request']['prompt'])['input_ids'])
+                seq_length = self.tokenizer(x['request']['prompt'], return_tensors='pt')['input_ids'].size(1)
                 
                 if seq_length > max_input_seq_length:
                     max_input_seq_length = seq_length

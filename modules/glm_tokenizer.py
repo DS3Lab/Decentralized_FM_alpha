@@ -18,6 +18,10 @@ class GLMTokenizer:
         self.special_tokens['eos'] = 20002
         self.special_tokens_decoder[20002] = '</s>'
         
+        self.bos_token = "sop"
+        self.eos_token = "eop"
+        self.pad_token = "[pad]"
+        
         self.model_max_length = 2048
         self.truncation_side = 'left'
         self.padding_side = 'left'
@@ -98,9 +102,13 @@ class GLMTokenizer:
         return cls()
     
     def convert_tokens_to_ids(self, tokens):
+        if isinstance(tokens, str):
+            return self.TokenToId(tokens)
         return [self.TokenToId(token) for token in tokens]
 
     def convert_ids_to_tokens(self, ids):
+        if isinstance(ids, int):
+            return self.IdToToken(ids)
         if isinstance(ids, torch.Tensor):
             ids = ids.cpu().tolist()
         return [self.IdToToken(idx) for idx in ids]
