@@ -51,7 +51,7 @@ def distributed_train_lm_iter(args, pipeline, device, train_data_loader):
     if get_pipeline_parallel_rank() == 0:
         total_time = 0
         for i, data in enumerate(train_data_loader):
-            input_ids = data['text'].to(device)
+            input_ids = data['input_ids'].to(device)
             current_iter_time = pipeline.sgd_iter(input_ids, None)
             if i > 0:
                 total_time += current_iter_time
@@ -62,8 +62,11 @@ def distributed_train_lm_iter(args, pipeline, device, train_data_loader):
               " iterations, averaged (exclude the first iter) run time:", averaged_time)
     elif get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
         for i, data in enumerate(train_data_loader):
-            input_ids = data['text'].to(device)
-            labels = data['text'].to(device) # labels are inputs
+            input_ids = data['input_ids'].to(device)
+            if 'labels' in data:
+                labels = data['labels'].to(device)
+            else:
+                labels = data['input_ids'].to(device) # labels are inputs
             pipeline.sgd_iter(input_ids, labels, 
                               loss_func=gpt_loss_func) # lm loss func
             if i >= args.num_iters-1:

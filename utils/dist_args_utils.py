@@ -74,6 +74,32 @@ def add_training_model_arguments(parser):
     parser.add_argument('--task', type=str, default='SeqClassification', metavar='S',
                         help='What task to run? SeqClassification or Seq2SeqClassification')
 
+def add_finetuning_model_arguments(parser):
+    parser.add_argument('--model-name', type=str, default='gpt2', metavar='S',
+                        help='model name or path')
+    parser.add_argument('--model-type', type=str, default='gpt2', metavar='S',
+                        help='model type')
+    parser.add_argument('--model-save-path', type=str, default=None, metavar='S',
+                        help='model save path')
+    parser.add_argument('--tokenizer-name', type=str, default='gpt2', metavar='S',
+                        help='tokenizer name or path')
+    parser.add_argument('--task-name', type=str, default='wikitext', metavar='S',
+                        help='task name')
+    parser.add_argument('--task-type', type=str, default='language_model', metavar='S',
+                        help='task typw')
+    parser.add_argument('--data-dirs', nargs='+', default=[],
+                        help='data dirs for fm in context training')
+    parser.add_argument('--data-cache-dir', type=str, default='', help='data cache dir for hf datasets tmp files / cache.')
+    parser.add_argument('--n-epochs', type=int, default=10, help='-')
+    # parser.add_argument('--warmup-epochs', type=int, default=1, help='warmup for activation compression')
+    parser.add_argument('--warmup-steps', type=int, default=None, help='-')
+    parser.add_argument('--total-steps', type=int, default=None, help='-')
+    parser.add_argument('--load-pretrained-model', 
+                        type=lambda x: x.lower()=='true', default=True, metavar='S',
+                        help='load pretrained model or not.')
+    parser.add_argument('--max-layers', type=int, default=None, help='max layers')
+    parser.add_argument('--seed', type=int, default=1, metavar='S',
+                        help='random seed (default: 1)')
 
 def add_training_hyper_parameter_arguments(parser):
     parser.add_argument('--batch-size', type=int, default=16, metavar='N',
@@ -83,6 +109,10 @@ def add_training_hyper_parameter_arguments(parser):
     parser.add_argument('--lr', type=float, default=0.0001, metavar='N',
                         help='-')
     parser.add_argument('--num-iters', type=int, default=4, metavar='N',
+                        help='-')
+    parser.add_argument('--weight-decay', type=float, default=0.1, metavar='N',
+                        help='-')
+    parser.add_argument('--dropout', type=float, default=0.1, metavar='N',
                         help='-')
 
 

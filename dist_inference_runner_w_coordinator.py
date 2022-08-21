@@ -22,6 +22,7 @@ def main():
     parser.add_argument('--trace-postfix', type=str, default='default', metavar='S',
                         help='postfix of the tracing file name.')
     args = parser.parse_args()
+    #args.infer_data = ''
     print_arguments(args)
     torch.manual_seed(args.seed)
     if args.use_cuda:
