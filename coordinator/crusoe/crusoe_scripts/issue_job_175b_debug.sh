@@ -19,7 +19,7 @@ ARGS="--model-type gptj --model-name ./pretrained_debug_models/gpt-j-175B \
 
 for (( i=0; i<${num_gpu}; i++))
 do
-    python multi_gpu_inference_w_crusoe_coordinator.py ${ARGS} --cuda-id i --rank i &
+    python3 multi_gpu_inference_w_crusoe_coordinator.py ${ARGS} --cuda-id $i --rank $i &
 done
 
 wait

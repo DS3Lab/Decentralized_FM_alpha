@@ -31,6 +31,7 @@ pip3 install "pybind11[global]"
 pip3 install transformers
 pip3 install deepspeed==0.6.7
 pip3 install sentencepiece
+pip3 install flask
 
 cd ~/GPT-home-private/coordinator/crusoe
 python3 crusoe_coordinator_vm_client.py --message "Install Python Libs: done." --coordinator-server-ip $coordinator_server_ip

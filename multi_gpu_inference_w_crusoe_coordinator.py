@@ -34,7 +34,7 @@ def main():
         device = torch.device('cpu')
 
     init_communicators(args)
-    client = VMClient()
+    client = VMClient(args)
     client.send_message_to_coordinate("Inference job starts.")
 
     if get_pipeline_parallel_rank() == 0 or True:
