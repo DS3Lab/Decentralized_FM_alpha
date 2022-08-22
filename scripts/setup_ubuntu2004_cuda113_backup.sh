@@ -32,7 +32,8 @@ pip3 install --pre torch==1.12.0+cu113 -f https://download.pytorch.org/whl/torch
 
 pip3 install "pybind11[global]"
 pip3 install transformers
-pip install deepspeed==0.6.7
+pip3 install deepspeed==0.6.7
+pip3 install sentencepiece
 
 # Install Ninja.
 wget https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-linux.zip

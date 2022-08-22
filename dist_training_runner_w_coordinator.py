@@ -6,7 +6,6 @@ from pipeline_parallel.dist_pp_utils import get_pp_module
 from utils.dist_args_utils import *
 from utils.dist_train_utils import *
 from comm.comm_utils import *
-from coordinator.coordinate_client import *
 
 
 def main():

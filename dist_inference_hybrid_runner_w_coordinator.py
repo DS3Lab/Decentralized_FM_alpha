@@ -5,8 +5,6 @@ from utils.dist_inference_utils import *
 from comm.hybrid_comm_utils import init_hybrid_inference_communicators_with_coordinator
 from task_datasets.inference_data import DummyRequestProcessor
 from pipeline_parallel.dist_pp_utils import *
-from coordinator.coordinate_client import *
-from transformers import AutoTokenizer
 
 
 def main():

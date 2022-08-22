@@ -1,9 +1,6 @@
 import argparse
-import time
 import random
-import numpy as np
 import os
-import torch
 import torch.autograd.profiler as profiler
 from task_datasets.wikitext import get_wikitext_train_data_loader, get_wikitext_test_data_loader
 from task_datasets.wiki103 import get_wiki103_train_data_loader, get_wiki103_test_data_loader
@@ -22,7 +19,6 @@ from utils.dist_args_utils import *
 from utils.dist_train_utils import *
 from utils.dist_test_utils import *
 from comm.comm_utils import *
-from coordinator.coordinate_client import *
 
 
 def save_checkpoint(args, pipe, ckpt_path):

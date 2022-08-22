@@ -4,8 +4,6 @@ from pipeline_parallel.dist_pp_utils import get_pp_inference_module
 from utils.dist_args_utils import *
 from utils.dist_inference_utils import *
 from comm.comm_utils import *
-from coordinator.coordinate_client import *
-from transformers import AutoTokenizer
 from task_datasets.inference_data import get_request_processor
 
 

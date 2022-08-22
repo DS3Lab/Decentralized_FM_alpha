@@ -481,7 +481,7 @@ def main():
     parser.add_argument('--coordinator-server-ip', type=str, default='localhost', metavar='S',
                         help='The IP of coordinator-server.')
     parser.add_argument('--bsub-script-path', type=str,
-                        default='/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/GPT-home-private/scripts/lsf_scripts',
+                        default='/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/GPT-home-private/coordinator/euler/lsf_scripts',
                         metavar='S', help='Path to store the bsub scripts')
     args = parser.parse_args()
     print(vars(args))
