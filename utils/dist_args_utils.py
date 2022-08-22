@@ -24,7 +24,7 @@ def add_torch_distributed_arguments(parser):
                         help='rank of the node')
 
 
-def add_torch_distributed_w_coordinator_arguments(parser):
+def add_torch_distributed_w_euler_coordinator_arguments(parser):
     parser.add_argument('--dist-backend', type=str, default='cupy_nccl', metavar='S',
                         help='backend type for distributed PyTorch (default: cupy_nccl)')
     parser.add_argument('--coordinator-server-port', type=int, default=9002, metavar='N',
@@ -100,6 +100,7 @@ def add_finetuning_model_arguments(parser):
     parser.add_argument('--max-layers', type=int, default=None, help='max layers')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
+
 
 def add_training_hyper_parameter_arguments(parser):
     parser.add_argument('--batch-size', type=int, default=16, metavar='N',
@@ -227,7 +228,7 @@ def add_hybrid_inference_arguments(parser):
                         help='Run model in fp16 mode.')
 
 
-def add_torch_distributed_inference_w_coordinator_arguments(parser):
+def add_torch_distributed_inference_w_euler_coordinator_arguments(parser):
     parser.add_argument('--dist-backend', type=str, default='cupy_nccl', metavar='S',
                         help='backend type for distributed PyTorch (default: cupy_nccl)')
     parser.add_argument('--coordinator-server-port', type=int, default=9002, metavar='N',
@@ -240,7 +241,14 @@ def add_torch_distributed_inference_w_coordinator_arguments(parser):
                         help='world-size (default: 4)')
 
 
-def add_torch_distributed_hybrid_inference_w_coordinator_arguments(parser):
+def add_torch_distributed_inference_w_crusoe_coordinator_arguments(parser):
+    parser.add_argument('--coordinator-server-port', type=int, default=9002, metavar='N',
+                        help='The port of coordinator-server.')
+    parser.add_argument('--coordinator-server-ip', type=str, default='localhost', metavar='S',
+                        help='The IP of coordinator-server.')
+
+
+def add_torch_distributed_hybrid_inference_w_euler_coordinator_arguments(parser):
     parser.add_argument('--dist-backend', type=str, default='cupy_nccl', metavar='S',
                         help='backend type for distributed PyTorch (default: cupy_nccl)')
     parser.add_argument('--coordinator-server-port', type=int, default=9002, metavar='N',

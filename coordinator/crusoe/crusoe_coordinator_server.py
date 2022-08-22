@@ -16,6 +16,7 @@ class CrusoeCoordinatorServer:
         self.host = args.coordinator_server_ip
         self.port = args.coordinator_server_port
         self.token = args.token
+        print(f"====Server initialized with toke: {self.token}====")
         self.meta_key_value_store = OrderedDict()
         # An array of dict object to store worker info
         self.node_info = []
@@ -48,6 +49,16 @@ class CrusoeCoordinatorServer:
         os.popen(f'ssh-keyscan -H {assign_ip} >> ~/.ssh/known_hosts')
         os.popen(f'ssh root@{assign_ip} bash -s < ./crusoe_scripts/startup_install.sh {self.token} &> ./exe_log/{assign_ip}_install.log &')
         return f"Succeed! Launched node <index:{len(self.node_info)}:{assign_ip}>"
+
+    def _handle_launch_new_job(self, msg_dict):
+        if msg_dict["job_type"] == "inference":
+            if msg_dict["model_name"] == "gpt_175b":
+                if msg_dict["data_set"] == "foo":
+                    node_index = msg_dict['node_index']
+                    worker_ip = self.node_info[node_index]
+                    os.popen(f'ssh root@{worker_ip} bash -s < ./crusoe_scripts/issue_job_175b_debug.sh &> ./exe_log/{worker_ip}_175b_debug.log &')
+                    return f"Job Submitted!"
+        return f"Job submission failed, not supported workflow."
 
     def _handle_recv_message_vm(self, ip, msg_dict):
         print(msg_dict['message'])
@@ -86,6 +97,8 @@ class CrusoeCoordinatorServer:
                         return_msg = self._handle_launch_new_vm(msg_dict)
                     elif msg_dict['op'] == 'check_node_status_user':
                         return_msg = self._handle_check_node_status()
+                    elif msg_dict['op'] == 'run_job_user':
+                        return_msg = self._handle_launch_new_job(msg_dict)
                     else:
                         assert False, "Not recognized op"
                     connection.sendall(return_msg.encode())

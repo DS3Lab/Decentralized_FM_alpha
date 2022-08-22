@@ -86,7 +86,7 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
 
 def main():
     parser = argparse.ArgumentParser(description='Gpipe-GPT3')
-    add_torch_distributed_w_coordinator_arguments(parser)
+    add_torch_distributed_w_euler_coordinator_arguments(parser)
     add_device_arguments(parser)
     # add_torch_distributed_arguments(parser)
     add_training_model_arguments(parser)

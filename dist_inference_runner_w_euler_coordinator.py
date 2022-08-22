@@ -11,7 +11,7 @@ from coordinator.euler.coordinate_client import CoordinatorInferenceClient
 def main():
     parser = argparse.ArgumentParser(description='Inference Runner with coordinator.')
     add_device_arguments(parser)
-    add_torch_distributed_inference_w_coordinator_arguments(parser)
+    add_torch_distributed_inference_w_euler_coordinator_arguments(parser)
     add_inference_arguments(parser)
     add_inference_details_arguments(parser)
     parser.add_argument('--seed', type=int, default=1, metavar='S',

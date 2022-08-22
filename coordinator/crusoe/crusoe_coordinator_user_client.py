@@ -63,7 +63,8 @@ def main():
             "op": "run_job_user",
             "job_type": "inference",
             "model_name": "gpt_175b",
-            "data_set": "foo"
+            "data_set": "foo",
+            "node_index": 0
         }
         client.ask_coordinator_to_run_job(work_json)
 

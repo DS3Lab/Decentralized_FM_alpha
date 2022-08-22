@@ -6,7 +6,7 @@ rank=$3
 timestamp=$(date +%Y_%m_%d_%H_%M)
 
 DIST_CONF="--pp-mode pipe_sync_greedy --world-size $world_size --pipeline-group-size $world_size --data-group-size 1 --rank "$rank""
-MODEL_CONF="--model-type gptj --model-name ./pretrained_models/gpt-j-6B"
+MODEL_CONF="--model-type gptj --model-name ./pretrained_debug_models/gpt-j-6B"
 INFERENCE_CONF="--batch-size 48 --input-seq-length 512 --generate-seq-length 32 --micro-batch-size 1 --num-layers 2"
 
 

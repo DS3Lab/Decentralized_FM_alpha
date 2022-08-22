@@ -26,7 +26,7 @@ else
   DIST_CONF="--pp-mode pipe_hybrid_greedy_async --world-size $world_size --pipeline-group-size $pipeline_size --rank $rank --node-type $node_type --use-cuda False"
 fi
 
-MODEL_CONF="--model-type gptj --model-name ./pretrained_models/gpt-j-175B"
+MODEL_CONF="--model-type gptj --model-name ./pretrained_debug_models/gpt-j-175B"
 INFERENCE_CONF="--num-iters 2 --input-seq-length $input_seq_length --generate-seq-length $generate_seq_length --prompt-micro-batch-size $micro_batch_size --token-micro-batch-size $micro_batch_size --stage-num-layers $stage_num_layers --global-num-layers $global_num_layers"
 BUF_CONF="--producer-buffer-size $producer_buffer_size --consumer-buffer-size $consumer_buffer_size"
 
