@@ -13,7 +13,8 @@ crusoe_node_types = {'a40.1x', 'a40.2x', 'a40.4x', 'a40.8x',
 
 class CrusoeCoordinatorServer:
     def __init__(self, args):
-        self.host = args.coordinator_server_ip
+        self.publish_ip = args.coordinator_server_ip
+        self.host = args.aws_start_ip
         self.port = args.coordinator_server_port
         self.token = args.token
         print(f"====Server initialized with toke: {self.token}====")
@@ -47,7 +48,7 @@ class CrusoeCoordinatorServer:
         print(f"Install cuda and pip lib in <{assign_ip}>")
         time.sleep(10)
         os.popen(f'ssh-keyscan -H {assign_ip} >> ~/.ssh/known_hosts')
-        os.popen(f'ssh root@{assign_ip} bash -s < ./crusoe_scripts/startup_install.sh {self.token} &> ./exe_log/{assign_ip}_install.log &')
+        os.popen(f'ssh root@{assign_ip} bash -s < ./crusoe_scripts/startup_install.sh {self.token} {self.publish_ip} &> ./exe_log/{assign_ip}_install.log &')
         return f"Succeed! Launched node <index:{len(self.node_info)}:{assign_ip}>"
 
     def _handle_launch_new_job(self, msg_dict):
@@ -56,7 +57,7 @@ class CrusoeCoordinatorServer:
                 if msg_dict["data_set"] == "foo":
                     node_index = msg_dict['node_index']
                     worker_ip = self.node_info[node_index]
-                    os.popen(f'ssh root@{worker_ip} bash -s < ./crusoe_scripts/issue_job_175b_debug.sh &> ./exe_log/{worker_ip}_175b_debug.log &')
+                    os.popen(f'ssh root@{worker_ip} bash -s < ./crusoe_scripts/issue_job_175b_debug.sh {self.publish_ip} &> ./exe_log/{worker_ip}_175b_debug.log &')
                     return f"Job Submitted!"
         return f"Job submission failed, not supported workflow."
 
@@ -109,6 +110,8 @@ def main():
     parser = argparse.ArgumentParser(description='Test Coordinator-Server')
     parser.add_argument('--coordinator-server-port', type=int, default=9002, metavar='N',
                         help='The port of coordinator-server.')
+    parser.add_argument('--aws-start-ip', type=str, default='0.0.0.0', metavar='S',
+                        help='The IP of coordinator-server.')
     parser.add_argument('--coordinator-server-ip', type=str, default='0.0.0.0', metavar='S',
                         help='The IP of coordinator-server.')
     parser.add_argument('--token', type=str, default='-', metavar='S',

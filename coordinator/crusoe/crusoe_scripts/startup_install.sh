@@ -1,8 +1,9 @@
 token=$1
+coordinator_server_ip=$2
 
 git clone https://"${token}"@github.com/BinhangYuan/GPT-home-private.git
 cd ~/GPT-home-private/coordinator/crusoe
-python3 crusoe_coordinator_vm_client.py --message "Checkout repo: done."
+python3 crusoe_coordinator_vm_client.py --message "Checkout repo: done." --coordinator-server-ip $coordinator_server_ip
 
 sudo apt-get update
 wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
@@ -19,7 +20,7 @@ sudo apt-get -y install python3-pip
 
 
 cd ~/GPT-home-private/coordinator/crusoe
-python3 crusoe_coordinator_vm_client.py --message "Install CUDA: done."
+python3 crusoe_coordinator_vm_client.py --message "Install CUDA: done." --coordinator-server-ip $coordinator_server_ip
 
 pip3 install cupy-cuda11x==11.0.0
 python3 -m cupyx.tools.install_library --cuda 11.x --library nccl
@@ -32,4 +33,4 @@ pip3 install deepspeed==0.6.7
 pip3 install sentencepiece
 
 cd ~/GPT-home-private/coordinator/crusoe
-python3 crusoe_coordinator_vm_client.py --message "Install Python Libs: done."
+python3 crusoe_coordinator_vm_client.py --message "Install Python Libs: done." --coordinator-server-ip $coordinator_server_ip

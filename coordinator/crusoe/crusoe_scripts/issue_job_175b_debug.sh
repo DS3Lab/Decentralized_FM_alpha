@@ -1,8 +1,11 @@
+coordinator_server_ip=$1
+
 cd ~/GPT-home-private
 
 num_gpu=8
 
 ARGS="--model-type gptj --model-name ./pretrained_debug_models/gpt-j-175B \
+--coordinator-server-ip $coordinator_server_ip
 --seed 42 \
 --fp16 \
 --num-layers 12 \
