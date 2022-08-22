@@ -25,7 +25,7 @@ class CrusoeCoordinatorServer:
 
     def _get_ip_in_node_info_index(self, ip) -> int:
         for i in range(len(self.node_info)):
-            if ip == self.node_info['ip']:
+            if ip == self.node_info[i]['ip']:
                 return i
         return -1
 
