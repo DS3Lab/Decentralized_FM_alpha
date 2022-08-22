@@ -1,3 +1,5 @@
+cd ~/GPT-home-private
+
 num_gpu=8
 
 ARGS="--model-type gptj --model-name ./pretrained_debug_models/gpt-j-175B \
