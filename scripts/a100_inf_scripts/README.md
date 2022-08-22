@@ -25,7 +25,26 @@ AutoTokenizer.from_pretrained(model_name_on_huggingface).save_pretrained(model_p
 
 We generally follow OpenAI's API (https://beta.openai.com/docs/api-reference/completions). 
 
-Each line of the data file is a json object. The below is an example. 
+Each line of the data file is a json object. The below is an example:
+
+```json
+{
+    "best_of":1,
+    "echo":false,
+    "engine":"gpt-j-6b",
+    "logprobs":1,
+    "max_tokens":2,
+    "n":1,
+    "prompt":"Passage: The bedroom is north of the garden.\nThe bathroom is west of the garden.\nThe office is east of the garden.\nThe hallway is west of the bathroom.\nThe bathroom is south of the kitchen.\nQuestion: How do you go from the bathroom to the office?\nAnswer: east east\n\nPassage: The office is north of the hallway.\nThe bathroom is east of the bedroom.\nThe hallway is north of the bedroom.\nThe office is east of the kitchen.\nThe bedroom is north of the garden.\nQuestion: How do you go from the bedroom to the office?\nAnswer: north north\n\nPassage: The garden is south of the bedroom.\nThe bathroom is east of the kitchen.\nThe office is north of the bathroom.\nThe bathroom is north of the hallway.\nThe bedroom is west of the office.\nQuestion: How do you go from the bathroom to the bedroom?\nAnswer: north west\n\nPassage: The garden is west of the office.\nThe bedroom is west of the garden.\nThe bathroom is south of the office.\nThe office is west of the hallway.\nThe kitchen is north of the office.\nQuestion: How do you go from the kitchen to the garden?\nAnswer: south west\n\nPassage: The bedroom is west of the office.\nThe garden is south of the bedroom.\nThe bathroom is south of the kitchen.\nThe hallway is north of the bedroom.\nThe bedroom is east of the bathroom.\nQuestion: How do you go from the bathroom to the hallway?\nAnswer: east north\n\nPassage: The bedroom is north of the bathroom.\nThe bedroom is east of the office.\nThe kitchen is east of the bedroom.\nThe garden is west of the bathroom.\nThe hallway is south of the bathroom.\nQuestion: How do you go from the bathroom to the office?\nAnswer:",
+    "stop":[
+        "\n"
+    ],
+    "temperature":0.0,
+    "top_p":1,
+}
+```
+
+Each line of the output file is also a json object. The below is an example:
 
 ```json
 {
