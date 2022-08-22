@@ -24,7 +24,8 @@ def distributed_inference_foo_iter(args, pipeline, device, request_processor, vm
             current_iter_time = pipeline.inference_batch(input_ids, output_ids_list)
             request_processor.add_result(inputs, output_ids_list)
             if VMClient is not None:
-                vm_client.send_message_to_coordinate("Iter<{}> takes {:3.2f}s".format(i, current_iter_time))
+                vm_client.send_message_to_coordinate("Iter<{}/{}> takes {:3.2f}s"
+                                                     .format(i+1, args.num_iters, current_iter_time))
             
             if i > 0:
                 total_time += current_iter_time
@@ -33,10 +34,7 @@ def distributed_inference_foo_iter(args, pipeline, device, request_processor, vm
         averaged_time = total_time / (args.num_iters - 1 + 1e-9)
         print("Finished running ", args.num_iters,
               " iterations, averaged (exclude the first iter) run time:", averaged_time)
-        if VMClient is not None:
-            vm_client.send_message_to_coordinate("Finished averaged runtime {:3.2f}s".format(averaged_time))
         # request_processor.write_scenario_state()
-            
     else:
         i = 0
         while True:
@@ -62,7 +60,8 @@ def distributed_inference_mask_iter(args, pipeline, device, request_processor, v
             output_ids_list = []
             current_iter_time = pipeline.inference_batch(input_ids, output_ids_list, attention_mask=attention_mask)
             if VMClient is not None:
-                vm_client.send_message_to_coordinate("Iter<{}> takes {:3.2f}s".format(i, current_iter_time))
+                vm_client.send_message_to_coordinate("Iter<{}/{}> takes {:3.2f}s"
+                                                     .format(i+1, args.num_iters, current_iter_time))
             
             if i > 0:
                 total_time += current_iter_time
@@ -71,8 +70,6 @@ def distributed_inference_mask_iter(args, pipeline, device, request_processor, v
         averaged_time = total_time / (args.num_iters - 1 + 1e-9)
         print("Finished running ", args.num_iters,
               " iterations, averaged (exclude the first iter) run time:", averaged_time)
-        if VMClient is not None:
-            vm_client.send_message_to_coordinate("Finished averaged runtime {:3.2f}s".format(averaged_time))
             
     elif get_pipeline_parallel_rank() == pipeline.pipeline_group_size - 1:
         infer_data_loader = request_processor.get_dataloader(args.batch_size)
