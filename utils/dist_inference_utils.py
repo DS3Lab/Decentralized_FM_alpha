@@ -33,7 +33,8 @@ def distributed_inference_foo_iter(args, pipeline, device, request_processor, vm
         averaged_time = total_time / (args.num_iters - 1 + 1e-9)
         print("Finished running ", args.num_iters,
               " iterations, averaged (exclude the first iter) run time:", averaged_time)
-        
+        if VMClient is not None:
+            vm_client.send_message_to_coordinate("Finished averaged runtime {:3.2f}s".format(averaged_time))
         # request_processor.write_scenario_state()
             
     else:
@@ -70,6 +71,8 @@ def distributed_inference_mask_iter(args, pipeline, device, request_processor, v
         averaged_time = total_time / (args.num_iters - 1 + 1e-9)
         print("Finished running ", args.num_iters,
               " iterations, averaged (exclude the first iter) run time:", averaged_time)
+        if VMClient is not None:
+            vm_client.send_message_to_coordinate("Finished averaged runtime {:3.2f}s".format(averaged_time))
             
     elif get_pipeline_parallel_rank() == pipeline.pipeline_group_size - 1:
         infer_data_loader = request_processor.get_dataloader(args.batch_size)
