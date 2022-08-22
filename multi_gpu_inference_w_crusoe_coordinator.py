@@ -69,7 +69,8 @@ def main():
         else:
             print("No recognized profiler?")
             assert False
-    client.send_message_to_coordinate("Inference job ends.")
+    if get_pipeline_parallel_rank() == 0:
+        client.send_message_to_coordinate("Inference job ends.")
 
 
 
