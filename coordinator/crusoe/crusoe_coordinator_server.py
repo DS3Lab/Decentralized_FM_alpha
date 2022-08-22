@@ -49,7 +49,7 @@ class CrusoeCoordinatorServer:
         time.sleep(10)
         os.popen(f'ssh-keyscan -H {assign_ip} >> ~/.ssh/known_hosts')
         os.popen(f'ssh root@{assign_ip} bash -s < ./crusoe_scripts/startup_install.sh {self.token} {self.publish_ip} &> ./exe_log/{assign_ip}_install.log &')
-        return f"Succeed! Launched node <index:{len(self.node_info)}:{assign_ip}>"
+        return f"Succeed! Launched node <index-{len(self.node_info)-1}:{assign_ip}>"
 
     def _handle_launch_new_job(self, msg_dict):
         if msg_dict["job_type"] == "inference":
@@ -66,13 +66,10 @@ class CrusoeCoordinatorServer:
         index = self._get_ip_in_node_info_index(ip)
         assert index != -1
         if msg_dict['message'] == 'Checkout repo: done.':
-            assert ip in self.node_info
             self.node_info[index]['state'] = 'repo_ready'
         elif msg_dict['message'] == 'Install CUDA: done.':
-            assert ip in self.node_info
             self.node_info[index]['state'] = 'cuda_ready'
         elif msg_dict['message'] == 'Install Python Libs: done.':
-            assert ip in self.node_info
             self.node_info[index]['state'] = 'pip_ready'
         return "Get it!"
 
