@@ -56,7 +56,8 @@ class CrusoeCoordinatorServer:
             if msg_dict["model_name"] == "gpt_175b":
                 if msg_dict["data_set"] == "foo":
                     node_index = msg_dict['node_index']
-                    worker_ip = self.node_info[node_index]
+                    worker_ip = self.node_info[node_index]['ip']
+                    print(f"Issue job_175b_debug in {worker_ip}")
                     os.popen(f'ssh root@{worker_ip} bash -s < ./crusoe_scripts/issue_job_175b_debug.sh {self.publish_ip} &> ./exe_log/{worker_ip}_175b_debug.log &')
                     return f"Job Submitted!"
         return f"Job submission failed, not supported workflow."
