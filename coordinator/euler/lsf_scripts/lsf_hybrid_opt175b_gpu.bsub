@@ -33,4 +33,4 @@ export NCCL_SOCKET_IFNAME=access
 export GLOO_SOCKET_IFNAME=access
 
 ##python dist_training_runner_w_coordinator.py $DIST_CONF $MODEL_CONF $COOR_CONF
-python dist_inference_hybrid_runner_w_coordinator.py --fp16 $DIST_CONF $MODEL_CONF $COOR_CONF $INFERENCE_CONF $BUF_CONF \
+python dist_inference_hybrid_runner_w_euler_coordinator.py --fp16 $DIST_CONF $MODEL_CONF $COOR_CONF $INFERENCE_CONF $BUF_CONF \

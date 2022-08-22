@@ -31,6 +31,15 @@ class UserClient:
             msg = s.recv(1024)
             print(f"Received: {msg}")
 
+    def ask_coordinator_to_run_job(self, work_json):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(('', self.client_port))
+            s.connect((self.host_ip, self.host_port))
+            assert 'op' in work_json and work_json['op'] == 'run_job_user'
+            s.sendall(json.dumps(work_json).encode())
+            msg = s.recv(1024)
+            print(f"Received: {msg}")
+
 
 def main():
     parser = argparse.ArgumentParser(description='Test Job-Submit-Client')
@@ -49,6 +58,14 @@ def main():
         client.ask_coordinator_node_info()
     elif args.op == 'launch_vm_user':
         client.ask_coordinator_to_launch_vm(args.node_type)
+    elif args.op == 'run_job_user':
+        work_json = {
+            "op": "run_job_user",
+            "job_type": "inference",
+            "model_name": "gpt_175b",
+            "data_set": "foo"
+        }
+        client.ask_coordinator_to_run_job(work_json)
 
 
 if __name__ == '__main__':

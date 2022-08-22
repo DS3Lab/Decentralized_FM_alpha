@@ -23,4 +23,4 @@ COOR_CONF="--coordinator-server-ip 129.132.93.88"
 export NCCL_SOCKET_IFNAME=access
 export GLOO_SOCKET_IFNAME=access
 
-python dist_inference_runner_w_coordinator.py $DIST_CONF $MODEL_CONF $INFERENCE_CONF $COOR_CONF --lsf-job-no
+python dist_inference_runner_w_euler_coordinator.py $DIST_CONF $MODEL_CONF $INFERENCE_CONF $COOR_CONF --lsf-job-no

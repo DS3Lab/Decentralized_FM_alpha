@@ -18,7 +18,14 @@ class CrusoeCoordinatorServer:
         self.token = args.token
         self.meta_key_value_store = OrderedDict()
         # An array of dict object to store worker info
-        self.node_info = {}
+        self.node_info = []
+        self.job_status = []
+
+    def _get_ip_in_node_info_index(self, ip) -> int:
+        for i in range(len(self.node_info)):
+            if ip == self.node_info['ip']:
+                return i
+        return -1
 
     def _handle_launch_new_vm(self, msg_dict):
         node_type = msg_dict['node_type']
@@ -30,24 +37,31 @@ class CrusoeCoordinatorServer:
         meta_dict = json.loads(output[json_start: json_end+1])
         ip_end = meta_dict['ssh_destination'].find(':22')
         assign_ip = meta_dict['ssh_destination'][0: ip_end]
-        self.node_info[assign_ip] = {'name': meta_dict['name'],
-                                     'crusoe_id': meta_dict['id'],
-                                     'created_time': meta_dict['created_at'],
-                                     'state': 'initialized'}
+        current_info = {'ip':assign_ip,
+                        'name': meta_dict['name'],
+                        'crusoe_id': meta_dict['id'],
+                        'created_time': meta_dict['created_at'],
+                        'state': 'initialized'}
+        self.node_info.append(current_info)
         print(f"Install cuda and pip lib in <{assign_ip}>")
         time.sleep(10)
         os.popen(f'ssh-keyscan -H {assign_ip} >> ~/.ssh/known_hosts')
         os.popen(f'ssh root@{assign_ip} bash -s < ./crusoe_scripts/startup_install.sh {self.token} &> ./exe_log/{assign_ip}_install.log &')
-        return f"Succeed! Launched node <{assign_ip}>"
+        return f"Succeed! Launched node <index:{len(self.node_info)}:{assign_ip}>"
 
     def _handle_recv_message_vm(self, ip, msg_dict):
         print(msg_dict['message'])
-        if msg_dict['message'] == 'Install CUDA: done.':
+        index = self._get_ip_in_node_info_index(ip)
+        assert index != -1
+        if msg_dict['message'] == 'Checkout repo: done.':
             assert ip in self.node_info
-            self.node_info[ip]['state'] = 'cuda_ready'
+            self.node_info[index]['state'] = 'repo_ready'
+        elif msg_dict['message'] == 'Install CUDA: done.':
+            assert ip in self.node_info
+            self.node_info[index]['state'] = 'cuda_ready'
         elif msg_dict['message'] == 'Install Python Libs: done.':
             assert ip in self.node_info
-            self.node_info[ip]['state'] = 'pip_ready'
+            self.node_info[index]['state'] = 'pip_ready'
         return "Get it!"
 
     def _handle_check_node_status(self):
