@@ -99,7 +99,7 @@ Each line of the output file is also a json object. The below is an example:
 }
 ```
 
-Currently, we need to keep hyperparameters (temperature, top\_p, stop, etc.) the same during inference. So we shall split the data manually.
+Currently, we need to keep hyperparameters (temperature, top\_p, stop, etc.) the same during inference. So we shall split the data manually. We can use `split_queries.py` in this folder.
 
 ## Launch local runs
 
