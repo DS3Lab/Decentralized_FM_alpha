@@ -26,6 +26,10 @@ from coordinator.coordinate_client import *
 
 
 def save_checkpoint(args, pipe, ckpt_path):
+
+    use_dp = (args.world_size != args.pipeline_group_size)
+    if use_dp and get_data_parallel_rank() != 0:
+        return
     
     _layer_begin = get_pipeline_parallel_rank() * args.num_layers
     _layer_end = min(_layer_begin + args.num_layers, args.max_layers)
@@ -71,7 +75,7 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
 
         distributed_train_lm_iter(args, pipe, device, train_data_loader)
         
-        if test_data_loader is not None and args.do_evaluation:
+        if args.do_evaluation:
             distributed_test_lm_iter(args, pipe, device, test_data_loader)
             
         if get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
@@ -138,28 +142,31 @@ def main():
     random.seed(args.seed)
     np.random.seed(args.seed)
     
-    if args.task_name == 'wikitext':
-        train_data_loader = get_wikitext_train_data_loader(args, tokenizer)
-        test_data_loader = get_wikitext_test_data_loader(args, tokenizer)
-    elif args.task_name == 'wiki103':
-        train_data_loader = get_wiki103_train_data_loader(args, tokenizer)
-        test_data_loader = get_wiki103_test_data_loader(args, tokenizer)
-    elif args.task_name == 'arxiv21':
-        train_data_loader = get_arxiv21_train_data_loader(args, tokenizer)
-        test_data_loader = get_arxiv21_test_data_loader(args, tokenizer)
-    elif args.task_name == 'openwebtext':
-        train_data_loader = get_openwebtext_train_data_loader(args, tokenizer)
-        test_data_loader = get_wikitext_test_data_loader(args, tokenizer)
-    elif args.task_name == 'fm_in_context_eval':
-        train_data_loader = get_fm_in_context_eval_train_data_loader(args, tokenizer)
-        test_data_loader = None
+    if get_pipeline_parallel_rank() == 0:
+        if args.task_name == 'wikitext':
+            train_data_loader = get_wikitext_train_data_loader(args, tokenizer)
+            test_data_loader = get_wikitext_test_data_loader(args, tokenizer)
+        elif args.task_name == 'wiki103':
+            train_data_loader = get_wiki103_train_data_loader(args, tokenizer)
+            test_data_loader = get_wiki103_test_data_loader(args, tokenizer)
+        elif args.task_name == 'arxiv21':
+            train_data_loader = get_arxiv21_train_data_loader(args, tokenizer)
+            test_data_loader = get_arxiv21_test_data_loader(args, tokenizer)
+        elif args.task_name == 'openwebtext':
+            train_data_loader = get_openwebtext_train_data_loader(args, tokenizer)
+            test_data_loader = get_wikitext_test_data_loader(args, tokenizer)
+        elif args.task_name == 'fm_in_context_eval':
+            train_data_loader = get_fm_in_context_eval_train_data_loader(args, tokenizer)
+            test_data_loader = None
+        else:
+            raise Exception('unknown task.')
     else:
-        raise Exception('unknown task.')
-        
+        train_data_loader, test_data_loader = None, None
+            
     if args.warmup_steps is None:
-        args.warmup_steps = len(train_data_loader)
+        args.warmup_steps = 0 #len(train_data_loader)
     if args.total_steps is None:
-        args.total_steps = len(train_data_loader) * args.n_epochs
+        args.total_steps = 0 #len(train_data_loader) * args.n_epochs
     
     use_dp = (args.world_size != args.pipeline_group_size)
     if use_dp:

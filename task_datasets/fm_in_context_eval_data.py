@@ -36,11 +36,13 @@ def get_fm_in_context_eval_train_data_loader(args, tokenizer, num_workers=0):
         
     # if torch.distributed.is_available() and torch.distributed.is_initialized():
     #     torch.distributed.barrier()
+    '''
     comm = get_pipeline_parallel_comm()
     comm.barrier()
     if args.data_group_size > 1:
         comm = get_data_parallel_comm()
         comm.barrier()
+    '''
 
     print('loading cached data')
     hf_datasets_with_label = load_from_disk(
@@ -120,10 +122,6 @@ def get_fm_in_context_eval_train_data_loader(args, tokenizer, num_workers=0):
     use_dp = (args.world_size != args.pipeline_group_size)
     if use_dp:
         dp_rank = get_data_parallel_rank()
-        n_samples = len(input_ids)
-        n_samples_per_rank = n_samples // args.data_group_size
-        i_begin, i_end = dp_rank * n_samples_per_rank, (dp_rank+1) * n_samples_per_rank
-        input_ids = input_ids[i_begin: i_end]
     else:
         dp_rank = 0
     
