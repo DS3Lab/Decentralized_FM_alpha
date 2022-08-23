@@ -498,32 +498,34 @@ class GpipeAsync:
             torch.cuda.synchronize()
             self.init_time_stamp = time.time() * 1e+6
             self.init_event.record()
+        
+        step = self.global_step % self.gradient_accumulate_step
         self.zero_input_grad()
 #         self.optimizer.zero_grad(set_to_none=True)
-        self.optimizer.zero_grad(set_to_none=False)
+        if step == 0:
+            self.optimizer.zero_grad(set_to_none=False)
 
-        for step in range(self.gradient_accumulate_step):
+        outputs = self.forward_stage(input_, aux_input_data=aux_input_data)
+        forward_time = time.time()
+        forward_slot = forward_time-start_time
+        print("Rank {} node forward pass {}/{} takes {:3.2f}s"
+              .format(self.global_rank, step, self.gradient_accumulate_step, forward_slot))
             
-            outputs = self.forward_stage(input_, aux_input_data=aux_input_data)
-            forward_time = time.time()
-            if step == 0:
-                forward_slot = forward_time-start_time
-            else:
-                forward_slot = forward_time-backward_time
-            print("Rank {} node forward pass {}/{} takes {:3.2f}s"
-                  .format(self.global_rank, step, self.gradient_accumulate_step, forward_slot))
-            
-            self.comm.barrier()  # This is an educated guess that such barrier would make it fair TC (probably required)
-            self.backward_stage(outputs, target, loss_func=loss_func)
-            backward_time = time.time()
-            print("Rank {} node backward pass {}/{} takes {:3.2f}s"
+        self.comm.barrier()  # This is an educated guess that such barrier would make it fair TC (probably required)
+        self.backward_stage(outputs, target, loss_func=loss_func)
+        backward_time = time.time()
+        print("Rank {} node backward pass {}/{} takes {:3.2f}s"
                   .format(self.global_rank, step, self.gradient_accumulate_step, backward_time-forward_time))
-        optimizer_time = time.time()
-        self.optimizer_step()
-        torch.cuda.synchronize()
-        self.comm.barrier()
-        end_time = time.time()
-        print("Rank {} node optimizer step takes {:3.2f}s".format(self.global_rank, end_time - optimizer_time))
+        if step == self.gradient_accumulate_step - 1:
+            optimizer_time = time.time()
+            self.optimizer_step()
+            torch.cuda.synchronize()
+            self.comm.barrier()
+            end_time = time.time()
+            print("Rank {} node optimizer step takes {:3.2f}s".format(self.global_rank, end_time - optimizer_time))
+        else:
+            self.comm.barrier()
+            end_time = time.time()
         iter_time = end_time - start_time
         print("Rank {} node whole iteration takes {:3.2f}s".format(self.global_rank, iter_time))
         print("-------------------------------------------")
