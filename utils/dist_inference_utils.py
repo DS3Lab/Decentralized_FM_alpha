@@ -9,8 +9,10 @@ from flask import Flask, request
 import threading
 import socket
 import time
+from coordinator.crusoe.crusoe_coordinator_vm_client import VMClient
 
-def distributed_inference_foo_iter(args, pipeline, device, request_processor):
+
+def distributed_inference_foo_iter(args, pipeline, device, request_processor, vm_client: VMClient = None):
     
     total_time = 0
     if get_pipeline_parallel_rank() == 0:
@@ -21,6 +23,9 @@ def distributed_inference_foo_iter(args, pipeline, device, request_processor):
             output_ids_list = []
             current_iter_time = pipeline.inference_batch(input_ids, output_ids_list)
             request_processor.add_result(inputs, output_ids_list)
+            if VMClient is not None:
+                vm_client.send_message_to_coordinate("Iter<{}/{}> takes {:3.2f}s"
+                                                     .format(i+1, args.num_iters, current_iter_time))
             
             if i > 0:
                 total_time += current_iter_time
@@ -29,9 +34,7 @@ def distributed_inference_foo_iter(args, pipeline, device, request_processor):
         averaged_time = total_time / (args.num_iters - 1 + 1e-9)
         print("Finished running ", args.num_iters,
               " iterations, averaged (exclude the first iter) run time:", averaged_time)
-        
         # request_processor.write_scenario_state()
-            
     else:
         i = 0
         while True:
@@ -45,7 +48,7 @@ def distributed_inference_foo_iter(args, pipeline, device, request_processor):
     return averaged_time
 
 
-def distributed_inference_mask_iter(args, pipeline, device, request_processor):
+def distributed_inference_mask_iter(args, pipeline, device, request_processor, vm_client: VMClient = None):
     
     total_time = 0
     if get_pipeline_parallel_rank() == 0:
@@ -56,6 +59,9 @@ def distributed_inference_mask_iter(args, pipeline, device, request_processor):
             attention_mask = inputs['attention_mask'].to(device)
             output_ids_list = []
             current_iter_time = pipeline.inference_batch(input_ids, output_ids_list, attention_mask=attention_mask)
+            if VMClient is not None:
+                vm_client.send_message_to_coordinate("Iter<{}/{}> takes {:3.2f}s"
+                                                     .format(i+1, args.num_iters, current_iter_time))
             
             if i > 0:
                 total_time += current_iter_time

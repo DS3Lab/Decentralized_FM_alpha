@@ -2,7 +2,7 @@ from modules.hf_gpt2_module import *
 
 
 def test_hugging_face_inference():
-    config = GPTConfig.from_pretrained('../pretrained_models/gpt2/')
+    config = GPTConfig.from_pretrained('../pretrained_debug_models/gpt2/')
     layer_embeddings = GPTEmbeddings(config).eval()
     layer0 = GPTBlock(config).eval()
     layer1 = GPTBlock(config).eval()

@@ -28,6 +28,10 @@ class YalmTokenizer:
         self.truncation_side = 'left'
         self.model_max_length = 2048
         
+        self.bos_token = "<s>"
+        self.eos_token = "</s>"
+        self.pad_token = "<s>"
+        
         mask_tokens = self.convert_tokens_to_ids([self.MASK_TOKEN])
         assert len(mask_tokens) == 1
         self.MASK = mask_tokens[0]
@@ -48,6 +52,8 @@ class YalmTokenizer:
         return self._tokenizer.piece_to_id(tokens)
 
     def convert_ids_to_tokens(self, ids):
+        if isinstance(ids, int):
+            return self.decoder[ids]
         if isinstance(ids, torch.Tensor):
             ids = ids.cpu().tolist()
         return [self.decoder[idx] for idx in ids]
