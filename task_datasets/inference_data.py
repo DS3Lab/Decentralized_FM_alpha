@@ -177,7 +177,8 @@ class RequestProcessor:
         
             max_input_seq_length = 1
             for i, x in enumerate(self.data):
-                seq_length = self.tokenizer(x['request']['prompt'], return_tensors='pt')['input_ids'].size(1)
+                seq_length = self.tokenizer(x['request']['prompt'], return_tensors='pt', padding=True,
+                                            truncation=False)['input_ids'].size(1)
                 
                 if seq_length > max_input_seq_length:
                     max_input_seq_length = seq_length
@@ -203,7 +204,7 @@ class RequestProcessor:
 
                 args.token_micro_batch_size = 2 # TODO: hard code
                 args.batch_size = max(budget // ((args.input_seq_length + args.generate_seq_length)*self.num_completions), 2) // args.token_micro_batch_size * args.token_micro_batch_size
-                args.batch_size = min(args.batch_size, 128) # TODO: if batch size is too large, the comm will stuck.
+                args.batch_size = min(args.batch_size, 64) # TODO: if batch size is too large, the comm will stuck.
                 #args.token_micro_batch_size = args.batch_size
 
             else:

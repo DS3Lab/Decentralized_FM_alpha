@@ -117,7 +117,6 @@ class GLMTokenizer:
         
         assert return_tensors == 'pt'
         assert padding == 'max_length' or padding == True
-        assert truncation == True
         
         if isinstance(text, str):
             text = [text]
@@ -128,14 +127,15 @@ class GLMTokenizer:
             if add_gmask:
                 t_ids = t_ids + [self.get_command('[gMASK]'), self.get_command('sop')] # append <s>
             
-            if self.truncation_side == 'left':
-                t_ids = t_ids[-self.model_max_length:]
-            else:
-                t_ids = t_ids[:self.model_max_length]
+            if truncation:
+                if self.truncation_side == 'left':
+                    t_ids = t_ids[-self.model_max_length:]
+                else:
+                    t_ids = t_ids[:self.model_max_length]
             
             ids.append(t_ids)
         
-        if padding == True:
+        if padding != 'max_length':
             max_len = max([len(t_ids) for t_ids in ids])
         else:
             max_len = self.model_max_length

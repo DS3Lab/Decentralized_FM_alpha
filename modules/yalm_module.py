@@ -13,7 +13,7 @@ class GPTConfig:
         self.intermediate_size = 27308
         self.padded_vocab_size = 128000
         self.layernorm_epsilon = 1e-5
-        self.max_position_embeddings = 2048 # for rotation embeddings
+        self.max_position_embeddings = 2050 # for rotation embeddings
         
         # self.num_layers = 3
         # self.embedding_size = 512

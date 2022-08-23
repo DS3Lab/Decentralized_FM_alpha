@@ -26,7 +26,7 @@ class YalmTokenizer:
         self.decoder = {idx: token for idx, token in enumerate(self._vocab_words)}
         self.padding_side = 'left'
         self.truncation_side = 'left'
-        self.model_max_length = 2048
+        self.model_max_length = 2049
         
         self.bos_token = "<s>"
         self.eos_token = "</s>"
@@ -98,7 +98,6 @@ class YalmTokenizer:
         
         assert return_tensors == 'pt'
         assert padding == 'max_length' or padding == True
-        assert truncation == True
         
         if isinstance(text, str):
             text = [text]
@@ -116,14 +115,15 @@ class YalmTokenizer:
                 if add_bos:
                     t_ids = [1] + t_ids # append <s>
             
-            if self.truncation_side == 'left':
-                t_ids = t_ids[-self.model_max_length:]
-            else:
-                t_ids = t_ids[:self.model_max_length]
+            if truncation:
+                if self.truncation_side == 'left':
+                    t_ids = t_ids[-self.model_max_length:]
+                else:
+                    t_ids = t_ids[:self.model_max_length]
             
             ids.append(t_ids)
         
-        if padding == True:
+        if padding != 'max_length':
             max_len = max([len(t_ids) for t_ids in ids])
         else:
             max_len = self.model_max_length
