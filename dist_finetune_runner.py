@@ -1,5 +1,6 @@
 import argparse
 import time
+import json
 import random
 import os
 import numpy as np
@@ -27,10 +28,22 @@ from comm.comm_utils import *
 
 def save_checkpoint(args, pipe, ckpt_path):
     
-    _layer_begin = get_pipeline_parallel_rank() * args.num_layers
+    pp_rank = get_pipeline_parallel_rank()
+    _layer_begin = pp_rank * args.num_layers
     _layer_end = min(_layer_begin + args.num_layers, args.max_layers)
     
-    if get_pipeline_parallel_rank()  == 0:
+    # if hasattr(pipe)
+    torch.save(
+        pipe.scheduler.state_dict(),
+        os.path.join(ckpt_path, f'scheduler_rank_{pp_rank}.pt')
+    )
+    
+    torch.save(
+        pipe.optimizer.state_dict(),
+        os.path.join(ckpt_path, f'optimizer_rank_{pp_rank}.pt')
+    )
+    
+    if pp_rank  == 0:
         torch.save(
             pipe.model.model[0].state_dict(),
             os.path.join(ckpt_path, f'pytorch_embs.pt')
@@ -43,7 +56,7 @@ def save_checkpoint(args, pipe, ckpt_path):
                 os.path.join(ckpt_path, f'pytorch_{i}.pt')
             )
             
-    elif get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
+    elif pp_rank  == args.pipeline_group_size - 1:
         for i in range(_layer_begin, _layer_end):
             print('saving layer', i)
             torch.save(
@@ -64,6 +77,24 @@ def save_checkpoint(args, pipe, ckpt_path):
 
 def train_loop(args, pipe, device, train_data_loader, test_data_loader):
     
+    pp_rank = get_pipeline_parallel_rank()
+    
+    if os.path.isfile(os.path.join(args.model_name, f'scheduler_rank_{pp_rank}.pt')):
+        print('resuming scheduler')
+        pipe.scheduler.load_state_dict(
+            torch.load(
+                os.path.join(args.model_name, f'scheduler_rank_{pp_rank}.pt')
+            )
+        )
+        
+    if os.path.isfile(os.path.join(args.model_name, f'optimizer_rank_{pp_rank}.pt')):
+        print('resuming optimizer')
+        pipe.optimizer.load_state_dict(
+            torch.load(
+                os.path.join(args.model_name, f'optimizer_rank_{pp_rank}.pt')
+            )
+        )
+    
     for e in range(args.n_epochs):
         
         distributed_train_lm_iter(args, pipe, device, train_data_loader)
@@ -76,7 +107,7 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
                 wandb.log({'epoch': e}, step=pipe.global_step)
                 
         if args.model_save_path is not None:
-            ckpt_path = os.path.join(args.model_save_path, f'ckpt_epoch_{e}')
+            ckpt_path = os.path.join(args.model_save_path, f'ckpt_step_{pipe.global_step}')
             try:
                 os.makedirs(ckpt_path)
             except Exception as e:
@@ -115,6 +146,7 @@ def main():
     config = AutoConfig.from_pretrained(args.model_name)
     for k in config.__dict__:
         if '_pdrop' in k or '_dropout' in k:
+            print(f'setting {k} to {args.dropout}.')
             config.__dict__[k] = args.dropout
     
     # config.n_layer = args.num_layers
