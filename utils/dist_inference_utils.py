@@ -23,7 +23,7 @@ def distributed_inference_foo_iter(args, pipeline, device, request_processor, vm
             output_ids_list = []
             current_iter_time = pipeline.inference_batch(input_ids, output_ids_list)
             request_processor.add_result(inputs, output_ids_list)
-            if VMClient is not None:
+            if vm_client is not None:
                 vm_client.send_message_to_coordinate("Iter<{}/{}> takes {:3.2f}s"
                                                      .format(i+1, args.num_iters, current_iter_time))
             
@@ -59,7 +59,7 @@ def distributed_inference_mask_iter(args, pipeline, device, request_processor, v
             attention_mask = inputs['attention_mask'].to(device)
             output_ids_list = []
             current_iter_time = pipeline.inference_batch(input_ids, output_ids_list, attention_mask=attention_mask)
-            if VMClient is not None:
+            if vm_client is not None:
                 vm_client.send_message_to_coordinate("Iter<{}/{}> takes {:3.2f}s"
                                                      .format(i+1, args.num_iters, current_iter_time))
             
