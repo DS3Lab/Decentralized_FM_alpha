@@ -6,7 +6,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=8G
-#SBATCH --output=gptJ_inf_4GPU_%j.log
+#SBATCH --output=/afs/cs.stanford.edu/u/biyuan/exe_log/gptJ_inf_4GPU_%j.log
 
 source activate base                          # Activate my conda python environment
 cd /afs/cs.stanford.edu/u/biyuan     # Change directory
