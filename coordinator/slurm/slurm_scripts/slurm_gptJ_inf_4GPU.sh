@@ -9,7 +9,7 @@
 #SBATCH --output=/afs/cs.stanford.edu/u/biyuan/exe_log/gptJ_inf_4GPU_%j.log
 
 source activate base                          # Activate my conda python environment
-cd /afs/cs.stanford.edu/u/biyuan     # Change directory
+cd /afs/cs.stanford.edu/u/biyuan/GPT-home-private     # Change directory
 
 nvidia-smi
 
