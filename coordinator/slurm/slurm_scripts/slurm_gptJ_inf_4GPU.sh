@@ -14,6 +14,8 @@ cd /afs/cs.stanford.edu/u/biyuan/GPT-home-private     # Change directory
 
 nvidia-smi
 
+ifconfig
+
 world_size=4
 
 DIST_CONF="--pp-mode pipe_sync_greedy --pipeline-group-size $world_size --cuda-id 0"
