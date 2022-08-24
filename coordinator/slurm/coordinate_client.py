@@ -21,7 +21,7 @@ class CoordinatorTrainClient:
     def __init__(self, args):
         self.host_ip = args.coordinator_server_ip
         self.host_port = args.coordinator_server_port
-        self.client_port = int(args.lsf_job_no) % 10000 + 10000
+        self.client_port = int(args.unique_port) % 10000 + 10000
 
     def notify_train_join(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -46,7 +46,7 @@ class CoordinatorInferenceClient:
     def __init__(self, args):
         self.host_ip = args.coordinator_server_ip
         self.host_port = args.coordinator_server_port
-        self.client_port = int(args.lsf_job_no) % 10000 + 10000
+        self.client_port = int(args.unique_port) % 10000 + 10000
 
     def notify_inference_join(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -71,7 +71,7 @@ class CoordinatorHybridInferenceClient:
     def __init__(self, args):
         self.host_ip = args.coordinator_server_ip
         self.host_port = args.coordinator_server_port
-        self.client_port = int(args.lsf_job_no) % 10000 + 10000
+        self.client_port = int(args.unique_port) % 10000 + 10000
         self.node_type = args.node_type
 
     def notify_inference_join(self):
@@ -100,8 +100,8 @@ def main():
                         help='The port of coordinator-server.')
     parser.add_argument('--coordinator-server-ip', type=str, default='localhost', metavar='S',
                         help='The IP of coordinator-server.')
-    parser.add_argument('--lsf-job-no', type=str, default='100', metavar='S',
-                        help='Job-<ID> assigned by LSF.')
+    parser.add_argument('--unique-port', type=str, default='100', metavar='S',
+                        help='Which port to use, each client should have different value of this.')
     args = parser.parse_args()
     print(vars(args))
     print(vars(args))

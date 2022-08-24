@@ -33,6 +33,8 @@ def add_torch_distributed_w_euler_coordinator_arguments(parser):
                         help='The IP of coordinator-server.')
     parser.add_argument('--lsf-job-no', type=str, default='100', metavar='S',
                         help='Job-<ID> assigned by LSF.')
+    parser.add_argument('--unique-port', type=str, default='100', metavar='S',
+                        help='Which port to use, each client should have different value of this.')
     parser.add_argument('--world-size', type=int, default=4, metavar='D',
                         help='world-size (default: 4)')
     parser.add_argument('--pipeline-group-size', type=int, default=4, metavar='D',
@@ -237,6 +239,8 @@ def add_torch_distributed_inference_w_euler_coordinator_arguments(parser):
                         help='The IP of coordinator-server.')
     parser.add_argument('--lsf-job-no', type=str, default='100', metavar='S',
                         help='Job-<ID> assigned by LSF.')
+    parser.add_argument('--unique-port', type=str, default='100', metavar='S',
+                        help='Which port to use, each client should have different value of this.')
     parser.add_argument('--pipeline-group-size', type=int, default=4, metavar='D',
                         help='world-size (default: 4)')
 
@@ -257,6 +261,8 @@ def add_torch_distributed_hybrid_inference_w_euler_coordinator_arguments(parser)
                         help='The IP of coordinator-server.')
     parser.add_argument('--lsf-job-no', type=str, default='100', metavar='S',
                         help='Job-<ID> assigned by LSF.')
+    parser.add_argument('--unique-port', type=str, default='100', metavar='S',
+                        help='Which port to use, each client should have different value of this.')
     parser.add_argument('--world-size', type=int, default=4, metavar='D',
                         help='world-size (default: 4)')
     parser.add_argument('--pipeline-group-size', type=int, default=4, metavar='D',

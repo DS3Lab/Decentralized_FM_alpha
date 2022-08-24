@@ -72,8 +72,8 @@ class CoordinatorInferenceServer:
                 return f'This job is not recognized on coordinate - {job_name}'
 
             for i in range(self.inference_pipeline_demand_worker_num):
-                os.system(f"sbatch {self.bsub_script_path}/{job_name}.sh")
-            os.system("squeue --account=biyuan")
+                os.system(f"sbatch {self.bsub_script_path}/{job_name}.sh {i+1}")
+            os.system("squeue --user=biyuan")
             self.working_pipelines.append(OrderedDict())
             self.active_inference_pipeline += 1
             return f'Succeed to submit job - {job_name}'
