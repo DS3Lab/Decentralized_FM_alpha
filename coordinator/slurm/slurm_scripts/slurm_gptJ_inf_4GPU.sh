@@ -23,7 +23,7 @@ MODEL_CONF="--model-type gptj --model-name ./pretrained_models/gpt-j-6B --num-it
 INFERENCE_CONF="--fp16 --batch-size 24 --input-seq-length 512 --generate-seq-length 32 --micro-batch-size 1 --num-layers 7"
 COOR_CONF="--coordinator-server-ip 10.79.12.70  --unique-port $port"
 
-export NCCL_SOCKET_IFNAME=ens160
-export GLOO_SOCKET_IFNAME=ens160
+#export NCCL_SOCKET_IFNAME=ens160
+#export GLOO_SOCKET_IFNAME=ens160
 
 python dist_inference_runner_w_slurm_coordinator.py $DIST_CONF $MODEL_CONF $INFERENCE_CONF $COOR_CONF
