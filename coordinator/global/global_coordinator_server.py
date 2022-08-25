@@ -160,7 +160,7 @@ def main():
     args = parser.parse_args()
     print(vars(args))
     coordinator = GlobalCoordinatorServer(args)
-
+    coordinator.check_status_from_memcache()
     coordinator.execute_server()
 
 
