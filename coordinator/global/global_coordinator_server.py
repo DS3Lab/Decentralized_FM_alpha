@@ -3,6 +3,7 @@ import argparse
 import json
 from pymemcache.client import base
 
+MAX_TASK_INDXE=1000
 
 class JsonSerde(object):
     def serialize(self, key, value):
@@ -25,6 +26,7 @@ class GlobalCoordinatorServer:
         self.allocated_task_index = 0
         self.key_value_client = base.Client(('127.0.0.1', 11111), serde=JsonSerde())
         self.to_do_tasks = []
+        self._resume_server_from_memcache()
 
     def _allocate_task_index(self):
         current_index = self.allocated_task_index
@@ -64,6 +66,7 @@ class GlobalCoordinatorServer:
         }
         if current_value['state'] == 'job_finished':
             return_msg['result'] = current_value['result']
+            self.key_value_client.delete(current_key)
         return json.dumps(return_msg)
 
     def _handle_get_request_cluster_coordinator(self, ip):
@@ -129,6 +132,23 @@ class GlobalCoordinatorServer:
                         assert False, "Not recognized op"
                     connection.sendall(return_msg.encode())
                     connection.close()
+
+    def check_status_from_memcache(self):
+        for i in range(MAX_TASK_INDXE):
+            current_key = 'task_index_' + str(i)
+            current_value = self.key_value_client.get(current_key,default=None)
+            if current_value:
+                print(f"<key: {current_key}>")
+                print(current_value)
+
+    def _resume_server_from_memcache(self):
+        for i in range(MAX_TASK_INDXE):
+            current_key = 'task_index_' + str(i)
+            current_value = self.key_value_client.get(current_key, default=None)
+            if current_value:
+                if current_value['state'] == 'job_issued':
+                    self.to_do_tasks.append(i)
+                self.allocated_task_index = i + 1
 
 
 def main():

@@ -10,6 +10,16 @@
         pip install pymemcache
 
 - Start memcache:
+       
+        memcached -p 11111 -U 11111
+
+- Kill memcache:
+        
+        sudo pkill -9 memcached
+
+        
+
+        
 
         
 
