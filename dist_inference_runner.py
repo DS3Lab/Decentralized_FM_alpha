@@ -59,15 +59,8 @@ def main():
 
     init_communicators(args)
 
-    if get_pipeline_parallel_rank() == 0 or True:
-        
-        request_processor = get_request_processor(args)
-        request_processor.set_arguments(args)
-        
-    else:
-        tokenizer = None
-        request_processor = None
-        print('warning: todo: arguments specified in the request will not take effect.')
+    request_processor = get_request_processor(args)
+    request_processor.set_arguments(args)
 
     pipe = get_pp_inference_module(args, device)
 
