@@ -37,6 +37,31 @@ def inference_latency_job_parser(job_detail_msg: str):
     return json.loads(job_detail_msg)
 
 
+def get_demand_resources(submission_script: str):
+    world_size = -1 # number of workers in total
+    machine_size = -1 # number of submission jobs
+    try:
+        with open(submission_script) as f:
+            for line in f:
+                if line.strip().startswith('machine_size='):
+                    try:
+                        machine_size = int(line.strip().replace('machine_size=', ''))
+                    except:
+                        pass
+                if line.strip().startswith('world_size='):
+                    try:
+                        world_size = int(line.strip().replace('world_size=', ''))
+                    except:
+                        pass
+    except:
+        print(f"cannot read '{submission_script}'")
+    
+    if machine_size < 0:
+        machine_size = world_size
+    
+    return machine_size, world_size
+
+
 class CoordinatorTrainServer:
     def __init__(self, args):
         self.host = args.coordinator_server_ip
@@ -173,29 +198,19 @@ class CoordinatorInferenceServer:
         print("<<<<<<<<<<<<<<<<<<<<< Submit Job >>>>>>>>>>>>>>>>>>>>>>")
         if not self.submit_locked:
             self.submit_locked = True
-            if job_name == 'lsf_gptJ_inf_4RTX2080Ti' or job_name == 'lsf_gptJ_inf_4RTXTitan.bsub':
-                self.inference_pipeline_demand_worker_num = 4
-            elif job_name == 'lsf_gptj':
-                self.inference_pipeline_demand_worker_num = 2
-            elif job_name == 'lsf_gptneox':
-                self.inference_pipeline_demand_worker_num = 11
-            elif job_name == 'lsf_opt66':
-                self.inference_pipeline_demand_worker_num = 32
-            elif job_name == 'lsf_opt66_16':
-                self.inference_pipeline_demand_worker_num = 16
-            elif job_name == 'lsf_t5':
-                self.inference_pipeline_demand_worker_num = 6
-            elif job_name == 'lsf_t0pp':
-                self.inference_pipeline_demand_worker_num = 6
-            elif job_name == 'lsf_ul2':
-                self.inference_pipeline_demand_worker_num = 16
-            elif job_name == 'lsf_hybrid_opt175b':
+            if job_name == 'lsf_hybrid_opt175b':
                 self.is_hybrid_task = True
                 self.inference_pipeline_demand_worker_num = 62
                 self.inference_pipeline_demand_GPU_worker_num = 32
                 self.inference_pipeline_demand_CPU_worker_num = 30
             else:
-                return f'This job is not recognized on coordinate - {job_name}'
+                machine_size, world_size = get_demand_resources(f'{self.bsub_script_path}/{job_name}.bsub')
+                # TODO: currently assume machine_size == world_size 
+                if world_size < 0 or machine_size < 0:
+                    return f'Fail to submit job - {job_name}, invalid world size or machine size'
+                
+                self.inference_pipeline_demand_worker_num = machine_size
+                # return f'This job is not recognized on coordinate - {job_name}'
 
             if self.is_hybrid_task:
                 for i in range(self.inference_pipeline_demand_worker_num):
