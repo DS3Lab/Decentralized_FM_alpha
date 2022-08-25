@@ -62,7 +62,7 @@ def main():
 
     if args.op == 'get':
         client.get_request_user_client(args.task_index)
-    elif args.submit_job == 'put':
+    elif args.op == 'put':
         inference_details = {
             'inputs': args.inputs,
             "parameters": {

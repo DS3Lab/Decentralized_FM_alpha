@@ -60,7 +60,7 @@ def main():
 
     if args.op == 'get':
         client.get_request_cluster_coordinator()
-    elif args.submit_job == 'put':
+    elif args.op == 'put':
         inference_results = "Hello world reply."
         client.put_request_cluster_coordinator(args.task_index, inference_results)
     else:
