@@ -46,9 +46,9 @@ class GlobalCoordinatorClient:
 
 def main():
     parser = argparse.ArgumentParser(description='Test Job-Submit-Client')
-    parser.add_argument('--coordinator-server-port', type=int, default=9002, metavar='N',
+    parser.add_argument('--coordinator-server-port', type=int, default=9102, metavar='N',
                         help='The port of coordinator-server.')
-    parser.add_argument('--coordinator-server-ip', type=str, default='localhost', metavar='S',
+    parser.add_argument('--coordinator-server-ip', type=str, default='35.92.51.7', metavar='S',
                         help='The IP of coordinator-server.')
     parser.add_argument('--op', type=str, default='get', metavar='S',
                         help='The op: {get or put}.')

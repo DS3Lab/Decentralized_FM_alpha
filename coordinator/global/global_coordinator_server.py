@@ -135,9 +135,10 @@ def main():
     parser = argparse.ArgumentParser(description='Test Coordinator-Server')
     parser.add_argument('--coordinator-server-port', type=int, default=9102, metavar='N',
                         help='The port of coordinator-server.')
-    parser.add_argument('--coordinator-server-ip', type=str, default='localhost', metavar='S',
+    parser.add_argument('--coordinator-server-ip', type=str, default='0.0.0.0', metavar='S',
                         help='The IP of coordinator-server.')
     args = parser.parse_args()
+    print(vars(args))
     coordinator = GlobalCoordinatorServer(args)
 
     coordinator.execute_server()
