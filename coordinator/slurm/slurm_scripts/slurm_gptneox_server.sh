@@ -3,7 +3,7 @@
 #
 #SBATCH --partition=jag-standard
 #SBATCH --gres=gpu:1
-#SBATCH --time=10:00
+#SBATCH --time=14-10:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=4G

@@ -24,8 +24,8 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 
-world_size=8
-machine_size=8
+world_size=6
+machine_size=6
 n_gpu_per_machine=$((world_size/machine_size))
 
 i=0
@@ -35,9 +35,10 @@ do
       break
   fi
   
+  # NOTE: disable fp16 for stabler inference
   DIST_CONF="--pp-mode pipe_sync_sample_mask_token_pipe --pipeline-group-size $world_size --cuda-id $i"
-  MODEL_CONF="--model-type gptneox --model-name /sailhome/biyuan/scratch/models/gpt-neox-20b-new --num-iters 10"
-  INFERENCE_CONF="--fp16   --budget 10400 --batch-size 24 --input-seq-length 512 --generate-seq-length 32 --micro-batch-size 1 --num-layers 6 --max-layers 44"
+  MODEL_CONF="--model-type t5 --model-name /sailhome/biyuan/scratch/models/t0pp-new --num-iters 10"
+  INFERENCE_CONF="--budget 2600 --batch-size 24 --input-seq-length 512 --generate-seq-length 32 --micro-batch-size 1 --num-layers 4 --max-layers 24"
   COOR_CONF="--coordinator-server-ip 10.79.12.70  --unique-port $port"
 
   python -u dist_inference_runner_w_slurm_coordinator.py $DIST_CONF $MODEL_CONF $INFERENCE_CONF $COOR_CONF &
