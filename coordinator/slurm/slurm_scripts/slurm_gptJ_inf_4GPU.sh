@@ -2,7 +2,7 @@
 #SBATCH --job-name=gptJ_inf_4GPU
 #
 #SBATCH --partition=jag-standard
-#SBATCH --gres gpu:3090:1
+#SBATCH --gres gpu:3090:2
 #SBATCH --time=10:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
@@ -18,6 +18,7 @@ nvidia-smi
 ifconfig
 
 world_size=4
+machine_size=2
 
 DIST_CONF="--pp-mode pipe_sync_greedy --pipeline-group-size $world_size --cuda-id 0"
 MODEL_CONF="--model-type gptj --model-name /sailhome/biyuan/GPT-home-private/pretrained_debug_models/gpt-j-6B --num-iters 10"

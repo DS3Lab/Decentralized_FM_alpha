@@ -23,8 +23,6 @@ def server_message_parser(msg: bytes):
             arg_dict['iter_time'] = float(msg_arg[3])
         elif arg_dict['state'] == 'submit':
             arg_dict['job_name'] = msg_arg[2]
-            if len(msg_arg) > 3:
-                arg_dict['infer_data'] = msg_arg[3]
         elif arg_dict['state'] == 'join':
             if len(msg_arg) > 2:
                 arg_dict['node_type'] = msg_arg[2]
@@ -88,7 +86,7 @@ class CoordinatorInferenceServer:
                 print(f"Node rank {self.working_pipelines[i][node_key]['rank']}, Address: {node_key}")
         print("-------------------------------------------------------")
 
-    def _handle_inference_submit(self, job_name, infer_data=None) -> str:
+    def _handle_inference_submit(self, job_name) -> str:
         print("<<<<<<<<<<<<<<<<<<<<< Submit Job >>>>>>>>>>>>>>>>>>>>>>")
         if not self.submit_locked:
             
@@ -170,7 +168,7 @@ class CoordinatorInferenceServer:
                     msg_arg = server_message_parser(msg_data)
                     if msg_arg['task'] == 'inference':
                         if msg_arg['state'] == 'submit':
-                            return_msg = self._handle_inference_submit(msg_arg['job_name'], msg_arg['infer_data'])
+                            return_msg = self._handle_inference_submit(msg_arg['job_name'])
                         elif msg_arg['state'] == 'join':
                             return_msg = self._handle_inference_join(worker_ip, port, node_type=None)
                         elif msg_arg['state'] == 'finish':
