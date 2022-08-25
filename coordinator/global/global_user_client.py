@@ -28,7 +28,7 @@ class GlobalUserClient:
             print("---------------------------")
 
     def get_request_user_client(self, task_index: int):
-        print("=========put_request_user_client=========")
+        print("=========get_request_user_client=========")
         msg_dict = {
             'op': 'get_request_user_client',
             'task_index': task_index

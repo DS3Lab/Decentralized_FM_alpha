@@ -101,6 +101,7 @@ class GlobalCoordinatorServer:
             assert current_value['server_ip'] == ip
             current_value['state'] = 'job_finished'
             current_value['result'] = msg_dict['result']
+            self.key_value_client.set(current_key, current_value)
             return_msg = {
                 'task_index': msg_dict['task_index'],
                 'state': 'put_result_succeed'
