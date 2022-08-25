@@ -63,10 +63,10 @@ class GlobalCoordinatorServer:
             return_msg = {
                 'task_index': msg_dict['task_index'],
                 'state': current_value['state']
-        }
-        if current_value['state'] == 'job_finished':
-            return_msg['result'] = current_value['result']
-            self.key_value_client.delete(current_key)
+            }
+            if current_value['state'] == 'job_finished':
+                return_msg['result'] = current_value['result']
+                self.key_value_client.delete(current_key)
         return json.dumps(return_msg)
 
     def _handle_get_request_cluster_coordinator(self, ip):
