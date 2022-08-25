@@ -35,16 +35,9 @@ def main():
     print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
 
     init_inference_communicators_with_coordinator(args, prime_ip, rank, port=port)
-
-    if get_pipeline_parallel_rank() == 0 or True:
-
-        request_processor = get_request_processor(args)
-        request_processor.set_arguments(args)
-
-    else:
-        tokenizer = None
-        request_processor = None
-        print('warning: todo: arguments specified in the request will not take effect.')
+    
+    request_processor = get_request_processor(args)
+    request_processor.set_arguments(args)
 
     pipe = get_pp_inference_module(args, device, rank=rank)
 
