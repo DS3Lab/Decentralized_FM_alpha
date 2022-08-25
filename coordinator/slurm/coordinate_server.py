@@ -23,8 +23,6 @@ def server_message_parser(msg: bytes):
             arg_dict['iter_time'] = float(msg_arg[3])
         elif arg_dict['state'] == 'submit':
             arg_dict['job_name'] = msg_arg[2]
-            if len(msg_arg) > 3:
-                arg_dict['infer_data'] = msg_arg[3]
         elif arg_dict['state'] == 'join':
             if len(msg_arg) > 2:
                 arg_dict['node_type'] = msg_arg[2]
@@ -33,12 +31,38 @@ def server_message_parser(msg: bytes):
     return arg_dict
 
 
+def get_demand_resources(submission_script: str):
+    world_size = -1 # number of workers in total
+    machine_size = -1 # number of submission jobs
+    try:
+        with open(submission_script) as f:
+            for line in f:
+                if line.strip().startswith('machine_size='):
+                    try:
+                        machine_size = int(line.strip().replace('machine_size=', ''))
+                    except:
+                        pass
+                if line.strip().startswith('world_size='):
+                    try:
+                        world_size = int(line.strip().replace('world_size=', ''))
+                    except:
+                        pass
+    except:
+        print(f"cannot read '{submission_script}'")
+    
+    if machine_size < 0:
+        machine_size = world_size
+    
+    return machine_size, world_size
+
+
 class CoordinatorInferenceServer:
     def __init__(self, args):
         self.host = args.coordinator_server_ip
         self.port = args.coordinator_server_port
         self.allocated_index = 0
         self.current_nccl_port = 15000
+        self.current_client_port = 0
         # An array of dict object to store worker info
         self.working_pipelines = []
         self.prime_worker_ips = []
@@ -62,17 +86,20 @@ class CoordinatorInferenceServer:
                 print(f"Node rank {self.working_pipelines[i][node_key]['rank']}, Address: {node_key}")
         print("-------------------------------------------------------")
 
-    def _handle_inference_submit(self, job_name, infer_data=None) -> str:
+    def _handle_inference_submit(self, job_name) -> str:
         print("<<<<<<<<<<<<<<<<<<<<< Submit Job >>>>>>>>>>>>>>>>>>>>>>")
         if not self.submit_locked:
+            
+            machine_size, world_size = get_demand_resources(f'{self.bsub_script_path}/{job_name}.sh')
+            if world_size < 0 or machine_size < 0:
+                return f'Fail to submit job - {job_name}, invalid world size or machine size'
+            
             self.submit_locked = True
-            if job_name == 'slurm_gptJ_inf_4GPU':
-                self.inference_pipeline_demand_worker_num = 4
-            else:
-                return f'This job is not recognized on coordinate - {job_name}'
+            self.inference_pipeline_demand_worker_num = world_size
 
-            for i in range(self.inference_pipeline_demand_worker_num):
-                os.system(f"sbatch {self.bsub_script_path}/{job_name}.sh {i+1}")
+            for i in range(machine_size):
+                os.system(f"sbatch {self.bsub_script_path}/{job_name}.sh {self.current_client_port}")
+                self.current_client_port += max(world_size // machine_size, 1)
             os.system("squeue --user=biyuan")
             self.working_pipelines.append(OrderedDict())
             self.active_inference_pipeline += 1
@@ -141,7 +168,7 @@ class CoordinatorInferenceServer:
                     msg_arg = server_message_parser(msg_data)
                     if msg_arg['task'] == 'inference':
                         if msg_arg['state'] == 'submit':
-                            return_msg = self._handle_inference_submit(msg_arg['job_name'], msg_arg['infer_data'])
+                            return_msg = self._handle_inference_submit(msg_arg['job_name'])
                         elif msg_arg['state'] == 'join':
                             return_msg = self._handle_inference_join(worker_ip, port, node_type=None)
                         elif msg_arg['state'] == 'finish':

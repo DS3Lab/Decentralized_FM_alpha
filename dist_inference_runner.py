@@ -59,15 +59,8 @@ def main():
 
     init_communicators(args)
 
-    if get_pipeline_parallel_rank() == 0 or True:
-        
-        request_processor = get_request_processor(args)
-        request_processor.set_arguments(args)
-        
-    else:
-        tokenizer = None
-        request_processor = None
-        print('warning: todo: arguments specified in the request will not take effect.')
+    request_processor = get_request_processor(args)
+    request_processor.set_arguments(args)
 
     pipe = get_pp_inference_module(args, device)
 
@@ -78,8 +71,8 @@ def main():
         trace_file = prefix + get_inference_arguments_str(args) + '_' + args.profiling + '_' + args.trace_postfix + \
                      '.json'
         if args.profiling == 'tidy_profiling':
-            # distributed_inference_mask_iter(args, pipe, device, request_processor)
-            distributed_inference_foo_iter(args, pipe, device, request_processor)
+            distributed_inference_mask_iter(args, pipe, device, request_processor)
+            # distributed_inference_foo_iter(args, pipe, device, request_processor)
             pipe.export_profiling_result(filename=trace_file)
         elif args.profiling == 'pytorch_profiling':
             with profiler.profile(profile_memory=True, use_cuda=args.use_cuda) as prof:
