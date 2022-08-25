@@ -19,7 +19,7 @@ ifconfig
 world_size=4
 
 DIST_CONF="--pp-mode pipe_sync_greedy --pipeline-group-size $world_size --cuda-id 0"
-MODEL_CONF="--model-type gptj --model-name ./pretrained_models/gpt-j-6B --num-iters 10"
+MODEL_CONF="--model-type gptj --model-name /afs/cs.stanford.edu/u/biyuan/GPT-home-private/pretrained_models/gpt-j-6B --num-iters 10"
 INFERENCE_CONF="--fp16 --batch-size 24 --input-seq-length 512 --generate-seq-length 32 --micro-batch-size 1 --num-layers 7"
 COOR_CONF="--coordinator-server-ip 10.79.12.70  --unique-port $port"
 
