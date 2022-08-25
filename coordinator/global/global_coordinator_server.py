@@ -44,7 +44,7 @@ class GlobalCoordinatorServer:
         self.key_value_client.add(current_key, current_value)
         return_msg = {
             'task_index': current_index,
-            'state': 'job_issued'
+            'state': 'job_queued'
         }
         self.to_do_tasks.append(current_index)
         return json.dumps(return_msg)
