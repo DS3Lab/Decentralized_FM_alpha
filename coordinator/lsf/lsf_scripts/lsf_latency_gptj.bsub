@@ -24,6 +24,8 @@ INFERENCE_CONF="--fp16 --batch-size 1 --token-micro-batch-size 1 --input-seq-len
 COOR_CONF="--coordinator-server-ip 129.132.93.106"
 #!/bin/bash
 
+export http_proxy=http://proxy.ethz.ch:3128
+export https_proxy=https://proxy.ethz.ch:3128
 export NCCL_SOCKET_IFNAME=access
 export GLOO_SOCKET_IFNAME=access
 export NCCL_DEBUG=INFO
