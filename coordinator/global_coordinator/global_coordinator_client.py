@@ -9,6 +9,8 @@ class GlobalCoordinatorClient:
     def __init__(self, args):
         self.host_ip = args.global_coordinator_server_ip
         self.host_port = args.global_coordinator_server_port
+        print("Global coordinator Host IP:", self.host_ip)
+        print("Global coordinator Host Port:", self.host_port)
         self.client_port = 9999 - random.randint(1, 5000)  # cannot exceed 10000
 
     def put_request_cluster_coordinator(self, task_index: int, inference_result: str)-> dict:

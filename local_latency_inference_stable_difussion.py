@@ -7,9 +7,11 @@ import argparse
 import torch
 from torch import autocast
 from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler
+from coordinator.global_coordinator.global_coordinator_client import GlobalCoordinatorClient
 
 
 def main():
+    parser = argparse.ArgumentParser(description='Inference Runner with coordinator.')
     lms = LMSDiscreteScheduler(
         beta_start=0.00085,
         beta_end=0.012,
@@ -22,6 +24,7 @@ def main():
         use_auth_token=True
     ).to("cuda:0")
 
+    add_global_coordinator_arguments(parser)
     global_coord_client = GlobalCoordinatorClient(args)
     return_msg = global_coord_client.get_request_cluster_coordinator()
     if return_msg['task_index'] == -1:
