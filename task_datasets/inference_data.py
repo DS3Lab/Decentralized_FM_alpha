@@ -18,7 +18,7 @@ class JsonDataset(torch.utils.data.Dataset):
             n_dummy = batch_size - len(data) % batch_size
             if n_dummy < batch_size:
                 self.idx += [-1]*n_dummy
-                self.data = self.data + [tokenizer.bos_token]*n_dummy
+                self.data = self.data + ['dummy']*n_dummy
     
     def __len__(self):
         return len(self.data)
