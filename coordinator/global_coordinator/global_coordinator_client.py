@@ -11,7 +11,7 @@ class GlobalCoordinatorClient:
         self.host_port = args.coordinator_server_port
         self.client_port = 9999 - random.randint(1, 5000)  # cannot exceed 10000
 
-    def put_request_cluster_coordinator(self, task_index: int, inference_result: str):
+    def put_request_cluster_coordinator(self, task_index: int, inference_result: str)-> dict:
         print("=========put_request_cluster_coordinator=========")
         msg_dict = {
             'op': 'put_request_cluster_coordinator',
@@ -23,12 +23,13 @@ class GlobalCoordinatorClient:
             s.connect((self.host_ip, self.host_port))
             s.sendall(json.dumps(msg_dict).encode())
             msg_raw = s.recv(2048)
-            msg = json.loads(msg_raw)
+            return_msg = json.loads(msg_raw)
             print(f"=========Received=========")
-            print(msg)
+            print(return_msg)
             print("---------------------------")
+            return return_msg
 
-    def get_request_cluster_coordinator(self):
+    def get_request_cluster_coordinator(self) -> dict:
         print("=========get_request_cluster_coordinator=========")
         msg_dict = {
             'op': 'get_request_cluster_coordinator'
@@ -38,10 +39,11 @@ class GlobalCoordinatorClient:
             s.connect((self.host_ip, self.host_port))
             s.sendall(json.dumps(msg_dict).encode())
             msg_raw = s.recv(2048)
-            msg = json.loads(msg_raw)
+            return_msg = json.loads(msg_raw)
             print(f"=========Received=========")
-            print(msg)
+            print(return_msg)
             print("---------------------------")
+            return return_msg
 
 
 def main():
