@@ -25,3 +25,7 @@ Go to this directory in the Euler cluster:
 - To check what is going on in a node,
 
        bjob_connect job_ID
+
+- Kill all jobs:
+
+       bkill 0

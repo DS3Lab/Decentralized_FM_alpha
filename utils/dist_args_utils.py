@@ -252,6 +252,14 @@ def add_torch_distributed_inference_w_crusoe_coordinator_arguments(parser):
                         help='The IP of coordinator-server.')
 
 
+def add_global_coordinator_arguments(parser):
+    parser.add_argument('--global-coordinator-server-port', type=int, default=9102, metavar='N',
+                        help='The port of coordinator-server.')
+    parser.add_argument('--global-coordinator-server-ip', type=str, default='35.92.51.7', metavar='S',
+                        help='The IP of coordinator-server.')
+
+
+
 def add_torch_distributed_hybrid_inference_w_euler_coordinator_arguments(parser):
     parser.add_argument('--dist-backend', type=str, default='cupy_nccl', metavar='S',
                         help='backend type for distributed PyTorch (default: cupy_nccl)')

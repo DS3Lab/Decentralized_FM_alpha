@@ -7,8 +7,8 @@ import json
 
 class GlobalCoordinatorClient:
     def __init__(self, args):
-        self.host_ip = args.coordinator_server_ip
-        self.host_port = args.coordinator_server_port
+        self.host_ip = args.global_coordinator_server_ip
+        self.host_port = args.global_coordinator_server_port
         self.client_port = 9999 - random.randint(1, 5000)  # cannot exceed 10000
 
     def put_request_cluster_coordinator(self, task_index: int, inference_result: str)-> dict:
@@ -48,9 +48,9 @@ class GlobalCoordinatorClient:
 
 def main():
     parser = argparse.ArgumentParser(description='Test Job-Submit-Client')
-    parser.add_argument('--coordinator-server-port', type=int, default=9102, metavar='N',
+    parser.add_argument('--global-coordinator-server-port', type=int, default=9102, metavar='N',
                         help='The port of coordinator-server.')
-    parser.add_argument('--coordinator-server-ip', type=str, default='35.92.51.7', metavar='S',
+    parser.add_argument('--global-coordinator-server-ip', type=str, default='35.92.51.7', metavar='S',
                         help='The IP of coordinator-server.')
     parser.add_argument('--op', type=str, default='get', metavar='S',
                         help='The op: {get or put}.')
