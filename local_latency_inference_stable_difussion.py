@@ -22,7 +22,18 @@ def main():
         use_auth_token=True
     ).to("cuda:0")
 
+    global_coord_client = GlobalCoordinatorClient(args)
+    return_msg = global_coord_client.get_request_cluster_coordinator()
+    if return_msg['task_index'] == -1:
+        time.sleep(10)
+    else:
+
+
     text = ['a lovely dog with sunglasses']
+
+
+
+
 
     with torch.no_grad():
         with autocast("cuda"):
