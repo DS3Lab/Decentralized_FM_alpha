@@ -5,7 +5,6 @@ from collections import OrderedDict
 import os
 import requests
 import json
-from coordinator.global_coordinator.global_coordinator_client import GlobalCoordinatorClient
 
 
 def server_message_parser(msg: bytes):
@@ -182,10 +181,6 @@ class CoordinatorInferenceServer:
         self.inference_pipeline_demand_GPU_worker_num = 0
         self.inference_pipeline_demand_CPU_worker_num = 0
         self.submit_locked = False
-        if include_global_client:
-            self.global_coordinator_client = GlobalCoordinatorClient(args)
-            self.latency_model_dict = {}
-            self.latency_tasks_cache = {}
 
     def _allocate_index(self):
         self.allocated_index = (self.allocated_index + 1) % 10000
