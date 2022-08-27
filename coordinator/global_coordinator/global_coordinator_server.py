@@ -19,12 +19,12 @@ class GlobalCoordinatorServer:
                 self.task_meta_key = entrance['key']
                 self.task_meta = entrance['doc']
         if self.task_meta_key is None:
-            self.task_meta = self.db.save({
+            self.task_meta_key = self.db.save({
                 'meta_start_time': str(datetime.now()),
                 'task_hash': {}
-            })
+            })['_id']
+            self.task_meta = self.db.get(self.task_meta_key)
             print(self.task_meta)
-            self.task_meta_key = self.task_meta['key']
 
     def _allocate_task_index(self):
         current_index = self.allocated_task_index

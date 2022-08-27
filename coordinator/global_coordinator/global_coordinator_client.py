@@ -11,13 +11,12 @@ class GlobalCoordinatorClient:
         server = pycouchdb.Server(args.db_server_address)
         self.db = server.database("global_coordinator")
 
-    def put_request_cluster_coordinator(self, request_key: str, inference_result) -> dict:
+    def put_request_cluster_coordinator(self, request_doc: dict, inference_result) -> dict:
         print("=========put_request_cluster_coordinator=========")
-        doc = self.db.get(request_key)
-        doc['inference_result'] = inference_result
-        self.db.save(doc)
+        request_doc['inference_result'] = inference_result
+        self.db.save(request_doc)
         print(f"=========[cluster client] put result in key value store=========")
-        print(doc)
+        print(request_doc)
         print("-----------------------------------------------------------------")
 
     def get_request_cluster_coordinator(self) -> dict:
@@ -25,9 +24,10 @@ class GlobalCoordinatorClient:
         for doc in self.db.all():
             # print(doc)
             # print('job_type_info' in doc['doc'])
-            if 'job_type_info' in doc['doc'] and doc['doc']['job_type_info'] == 'latency_inference':
-                if doc['doc']['job_state'] == 'job_queued':
-                    doc['doc']['job_state'] = 'job_running'
+            doc=doc['doc']
+            if 'job_type_info' in doc and doc['job_type_info'] == 'latency_inference':
+                if doc['job_state'] == 'job_queued':
+                    doc['job_state'] = 'job_running'
                     self.db.save(doc)
                     print(f"=========[cluster client] get task in key value store=========")
                     print(doc)
