@@ -66,7 +66,7 @@ def main():
                 "temperature": 0.8,
                 "top_p": 0.95,
                 "max_time": 10.0,
-                "num_return_sequences": 3,
+                "num_return_sequences": 1,
                 "use_gpu": True
             }
         }
