@@ -106,7 +106,7 @@ def main():
 
                 output_ids_list = []
                 pipeline.inference_batch(input_ids, output_ids_list, attention_mask=attention_mask)
-                return_full_text = return_msg['hf_api_para']['return_full_text']
+                return_full_text = return_msg['hf_api_para']['parameters']['return_full_text']
 
                 results = []
                 for i in range(pipeline.num_completions):
@@ -115,10 +115,10 @@ def main():
                     result = torch.empty((1, token_len.item()), dtype=torch.long).cuda()
                     pipeline.comm.recv(result, src=pipeline.pipeline_group_size - 1)
                     if return_full_text:
-                        results.append(return_msg['hf_api_para']['inputs'] + tokenizer.decode(result[0]))
+                        results.append(return_msg['hf_api_para']['parameters']['inputs'] + tokenizer.decode(result[0]))
                     else:
                         results.append(tokenizer.decode(result[0]))
-                global_coord_client.put_request_cluster_coordinator(return_msg['key'], results)
+                global_coord_client.put_request_cluster_coordinator(return_msg, results)
 
         elif get_pipeline_parallel_rank() == pipeline.pipeline_group_size - 1:
             while True:
