@@ -18,11 +18,11 @@ def sync_setting(args, pipeline, device, return_msg=None):
     do_sample_tensor = torch.zeros(1, dtype=torch.uint8, device=device)
 
     if get_pipeline_parallel_rank() == 0:
-        generate_token_length = return_msg['hf_api_para']['max_new_tokens']
-        do_sample = return_msg['hf_api_para']['do_sample']
-        temperature = return_msg['hf_api_para']['temperature']
-        top_p = return_msg['hf_api_para']['top_p']
-        num_return_sequences = return_msg['hf_api_para']['num_return_sequences']
+        generate_token_length = return_msg['hf_api_para']['parameters']['max_new_tokens']
+        do_sample = return_msg['hf_api_para']['parameters']['do_sample']
+        temperature = return_msg['hf_api_para']['parameters']['temperature']
+        top_p = return_msg['hf_api_para']['parameters']['top_p']
+        num_return_sequences = return_msg['hf_api_para']['parameters']['num_return_sequences']
         num_return_sequences_tensor[:] = num_return_sequences
         generate_token_length_tensor[:] = generate_token_length
         temperature_tensor[:] = temperature
@@ -86,6 +86,9 @@ def main():
         if get_pipeline_parallel_rank() == 0:
             global_coord_client = GlobalCoordinatorClient(args)
             return_msg = global_coord_client.get_request_cluster_coordinator()
+            print("<<<<<<<<<<<<<<Return_msg Dict>>>>>>>>>>>>")
+            print(return_msg)
+
             if return_msg is None:
                 time.sleep(10)
             else:
