@@ -250,7 +250,9 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         assert self.pp_rank == self.pipeline_group_size - 1
         buff_i = index//self.token_micro_batch_size
         pos = index%self.token_micro_batch_size
+        print("_copy_initial_token_emb")
         for k in range(self.num_completions):
+            print(f"_copy_initial_token_emb {k}/{self.num_completions}")
             self.output_token_emb[buff_i][pos + k * self.token_micro_batch_size] = self.output_seq_emb[index][:, -1:]
         
     def _get_cached_attention(self, layer_index, token_batch_index):
