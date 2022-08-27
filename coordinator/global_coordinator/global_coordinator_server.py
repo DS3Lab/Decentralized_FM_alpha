@@ -50,7 +50,7 @@ def main():
     args = parser.parse_args()
     print(vars(args))
     coordinator = GlobalCoordinatorServer(args)
-    coordinator.clear_key_value()
+    # coordinator.clear_key_value()
     coordinator.check_key_value_info()
 
 
