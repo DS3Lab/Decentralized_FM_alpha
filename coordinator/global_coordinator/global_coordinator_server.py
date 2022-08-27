@@ -36,6 +36,11 @@ class GlobalCoordinatorServer:
             print("-----------------------------------------")
             print(entrance)
 
+    def clear_key_value(self):
+        keys = [doc['key'] for doc in self.db.all()]
+        print(keys)
+        for key in keys:
+            self.db.delete(key)
 
 def main():
     parser = argparse.ArgumentParser(description='Test Coordinator-Server')
@@ -45,6 +50,7 @@ def main():
     args = parser.parse_args()
     print(vars(args))
     coordinator = GlobalCoordinatorServer(args)
+    coordinator.clear_key_value()
     coordinator.check_key_value_info()
 
 
