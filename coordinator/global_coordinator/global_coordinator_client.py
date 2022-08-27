@@ -3,60 +3,50 @@ import socket
 import argparse
 import random
 import json
+import pycouchdb
 
 
 class GlobalCoordinatorClient:
     def __init__(self, args):
-        self.host_ip = args.global_coordinator_server_ip
-        self.host_port = args.global_coordinator_server_port
-        print("Global coordinator Host IP:", self.host_ip)
-        print("Global coordinator Host Port:", self.host_port)
-        self.client_port = 9999 - random.randint(1, 5000)  # cannot exceed 10000
+        server = pycouchdb.Server(args.db_server_address)
+        self.db = server.database("global_coordinator")
 
-    def put_request_cluster_coordinator(self, task_index: int, inference_result: str)-> dict:
+    def put_request_cluster_coordinator(self, request_key: str, inference_result) -> dict:
         print("=========put_request_cluster_coordinator=========")
-        msg_dict = {
-            'op': 'put_request_cluster_coordinator',
-            'task_index': task_index,
-            'result': inference_result
-        }
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(('', self.client_port))
-            s.connect((self.host_ip, self.host_port))
-            s.sendall(json.dumps(msg_dict).encode())
-            msg_raw = s.recv(2048)
-            return_msg = json.loads(msg_raw)
-            print(f"=========Received=========")
-            print(return_msg)
-            print("---------------------------")
-            return return_msg
+        doc = self.db.get(request_key)
+        doc['inference_result'] = inference_result
+        self.db.save(doc)
+        print(f"=========[cluster client] put result in key value store=========")
+        print(doc)
+        print("-----------------------------------------------------------------")
 
     def get_request_cluster_coordinator(self) -> dict:
         print("=========get_request_cluster_coordinator=========")
-        msg_dict = {
-            'op': 'get_request_cluster_coordinator'
-        }
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(('', self.client_port))
-            s.connect((self.host_ip, self.host_port))
-            s.sendall(json.dumps(msg_dict).encode())
-            msg_raw = s.recv(2048)
-            return_msg = json.loads(msg_raw)
-            print(f"=========Received=========")
-            print(return_msg)
-            print("---------------------------")
-            return return_msg
+        for doc in self.db.all():
+            # print(doc)
+            # print('job_type_info' in doc['doc'])
+            if 'job_type_info' in doc['doc'] and doc['doc']['job_type_info'] == 'latency_inference':
+                if doc['doc']['job_state'] == 'job_queued':
+                    doc['doc']['job_state'] = 'job_running'
+                    self.db.save(doc)
+                    print(f"=========[cluster client] get task in key value store=========")
+                    print(doc)
+                    print("---------------------------------------------------------------")
+                    return doc
+        print(f"=========[cluster client] get task in key value store=========")
+        print("None job in the queue")
+        print("---------------------------------------------------------------")
+        return None
 
 
 def main():
     parser = argparse.ArgumentParser(description='Test Job-Submit-Client')
-    parser.add_argument('--global-coordinator-server-port', type=int, default=9102, metavar='N',
-                        help='The port of coordinator-server.')
-    parser.add_argument('--global-coordinator-server-ip', type=str, default='35.92.51.7', metavar='S',
-                        help='The IP of coordinator-server.')
+    parser.add_argument('--db-server-address', type=str,
+                        default="http://xzyao:agway-fondly-ell-hammer-flattered-coconut@db.yao.sh:5984/", metavar='N',
+                        help='Key value store address.')
     parser.add_argument('--op', type=str, default='get', metavar='S',
                         help='The op: {get or put}.')
-    parser.add_argument('--task-index', type=int, default=0, metavar='N',
+    parser.add_argument('--request-key', type=str, default="6070cb8cfa50434192e060ed40c9a92e", metavar='N',
                         help='The index of the submitted tasks.')
     args = parser.parse_args()
     print(vars(args))

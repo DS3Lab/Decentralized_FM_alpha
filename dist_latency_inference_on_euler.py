@@ -6,7 +6,7 @@ from pipeline_parallel.dist_pp_utils import get_pp_inference_module
 from utils.dist_args_utils import *
 from utils.dist_inference_utils import *
 from comm.comm_utils import *
-from coordinator.lsf.coordinate_client import CoordinatorInferenceClient
+from coordinator.lsf.lsf_coordinate_client import CoordinatorInferenceClient
 from coordinator.global_coordinator.global_coordinator_client import GlobalCoordinatorClient
 
 
@@ -18,11 +18,11 @@ def sync_setting(args, pipeline, device, return_msg=None):
     do_sample_tensor = torch.zeros(1, dtype=torch.uint8, device=device)
 
     if get_pipeline_parallel_rank() == 0:
-        generate_token_length = return_msg['hf_api_para']['max_new_tokens']
-        do_sample = return_msg['hf_api_para']['do_sample']
-        temperature = return_msg['hf_api_para']['temperature']
-        top_p = return_msg['hf_api_para']['top_p']
-        num_return_sequences = return_msg['hf_api_para']['num_return_sequences']
+        generate_token_length = return_msg['doc']['hf_api_para']['max_new_tokens']
+        do_sample = return_msg['doc']['hf_api_para']['do_sample']
+        temperature = return_msg['doc']['hf_api_para']['temperature']
+        top_p = return_msg['doc']['hf_api_para']['top_p']
+        num_return_sequences = return_msg['doc']['hf_api_para']['num_return_sequences']
         num_return_sequences_tensor[:] = num_return_sequences
         generate_token_length_tensor[:] = generate_token_length
         temperature_tensor[:] = temperature
@@ -86,13 +86,13 @@ def main():
         if get_pipeline_parallel_rank() == 0:
             global_coord_client = GlobalCoordinatorClient(args)
             return_msg = global_coord_client.get_request_cluster_coordinator()
-            if return_msg['task_index'] == -1:
+            if return_msg is None:
                 time.sleep(10)
             else:
                 sync_setting(args, pipeline, device, return_msg)
                 pipeline.update_processors(args)
                 #####
-                inputs = tokenizer(return_msg['hf_api_para']['inputs'], return_tensors='pt',
+                inputs = tokenizer(return_msg['doc']['hf_api_para']['inputs'], return_tensors='pt',
                                    padding='max_length', truncation=True, )
 
                 input_ids = inputs['input_ids'].long().to(device)
@@ -103,7 +103,7 @@ def main():
 
                 output_ids_list = []
                 pipeline.inference_batch(input_ids, output_ids_list, attention_mask=attention_mask)
-                return_full_text = return_msg['hf_api_para']['return_full_text']
+                return_full_text = return_msg['doc']['hf_api_para']['return_full_text']
 
                 results = []
                 for i in range(pipeline.num_completions):
@@ -112,10 +112,10 @@ def main():
                     result = torch.empty((1, token_len.item()), dtype=torch.long).cuda()
                     pipeline.comm.recv(result, src=pipeline.pipeline_group_size - 1)
                     if return_full_text:
-                        results.append(return_msg['hf_api_para']['inputs'] + tokenizer.decode(result[0]))
+                        results.append(return_msg['doc']['hf_api_para']['inputs'] + tokenizer.decode(result[0]))
                     else:
                         results.append(tokenizer.decode(result[0]))
-                global_coord_client.put_request_cluster_coordinator(return_msg['task_index'], )
+                global_coord_client.put_request_cluster_coordinator(return_msg['key'], results)
 
         elif get_pipeline_parallel_rank() == pipeline.pipeline_group_size - 1:
             while True:

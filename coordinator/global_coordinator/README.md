@@ -2,20 +2,18 @@
 
 ### Set up coordinator 
 
-- Install memcache:
+- Install couchdb:
 
-        sudo apt-get update
-        sudo apt-get install memcached
-        sudo apt install python3-pip -y
-        pip install pymemcache
+        pip install pycouchdb
 
-- Start memcache:
+- So far just use Xiaozhe's DB service, we can seperated ones later: 
        
-        memcached -p 11111 -U 11111
+        http://xzyao:agway-fondly-ell-hammer-flattered-coconut@db.yao.sh:5984/
 
-- Kill memcache:
+- Doc about couchdb:
+
+        https://github.com/histrio/py-couchdb/blob/master/docs/source/quickstart.rst
         
-        sudo pkill -9 memcached
 
         
 

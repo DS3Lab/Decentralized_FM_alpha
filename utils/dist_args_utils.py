@@ -253,11 +253,9 @@ def add_torch_distributed_inference_w_crusoe_coordinator_arguments(parser):
 
 
 def add_global_coordinator_arguments(parser):
-    parser.add_argument('--global-coordinator-server-port', type=int, default=9102, metavar='N',
-                        help='The port of coordinator-server.')
-    parser.add_argument('--global-coordinator-server-ip', type=str, default='35.92.51.7', metavar='S',
-                        help='The IP of coordinator-server.')
-
+    parser.add_argument('--db-server-address', type=str,
+                        default="http://xzyao:agway-fondly-ell-hammer-flattered-coconut@db.yao.sh:5984/", metavar='N',
+                        help='Key value store address.')
 
 
 def add_torch_distributed_hybrid_inference_w_euler_coordinator_arguments(parser):

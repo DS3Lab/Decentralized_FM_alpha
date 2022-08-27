@@ -1,58 +1,52 @@
-import time
+from datetime import datetime
 import socket
 import argparse
 import random
 import json
+import pycouchdb
 
 
 class GlobalUserClient:
     def __init__(self, args):
-        self.host_ip = args.coordinator_server_ip
-        self.host_port = args.coordinator_server_port
-        self.client_port = 9999 - random.randint(1, 5000)  # cannot exceed 10000
+        server = pycouchdb.Server(args.db_server_address)
+        self.db = server.database("global_coordinator")
+        self.task_keys = []
 
     def put_request_user_client(self, inference_details: dict):
         print("=========put_request_user_client=========")
         msg_dict = {
-            'op': 'put_request_user_client',
+            'job_type_info': 'latency_inference',
+            'job_state': 'job_queued',
+            'job_post_time': str(datetime.now()),
             'hf_api_para': inference_details
         }
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(('', self.client_port))
-            s.connect((self.host_ip, self.host_port))
-            s.sendall(json.dumps(msg_dict).encode())
-            msg_raw = s.recv(2048)
-            msg = json.loads(msg_raw)
-            print(f"=========Received=========")
-            print(msg)
-            print("---------------------------")
+        doc = self.db.save(msg_dict)
+        current_job_key = doc['_id']
+        self.task_keys.append(current_job_key)
+        print(f"=========[user client] put result in key value store=========")
+        print("Current key:", current_job_key)
+        print(doc)
+        print("--------------------------------------------------")
 
-    def get_request_user_client(self, task_index: int):
+    def get_request_user_client(self, request_key: str):
         print("=========get_request_user_client=========")
-        msg_dict = {
-            'op': 'get_request_user_client',
-            'task_index': task_index
-        }
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(('', self.client_port))
-            s.connect((self.host_ip, self.host_port))
-            s.sendall(json.dumps(msg_dict).encode())
-            msg_raw = s.recv(2048)
-            msg = json.loads(msg_raw)
-            print(f"=========Received=========")
-            print(msg)
-            print("---------------------------")
+        doc = self.db.get(request_key)
+        assert doc is not None
+        print(f"=========[user client] get result in key value store=========")
+        print(doc)
+        print("------------------------------------------------------")
+        if doc['job_state'] == 'job_finished':
+            self.db.delete(request_key)
 
 
 def main():
     parser = argparse.ArgumentParser(description='Test Job-Submit-Client')
-    parser.add_argument('--coordinator-server-port', type=int, default=9102, metavar='N',
-                        help='The port of coordinator-server.')
-    parser.add_argument('--coordinator-server-ip', type=str, default='35.92.51.7', metavar='S',
-                        help='The IP of coordinator-server.')
+    parser.add_argument('--db-server-address', type=str,
+                        default="http://xzyao:agway-fondly-ell-hammer-flattered-coconut@db.yao.sh:5984/", metavar='N',
+                        help='Key value store address.')
     parser.add_argument('--op', type=str, default='get', metavar='S',
                         help='The op: {get or put}.')
-    parser.add_argument('--task-index', type=int, default=0, metavar='N',
+    parser.add_argument('--request-key', type=str, default="6070cb8cfa50434192e060ed40c9a92e", metavar='N',
                         help='The index of the submitted tasks.')
     parser.add_argument('--inputs', type=str, default='Hello world!', metavar='S',
                         help='The prompt sequence.')
@@ -61,7 +55,7 @@ def main():
     client = GlobalUserClient(args)
 
     if args.op == 'get':
-        client.get_request_user_client(args.task_index)
+        client.get_request_user_client(args.request_key)
     elif args.op == 'put':
         inference_details = {
             'inputs': args.inputs,
