@@ -30,7 +30,9 @@ def sync_setting(args, pipeline, device, return_msg=None):
         do_sample_tensor[:] = do_sample
 
     pipeline.comm.broadcast(num_return_sequences_tensor, src=0)
-    pipeline.num_completions = num_return_sequences_tensor.item()
+    # pipeline.num_completions = num_return_sequences_tensor.item()
+
+    pipeline.change_num_completions(num_return_sequences_tensor.item())
 
     pipeline.comm.broadcast(generate_token_length_tensor, src=0)
     pipeline.generate_seq_length = generate_token_length_tensor.item()

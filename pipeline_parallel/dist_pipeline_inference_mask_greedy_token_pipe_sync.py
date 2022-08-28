@@ -25,8 +25,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         self.max_layers = args.max_layers
         self._layer_begin = args.num_layers * get_pipeline_parallel_rank()
         self._layer_end = args.num_layers * (get_pipeline_parallel_rank()+1)
-        
-        
+
         ##########
         self.stop = args.stop
         # self.stop = None
@@ -77,11 +76,32 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             self.output_seq_emb = [torch.zeros((1, self.input_seq_length-1, self.embedding_dim),
                                                requires_grad=False, device=self.device, dtype=self.dtype)
                                    for _ in range(self.seq_num)]
-            
+
+    def change_num_completions(self, num_completions):
+        self.num_completions = num_completions
+        if self.pp_rank == self.pipeline_group_size - 1:
+            ret_seq_length = self.generate_seq_length if not self.echo_prompt else self.input_seq_length + self.generate_seq_length
+            self.ret_tokens = torch.zeros(
+                (self.seq_num * self.num_completions, ret_seq_length),
+                requires_grad=False, device=self.device, dtype=torch.int64
+            )
+            self.ret_token_logprobs = torch.zeros(
+                (self.seq_num * self.num_completions, ret_seq_length),
+                requires_grad=False, device=self.device, dtype=self.dtype
+            )
+            if self.top_k_per_token > 0:
+                self.ret_topk_tokens = torch.zeros(
+                    (self.seq_num * self.num_completions, ret_seq_length, self.top_k_per_token),
+                    requires_grad=False, device=self.device, dtype=torch.int64
+                )
+                self.ret_topk_token_logprobs = torch.zeros(
+                    (self.seq_num * self.num_completions, ret_seq_length, self.top_k_per_token),
+                    requires_grad=False, device=self.device, dtype=self.dtype
+                )
 
     def _print_buffers(self):
         if self.generate_seq_length == 0:
-            # dont print when seq_length == 0
+            # don't print when seq_length == 0
             return
         super()._print_buffers()
             
