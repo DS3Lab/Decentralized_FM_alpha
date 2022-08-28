@@ -98,6 +98,27 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
                     (self.seq_num * self.num_completions, ret_seq_length, self.top_k_per_token),
                     requires_grad=False, device=self.device, dtype=self.dtype
                 )
+        if self.pp_rank == 0:
+            self.recv_new_token = [torch.zeros((self.token_micro_batch_size * num_completions, 1),
+                                               requires_grad=False, device=self.device, dtype=torch.int64)
+                                   for _ in range(self.token_micro_batch_num)]
+        if self.pp_rank == self.pipeline_group_size - 1:
+            self.send_new_tokens = [torch.zeros((self.token_micro_batch_size * num_completions, 1),
+                                                requires_grad=False, device=self.device, dtype=torch.int64)
+                                    for _ in range(self.token_micro_batch_num)]
+
+        self.input_seq_emb = [torch.zeros((1, self.input_seq_length, self.embedding_dim),
+                                          requires_grad=False, device=self.device, dtype=self.dtype)
+                              for _ in range(self.seq_num)]
+        self.output_seq_emb = [torch.zeros((1, self.input_seq_length, self.embedding_dim),
+                                           requires_grad=False, device=self.device, dtype=self.dtype)
+                               for _ in range(self.seq_num)]
+        self.input_token_emb = [torch.zeros((self.token_micro_batch_size * num_completions, 1, self.embedding_dim),
+                                            requires_grad=False, device=self.device, dtype=self.dtype)
+                                for _ in range(self.token_micro_batch_num)]
+        self.output_token_emb = [torch.zeros((self.token_micro_batch_size * num_completions, 1, self.embedding_dim),
+                                             requires_grad=False, device=self.device, dtype=self.dtype)
+                                 for _ in range(self.token_micro_batch_num)]
 
     def _print_buffers(self):
         if self.generate_seq_length == 0:
