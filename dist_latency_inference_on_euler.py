@@ -18,11 +18,11 @@ def sync_setting(args, pipeline, device, return_msg=None):
     do_sample_tensor = torch.zeros(1, dtype=torch.uint8, device=device)
 
     if get_pipeline_parallel_rank() == 0:
-        generate_token_length = return_msg['hf_api_para']['parameters']['max_new_tokens']
-        do_sample = return_msg['hf_api_para']['parameters']['do_sample']
-        temperature = return_msg['hf_api_para']['parameters']['temperature']
-        top_p = return_msg['hf_api_para']['parameters']['top_p']
-        num_return_sequences = return_msg['hf_api_para']['parameters']['num_return_sequences']
+        generate_token_length = return_msg['task_api']['parameters']['max_new_tokens']
+        do_sample = return_msg['task_api']['parameters']['do_sample']
+        temperature = return_msg['task_api']['parameters']['temperature']
+        top_p = return_msg['task_api']['parameters']['top_p']
+        num_return_sequences = return_msg['task_api']['parameters']['num_return_sequences']
         num_return_sequences_tensor[:] = num_return_sequences
         generate_token_length_tensor[:] = generate_token_length
         temperature_tensor[:] = temperature
@@ -84,10 +84,13 @@ def main():
     input_ids = torch.ones([args.batch_size, args.input_seq_length]).long().cuda()
     attention_mask = torch.ones([args.batch_size, args.input_seq_length]).long().cuda()
 
+    model_name_abbr = args.model_name.split('/')[-1]
     while True:
         if get_pipeline_parallel_rank() == 0:
             global_coord_client = GlobalCoordinatorClient(args)
-            return_msg = global_coord_client.get_request_cluster_coordinator()
+            return_msg = global_coord_client.get_request_cluster_coordinator(job_type_info='latency_inference',
+                                                                             model_name=model_name_abbr,
+                                                                             task_type='seq_generation')
             print("<<<<<<<<<<<<<<Return_msg Dict>>>>>>>>>>>>")
             print(return_msg)
 
@@ -97,7 +100,7 @@ def main():
                 sync_setting(args, pipeline, device, return_msg)
                 pipeline.update_processors(args)
                 #####
-                inputs = tokenizer(return_msg['hf_api_para']['inputs'], return_tensors='pt',
+                inputs = tokenizer(return_msg['task_api']['inputs'], return_tensors='pt',
                                    padding='max_length', truncation=True, )
 
                 input_ids = inputs['input_ids'].long().to(device)
@@ -108,7 +111,7 @@ def main():
 
                 output_ids_list = []
                 pipeline.inference_batch(input_ids, output_ids_list, attention_mask=attention_mask)
-                return_full_text = return_msg['hf_api_para']['parameters']['return_full_text']
+                return_full_text = return_msg['task_api']['parameters']['return_full_text']
 
                 results = []
                 for i in range(pipeline.num_completions):
@@ -117,7 +120,7 @@ def main():
                     result = torch.empty((1, token_len.item()), dtype=torch.long).cuda()
                     pipeline.comm.recv(result, src=pipeline.pipeline_group_size - 1)
                     if return_full_text:
-                        results.append(return_msg['hf_api_para']['parameters']['inputs'] + tokenizer.decode(result[0]))
+                        results.append(return_msg['task_api']['inputs'] + tokenizer.decode(result[0]))
                     else:
                         results.append(tokenizer.decode(result[0]))
                 global_coord_client.put_request_cluster_coordinator(return_msg, results)

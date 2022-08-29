@@ -252,6 +252,17 @@ def add_torch_distributed_inference_w_crusoe_coordinator_arguments(parser):
                         help='The IP of coordinator-server.')
 
 
+def add_lsf_coordinator_arguments(parser):
+    parser.add_argument('--coordinator-server-port', type=int, default=9002, metavar='N',
+                        help='The port of coordinator-server.')
+    parser.add_argument('--coordinator-server-ip', type=str, default='localhost', metavar='S',
+                        help='The IP of coordinator-server.')
+    parser.add_argument('--lsf-job-no', type=str, default='100', metavar='S',
+                        help='Job-<ID> assigned by LSF.')
+    parser.add_argument('--unique-port', type=str, default='100', metavar='S',
+                        help='Which port to use, each client should have different value of this.')
+
+
 def add_global_coordinator_arguments(parser):
     parser.add_argument('--db-server-address', type=str,
                         default="http://xzyao:agway-fondly-ell-hammer-flattered-coconut@db.yao.sh:5984/", metavar='N',

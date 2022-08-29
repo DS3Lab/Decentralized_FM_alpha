@@ -1,8 +1,5 @@
 from datetime import datetime
-import socket
 import argparse
-import random
-import json
 import pycouchdb
 
 
@@ -17,8 +14,13 @@ class GlobalUserClient:
         msg_dict = {
             'job_type_info': 'latency_inference',
             'job_state': 'job_queued',
-            'job_post_time': str(datetime.now()),
-            'hf_api_para': inference_details
+            'time': {
+                'job_queued_time': str(datetime.now()),
+                'job_start_time': None,
+                'job_end_time': None,
+                'job_returned_time': None
+            },
+            'task_api': inference_details
         }
         doc = self.db.save(msg_dict)
         current_job_key = doc['_id']
@@ -36,7 +38,9 @@ class GlobalUserClient:
         print(doc)
         print("------------------------------------------------------")
         if doc['job_state'] == 'job_finished':
-            self.db.delete(request_key)
+            doc['job_state'] = 'job_returned'
+            self.db.save(doc)
+        return doc
 
 
 def main():
@@ -50,6 +54,10 @@ def main():
                         help='The index of the submitted tasks.')
     parser.add_argument('--inputs', type=str, default='Hello world!', metavar='S',
                         help='The prompt sequence.')
+    parser.add_argument('--model-name', type=str, default='gptj', metavar='S',
+                        help='-')
+    parser.add_argument('--task-type', type=str, default='seq_generation', metavar='S',
+                        help='-')
     args = parser.parse_args()
     print(vars(args))
     client = GlobalUserClient(args)
@@ -59,6 +67,8 @@ def main():
     elif args.op == 'put':
         inference_details = {
             'inputs': args.inputs,
+            'model_name': args.model_name,
+            'task_type': args.task_type,
             "parameters": {
                 "max_new_tokens": 64,
                 "return_full_text": False,
@@ -68,7 +78,8 @@ def main():
                 "max_time": 10.0,
                 "num_return_sequences": 3,
                 "use_gpu": True
-            }
+            },
+            'outputs': None
         }
         client.put_request_user_client(inference_details)
     else:

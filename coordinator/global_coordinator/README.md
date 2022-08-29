@@ -1,6 +1,6 @@
 # Global Coordinator
 
-### Set up coordinator 
+## Set up coordinator 
 
 - Install couchdb:
 
@@ -15,7 +15,30 @@
         https://github.com/histrio/py-couchdb/blob/master/docs/source/quickstart.rst
         
 
-        
+## Format of Submission File
+
+- job_type_info: (latency_inference, batch_inference)
+- job_state: (job_queued, job_running, job_finished, job_returned)
+- time:
+  - job_queued_time:
+  - job_start_time:
+  - job_end_time:
+  - job_returned_time:
+- task_api:
+  - inputs:
+  - model_name: gptj, etc. 
+  - task_type: seq_generation, image_generation
+  - parameters:
+    - max_new_tokens
+    - return_full_text
+    - do_sample
+    - temperature
+    - top_p
+    - max_time
+    - num_return_sequences
+    - use_gpu
+    - (etc.)
+  - outputs: 
 
         
 

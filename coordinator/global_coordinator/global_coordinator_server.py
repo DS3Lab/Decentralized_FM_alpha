@@ -42,15 +42,20 @@ class GlobalCoordinatorServer:
         for key in keys:
             self.db.delete(key)
 
+
 def main():
     parser = argparse.ArgumentParser(description='Test Coordinator-Server')
     parser.add_argument('--db-server-address', type=str,
                         default="http://xzyao:agway-fondly-ell-hammer-flattered-coconut@db.yao.sh:5984/", metavar='N',
                         help='Key value store address.')
+    parser.add_argument('--clear-all', type=lambda x: (str(x).lower() == 'true'),
+                        default=False, metavar='S',
+                        help='Delete all cached results. Everything gets deleted.')
     args = parser.parse_args()
     print(vars(args))
     coordinator = GlobalCoordinatorServer(args)
-    # coordinator.clear_key_value()
+    if args.clear_all:
+        coordinator.clear_key_value()
     coordinator.check_key_value_info()
 
 

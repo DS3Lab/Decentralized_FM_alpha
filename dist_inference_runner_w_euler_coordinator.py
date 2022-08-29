@@ -5,7 +5,7 @@ from utils.dist_args_utils import *
 from utils.dist_inference_utils import *
 from comm.comm_utils import *
 from task_datasets.inference_data import get_request_processor
-from coordinator.lsf.coordinate_client import CoordinatorInferenceClient
+from coordinator.lsf.lsf_coordinate_client import CoordinatorInferenceClient
 
 
 def main():
