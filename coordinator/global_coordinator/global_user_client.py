@@ -54,7 +54,7 @@ def main():
                         help='The index of the submitted tasks.')
     parser.add_argument('--inputs', type=str, default='Hello world!', metavar='S',
                         help='The prompt sequence.')
-    parser.add_argument('--model-name', type=str, default='gptj', metavar='S',
+    parser.add_argument('--model-name', type=str, default='gpt-j-6B', metavar='S',
                         help='-')
     parser.add_argument('--task-type', type=str, default='seq_generation', metavar='S',
                         help='-')

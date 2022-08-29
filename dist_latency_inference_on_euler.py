@@ -85,6 +85,7 @@ def main():
     attention_mask = torch.ones([args.batch_size, args.input_seq_length]).long().cuda()
 
     model_name_abbr = args.model_name.split('/')[-1]
+    print("model name abbr: ", model_name_abbr)
     while True:
         if get_pipeline_parallel_rank() == 0:
             global_coord_client = GlobalCoordinatorClient(args)
