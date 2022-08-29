@@ -1,6 +1,6 @@
 #!/bin/bash
 #BSUB -n 1                     # 1 cores
-#BSUB -W 3:59                   # 3-minutes run-time
+#BSUB -W 11:59                   # 12 hours run-time
 #BSUB -R "rusage[mem=8000]"     # 8 GB per core
 #BSUB -R "rusage[ngpus_excl_p=1]"
 #BSUB -R "select[gpu_mtotal0>=10000]"
