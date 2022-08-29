@@ -12,14 +12,6 @@ from utils.dist_args_utils import *
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Inference Runner with coordinator.')
-    parser.add_argument('--infer-data', type=str, default='foo', metavar='S',
-                        help='data path')
-    add_global_coordinator_arguments(parser)
-    add_torch_distributed_inference_w_euler_coordinator_arguments(parser)
-    args = parser.parse_args()
-    print_arguments(args)
-
     lms = LMSDiscreteScheduler(
         beta_start=0.00085,
         beta_end=0.012,
@@ -33,6 +25,16 @@ def main():
         torch_dtype=torch.float16,
         revision="fp16"
     ).to("cuda:0")
+
+    print("Load Stable Diffusion Model is done.")
+
+    parser = argparse.ArgumentParser(description='Inference Runner with coordinator.')
+    parser.add_argument('--infer-data', type=str, default='foo', metavar='S',
+                        help='data path')
+    add_global_coordinator_arguments(parser)
+    add_lsf_coordinator_arguments(parser)
+    args = parser.parse_args()
+    print_arguments(args)
 
     lsf_coordinator_client = CoordinatorInferenceClient(args)
     lsf_coordinator_client.notify_inference_join()
