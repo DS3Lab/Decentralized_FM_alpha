@@ -77,8 +77,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
                                                requires_grad=False, device=self.device, dtype=self.dtype)
                                    for _ in range(self.seq_num)]
 
-    def change_num_completions(self, num_completions):
-        self.num_completions = num_completions
+    def change_buffer_size(self):
         if self.pp_rank == self.pipeline_group_size - 1:
             ret_seq_length = self.generate_seq_length if not self.echo_prompt else self.input_seq_length + self.generate_seq_length
             self.ret_tokens = torch.zeros(
@@ -99,11 +98,11 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
                     requires_grad=False, device=self.device, dtype=self.dtype
                 )
         if self.pp_rank == 0:
-            self.recv_new_token = [torch.zeros((self.token_micro_batch_size * num_completions, 1),
+            self.recv_new_token = [torch.zeros((self.token_micro_batch_size * self.num_completions, 1),
                                                requires_grad=False, device=self.device, dtype=torch.int64)
                                    for _ in range(self.token_micro_batch_num)]
         if self.pp_rank == self.pipeline_group_size - 1:
-            self.send_new_tokens = [torch.zeros((self.token_micro_batch_size * num_completions, 1),
+            self.send_new_tokens = [torch.zeros((self.token_micro_batch_size * self.num_completions, 1),
                                                 requires_grad=False, device=self.device, dtype=torch.int64)
                                     for _ in range(self.token_micro_batch_num)]
 
@@ -113,10 +112,10 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         self.output_seq_emb = [torch.zeros((1, self.input_seq_length, self.embedding_dim),
                                            requires_grad=False, device=self.device, dtype=self.dtype)
                                for _ in range(self.seq_num)]
-        self.input_token_emb = [torch.zeros((self.token_micro_batch_size * num_completions, 1, self.embedding_dim),
+        self.input_token_emb = [torch.zeros((self.token_micro_batch_size * self.num_completions, 1, self.embedding_dim),
                                             requires_grad=False, device=self.device, dtype=self.dtype)
                                 for _ in range(self.token_micro_batch_num)]
-        self.output_token_emb = [torch.zeros((self.token_micro_batch_size * num_completions, 1, self.embedding_dim),
+        self.output_token_emb = [torch.zeros((self.token_micro_batch_size * self.num_completions, 1, self.embedding_dim),
                                              requires_grad=False, device=self.device, dtype=self.dtype)
                                  for _ in range(self.token_micro_batch_num)]
 
