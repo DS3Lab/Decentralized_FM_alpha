@@ -21,5 +21,8 @@ COOR_CONF="--coordinator-server-ip 129.132.93.115"
 
 export http_proxy=http://proxy.ethz.ch:3128
 export https_proxy=https://proxy.ethz.ch:3128
+export NCCL_IB_DISABLE=1
+export NCCL_P2P_DISABLE=1
+
 
 python -u local_latency_inference_stable_diffussion.py $COOR_CONF
