@@ -176,17 +176,20 @@ class CoordinatorInferenceServer:
         self.prime_worker_ips = []
         self.active_inference_pipeline = 0
         self.bsub_script_path = args.bsub_script_path
-        self.is_hybrid_task = False
         self.inference_pipeline_demand_worker_num = 0
         self.inference_pipeline_demand_GPU_worker_num = 0
         self.inference_pipeline_demand_CPU_worker_num = 0
         self.submit_locked = False
+        self.active_models = []
 
     def _allocate_index(self):
         self.allocated_index = (self.allocated_index + 1) % 10000
         return self.allocated_index
 
     def _print_current_working_nodes(self):
+        print(f"<----------------Current running models---------------->")
+        for model in self.active_models:
+            print(model)
         print(f"<----------------Current Working Pipelines [{len(self.working_pipelines)}]---------------->")
         for i in range(len(self.working_pipelines)):
             print(f"<----------------Current Pipeline [{i}] Workers---------------->")
@@ -198,11 +201,9 @@ class CoordinatorInferenceServer:
         print("<<<<<<<<<<<<<<<<<<<<< Submit Job >>>>>>>>>>>>>>>>>>>>>>")
         if not self.submit_locked:
             self.submit_locked = True
-            if job_name == 'lsf_hybrid_opt175b':
-                self.is_hybrid_task = True
-                self.inference_pipeline_demand_worker_num = 62
-                self.inference_pipeline_demand_GPU_worker_num = 32
-                self.inference_pipeline_demand_CPU_worker_num = 30
+            self.active_models.append(job_name)
+            if job_name == 'lsf_latency_stable_diffusion':
+                self.inference_pipeline_demand_worker_num = 1
             else:
                 machine_size, world_size = get_demand_resources(f'{self.bsub_script_path}/{job_name}.bsub')
                 # TODO: currently assume machine_size == world_size 
@@ -212,32 +213,17 @@ class CoordinatorInferenceServer:
                 self.inference_pipeline_demand_worker_num = machine_size
                 # return f'This job is not recognized on coordinate - {job_name}'
 
-            if self.is_hybrid_task:
-                for i in range(self.inference_pipeline_demand_worker_num):
-                    os.system(f"rm {self.bsub_script_path}/submit_cache/*.bsub")
-                    hardware = "gpu" if i < self.inference_pipeline_demand_GPU_worker_num else "cpu"
-                    os.system(f"cp {self.bsub_script_path}/{job_name}_{hardware}.bsub "
-                              f"{self.bsub_script_path}/submit_cache/{job_name}_{hardware}_{i+1}.bsub")
-                    os.system(f"echo \'--lsf-job-no {self._allocate_index()} --infer-data {infer_data}\' "
-                              f">> {self.bsub_script_path}/submit_cache/{job_name}_{hardware}_{i+1}.bsub")
-                    os.system(f"cd {self.bsub_script_path}/submit_cache && "
-                              f"bsub < {job_name}_{hardware}_{i+1}.bsub")
-                os.system("bjobs")
-                self.working_pipelines.append(OrderedDict())
-                self.active_inference_pipeline += 1
-                return f'Succeed to submit job - {job_name}'
-            else:
-                for i in range(self.inference_pipeline_demand_worker_num):
-                    os.system(f"rm {self.bsub_script_path}/submit_cache/*.bsub")
-                    os.system(f"cp {self.bsub_script_path}/{job_name}.bsub "
-                              f"{self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
-                    os.system(f"echo \'--lsf-job-no {self._allocate_index()} --infer-data {infer_data}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
-                    os.system(f"cd {self.bsub_script_path}/submit_cache && "
-                              f"bsub < {job_name}_{i+1}.bsub")
-                os.system("bjobs")
-                self.working_pipelines.append(OrderedDict())
-                self.active_inference_pipeline += 1
-                return f'Succeed to submit job - {job_name}'
+            for i in range(self.inference_pipeline_demand_worker_num):
+                os.system(f"rm {self.bsub_script_path}/submit_cache/*.bsub")
+                os.system(f"cp {self.bsub_script_path}/{job_name}.bsub "
+                          f"{self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
+                os.system(f"echo \'--lsf-job-no {self._allocate_index()} --infer-data {infer_data}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
+                os.system(f"cd {self.bsub_script_path}/submit_cache && "
+                          f"bsub < {job_name}_{i+1}.bsub")
+            os.system("bjobs")
+            self.working_pipelines.append(OrderedDict())
+            self.active_inference_pipeline += 1
+            return f'Succeed to submit job - {job_name}'
         else:
             return f'Fail to submit job - {job_name}, coordinator server is handling other submission'
 
@@ -253,7 +239,7 @@ class CoordinatorInferenceServer:
                 return i
         return -1
 
-    def _handle_inference_join(self, worker_ip, port, node_type=None) -> str:
+    def _handle_inference_join(self, worker_ip, port) -> str:
         node_key = worker_ip + ':' + str(port)
         assert not self._check_if_node_has_joined(node_key),\
             f"Worker called notify_inference_join has been joined before ({node_key})"
@@ -289,27 +275,6 @@ class CoordinatorInferenceServer:
         return_msg = 'done'
         return return_msg
 
-
-    def _handle_inference_job_latency(self, job_details) -> str:
-        print("<<<<<<<<<<<<<<<<<<<<< Get Inference Job >>>>>>>>>>>>>>>>>>>>>>")
-        # parser the inference job like
-        '''
-        url = 'http://10.205.11.33:5001'
-        myobj = {
-            'inputs': "you are not",
-            "parameters": {
-                "max_new_tokens": 20, "return_full_text": True,
-                "do_sample": True, "temperature": 0.8, "top_p": 0.95,
-                "max_time": 10.0, "num_return_sequences": 2,
-                "use_gpu": True,
-            }
-        }
-        '''
-        inference_latency_job = inference_latency_job_parser(job_details)
-        url = 'http://' + self.prime_worker_ips[0] + ':5001'
-        x = requests.post(url, json=inference_latency_job)
-        return x.text
-
     def execute_server(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind((self.host, self.port))
@@ -325,11 +290,9 @@ class CoordinatorInferenceServer:
                         if msg_arg['state'] == 'submit':
                             return_msg = self._handle_inference_submit(msg_arg['job_name'], msg_arg['infer_data'])
                         elif msg_arg['state'] == 'join':
-                            return_msg = self._handle_inference_join(worker_ip, port, node_type=None)
+                            return_msg = self._handle_inference_join(worker_ip, port)
                         elif msg_arg['state'] == 'finish':
                             return_msg = self._handle_inference_finish(worker_ip, port, msg_arg)
-                        elif msg_arg['state'] == 'latency_job':
-                            return_msg = self._handle_inference_job_latency(msg_arg['job_details'])
                         else:
                             assert False, f"Not valid operator for training ({msg_arg['state']})"
                     connection.sendall(return_msg.encode())
