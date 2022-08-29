@@ -19,8 +19,8 @@ ifconfig
 COOR_CONF="--coordinator-server-ip 129.132.93.115"
 #!/bin/bash
 
-export http_proxy=http://proxy.ethz.ch:3128
-export https_proxy=https://proxy.ethz.ch:3128
+# export http_proxy=http://proxy.ethz.ch:3128
+# export https_proxy=https://proxy.ethz.ch:3128
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 
