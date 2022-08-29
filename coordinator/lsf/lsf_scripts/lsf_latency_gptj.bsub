@@ -4,8 +4,8 @@
 #BSUB -R "rusage[mem=8000]"     # 8 GB per core
 #BSUB -R "rusage[ngpus_excl_p=1]"
 #BSUB -R "select[gpu_mtotal0>=10000]"
-#BSUB -o /cluster/home/biyuan/exe_log/gptj.out.%J
-#BSUB -e /cluster/home/biyuan/exe_log/gptj.err.%J
+#BSUB -o /nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/exe_log/gptj.out.%J
+#BSUB -e /nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/exe_log/gptj.err.%J
 env2lmod
 module load gcc/6.3.0 cuda/11.0.3             # Load modules from Euler setup
 module load eth_proxy
