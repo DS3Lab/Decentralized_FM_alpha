@@ -94,7 +94,8 @@ def main():
                                                                              task_type='seq_generation')
             # print("<<<<<<<<<<<<<<Return_msg Dict>>>>>>>>>>>>")
             # print(return_msg)
-            print(f"Handel request: <{return_msg['_id']}>")
+            if return_msg:
+                print(f"Handel request: <{return_msg['_id']}>")
 
             if return_msg is None:
                 time.sleep(10)
