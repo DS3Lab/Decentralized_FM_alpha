@@ -58,6 +58,10 @@ def main():
                         help='-')
     parser.add_argument('--task-type', type=str, default='seq_generation', metavar='S',
                         help='-')
+    parser.add_argument('--max-new-tokens', type=int, default=128, metavar='N',
+                        help='-')
+    parser.add_argument('--num-return-sequences', type=int, default=3, metavar='N',
+                        help='-')
     args = parser.parse_args()
     print(vars(args))
     client = GlobalUserClient(args)
@@ -70,13 +74,13 @@ def main():
             'model_name': args.model_name,
             'task_type': args.task_type,
             "parameters": {
-                "max_new_tokens": 64,
+                "max_new_tokens": args.max_new_tokens,
                 "return_full_text": False,
                 "do_sample": True,
                 "temperature": 0.8,
                 "top_p": 0.95,
                 "max_time": 10.0,
-                "num_return_sequences": 3,
+                "num_return_sequences": args.num_return_sequences,
                 "use_gpu": True
             },
             'outputs': None

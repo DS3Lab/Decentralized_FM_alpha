@@ -32,9 +32,27 @@ class GlobalCoordinatorServer:
         return current_index
 
     def check_key_value_info(self):
+        record_count = 0
         for entrance in self.db.all():
             print("-----------------------------------------")
-            print(entrance)
+            doc = entrance['doc']
+            print("key:", doc['_id'])
+            if 'job_type_info' in doc:
+                print("job_type_info:", doc['job_type_info'])
+                print("job_state:", doc['job_state'])
+                print("time:", doc['time'])
+                print("task_api: <task_type>:", doc['task_api']['task_type'])
+                print("task_api: <model_name>:", doc['task_api']['model_name'])
+                print("task_api: <parameters>:", doc['task_api']['parameters'])
+                print("task_api: <inputs>:", doc['task_api']['inputs'])
+                if doc['task_api']['outputs']:
+                    print("task_api: length of <outputs>:", len(doc['task_api']['outputs']))
+                else:
+                    print("task_api: <outputs>: not ready")
+                record_count += 1
+            else:
+                print(doc)
+        print("Total number of record:", record_count)
 
     def clear_key_value(self):
         keys = [doc['key'] for doc in self.db.all()]
