@@ -92,8 +92,9 @@ def main():
             return_msg = global_coord_client.get_request_cluster_coordinator(job_type_info='latency_inference',
                                                                              model_name=model_name_abbr,
                                                                              task_type='seq_generation')
-            print("<<<<<<<<<<<<<<Return_msg Dict>>>>>>>>>>>>")
-            print(return_msg)
+            # print("<<<<<<<<<<<<<<Return_msg Dict>>>>>>>>>>>>")
+            # print(return_msg)
+            print(f"Handel request: <{return_msg['_id']}>")
 
             if return_msg is None:
                 time.sleep(10)

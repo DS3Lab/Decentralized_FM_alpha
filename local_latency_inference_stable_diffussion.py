@@ -44,8 +44,8 @@ def main():
     while True:
         return_msg = global_coord_client.get_request_cluster_coordinator(model_name='stable_diffusion',
                                                                          task_type='image_generation')
-        print("<<<<<<<<<<<<<<Return_msg Dict>>>>>>>>>>>>")
-        print(return_msg)
+        # print("<<<<<<<<<<<<<<Return_msg Dict>>>>>>>>>>>>")
+        print(f"Handel request: <{return_msg['_id']}>")
 
         if return_msg is None:
             time.sleep(10)
