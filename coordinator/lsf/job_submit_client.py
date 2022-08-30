@@ -2,6 +2,7 @@ import time
 import socket
 import argparse
 import random
+import json
 
 
 class JobSubmitClient:
@@ -24,12 +25,19 @@ class JobSubmitClient:
             else:
                 break
         
-    def submit_inference_job(self, job_name: str):
+    def submit_inference_job(self, job_name: str, infer_data: str='foo'):
         while True:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.bind(('', self.client_port))
                 s.connect((self.host_ip, self.host_port))
-                s.sendall(b"inference#submit#"+job_name.encode())
+                # s.sendall(b"inference#submit#"+job_name.encode())
+                msg_dict = {
+                    'task': 'inference',
+                    'state': 'submit',
+                    'job_name': job_name,
+                    'infer_data': infer_data
+                }
+                s.sendall(json.dumps(msg_dict).encode())
                 msg = s.recv(1024)
                 print(f"Received: {msg}")
             if msg.decode('utf-8').startswith('Fail'):
