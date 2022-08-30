@@ -5,7 +5,9 @@ import os
 import json
 import time
 import subprocess
-
+import sys
+sys.path.append("/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/GPT-home-private/coordinator/global_coordinator_deprecated")
+from global_coordinator_client import GlobalCoordinatorClient
 
 
 def _running_model_to_model_name_and_task_type(job_name: str):
@@ -578,5 +580,4 @@ def main():
 
 
 if __name__ == '__main__':
-    from ..global_coordinator.global_coordinator_client import GlobalCoordinatorClient
     main()
