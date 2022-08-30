@@ -4,8 +4,10 @@ from collections import OrderedDict
 import os
 import json
 import time
-from ..global_coordinator.global_coordinator_client import GlobalCoordinatorClient
 import subprocess
+import sys
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+from ..global_coordinator.global_coordinator_client import GlobalCoordinatorClient
 
 
 def _running_model_to_model_name_and_task_type(job_name: str):
@@ -578,4 +580,5 @@ def main():
 
 
 if __name__ == '__main__':
+
     main()
