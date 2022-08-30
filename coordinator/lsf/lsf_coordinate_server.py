@@ -4,8 +4,7 @@ from collections import OrderedDict
 import os
 import json
 import time
-from coordinator.global_coordinator.global_coordinator_client import GlobalCoordinatorClient
-from utils.dist_args_utils import add_global_coordinator_arguments
+from ..global_coordinator.global_coordinator_client import GlobalCoordinatorClient
 import subprocess
 
 
@@ -562,7 +561,9 @@ def main():
     parser.add_argument('--bsub-script-path', type=str,
                         default='/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/GPT-home-private/coordinator/lsf/lsf_scripts',
                         metavar='S', help='Path to store the bsub scripts')
-    add_global_coordinator_arguments(parser)
+    parser.add_argument('--db-server-address', type=str,
+                        default="http://xzyao:agway-fondly-ell-hammer-flattered-coconut@db.yao.sh:5984/", metavar='N',
+                        help='Key value store address.')
     args = parser.parse_args()
     print(vars(args))
     if args.coordinator_type == 'train':
