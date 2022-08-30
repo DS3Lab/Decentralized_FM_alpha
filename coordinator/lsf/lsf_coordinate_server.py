@@ -5,7 +5,7 @@ import os
 import json
 import time
 import subprocess
-
+from ..global_coordinator.global_coordinator_client import GlobalCoordinatorClient
 
 
 def _running_model_to_model_name_and_task_type(job_name: str):
