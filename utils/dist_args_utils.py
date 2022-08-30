@@ -243,6 +243,8 @@ def add_torch_distributed_inference_w_euler_coordinator_arguments(parser):
                         help='Which port to use, each client should have different value of this.')
     parser.add_argument('--pipeline-group-size', type=int, default=4, metavar='D',
                         help='world-size (default: 4)')
+    parser.add_argument('--heartbeats-timelimit', type=float, default=60, metavar='S',
+                        help='time to issue heartbeats')
 
 
 def add_torch_distributed_inference_w_crusoe_coordinator_arguments(parser):
