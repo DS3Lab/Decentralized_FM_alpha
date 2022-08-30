@@ -218,8 +218,13 @@ class CoordinatorInferenceServer:
                 os.system(f"cp {self.bsub_script_path}/{job_name}.bsub "
                           f"{self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
                 os.system(f"echo \'--lsf-job-no {self._allocate_index()} --infer-data {infer_data}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
-                os.system(f"cd {self.bsub_script_path}/submit_cache && "
-                          f"bsub < {job_name}_{i+1}.bsub")
+                # os.system(f"cd {self.bsub_script_path}/submit_cache && "
+                #          f"bsub < {job_name}_{i+1}.bsub")
+                output = os.popen(f"cd {self.bsub_script_path}/submit_cache && bsub < {job_name}_{i+1}.bsub").read()
+                id_start = output.find('<')
+                id_end = output.rfind(">")
+                current_id = output[id_start+1: id_end]
+                print(f"+++++++++++++++++Current submitted job assigned ID:<{current_id}>+++++++++++++++++")
             os.system("bjobs")
             self.working_pipelines.append(OrderedDict())
             self.active_inference_pipeline += 1
