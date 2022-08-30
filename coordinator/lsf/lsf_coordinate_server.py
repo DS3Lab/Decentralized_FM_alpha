@@ -170,7 +170,7 @@ class CoordinatorInferenceServer:
     def __init__(self, args, include_global_client=False):
         self.host = args.coordinator_server_ip
         self.port = args.coordinator_server_port
-        self.timeout_limit = 900  # 10 minutes
+        self.timeout_limit = 900  # 15 minutes
         self.allocated_index = 0
         self.current_nccl_port = 15000
         # An array of dict object to store worker info
@@ -328,10 +328,13 @@ class CoordinatorInferenceServer:
                 restart_index = i
                 break
         if restart_index != -1:
-            restart_job_name = self._kill_pipeline(restart_index)
-            msg = self._start_job(restart_job_name, infer_data='foo')
-            print(f"<=====_auto_restart_timeout_jobs issues job <{restart_job_name}>=====>")
-            print(msg)
+            if self.submit_locked is False:
+                restart_job_name = self._kill_pipeline(restart_index)
+                msg = self._start_job(restart_job_name, infer_data='foo')
+                print(f"<=====_auto_restart_timeout_jobs issues job <{restart_job_name}>=====>")
+                print(msg)
+            else:
+                print(f"<=====_auto_restart_timeout_jobs detects timeout job, but submit lock is not released.=====>")
 
     def execute_server(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
