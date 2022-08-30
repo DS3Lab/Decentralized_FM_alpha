@@ -5,6 +5,7 @@ from collections import OrderedDict
 import os
 import requests
 import json
+import time
 
 
 def server_message_parser(msg: bytes):
@@ -169,16 +170,17 @@ class CoordinatorInferenceServer:
     def __init__(self, args, include_global_client=False):
         self.host = args.coordinator_server_ip
         self.port = args.coordinator_server_port
+        self.timeout_limit = 900  # 10 minutes
         self.allocated_index = 0
         self.current_nccl_port = 15000
         # An array of dict object to store worker info
         self.working_pipelines = []
+        self.working_pipeline_jobIDs = []
+        self.working_pipeline_last_check_timestamp = []
         self.prime_worker_ips = []
         self.active_inference_pipeline = 0
         self.bsub_script_path = args.bsub_script_path
         self.inference_pipeline_demand_worker_num = 0
-        self.inference_pipeline_demand_GPU_worker_num = 0
-        self.inference_pipeline_demand_CPU_worker_num = 0
         self.submit_locked = False
         self.active_models = []
 
@@ -196,9 +198,18 @@ class CoordinatorInferenceServer:
             for node_key in self.working_pipelines[i].keys():
                 print(f"Node rank {self.working_pipelines[i][node_key]['rank']}, Address: {node_key}")
         print("-------------------------------------------------------")
+        print(f"<----------------Current Working Pipelines JobIDs[{len(self.working_pipeline_jobIDs)}]"
+              f"---------------->")
+        for i in range(len(self.working_pipeline_jobIDs)):
+            print(f"Job group {i}:", self.working_pipeline_jobIDs[i])
+        print("-------------------------------------------------------")
+        print(f"<----------------Current Working Pipelines Last checking timestamp"
+              f"[{len(self.working_pipeline_last_check_timestamp)}]---------------->")
+        for i in range(len(self.working_pipeline_last_check_timestamp)):
+            print(f"Pipeline {i} last checkin:", time.ctime(self.working_pipeline_last_check_timestamp[i]))
+        print("-------------------------------------------------------")
 
-    def _handle_inference_submit(self, job_name, infer_data) -> str:
-        print("<<<<<<<<<<<<<<<<<<<<< Submit Job >>>>>>>>>>>>>>>>>>>>>>")
+    def _start_job(self, job_name, infer_data):
         if not self.submit_locked:
             self.submit_locked = True
             self.active_models.append(job_name)
@@ -206,31 +217,38 @@ class CoordinatorInferenceServer:
                 self.inference_pipeline_demand_worker_num = 1
             else:
                 machine_size, world_size = get_demand_resources(f'{self.bsub_script_path}/{job_name}.bsub')
-                # TODO: currently assume machine_size == world_size 
+                # TODO: currently assume machine_size == world_size
                 if world_size < 0 or machine_size < 0:
                     return f'Fail to submit job - {job_name}, invalid world size or machine size'
-                
+
                 self.inference_pipeline_demand_worker_num = machine_size
                 # return f'This job is not recognized on coordinate - {job_name}'
 
+            self.working_pipeline_jobIDs.append([])
             for i in range(self.inference_pipeline_demand_worker_num):
                 os.system(f"rm {self.bsub_script_path}/submit_cache/*.bsub")
                 os.system(f"cp {self.bsub_script_path}/{job_name}.bsub "
-                          f"{self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
-                os.system(f"echo \'--lsf-job-no {self._allocate_index()} --infer-data {infer_data}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i+1}.bsub")
+                          f"{self.bsub_script_path}/submit_cache/{job_name}_{i + 1}.bsub")
+                os.system(
+                    f"echo \'--lsf-job-no {self._allocate_index()} --infer-data {infer_data}\' >> {self.bsub_script_path}/submit_cache/{job_name}_{i + 1}.bsub")
                 # os.system(f"cd {self.bsub_script_path}/submit_cache && "
                 #          f"bsub < {job_name}_{i+1}.bsub")
-                output = os.popen(f"cd {self.bsub_script_path}/submit_cache && bsub < {job_name}_{i+1}.bsub").read()
+                output = os.popen(f"cd {self.bsub_script_path}/submit_cache && bsub < {job_name}_{i + 1}.bsub").read()
                 id_start = output.find('<')
-                id_end = output.rfind(">")
-                current_id = output[id_start+1: id_end]
+                id_end = output.find(">")
+                current_id = output[id_start + 1: id_end]
                 print(f"+++++++++++++++++Current submitted job assigned ID:<{current_id}>+++++++++++++++++")
+                self.working_pipeline_jobIDs[-1].append(current_id)
             os.system("bjobs")
             self.working_pipelines.append(OrderedDict())
             self.active_inference_pipeline += 1
             return f'Succeed to submit job - {job_name}'
         else:
             return f'Fail to submit job - {job_name}, coordinator server is handling other submission'
+
+    def _handle_inference_submit(self, job_name, infer_data) -> str:
+        print("<<<<<<<<<<<<<<<<<<<<< Submit Job >>>>>>>>>>>>>>>>>>>>>>")
+        return self._start_job(job_name, infer_data)
 
     def _check_if_node_has_joined(self, node_key):
         for pipe in self.working_pipelines:
@@ -248,9 +266,10 @@ class CoordinatorInferenceServer:
         node_key = worker_ip + ':' + str(port)
         assert not self._check_if_node_has_joined(node_key),\
             f"Worker called notify_inference_join has been joined before ({node_key})"
-        print(f"Connected by +NEW+ worker with address {worker_ip}, (port:{port})")
+        print(f"<=====Connected by +NEW+ worker with address {worker_ip}, (port:{port})=====>")
         new_node_rank = len(self.working_pipelines[-1])
         if new_node_rank == 0:
+            self.working_pipeline_last_check_timestamp.append(time.time())
             self.prime_worker_ips.append(worker_ip)
             self.current_nccl_port += 1 # make sure each inference job has different nccl_port.
         self.working_pipelines[-1][node_key] = {'rank': new_node_rank, 'nccl_port': self.current_nccl_port}
@@ -280,17 +299,54 @@ class CoordinatorInferenceServer:
         return_msg = 'done'
         return return_msg
 
+    def _handle_inference_heartbeats(self, worker_ip, port) -> str:
+        node_key = worker_ip + ':' + str(port)
+        pipe_index = self._get_node_working_pipeline_index(node_key)
+        assert pipe_index != -1, f"Worker called notify_inference_heartbeat is not recognized ({node_key})"
+        print("<=====Get heartbeats from worker with address {worker_ip}, (port:{port})=====>")
+        self.working_pipeline_last_check_timestamp[pipe_index] = time.time()
+        return_msg = 'get heartbeats'
+        return return_msg
+
+    def _kill_pipeline(self, pipe_index) -> str:
+        killed_job_name = self.active_models.pop(pipe_index)
+        self.working_pipeline_last_check_timestamp.pop(pipe_index)
+        self.working_pipelines.pop(pipe_index)
+        self.prime_worker_ips.pop(pipe_index)
+        jobIDs = self.working_pipeline_jobIDs.pop(pipe_index)
+
+        for jobID in jobIDs:
+            os.system(f"bkill {jobID}")
+        os.system("bjobs")
+        return killed_job_name
+
+    def _auto_restart_timeout_jobs(self):
+        current_timestamp = time.time()
+        restart_index = -1
+        for i in range(len(self.working_pipeline_last_check_timestamp)):
+            if current_timestamp - self.working_pipeline_last_check_timestamp[i] > self.timeout_limit:
+                restart_index = i
+                break
+        if restart_index != -1:
+            restart_job_name = self._kill_pipeline(restart_index)
+            msg = self._start_job(restart_job_name, infer_data='foo')
+            print(f"<=====_auto_restart_timeout_jobs issues job <{restart_job_name}>=====>")
+            print(msg)
+
     def execute_server(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind((self.host, self.port))
             s.listen()
             while True:
+                self._auto_restart_timeout_jobs()
+
                 connection, address = s.accept()
                 with connection:
                     worker_ip, port = address
                     msg_data = connection.recv(1024)
                     print(f"==[Recv message: {msg_data}]==")
-                    msg_arg = server_message_parser(msg_data)
+                    # msg_arg = server_message_parser(msg_data)
+                    msg_arg = json.loads(msg_data)
                     if msg_arg['task'] == 'inference':
                         if msg_arg['state'] == 'submit':
                             return_msg = self._handle_inference_submit(msg_arg['job_name'], msg_arg['infer_data'])
@@ -298,6 +354,8 @@ class CoordinatorInferenceServer:
                             return_msg = self._handle_inference_join(worker_ip, port)
                         elif msg_arg['state'] == 'finish':
                             return_msg = self._handle_inference_finish(worker_ip, port, msg_arg)
+                        elif msg_arg['state'] == 'heart_beats':
+                            return_msg = self._handle_inference_heartbeats(worker_ip, port)
                         else:
                             assert False, f"Not valid operator for training ({msg_arg['state']})"
                     connection.sendall(return_msg.encode())

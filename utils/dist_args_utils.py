@@ -261,6 +261,8 @@ def add_lsf_coordinator_arguments(parser):
                         help='Job-<ID> assigned by LSF.')
     parser.add_argument('--unique-port', type=str, default='100', metavar='S',
                         help='Which port to use, each client should have different value of this.')
+    parser.add_argument('--heartbeats-timelimit', type=float, default=60, metavar='S',
+                        help='time to issue heartbeats')
 
 
 def add_global_coordinator_arguments(parser):

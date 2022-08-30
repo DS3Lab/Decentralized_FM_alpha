@@ -1,3 +1,4 @@
+import json
 import socket
 import argparse
 
@@ -52,17 +53,42 @@ class CoordinatorInferenceClient:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(('', self.client_port))
             s.connect((self.host_ip, self.host_port))
-            s.sendall(b"inference#join")
+            # s.sendall(b"inference#join#")
+            msg_dict = {
+                'task': 'inference',
+                'state': 'join'
+            }
+            s.sendall(json.dumps(msg_dict).encode())
             msg = s.recv(1024)
             print(f"Received: {msg}")
             msg_arg = client_message_parser(msg, 'join_inference')
             return msg_arg['prime_ip'], msg_arg['my_rank'], msg_arg['port']
 
-    def notify_inference_finish(self, message: str):
+    def notify_inference_finish(self, rank: int, iter_time: float):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(('', self.client_port))
             s.connect((self.host_ip, self.host_port))
-            s.sendall(b"inference#finish#"+message.encode())
+            # s.sendall(b"inference#finish#"+message.encode())
+            msg_dict = {
+                'task': 'inference',
+                'state': 'finish',
+                'rank': rank,
+                'iter_time': iter_time
+            }
+            s.sendall(json.dumps(msg_dict).encode())
+            msg = s.recv(1024)
+            print(f"Received: {msg}")
+
+    def notify_inference_heartbeat(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(('', self.client_port))
+            s.connect((self.host_ip, self.host_port))
+            # s.sendall(b"inference#finish#"+message.encode())
+            msg_dict = {
+                'task': 'inference',
+                'state': 'heart_beats',
+            }
+            s.sendall(json.dumps(msg_dict).encode())
             msg = s.recv(1024)
             print(f"Received: {msg}")
 

@@ -84,10 +84,19 @@ def main():
     input_ids = torch.ones([args.batch_size, args.input_seq_length]).long().cuda()
     attention_mask = torch.ones([args.batch_size, args.input_seq_length]).long().cuda()
 
+    coord_client.notify_inference_heartbeat()
+    last_timestamp = time.time()
+
     model_name_abbr = args.model_name.split('/')[-1]
     print("model name abbr: ", model_name_abbr)
     while True:
         if get_pipeline_parallel_rank() == 0:
+
+            current_timestamp = time.time()
+            if current_timestamp - last_timestamp >= args.heartbeats_timelimit:
+                coord_client.notify_inference_heartbeat()
+                last_timestamp = current_timestamp
+
             global_coord_client = GlobalCoordinatorClient(args)
             return_msg = global_coord_client.get_request_cluster_coordinator(job_type_info='latency_inference',
                                                                              model_name=model_name_abbr,

@@ -58,8 +58,8 @@ def main():
         else:
             print("No recognized profiler?")
             assert False
-    train_finish_msg = str(rank) + '#' + str(round(avg_iter_time, 3))
-    coord_client.notify_inference_finish(message=train_finish_msg)
+    # train_finish_msg = str(rank) + '#' + str(round(avg_iter_time, 3))
+    coord_client.notify_inference_finish(rank=rank, iter_time=round(avg_iter_time, 3))
 
 
 if __name__ == '__main__':
