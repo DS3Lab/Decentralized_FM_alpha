@@ -1,9 +1,6 @@
-import time
-import socket
 import argparse
-import random
-import json
 import pycouchdb
+from datetime import datetime
 
 
 class GlobalCoordinatorClient:
@@ -13,28 +10,34 @@ class GlobalCoordinatorClient:
 
     def put_request_cluster_coordinator(self, request_doc: dict, inference_result) -> dict:
         print("=========put_request_cluster_coordinator=========")
-        print(request_doc)
-        request_doc['inference_result'] = inference_result
+        # print(request_doc)
+        request_doc['time']['job_end_time'] = str(datetime.now()),
+        request_doc['task_api']['outputs'] = inference_result
         request_doc['job_state'] = 'job_finished'
         request_doc = self.db.save(request_doc)
         print(f"=========[cluster client] put result in key value store=========")
-        print(request_doc)
+        # print(request_doc)
         print("-----------------------------------------------------------------")
+        return request_doc
 
-    def get_request_cluster_coordinator(self) -> dict:
+    def get_request_cluster_coordinator(self, job_type_info='latency_inference',
+                                        model_name='gptj', task_type='seq_generation') -> dict:
         print("=========get_request_cluster_coordinator=========")
+        # Note this is a preliminary version for latency based inference, we need to add more functionality here.
         for doc in self.db.all():
             # print(doc)
             # print('job_type_info' in doc['doc'])
             doc = doc['doc']
-            if 'job_type_info' in doc and doc['job_type_info'] == 'latency_inference':
-                if doc['job_state'] == 'job_queued':
-                    doc['job_state'] = 'job_running'
-                    doc = self.db.save(doc)
-                    print(f"=========[cluster client] get task in key value store=========")
-                    print(doc)
-                    print("---------------------------------------------------------------")
-                    return doc
+            if 'job_type_info' in doc and doc['job_type_info'] == job_type_info:
+                if doc['task_api']['model_name'] == model_name and doc['task_api']['task_type'] == task_type:
+                    if doc['job_state'] == 'job_queued':
+                        doc['job_state'] = 'job_running'
+                        doc['time']['job_start_time'] = str(datetime.now())
+                        doc = self.db.save(doc)
+                        print(f"=========[cluster client] get task in key value store=========")
+                        # print(doc)
+                        print("---------------------------------------------------------------")
+                        return doc
         print(f"=========[cluster client] get task in key value store=========")
         print("None job in the queue")
         print("---------------------------------------------------------------")
