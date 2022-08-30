@@ -5,23 +5,8 @@ import os
 import json
 import time
 import subprocess
-import sys
-from pathlib import Path
 
-if __name__ == '__main__' and __package__ is None:
-    file = Path(__file__).resolve()
-    parent, top = file.parent, file.parents[2]
 
-    sys.path.append(str(top))
-    try:
-        sys.path.remove(str(parent))
-    except ValueError: # Already removed
-        pass
-
-    import global_coordinator.global_coordinator_client
-    __package__ = 'global_coordinator.global_coordinator_client'
-
-from .. import GlobalCoordinatorClient
 
 def _running_model_to_model_name_and_task_type(job_name: str):
     mappings = {
