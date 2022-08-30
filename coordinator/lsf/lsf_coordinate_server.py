@@ -196,7 +196,7 @@ class CoordinatorInferenceServer:
         self.active_models = []
         self.model_heartbeats = []
         self.global_coord_client = GlobalCoordinatorClient
-        cmd=f"python job_submit_client --submit-job heartbeats & >> /cluster/home/biyuan/exe_log/client_heartbeats.log"
+        cmd=f"python job_submit_client.py --submit-job heartbeats & >> /cluster/home/biyuan/exe_log/client_heartbeats.log"
         subprocess.Popen(cmd, shell=True)
 
     def _allocate_index(self):
