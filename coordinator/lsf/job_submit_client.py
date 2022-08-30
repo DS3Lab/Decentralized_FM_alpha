@@ -82,7 +82,7 @@ def main():
         client.submit_train_job(args.job_name)
     elif args.submit_job == 'inference':
         client.submit_inference_job(args.job_name)
-    if args.submit_job == 'heartbeats':
+    elif args.submit_job == 'heartbeats':
         client.client_heartbeats()
     else:
         assert False
