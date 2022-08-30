@@ -4,7 +4,7 @@ from collections import OrderedDict
 import os
 import json
 import time
-from ..global_coordinator.global_coordinator_client import GlobalCoordinatorClient
+from coordinator.global_coordinator.global_coordinator_client import GlobalCoordinatorClient
 from utils.dist_args_utils import add_global_coordinator_arguments
 import subprocess
 
