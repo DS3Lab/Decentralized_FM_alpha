@@ -12,6 +12,18 @@ from utils.dist_args_utils import *
 
 
 def main():
+
+    parser = argparse.ArgumentParser(description='Inference Runner with coordinator.')
+    parser.add_argument('--infer-data', type=str, default='foo', metavar='S',
+                        help='data path')
+    add_global_coordinator_arguments(parser)
+    add_lsf_coordinator_arguments(parser)
+    args = parser.parse_args()
+    print_arguments(args)
+
+    lsf_coordinator_client = CoordinatorInferenceClient(args)
+    lsf_coordinator_client.notify_inference_join()
+
     lms = LMSDiscreteScheduler(
         beta_start=0.00085,
         beta_end=0.012,
@@ -28,20 +40,17 @@ def main():
 
     print("Load Stable Diffusion Model is done.")
 
-    parser = argparse.ArgumentParser(description='Inference Runner with coordinator.')
-    parser.add_argument('--infer-data', type=str, default='foo', metavar='S',
-                        help='data path')
-    add_global_coordinator_arguments(parser)
-    add_lsf_coordinator_arguments(parser)
-    args = parser.parse_args()
-    print_arguments(args)
-
-    lsf_coordinator_client = CoordinatorInferenceClient(args)
-    lsf_coordinator_client.notify_inference_join()
+    lsf_coordinator_client.notify_inference_heartbeat()
+    last_timestamp = time.time()
 
     global_coord_client = GlobalCoordinatorClient(args)
 
     while True:
+        current_timestamp = time.time()
+        if current_timestamp - last_timestamp >= args.heartbeats_timelimit:
+            lsf_coordinator_client.notify_inference_heartbeat()
+            last_timestamp = current_timestamp
+
         return_msg = global_coord_client.get_request_cluster_coordinator(model_name='stable_diffusion',
                                                                          task_type='image_generation')
         # print("<<<<<<<<<<<<<<Return_msg Dict>>>>>>>>>>>>")
