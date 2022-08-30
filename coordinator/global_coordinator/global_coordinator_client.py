@@ -7,6 +7,7 @@ class GlobalCoordinatorClient:
     def __init__(self, args):
         server = pycouchdb.Server(args.db_server_address)
         self.db = server.database("global_coordinator")
+        self.status_db = server.database("global_coordinator_status")
 
     def put_request_cluster_coordinator(self, request_doc: dict, inference_result) -> dict:
         print("=========put_request_cluster_coordinator=========")
@@ -42,6 +43,18 @@ class GlobalCoordinatorClient:
         print("None job in the queue")
         print("---------------------------------------------------------------")
         return None
+
+    def post_model_heartbeats_cluster_coordinator(self, heartbeats_dict) -> dict:
+        print("=========post_model_heartbeats_cluster_coordinator=========")
+        assert 'task_type' in heartbeats_dict
+        assert 'model_name' in heartbeats_dict
+        assert 'cluster_location' in heartbeats_dict
+        assert 'last_heartbeat_time' in heartbeats_dict
+        status_doc = self.status_db.save(heartbeats_dict)
+        print(f"=========[cluster client] post heartbeats in key value store=========")
+        print(status_doc)
+        print("---------------------------------------------------------------")
+        return status_doc
 
 
 def main():

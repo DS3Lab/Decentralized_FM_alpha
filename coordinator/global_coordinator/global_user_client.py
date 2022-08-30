@@ -7,6 +7,7 @@ class GlobalUserClient:
     def __init__(self, args):
         server = pycouchdb.Server(args.db_server_address)
         self.db = server.database("global_coordinator")
+        self.status_db = server.database("global_coordinator_status")
         self.task_keys = []
 
     def put_request_user_client(self, inference_details: dict):
@@ -41,6 +42,16 @@ class GlobalUserClient:
             doc['job_state'] = 'job_returned'
             self.db.save(doc)
         return doc
+
+    def get_status_user_client(self):
+        print("=========get_request_user_client=========")
+        results = []
+        for status_doc in self.status_db.all():
+            status_doc = status_doc['doc']
+            print(status_doc)
+            results.append(status_doc)
+        print("------------------------------------------------------")
+        return results
 
 
 def main():
@@ -86,6 +97,8 @@ def main():
             'outputs': None
         }
         client.put_request_user_client(inference_details)
+    elif args.op == 'status':
+        client.get_status_user_client()
     else:
         assert False
 

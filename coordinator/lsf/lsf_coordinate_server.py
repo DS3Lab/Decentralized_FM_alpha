@@ -1,11 +1,21 @@
-import random
 import socket
 import argparse
 from collections import OrderedDict
 import os
-import requests
 import json
 import time
+from ..global_coordinator.global_coordinator_client import GlobalCoordinatorClient
+from utils.dist_args_utils import add_global_coordinator_arguments
+import subprocess
+
+
+def _running_model_to_model_name_and_task_type(job_name: str):
+    mappings = {
+        "lsf_latency_stable_diffusion": ("image_generation", "stable_diffusion"),
+        "lsf_latency_gptj": ("seq_generation", "gpt-j-6B")
+    }
+    assert job_name in mappings
+    return mappings[job_name]
 
 
 def server_message_parser(msg: bytes):
@@ -183,6 +193,10 @@ class CoordinatorInferenceServer:
         self.inference_pipeline_demand_worker_num = 0
         self.submit_locked = False
         self.active_models = []
+        self.model_heartbeats = []
+        self.global_coord_client = GlobalCoordinatorClient
+        cmd=f"python job_submit_client --submit-job heartbeats & >> /cluster/home/biyuan/exe_log/client_heartbeats.log"
+        subprocess.Popen(cmd, shell=True)
 
     def _allocate_index(self):
         self.allocated_index = (self.allocated_index + 1) % 10000
@@ -207,12 +221,13 @@ class CoordinatorInferenceServer:
               f"[{len(self.working_pipeline_last_check_timestamp)}]---------------->")
         for i in range(len(self.working_pipeline_last_check_timestamp)):
             print(f"Pipeline {i} last checkin:", time.ctime(self.working_pipeline_last_check_timestamp[i]))
-        print("-------------------------------------------------------")
+        print("-------------------------------------------------------\n\n")
 
     def _start_job(self, job_name, infer_data):
         if not self.submit_locked:
             self.submit_locked = True
             self.active_models.append(job_name)
+            self.model_heartbeats.append(None)
             if job_name == 'lsf_latency_stable_diffusion':
                 self.inference_pipeline_demand_worker_num = 1
             else:
@@ -308,6 +323,24 @@ class CoordinatorInferenceServer:
         return_msg = 'get heartbeats'
         return return_msg
 
+    def _handle_client_heartbeats(self) -> str:
+        print("<=====Get heartbeats from client=====>")
+        for i in range(len(self.active_models)):
+            task_type, model_name = _running_model_to_model_name_and_task_type(self.active_models[i])
+            if self.model_heartbeats[i] is None:
+                status = {
+                    "task_type": task_type,
+                    "model_name": model_name,
+                    "cluster_location": "ETHZ-Euler",
+                    "last_heartbeat_time": self.working_pipeline_last_check_timestamp
+                }
+            else:
+                status = self.model_heartbeats[i]
+                status["last_heartbeat_time"] = self.working_pipeline_last_check_timestamp
+            self.model_heartbeats[i] = self.global_coord_client.post_model_heartbeats_cluster_coordinator(status)
+        return_msg = 'get heartbeats'
+        return return_msg
+
     def _kill_pipeline(self, pipe_index) -> str:
         killed_job_name = self.active_models.pop(pipe_index)
         self.working_pipeline_last_check_timestamp.pop(pipe_index)
@@ -359,6 +392,8 @@ class CoordinatorInferenceServer:
                             return_msg = self._handle_inference_finish(worker_ip, port, msg_arg)
                         elif msg_arg['state'] == 'heart_beats':
                             return_msg = self._handle_inference_heartbeats(worker_ip, port)
+                        elif msg_arg['state'] == 'client_heartbeats':
+                            return_msg = self._handle_client_heartbeats()
                         else:
                             assert False, f"Not valid operator for training ({msg_arg['state']})"
                     connection.sendall(return_msg.encode())
@@ -527,6 +562,7 @@ def main():
     parser.add_argument('--bsub-script-path', type=str,
                         default='/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/GPT-home-private/coordinator/lsf/lsf_scripts',
                         metavar='S', help='Path to store the bsub scripts')
+    add_global_coordinator_arguments(parser)
     args = parser.parse_args()
     print(vars(args))
     if args.coordinator_type == 'train':

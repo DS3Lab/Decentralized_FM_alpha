@@ -9,7 +9,10 @@ class JobSubmitClient:
     def __init__(self, args):
         self.host_ip = args.coordinator_server_ip
         self.host_port = args.coordinator_server_port
-        self.client_port = 9999 - random.randint(1, 5000) # cannot exceed 10000
+        if args.submit_job == 'heartbeats':
+            self.client_port = 20000
+        else:
+            self.client_port = 9999 - random.randint(1, 5000) # cannot exceed 10000
 
     def submit_train_job(self, job_name: str):
         while True:
@@ -47,6 +50,21 @@ class JobSubmitClient:
             else:
                 break
 
+    def client_heartbeats(self):
+        # TODO, This is a dirty fix, change the client to multi-thread later;
+        while True:
+            time.sleep(300)
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(('', self.client_port))
+                s.connect((self.host_ip, self.host_port))
+                msg_dict = {
+                    'task': 'inference',
+                    'state': 'client_heartbeats',
+                }
+                s.sendall(json.dumps(msg_dict).encode())
+                msg = s.recv(1024)
+                print(f"Received: {msg}")
+
 
 def main():
     parser = argparse.ArgumentParser(description='Test Job-Submit-Client')
@@ -64,6 +82,8 @@ def main():
         client.submit_train_job(args.job_name)
     elif args.submit_job == 'inference':
         client.submit_inference_job(args.job_name)
+    if args.submit_job == 'heartbeats':
+        client.client_heartbeats()
     else:
         assert False
 

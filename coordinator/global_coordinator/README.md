@@ -15,7 +15,7 @@
         https://github.com/histrio/py-couchdb/blob/master/docs/source/quickstart.rst
         
 
-## Format of Submission File
+## Format of Job Submission File
 
 - job_type_info: (latency_inference, batch_inference)
 - job_state: (job_queued, job_running, job_finished, job_returned)
@@ -41,6 +41,11 @@
   - outputs: 
 
         
+## Format of HeartBeat Submission File
 
+- task_type:
+- model_name:
+- cluster_location:
+- last_heartbeat_time:
         
 
