@@ -20,7 +20,9 @@ class YalmTokenizer:
 
     def __init__(self, vocab_file):
         self.name = "sp"
-        self._tokenizer = spm.SentencePieceProcessor(model_file=vocab_file)
+        self._tokenizer = spm.SentencePieceProcessor(
+            model_file=vocab_file,
+        )
         self._vocab_words = self._get_vocab_words()
         self.encoder = {token: idx for idx, token in enumerate(self._vocab_words)}
         self.decoder = {idx: token for idx, token in enumerate(self._vocab_words)}
@@ -46,8 +48,36 @@ class YalmTokenizer:
     def tokenize(self, line, out_type=int):
         line = convert_to_unicode(line)
         line = line.replace("\n", self.NEW_LINE)
-        return self._encode(line, out_type=out_type) # BOS will be added in another wrapper
+        has_bos = False
+        has_eos = False
+        if line.startswith('<s> '):
+            has_bos = True
+            line = line[4:]
+        elif line.startswith('<s>'):
+            has_bos = True
+            line = line[3:]
+        if line.endswith(' </s>'):
+            has_eos = True
+            line = line[:-5]
+        elif line.endswith('</s>'):
+            has_eos = True
+            line = line[:-4]
+    
+        token_ids = self._encode(line, out_type=out_type)
 
+        if has_bos:
+            if out_type == int:
+                token_ids = [1] + token_ids
+            else:
+                token_ids = [self.bos_token] + token_ids
+        if has_eos:
+            if out_type == int:
+                token_ids = token_ids + [2]
+            else:
+                token_ids = token_ids + [self.eos_token]
+
+        return token_ids
+    
     def convert_tokens_to_ids(self, tokens):
         return self._tokenizer.piece_to_id(tokens)
 
