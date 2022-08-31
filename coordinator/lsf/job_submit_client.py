@@ -75,13 +75,14 @@ def main():
                         help='The IP of coordinator-server.')
     parser.add_argument('--job-name', type=str, default='lsf_gptJ_inf_4RTX2080Ti', metavar='S',
                         help='Support a fixed list of job first, this can be more flexible later.')
+    parser.add_argument('--infer-data', type=str, default='foo', metavar='S', help='path of infer data')
     args = parser.parse_args()
     print(vars(args))
     client = JobSubmitClient(args)
     if args.submit_job == 'train':
         client.submit_train_job(args.job_name)
     elif args.submit_job == 'inference':
-        client.submit_inference_job(args.job_name)
+        client.submit_inference_job(args.job_name, infer_data=args.infer_data)
     elif args.submit_job == 'heartbeats':
         client.client_heartbeats()
     else:
