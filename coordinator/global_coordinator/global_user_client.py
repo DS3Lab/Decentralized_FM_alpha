@@ -49,7 +49,7 @@ class GlobalUserClient:
         results = {}
         for status_doc in self.status_db.all():
             status_doc = status_doc['doc']
-            print(status_doc)
+            # print(status_doc)
             current_key = status_doc['task_type'] + '/' + status_doc['model_name']
             if current_key not in results:
                 results[current_key] = status_doc
@@ -58,18 +58,41 @@ class GlobalUserClient:
                 tmp_time = datetime.strptime(status_doc['last_heartbeat_time'], "%a %b %d %H:%M:%S %Y")
                 if tmp_time.timestamp() > current_time.timestamp():
                     results[current_key] = status_doc
+        result_arr =[arr for arr in results.values()]
+        for record in result_arr:
+            print(record)
         print("------------------------------------------------------")
-        return results.values()
+        return result_arr
 
     def get_model_time_estimate_user_client(self, task_type:str, model_name: str):
         print("=========get_model_status_user_client=========")
-        total_time = 0
-        succeed_count = 0
+        last_time = None
+        estimated_time = None
         for doc in self.db.all():
             doc = doc['doc']
-            if "job_type_info" in doc:
-                if doc['job_state'] == 'job_returned' and doc['task_api']['model_name'] == model_name:
-                    pass
+            if ("job_type_info" in doc and doc['job_state'] == 'job_returned'
+                    and doc['task_api']['model_name'] == model_name and doc['task_api']['task_type'] == task_type):
+                start_time = datetime.strptime(doc['time']['job_queued_time'], '%Y-%m-%d %H:%M:%S.%f')
+                if doc['time']['job_returned_time'] is not None:
+                    end_time = datetime.strptime(doc['time']['job_returned_time'], '%Y-%m-%d %H:%M:%S.%f')
+                else:
+                    continue
+                if last_time is None or last_time < start_time.timestamp():
+                    last_time = start_time.timestamp()
+                    estimated_time = end_time.timestamp() - start_time.timestamp()
+
+        if estimated_time is None:
+            estimated_record = 'N.A (No such record)'
+        else:
+            estimated_record = format(estimated_time, '.2f') + ' seconds'
+        result = {
+            "task_type": task_type,
+            "model_name": model_name,
+            "estimated_runtime": estimated_record
+        }
+        print(result)
+        print("------------------------------------------------------")
+        return result
 
 
 def main():
@@ -118,7 +141,7 @@ def main():
     elif args.op == 'status':
         client.get_model_status_user_client()
     elif args.op == 'estimate':
-        client.get_model_time_estimate_user_client()
+        client.get_model_time_estimate_user_client(args.task_type, args.model_name)
     else:
         assert False
 
