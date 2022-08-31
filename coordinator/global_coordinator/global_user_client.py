@@ -36,20 +36,21 @@ class GlobalUserClient:
         doc = self.db.get(request_key)
         assert doc is not None
         print(f"=========[user client] get result in key value store=========")
-        print(doc)
-        print("------------------------------------------------------")
         if doc['job_state'] == 'job_finished':
             doc['job_state'] = 'job_returned'
+            doc['time']['job_returned_time'] = str(datetime.now())
             self.db.save(doc)
+        print(doc)
+        print("------------------------------------------------------")
         return doc
 
-    def get_status_user_client(self):
-        print("=========get_status_user_client=========")
+    def get_model_status_user_client(self):
+        print("=========get_model_status_user_client=========")
         results = {}
         for status_doc in self.status_db.all():
             status_doc = status_doc['doc']
             print(status_doc)
-            current_key = status_doc['doc']['task_type'] + '/' + status_doc['doc']['model_name']
+            current_key = status_doc['task_type'] + '/' + status_doc['model_name']
             if current_key not in results:
                 results[current_key] = status_doc
             else:
@@ -59,6 +60,16 @@ class GlobalUserClient:
                     results[current_key] = status_doc
         print("------------------------------------------------------")
         return results.values()
+
+    def get_model_time_estimate_user_client(self, task_type:str, model_name: str):
+        print("=========get_model_status_user_client=========")
+        total_time = 0
+        succeed_count = 0
+        for doc in self.db.all():
+            doc = doc['doc']
+            if "job_type_info" in doc:
+                if doc['job_state'] == 'job_returned' and doc['task_api']['model_name'] == model_name:
+                    pass
 
 
 def main():
@@ -105,7 +116,9 @@ def main():
         }
         client.put_request_user_client(inference_details)
     elif args.op == 'status':
-        client.get_status_user_client()
+        client.get_model_status_user_client()
+    elif args.op == 'estimate':
+        client.get_model_time_estimate_user_client()
     else:
         assert False
 
