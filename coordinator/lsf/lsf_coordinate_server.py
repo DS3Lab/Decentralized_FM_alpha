@@ -195,9 +195,9 @@ class CoordinatorInferenceServer:
         self.submit_locked = False
         self.active_models = []
         self.model_heartbeats = []
-        self.global_coord_client = GlobalCoordinatorClient
-        cmd=f"python job_submit_client.py --submit-job heartbeats & >> /cluster/home/biyuan/exe_log/client_heartbeats.log"
-        subprocess.Popen(cmd, shell=True)
+        self.global_coord_client = GlobalCoordinatorClient(args)
+        # cmd=f"python job_submit_client.py --submit-job heartbeats & >> /cluster/home/biyuan/exe_log/client_heartbeats.log"
+        # subprocess.Popen(cmd, shell=True)
 
     def _allocate_index(self):
         self.allocated_index = (self.allocated_index + 1) % 10000
