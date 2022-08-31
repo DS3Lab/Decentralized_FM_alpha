@@ -10,7 +10,7 @@ def main(args):
         for line in f:
             queries.append(json.loads(line))
             
-    clusters_by_engine = defaultdict(defaultdict(list))
+    clusters_by_engine = defaultdict(lambda : defaultdict(list))
     for i, q in enumerate(queries):
         # if q['engine'] != 'yalm':
         #     continue
