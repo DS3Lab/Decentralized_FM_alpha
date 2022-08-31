@@ -8,6 +8,7 @@ class GlobalCoordinatorServer:
     def __init__(self, args):
         server = pycouchdb.Server(args.db_server_address)
         self.db = server.database("global_coordinator")
+        self.status_db = server.database("global_coordinator_status")
         self.allocated_task_index = 0
         self.task_meta_key = None
         self.task_meta = None
@@ -31,7 +32,7 @@ class GlobalCoordinatorServer:
         self.allocated_task_index += 1
         return current_index
 
-    def check_key_value_info(self):
+    def check_job_key_value_info(self):
         record_count = 0
         for entrance in self.db.all():
             print("-----------------------------------------")
@@ -54,11 +55,23 @@ class GlobalCoordinatorServer:
                 print(doc)
         print("Total number of record:", record_count)
 
+    def check_status_key_value_info(self):
+        for entrance in self.status_db.all():
+            print("-----------------------------------------")
+            doc = entrance['doc']
+            print(doc)
+
     def clear_key_value(self):
         keys = [doc['key'] for doc in self.db.all()]
         print(keys)
         for key in keys:
             self.db.delete(key)
+
+    def clear_status_key_value(self):
+        keys = [doc['key'] for doc in self.status_db.all()]
+        print(keys)
+        for key in keys:
+            self.status_db.delete(key)
 
 
 def main():
@@ -69,12 +82,21 @@ def main():
     parser.add_argument('--clear-all', type=lambda x: (str(x).lower() == 'true'),
                         default=False, metavar='S',
                         help='Delete all cached results. Everything gets deleted.')
+    parser.add_argument('--op', type=str,
+                        default="check_job", metavar='N',
+                        help='Key value store address.')
     args = parser.parse_args()
     print(vars(args))
     coordinator = GlobalCoordinatorServer(args)
     if args.clear_all:
-        coordinator.clear_key_value()
-    coordinator.check_key_value_info()
+        coordinator.clear_status_key_value()
+
+    if args.op == 'check_job':
+        coordinator.check_job_key_value_info()
+    elif args.op == 'check_status':
+        coordinator.check_status_key_value_info()
+    else:
+        assert False
 
 
 if __name__ == '__main__':

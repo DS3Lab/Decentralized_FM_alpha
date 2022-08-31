@@ -326,7 +326,8 @@ class CoordinatorInferenceServer:
 
     def _handle_client_heartbeats(self) -> str:
         print("<=====Get heartbeats from client=====>")
-        for i in range(len(self.active_models)):
+        # It is important use timestamp instead of e.g., active models
+        for i in range(len(self.working_pipeline_last_check_timestamp)):
             task_type, model_name = _running_model_to_model_name_and_task_type(self.active_models[i])
             if self.model_heartbeats[i] is None:
                 status = {

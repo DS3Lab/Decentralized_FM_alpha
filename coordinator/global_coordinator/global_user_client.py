@@ -45,13 +45,20 @@ class GlobalUserClient:
 
     def get_status_user_client(self):
         print("=========get_status_user_client=========")
-        results = []
+        results = {}
         for status_doc in self.status_db.all():
             status_doc = status_doc['doc']
             print(status_doc)
-            results.append(status_doc)
+            current_key = status_doc['doc']['task_type'] + '/' + status_doc['doc']['model_name']
+            if current_key not in results:
+                results[current_key] = status_doc
+            else:
+                current_time = datetime.strptime(results[current_key]['last_heartbeat_time'], "%a %b %d %H:%M:%S %Y")
+                tmp_time = datetime.strptime(status_doc['last_heartbeat_time'], "%a %b %d %H:%M:%S %Y")
+                if tmp_time.timestamp() > current_time.timestamp():
+                    results[current_key] = status_doc
         print("------------------------------------------------------")
-        return results
+        return results.values()
 
 
 def main():
