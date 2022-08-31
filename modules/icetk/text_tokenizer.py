@@ -15,7 +15,7 @@ from copy import copy
 from typing import List
 
 import sentencepiece as spm
-import .sentencepiece_model_pb2 as model
+from . import sentencepiece_model_pb2 as model
 
 
 class TextTokenizer:
