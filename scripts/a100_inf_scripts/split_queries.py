@@ -10,36 +10,44 @@ def main(args):
         for line in f:
             queries.append(json.loads(line))
             
-    clusters = defaultdict(list)
+    clusters_by_engine = defaultdict(defaultdict(list))
     for i, q in enumerate(queries):
         # if q['engine'] != 'yalm':
         #     continue
         k = (q['echo'], q['logprobs'], q['max_tokens'], q['n'], q['temperature'], q['best_of'], q['top_p'],
              (tuple(sorted(q['stop'])) if q['stop'] is not None else None)
             )
-        clusters[k].append(q)
+        clusters_by_engine[q['engine']][k].append(q)
         
     if not os.path.isdir(args.output_dir):
         os.mkdir(args.output_dir)
         
     token_chunk_size = args.generate_token_chunk_size #1000 * 100
-    global_request = 0
-    i_count = 0
-    for k, v in clusters.items():
-        n_gen = max(k[2], 100) # this regards generate_tokens < 100 as 100
-        chunk_size = token_chunk_size // n_gen
-        v = sorted(v, key=lambda q: -len(q['prompt'].split()))
-        for i in range(len(v) // chunk_size + 1):
-            qs = v[i*chunk_size: (i+1)*chunk_size]
-            if len(qs) == 0:
-                continue
-            with open(
-                os.path.join(args.output_dir, f'request_{global_request}.jsonl'), 'w'
-            ) as f:
-                for q in qs:
-                    f.write(json.dumps(q) + '\n')
-                    i_count += 1
-            global_request += 1
+    
+    for engine, clusters in clusters_by_engine.items():
+        
+        try:
+            os.mkdir(os.path.join(args.output_dir, engine))
+        except:
+            pass
+        
+        global_request = 0
+        i_count = 0
+        for k, v in clusters.items():
+            n_gen = max(k[2], 100) # this regards generate_tokens < 100 as 100
+            chunk_size = token_chunk_size // n_gen
+            v = sorted(v, key=lambda q: -len(q['prompt'].split()))
+            for i in range(len(v) // chunk_size + 1):
+                qs = v[i*chunk_size: (i+1)*chunk_size]
+                if len(qs) == 0:
+                    continue
+                with open(
+                    os.path.join(args.output_dir, engine, f'request_{global_request}.jsonl'), 'w'
+                ) as f:
+                    for q in qs:
+                        f.write(json.dumps(q) + '\n')
+                        i_count += 1
+                global_request += 1
             
             
 if __name__ == '__main__':
