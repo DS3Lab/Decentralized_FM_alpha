@@ -181,7 +181,7 @@ class CoordinatorInferenceServer:
     def __init__(self, args, include_global_client=False):
         self.host = args.coordinator_server_ip
         self.port = args.coordinator_server_port
-        self.timeout_limit = 900  # 15 minutes
+        self.timeout_limit = 300  # 5 minutes
         self.allocated_index = 0
         self.current_nccl_port = 15000
         # An array of dict object to store worker info
