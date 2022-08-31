@@ -196,7 +196,7 @@ class CoordinatorInferenceServer:
         self.active_models = []
         self.model_heartbeats = []
         self.global_coord_client = GlobalCoordinatorClient(args)
-        # cmd=f"python job_submit_client.py --submit-job heartbeats & >> /cluster/home/biyuan/exe_log/client_heartbeats.log"
+        # cmd=f"python job_submit_client.py --submit-job heartbeats --coordinator-server-ip 129.132.93.115 & >> /cluster/home/biyuan/exe_log/client_heartbeats.log"
         # subprocess.Popen(cmd, shell=True)
 
     def _allocate_index(self):
@@ -319,7 +319,7 @@ class CoordinatorInferenceServer:
         node_key = worker_ip + ':' + str(port)
         pipe_index = self._get_node_working_pipeline_index(node_key)
         assert pipe_index != -1, f"Worker called notify_inference_heartbeat is not recognized ({node_key})"
-        print("<=====Get heartbeats from worker with address {worker_ip}, (port:{port})=====>")
+        print(f"<=====Get heartbeats from worker with address {worker_ip}, (port:{port})=====>")
         self.working_pipeline_last_check_timestamp[pipe_index] = time.time()
         return_msg = 'get heartbeats'
         return return_msg
@@ -333,11 +333,11 @@ class CoordinatorInferenceServer:
                     "task_type": task_type,
                     "model_name": model_name,
                     "cluster_location": "ETHZ-Euler",
-                    "last_heartbeat_time": self.working_pipeline_last_check_timestamp
+                    "last_heartbeat_time": time.ctime(self.working_pipeline_last_check_timestamp[i])
                 }
             else:
                 status = self.model_heartbeats[i]
-                status["last_heartbeat_time"] = self.working_pipeline_last_check_timestamp
+                status["last_heartbeat_time"] = time.ctime(self.working_pipeline_last_check_timestamp[i])
             self.model_heartbeats[i] = self.global_coord_client.post_model_heartbeats_cluster_coordinator(status)
         return_msg = 'get heartbeats'
         return return_msg
@@ -376,7 +376,6 @@ class CoordinatorInferenceServer:
             s.listen()
             while True:
                 self._auto_restart_timeout_jobs()
-
                 connection, address = s.accept()
                 with connection:
                     worker_ip, port = address
