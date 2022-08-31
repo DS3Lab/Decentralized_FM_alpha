@@ -44,7 +44,7 @@ class GlobalUserClient:
         return doc
 
     def get_status_user_client(self):
-        print("=========get_request_user_client=========")
+        print("=========get_status_user_client=========")
         results = []
         for status_doc in self.status_db.all():
             status_doc = status_doc['doc']
