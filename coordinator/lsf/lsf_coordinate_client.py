@@ -77,7 +77,8 @@ class CoordinatorInferenceClient:
             }
             s.sendall(json.dumps(msg_dict).encode())
             msg = s.recv(1024)
-            print(f"Received: {msg}")
+        print(f"Received: {msg}")
+        return msg
 
     def notify_inference_heartbeat(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -90,8 +91,8 @@ class CoordinatorInferenceClient:
             }
             s.sendall(json.dumps(msg_dict).encode())
             msg = s.recv(1024)
-            print(f"Received: {msg}")
-            return msg
+        print(f"Received: {msg}")
+        return msg
 
     def notify_inference_dequeue_job(self, model_name):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -106,8 +107,8 @@ class CoordinatorInferenceClient:
             s.sendall(json.dumps(msg_dict).encode())
             msg = s.recv(8192)
             return_msg_dict = json.loads(msg)
-            print(f"Received: {return_msg_dict}")
-            return return_msg_dict
+        print(f"Received: {return_msg_dict}")
+        return return_msg_dict
 
     def notify_inference_post_result(self, job_request):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -121,8 +122,8 @@ class CoordinatorInferenceClient:
             }
             s.sendall(json.dumps(msg_dict).encode())
             msg = s.recv(8192)
-            print(f"Received: {msg}")
-            return msg
+        print(f"Received: {msg}")
+        return msg
 
 
 class CoordinatorHybridInferenceClient:
