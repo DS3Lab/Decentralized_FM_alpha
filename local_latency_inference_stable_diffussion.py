@@ -47,6 +47,7 @@ def main():
         if current_timestamp - last_timestamp >= args.heartbeats_timelimit:
             lsf_coordinator_client.notify_inference_heartbeat()
             last_timestamp = current_timestamp
+            time.sleep(10)
 
         return_msg = lsf_coordinator_client.notify_inference_dequeue_job('stable_diffusion')
 
