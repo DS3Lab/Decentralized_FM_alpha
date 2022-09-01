@@ -39,19 +39,19 @@ def main():
 
     print("Load Stable Diffusion Model is done.")
 
-    # lsf_coordinator_client.notify_inference_heartbeat()
-    # last_timestamp = time.time()
+    lsf_coordinator_client.notify_inference_heartbeat()
+    last_timestamp = time.time()
 
     while True:
-        # current_timestamp = time.time()
-        # if current_timestamp - last_timestamp >= args.heartbeats_timelimit:
-        #    lsf_coordinator_client.notify_inference_heartbeat()
-        #    last_timestamp = current_timestamp
-        #    time.sleep(10)
+        current_timestamp = time.time()
+        if current_timestamp - last_timestamp >= args.heartbeats_timelimit:
+            lsf_coordinator_client.notify_inference_heartbeat()
+            last_timestamp = current_timestamp
+            time.sleep(10)
 
         return_msg = lsf_coordinator_client.notify_inference_dequeue_job('stable_diffusion')
 
-        print(f"Handel request: <{return_msg['_id']}>")
+        print(f"Handel request: <{return_msg}>")
 
         if return_msg['message'] == "fetched":
             job_request = return_msg['job_request']

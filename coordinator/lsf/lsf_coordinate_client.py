@@ -52,6 +52,7 @@ class CoordinatorInferenceClient:
     def notify_inference_join(self):
         print("++++++++++++++++++notify_inference_join++++++++++++++++++")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind(('', self.client_port))
             s.connect((self.host_ip, self.host_port))
             # s.sendall(b"inference#join#")
@@ -68,6 +69,7 @@ class CoordinatorInferenceClient:
     def notify_inference_finish(self, rank: int, iter_time: float):
         print("++++++++++++++++++notify_inference_finish++++++++++++++++++")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind(('', self.client_port))
             s.connect((self.host_ip, self.host_port))
             # s.sendall(b"inference#finish#"+message.encode())
@@ -85,6 +87,7 @@ class CoordinatorInferenceClient:
     def notify_inference_heartbeat(self):
         print("++++++++++++++++++notify_inference_heartbeat++++++++++++++++++")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind(('', self.client_port))
             s.connect((self.host_ip, self.host_port))
             # s.sendall(b"inference#finish#"+message.encode())
