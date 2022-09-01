@@ -75,6 +75,9 @@ def main():
                         help='The port of coordinator-server.')
     parser.add_argument('--coordinator-server-ip', type=str, default='localhost', metavar='S',
                         help='The IP of coordinator-server.')
+    parser.add_argument('--db-server-address', type=str,
+                        default="http://xzyao:agway-fondly-ell-hammer-flattered-coconut@db.yao.sh:5984/", metavar='N',
+                        help='Key value store address.')
     args = parser.parse_args()
     print(vars(args))
     client = ReqeustFetchClient(args)
