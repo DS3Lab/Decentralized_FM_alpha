@@ -41,6 +41,7 @@ def main():
 
     lsf_coordinator_client.notify_inference_heartbeat()
     last_timestamp = time.time()
+    time.sleep(10)
 
     while True:
         current_timestamp = time.time()
