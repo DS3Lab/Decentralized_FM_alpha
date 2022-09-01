@@ -26,7 +26,7 @@
   - job_returned_time:
 - task_api:
   - inputs:
-  - model_name: gptj, etc. 
+  - model_name: gpt_j_6B, stable_diffusion. 
   - task_type: seq_generation, image_generation
   - parameters:
     - max_new_tokens
