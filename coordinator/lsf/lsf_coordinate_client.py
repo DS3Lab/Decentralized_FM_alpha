@@ -91,6 +91,7 @@ class CoordinatorInferenceClient:
             s.sendall(json.dumps(msg_dict).encode())
             msg = s.recv(1024)
             print(f"Received: {msg}")
+            return msg
 
     def notify_inference_dequeue_job(self, model_name):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
