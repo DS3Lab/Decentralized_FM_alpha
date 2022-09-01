@@ -13,7 +13,7 @@ from global_coordinator_client import GlobalCoordinatorClient
 def _running_model_to_model_name_and_task_type(job_name: str):
     mappings = {
         "lsf_latency_stable_diffusion": ("image_generation", "stable_diffusion"),
-        "lsf_latency_gptj": ("seq_generation", "gpt-j-6B")
+        "lsf_latency_gpt_j_6B": ("seq_generation", "gpt_j_6B")
     }
     assert job_name in mappings
     return mappings[job_name]
@@ -198,10 +198,17 @@ class CoordinatorInferenceServer:
         self.global_coord_client = GlobalCoordinatorClient(args)
         # cmd=f"python job_submit_client.py --submit-job heartbeats --coordinator-server-ip 129.132.93.115 & >> /cluster/home/biyuan/exe_log/client_heartbeats.log"
         # subprocess.Popen(cmd, shell=True)
+        self.latency_task_queue = []
 
     def _allocate_index(self):
         self.allocated_index = (self.allocated_index + 1) % 10000
         return self.allocated_index
+
+    def _find_pipeline_index_by_model_name(self, model_name):
+        for i in range(len(self.active_models)):
+            if self.active_models[i] == 'lsf_latency_' + model_name:
+                return i
+        return None
 
     def _print_current_working_nodes(self):
         print(f"<----------------Current running models---------------->")
@@ -229,6 +236,7 @@ class CoordinatorInferenceServer:
             self.submit_locked = True
             self.active_models.append(job_name)
             self.model_heartbeats.append(None)
+            self.latency_task_queue.append([])
             if job_name == 'lsf_latency_stable_diffusion':
                 self.inference_pipeline_demand_worker_num = 1
             else:
@@ -315,7 +323,7 @@ class CoordinatorInferenceServer:
         return_msg = 'done'
         return return_msg
 
-    def _handle_inference_heartbeats(self, worker_ip, port) -> str:
+    def _handle_inference_worker_heartbeats(self, worker_ip, port) -> str:
         node_key = worker_ip + ':' + str(port)
         pipe_index = self._get_node_working_pipeline_index(node_key)
         assert pipe_index != -1, f"Worker called notify_inference_heartbeat is not recognized ({node_key})"
@@ -324,8 +332,8 @@ class CoordinatorInferenceServer:
         return_msg = 'get heartbeats'
         return return_msg
 
-    def _handle_client_heartbeats(self) -> str:
-        print("<=====Get heartbeats from client=====>")
+    def _handle_job_fetch_heartbeats(self) -> str:
+        print("<=====Get heartbeats from job fetcher=====>")
         # It is important use timestamp instead of e.g., active models
         for i in range(len(self.working_pipeline_last_check_timestamp)):
             task_type, model_name = _running_model_to_model_name_and_task_type(self.active_models[i])
@@ -371,6 +379,48 @@ class CoordinatorInferenceServer:
             else:
                 print(f"<=====_auto_restart_timeout_jobs detects timeout job, but submit lock is not released.=====>")
 
+    def _enqueue_job_from_job_fetcher(self, job_request):
+        assert 'task_api' in job_request and 'model_name' in job_request['task_api']
+        model_name = job_request['task_api']['model_name']
+        queue_index = self._find_pipeline_index_by_model_name(model_name)
+        if queue_index is not None:
+            self.latency_task_queue[queue_index].append(job_request)
+            return_msg = "job is in the queue of the local coordinator."
+        else:
+            return_msg = f"try to enqueue <{model_name}>, not found!"
+        print("<========== Enqueue job from job fetcher ===========>")
+        print("Message:", return_msg)
+        return return_msg
+
+    def _dequeue_job_to_worker(self, model_name):
+        queue_index = self._find_pipeline_index_by_model_name(model_name)
+        if queue_index is not None:
+            if len(self.latency_task_queue[queue_index]) > 0:
+                task_dict = self.latency_task_queue[queue_index].pop(0)
+                msg_dict = {
+                    'message': "fetched",
+                    'job_request': task_dict
+                }
+            else:
+                msg_dict = {
+                    'message': 'empty'
+                }
+        else:
+            msg_dict = {
+                'message': 'invalid'
+            }
+        return_msg = json.dumps(msg_dict)
+        print("<========== Dequeue job to worker ===========>")
+        print("Message:", msg_dict)
+        return return_msg
+
+    def _get_result_from_worker(self, result_dict):
+        print("<========== Get result from worker ===========>")
+        self.global_coord_client.put_request_cluster_coordinator(result_dict)
+        return_msg = "Sent result to global key-value store."
+        print("Message:", return_msg)
+        return return_msg
+
     def execute_server(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind((self.host, self.port))
@@ -380,7 +430,7 @@ class CoordinatorInferenceServer:
                 connection, address = s.accept()
                 with connection:
                     worker_ip, port = address
-                    msg_data = connection.recv(1024)
+                    msg_data = connection.recv(8192)
                     print(f"==[Recv message: {msg_data}]==")
                     # msg_arg = server_message_parser(msg_data)
                     msg_arg = json.loads(msg_data)
@@ -391,10 +441,16 @@ class CoordinatorInferenceServer:
                             return_msg = self._handle_inference_join(worker_ip, port)
                         elif msg_arg['state'] == 'finish':
                             return_msg = self._handle_inference_finish(worker_ip, port, msg_arg)
-                        elif msg_arg['state'] == 'heart_beats':
-                            return_msg = self._handle_inference_heartbeats(worker_ip, port)
-                        elif msg_arg['state'] == 'client_heartbeats':
-                            return_msg = self._handle_client_heartbeats()
+                        elif msg_arg['state'] == 'worker_heartbeats':
+                            return_msg = self._handle_inference_worker_heartbeats(worker_ip, port)
+                        elif msg_arg['state'] == 'fetcher_heartbeats':
+                            return_msg = self._handle_job_fetch_heartbeats()
+                        elif msg_arg['state'] == 'fetcher_enqueue_job':
+                            return_msg = self._enqueue_job_from_job_fetcher(msg_arg['job_request'])
+                        elif msg_arg['state'] == 'worker_dequeue':
+                            return_msg = self._dequeue_job_to_worker(msg_arg['model_name'])
+                        elif msg_arg['state'] == 'worker_post_result':
+                            return_msg = self._get_result_from_worker(msg_arg['job_request'])
                         else:
                             assert False, f"Not valid operator for training ({msg_arg['state']})"
                     connection.sendall(return_msg.encode())

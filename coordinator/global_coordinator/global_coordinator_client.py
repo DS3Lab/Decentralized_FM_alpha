@@ -9,12 +9,16 @@ class GlobalCoordinatorClient:
         self.db = server.database("global_coordinator")
         self.status_db = server.database("global_coordinator_status")
 
-    def put_request_cluster_coordinator(self, request_doc: dict, inference_result) -> dict:
+    def put_request_cluster_coordinator(self, request_doc: dict, inference_result=None) -> dict:
         print("=========put_request_cluster_coordinator=========")
         # print(request_doc)
-        request_doc['time']['job_end_time'] = str(datetime.now())
-        request_doc['task_api']['outputs'] = inference_result
+
         request_doc['job_state'] = 'job_finished'
+        request_doc['time']['job_end_time'] = str(datetime.now())
+        if inference_result is not None:
+            request_doc['task_api']['outputs'] = inference_result
+        else:
+            assert request_doc['task_api']['outputs'] is not None
         request_doc = self.db.save(request_doc)
         print(f"=========[cluster client] put result in key value store=========")
         # print(request_doc)

@@ -6,7 +6,6 @@ import argparse
 import torch
 from torch import autocast
 from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler
-from coordinator.global_coordinator.global_coordinator_client import GlobalCoordinatorClient
 from coordinator.lsf.lsf_coordinate_client import CoordinatorInferenceClient
 from utils.dist_args_utils import *
 
@@ -43,25 +42,21 @@ def main():
     lsf_coordinator_client.notify_inference_heartbeat()
     last_timestamp = time.time()
 
-    global_coord_client = GlobalCoordinatorClient(args)
-
     while True:
         current_timestamp = time.time()
         if current_timestamp - last_timestamp >= args.heartbeats_timelimit:
             lsf_coordinator_client.notify_inference_heartbeat()
             last_timestamp = current_timestamp
 
-        return_msg = global_coord_client.get_request_cluster_coordinator(model_name='stable_diffusion',
-                                                                         task_type='image_generation')
-        # print("<<<<<<<<<<<<<<Return_msg Dict>>>>>>>>>>>>")
-        if return_msg:
-            print(f"Handel request: <{return_msg['_id']}>")
+        return_msg = lsf_coordinator_client.notify_inference_dequeue_job('stable_diffusion')
 
-        if return_msg is None:
-            time.sleep(10)
-        else:
-            num_return_sequences = return_msg['task_api']['parameters']['num_return_sequences']
-            text = [return_msg['task_api']['inputs']]
+        print(f"Handel request: <{return_msg['_id']}>")
+
+        if return_msg['message'] == "fetched":
+            job_request = return_msg['job_request']
+
+            num_return_sequences = job_request['task_api']['parameters']['num_return_sequences']
+            text = [job_request['task_api']['inputs']]
             with torch.no_grad():
                 with autocast("cuda"):
                     img_results = []
@@ -74,7 +69,8 @@ def main():
                         img_str = img_encode.decode()  # image stored in base64 string.
                         img_results.append(img_str)
                     # print(img_str)
-                    global_coord_client.put_request_cluster_coordinator(return_msg, img_results)
+                    job_request['task_api']['outputs'] = img_results
+                    lsf_coordinator_client.notify_inference_post_result()
 
 
 if __name__ == '__main__':

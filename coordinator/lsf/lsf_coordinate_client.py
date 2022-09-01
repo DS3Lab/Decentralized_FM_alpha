@@ -86,11 +86,42 @@ class CoordinatorInferenceClient:
             # s.sendall(b"inference#finish#"+message.encode())
             msg_dict = {
                 'task': 'inference',
-                'state': 'heart_beats',
+                'state': 'worker_heartbeats',
             }
             s.sendall(json.dumps(msg_dict).encode())
             msg = s.recv(1024)
             print(f"Received: {msg}")
+
+    def notify_inference_dequeue_job(self, model_name):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(('', self.client_port))
+            s.connect((self.host_ip, self.host_port))
+            # s.sendall(b"inference#finish#"+message.encode())
+            msg_dict = {
+                'task': 'inference',
+                'state': 'worker_dequeue',
+                'model_name': model_name
+            }
+            s.sendall(json.dumps(msg_dict).encode())
+            msg = s.recv(8192)
+            return_msg_dict = json.loads(msg)
+            print(f"Received: {return_msg_dict}")
+            return return_msg_dict
+
+    def notify_inference_post_result(self, job_request):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(('', self.client_port))
+            s.connect((self.host_ip, self.host_port))
+            # s.sendall(b"inference#finish#"+message.encode())
+            msg_dict = {
+                'task': 'inference',
+                'state': 'worker_post_result',
+                'job_request': job_request
+            }
+            s.sendall(json.dumps(msg_dict).encode())
+            msg = s.recv(8192)
+            print(f"Received: {msg}")
+            return msg
 
 
 class CoordinatorHybridInferenceClient:
