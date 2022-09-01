@@ -2,6 +2,7 @@ import time
 import socket
 import argparse
 import json
+import sys
 sys.path.append("/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/GPT-home-private/coordinator/global_coordinator")
 from global_coordinator_client import GlobalCoordinatorClient
 
