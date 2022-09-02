@@ -1,9 +1,11 @@
 import time
 import json
-import torch.nn.functional
+import torch
+import torch.nn.functional as F
 from comm.comm_utils import *
 from modules.generation_utils import get_logits_processor, get_logits_warper
 from .dist_pipeline_inference_greedy_token_pipe_sync import DistGreedyInferenceTokePipeSync
+from .share_prefix import SharePrefix
 
 
 class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
@@ -36,6 +38,15 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             from task_datasets.inference_data import get_tokenizer
             self.tokenizer = get_tokenizer(args)
             self.stop_flag = torch.zeros(1, requires_grad=False, device=device).long()
+        ##########
+        
+        ##########
+        self.share_prefix = SharePrefix() # not applicable for echo
+        if not args.share_prefix:
+            self.share_prefix.disable()
+        elif args.echo_prompt:
+            print('Warn: share-prefix with echo-prompt is not supported. Disabling share-prefix..')
+            self.share_prefix.disable()
         ##########
         
         super().__init__(args, device, rank=rank)
@@ -213,6 +224,8 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             
         if self.stop is not None:
             self.stop_flag[:] = 0
+            
+        self.share_prefix.clear()
 
     def _merge_cached_seqs_and_attentions(self):
         if not self.echo_prompt:
@@ -237,15 +250,23 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             
         if self.stop is not None:
             self.stop_flag[:] = 0
+        
+        self.share_prefix.clear() # token generation do not need this
 
-    def _forward_compute_prompt_seq(self, index, seq=None, mask=None):
+    def _forward_compute_prompt_seq(self, index, seq, mask):
         print("Compute prompt seq<", index, ">.")
         if self.pp_rank == 0:
             self.input_seq_emb[index] = self.layers['emb'](seq, mask=mask)
         current_emb = self.input_seq_emb[index]
+        caches = [None] * self.num_layers
+        mask, current_emb, caches = self.share_prefix.process_inputs(
+            seq, mask, current_emb, caches)
         for layer_index in range(self.num_layers):
-            current_emb, self.cached_attention[layer_index][index] = \
-                self.layers['block' + str(layer_index)](current_emb, mask=mask)
+            current_emb, caches[layer_index] = \
+                self.layers['block' + str(layer_index)](current_emb, caches[layer_index], mask=mask)
+            self.cached_attention[layer_index][index] = caches[layer_index]
+        current_emb = self.share_prefix.process_outputs(
+            seq, mask, current_emb, caches)
         self.output_seq_emb[index] = current_emb
         
         if self.pp_rank == self.pipeline_group_size - 1:
@@ -262,7 +283,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             z = self.layers['lm'](self.output_seq_emb[index])
         else:
             z = self.layers['lm'](self.output_seq_emb[index][:, :-1])
-        z = torch.nn.functional.log_softmax(z, -1)
+        z = F.log_softmax(z, -1)
         original_indices = indices
         indices = indices[:, 1:] # skip first
         
@@ -356,7 +377,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         assert self.pp_rank == self.pipeline_group_size - 1
         z = self.layers['lm'](self.output_token_emb[index])
         z = z.float()
-        z = torch.nn.functional.log_softmax(z, -1)
+        z = F.log_softmax(z, -1)
         logprobs, indices = z.topk(k=1, dim=-1)
         self.send_new_tokens[index] = indices
         self.ret_tokens[
@@ -384,7 +405,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
     def _process_mask_during_generation(self, attention_mask):
         if attention_mask is not None:
             # increase one for the new token
-            attention_mask = torch.nn.functional.pad(attention_mask, pad=(0, 1), mode='constant', value=1)
+            attention_mask = F.pad(attention_mask, pad=(0, 1), mode='constant', value=1)
             
         return attention_mask
 
@@ -394,9 +415,8 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             if self.pp_rank == 0 and self.generate_seq_length == 0:
                 # input reduce 1 for first node
                 input_data = input_data[:, :-1]
-            input_seqs = torch.chunk(input_data, self.seq_num, dim=0)
-        else:
-            input_seqs = None
+        
+        input_seqs = torch.chunk(input_data, self.seq_num, dim=0)
             
         if attention_mask is not None:
             if self.generate_seq_length == 0:
@@ -432,7 +452,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
                 self.profile_mark_forward_seq_recv_end(i)
                 # Compute
                 self.profile_mark_forward_seq_comp_start(i)
-                self._forward_compute_prompt_seq(index=i, seq=None, mask=attention_mask[i])
+                self._forward_compute_prompt_seq(index=i, seq=input_seqs[i], mask=attention_mask[i])
                 self.profile_mark_forward_seq_comp_end(i)
                 # Send
                 self.profile_mark_forward_seq_send_start(i)

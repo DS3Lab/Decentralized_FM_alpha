@@ -92,8 +92,9 @@ def distributed_inference_mask_iter(args, pipeline, device, request_processor, v
     else:
         infer_data_loader = request_processor.get_dataloader(args.batch_size)
         for i, inputs in enumerate(infer_data_loader):
+            input_ids = inputs['text'].to(device)
             attention_mask = inputs['attention_mask'].to(device)
-            current_iter_time = pipeline.inference_batch(attention_mask=attention_mask)
+            current_iter_time = pipeline.inference_batch(input_ids, attention_mask=attention_mask)
             if i > 0:
                 total_time += current_iter_time
             if i >= args.num_iters-1:

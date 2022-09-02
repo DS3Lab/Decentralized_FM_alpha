@@ -323,6 +323,8 @@ def add_inference_details_arguments(parser):
                         help='budget: for each batch, auto-assign max(n_seq * n_tokens)')
     parser.add_argument('--stop', nargs='+', type=str, default=None,
                         help='stop words')
+    parser.add_argument('--share-prefix', type=lambda x: (str(x).lower() == 'true'), default=False,
+                        help='whether to share prefix of prompt')
 
 
 def get_inference_arguments_str(args, add_rank=True, rank=None):

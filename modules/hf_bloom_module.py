@@ -120,7 +120,7 @@ class GPTBlock(_BloomBlock):
         mask = self.cache_mask[:target_length, :target_length].to(dtype)
         
         if past_key_values_length > 0:
-            mask = torch.cat([torch.zeros(target_length, past_key_values_length, dtype=dtype), mask], dim=-1)
+            mask = torch.cat([torch.zeros(target_length, past_key_values_length, dtype=dtype, device=mask.device), mask], dim=-1)
             
         return mask[None, None, :, :]
         # expanded_mask = mask[None, None, :, :].expand(batch_size, 1, target_length, target_length + past_key_values_length)
