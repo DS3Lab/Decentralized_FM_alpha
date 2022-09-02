@@ -259,14 +259,20 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             self.input_seq_emb[index] = self.layers['emb'](seq, mask=mask)
         current_emb = self.input_seq_emb[index]
         caches = [None] * self.num_layers
+        
+        # when disabled, this will do nothing
         mask, current_emb, caches = self.share_prefix.process_inputs(
             seq, mask, current_emb, caches)
+        
         for layer_index in range(self.num_layers):
             current_emb, caches[layer_index] = \
                 self.layers['block' + str(layer_index)](current_emb, caches[layer_index], mask=mask)
             self.cached_attention[layer_index][index] = caches[layer_index]
+        
+        # when disabled, this will do nothing
         current_emb = self.share_prefix.process_outputs(
             seq, mask, current_emb, caches)
+        
         self.output_seq_emb[index] = current_emb
         
         if self.pp_rank == self.pipeline_group_size - 1:
@@ -416,7 +422,10 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
                 # input reduce 1 for first node
                 input_data = input_data[:, :-1]
         
-        input_seqs = torch.chunk(input_data, self.seq_num, dim=0)
+        if input_data is not None:
+            input_seqs = torch.chunk(input_data, self.seq_num, dim=0)
+        else:
+            input_seqs = [None] * self.seq_num
             
         if attention_mask is not None:
             if self.generate_seq_length == 0:
