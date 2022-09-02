@@ -101,13 +101,12 @@ class JobScheduler:
             print("Get input job: ", new_job_arr)
 
     def _post_job_request_output_to_global_coordinator(self):
-
         return_job_arr = []
         for task_model_tuple in model_name_and_task_type_list:
             model_name = task_model_tuple[1]
             dir_path = os.path.join(self.working_directory, model_name)
             for filename in os.listdir(dir_path):
-                print(filename)
+                # print(filename)
                 if filename.startswith('output_'):
                     doc_path = os.path.join(dir_path, filename)
                     try:
@@ -130,6 +129,8 @@ class JobScheduler:
 
     def execute_job_scheduler(self):
         last_time = time.time()
+        print("Running: <_fetch_job_request_input_from_global_coordinator> and "
+              "<_post_job_request_output_to_global_coordinator>")
         while True:
             self._fetch_job_request_input_from_global_coordinator()
             self._post_job_request_output_to_global_coordinator()
