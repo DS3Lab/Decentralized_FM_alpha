@@ -3,6 +3,7 @@ import socket
 import argparse
 import os
 
+
 def client_message_parser(msg: bytes, context: str):
     msg_arg = msg.decode().split('#')
     if context == 'join_training':
@@ -110,7 +111,7 @@ class CoordinatorInferenceClient:
                 doc_path = os.path.join(dir_path, filename)
                 with open(doc_path, 'r') as infile:
                     doc = json.load(infile)
-                    assert model_name == doc['task_api']['model_name']
+                    # assert model_name == doc['task_api']['model_name']
                     return doc
         return None
 
