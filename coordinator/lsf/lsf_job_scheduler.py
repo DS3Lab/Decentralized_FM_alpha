@@ -55,7 +55,7 @@ class JobScheduler:
             # if not os.path.exists(lock_path):
             #     with open(lock_path, mode='a'):
             #        pass
-            model_lock = FileLock(lock_path, timeout=5)
+            model_lock = FileLock(lock_path, timeout=1)
             self.model_locks[model_name] = model_lock
 
     def _job_scheduler_notify_server_heartbeats(self):
