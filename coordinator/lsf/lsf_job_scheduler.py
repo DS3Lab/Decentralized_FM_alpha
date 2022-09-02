@@ -59,6 +59,7 @@ class JobScheduler:
             self.model_locks[model_name] = model_lock
 
     def _job_scheduler_notify_server_heartbeats(self):
+        print("=========_job_scheduler_notify_server_heartbeats=========")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind(('', self.client_port))
@@ -72,7 +73,7 @@ class JobScheduler:
             print(f"Received: {msg}")
 
     def _fetch_job_request_input_from_global_coordinator(self):
-        print("=========_fetch_job_request_input_from_global_coordinator=========")
+        # print("=========_fetch_job_request_input_from_global_coordinator=========")
         new_job_arr = []
         for doc in self.db.all():
             # print(doc)
@@ -82,7 +83,8 @@ class JobScheduler:
                 model_alias = doc['task_api']['model_name']
                 model_name = alias_to_model_name(model_alias)
                 if model_name is None:
-                    print(f"!!!!! Unknown model_name: {model_alias} !!!!!")
+                    pass
+                    # print(f"!!!!! Unknown model_name: {model_alias} !!!!!")
                 else:
                     os.path.join(self.working_directory, model_name)
                     if doc['job_state'] == 'job_queued':
@@ -94,10 +96,12 @@ class JobScheduler:
                             with open(path, 'w') as outfile:
                                 json.dump(doc, outfile)
                         new_job_arr.append(doc['_id'])
-        print("Get input job: ", new_job_arr)
+        if len(new_job_arr) != 0:
+            print("=========_fetch_job_request_input_from_global_coordinator=========")
+            print("Get input job: ", new_job_arr)
 
     def _post_job_request_output_to_global_coordinator(self):
-        print("=========_post_job_request_output_to_global_coordinator=========")
+
         return_job_arr = []
         for task_model_tuple in model_name_and_task_type_list:
             model_name = task_model_tuple[1]
@@ -120,7 +124,9 @@ class JobScheduler:
                     return_job_arr.append(doc['_id'])
                     new_doc_path = os.path.join(dir_path, 'posted_'+filename)
                     os.rename(doc_path, new_doc_path)
-        print("Post output job:", return_job_arr)
+        if len(return_job_arr) != 0:
+            print("=========_post_job_request_output_to_global_coordinator=========")
+            print("Post output job:", return_job_arr)
 
     def execute_job_scheduler(self):
         last_time = time.time()

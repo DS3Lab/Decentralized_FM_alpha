@@ -245,6 +245,9 @@ def add_torch_distributed_inference_w_euler_coordinator_arguments(parser):
                         help='world-size (default: 4)')
     parser.add_argument('--heartbeats-timelimit', type=float, default=60, metavar='S',
                         help='time to issue heartbeats')
+    parser.add_argument('--working-directory', type=str,
+                        default='/cluster/scratch/biyuan/fetch_cache', metavar='S',
+                        help='The IP of coordinator-server.')
 
 
 def add_torch_distributed_inference_w_crusoe_coordinator_arguments(parser):
