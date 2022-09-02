@@ -265,6 +265,9 @@ def add_lsf_coordinator_arguments(parser):
                         help='Which port to use, each client should have different value of this.')
     parser.add_argument('--heartbeats-timelimit', type=float, default=60, metavar='S',
                         help='time to issue heartbeats')
+    parser.add_argument('--working-directory', type=str,
+                        default='/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/fetch_cache', metavar='S',
+                        help='The IP of coordinator-server.')
 
 
 def add_global_coordinator_arguments(parser):

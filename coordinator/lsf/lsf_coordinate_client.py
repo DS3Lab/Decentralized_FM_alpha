@@ -1,7 +1,7 @@
 import json
 import socket
 import argparse
-
+import os
 
 def client_message_parser(msg: bytes, context: str):
     msg_arg = msg.decode().split('#')
@@ -48,6 +48,7 @@ class CoordinatorInferenceClient:
         self.host_ip = args.coordinator_server_ip
         self.host_port = args.coordinator_server_port
         self.client_port = int(args.lsf_job_no) % 10000 + 10000
+        self.working_directory = args.working_directory
 
     def notify_inference_join(self):
         print("++++++++++++++++++notify_inference_join++++++++++++++++++")
@@ -100,6 +101,33 @@ class CoordinatorInferenceClient:
         print(f"Received: {msg}")
         return msg
 
+    def load_input_job_from_dfs(self, model_name: str):
+        print("++++++++++++++load_input_job_from_dfs++++++++++++")
+        dir_path = os.path.join(self.working_directory, model_name)
+        for filename in os.listdir(dir_path):
+            print(filename)
+            if filename.startswith('input_'):
+                doc_path = os.path.join(dir_path, filename)
+                with open(doc_path, 'r') as infile:
+                    doc = json.load(infile)
+                    assert model_name == doc['task_api']['model_name']
+                    return doc
+        return None
+
+    def save_output_job_to_dfs(self, result_doc):
+        print("++++++++++++++save_output_job_to_dfs++++++++++++")
+        model_name = result_doc['task_api']['model_name']
+        dir_path = os.path.join(self.working_directory, model_name)
+        output_filename = 'output_' + result_doc['_doc'] + '.json'
+        output_path = os.path.join(dir_path, output_filename)
+        with open(output_path, 'w') as outfile:
+            json.dump(result_doc, outfile)
+        input_filename = 'input_' + result_doc['_doc'] + '.json'
+        input_path = os.path.join(dir_path, input_filename)
+        assert os.path.exists(input_path)
+        os.remove(input_path)
+
+    """
     def notify_inference_dequeue_job(self, model_name):
         print("++++++++++++++++++notify_inference_dequeue_job++++++++++++++++++")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -133,6 +161,7 @@ class CoordinatorInferenceClient:
             msg = s.recv(8192)
         print(f"Received: {msg}")
         return msg
+    """
 
 
 class CoordinatorHybridInferenceClient:

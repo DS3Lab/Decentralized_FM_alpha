@@ -50,12 +50,12 @@ def main():
             last_timestamp = current_timestamp
             time.sleep(10)
 
-        return_msg = lsf_coordinator_client.notify_inference_dequeue_job('stable_diffusion')
+        return_msg = lsf_coordinator_client.load_input_job_from_dfs('stable_diffusion')
 
-        print(f"Handel request: <{return_msg}>")
+        if return_msg is not None:
+            print(f"Handel request: <{return_msg['_doc']}>")
 
-        if return_msg['message'] == "fetched":
-            job_request = return_msg['job_request']
+            job_request = return_msg
 
             num_return_sequences = job_request['task_api']['parameters']['num_return_sequences']
             text = [job_request['task_api']['inputs']]

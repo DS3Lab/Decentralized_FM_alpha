@@ -60,9 +60,9 @@ class ReqeustFetchClient:
                 print(f"Enqueue request: <{return_msg['_id']}>")
 
             if return_msg is None:
-                time.sleep(6)
+                time.sleep(10)
                 timer_count += 1
-                if timer_count == 10:
+                if timer_count == 12:
                     self._fetcher_notify_server_heartbeats()
                     timer_count = 0
             else:
