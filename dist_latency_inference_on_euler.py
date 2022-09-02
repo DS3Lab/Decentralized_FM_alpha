@@ -1,13 +1,10 @@
 import argparse
-import time
-
-import torch.autograd.profiler as profiler
 from pipeline_parallel.dist_pp_utils import get_pp_inference_module
 from utils.dist_args_utils import *
 from utils.dist_inference_utils import *
 from comm.comm_utils import *
 from coordinator.lsf.lsf_coordinate_client import CoordinatorInferenceClient
-
+from coordinator.lsf.lsf_job_scheduler import alias_to_model_name
 
 def sync_setting(args, pipeline, device, return_msg=None):
     num_return_sequences_tensor = torch.zeros(1, dtype=torch.int64, device=device)
@@ -71,7 +68,8 @@ def main():
 
     model_name_abbr = args.model_name.split('/')[-1]
     print("model name abbr: ", model_name_abbr)
-    coord_client = CoordinatorInferenceClient(args, model_name_abbr)
+    print("model name: ", alias_to_model_name(model_name_abbr))
+    coord_client = CoordinatorInferenceClient(args, alias_to_model_name(model_name_abbr))
     prime_ip, rank, port = coord_client.notify_inference_join()
     print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
 

@@ -43,4 +43,4 @@ Go to this directory in the Euler cluster:
   - Submit jobs:
   
         python job_submit_client.py --coordinator-server-ip 129.132.93.85 --submit-job inference --job-name lsf_latency_stable_diffusion
-        python job_submit_client.py --coordinator-server-ip 129.132.93.85 --submit-job inference --job-name lsf_latency_gptj
+        python job_submit_client.py --coordinator-server-ip 129.132.93.85 --submit-job inference --job-name lsf_latency_gpt_j_6B
