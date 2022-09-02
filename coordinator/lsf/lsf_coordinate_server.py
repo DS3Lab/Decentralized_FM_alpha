@@ -428,35 +428,41 @@ class CoordinatorInferenceServer:
             s.listen()
             while True:
                 self._auto_restart_timeout_jobs()
-                connection, address = s.accept()
-                with connection:
-                    worker_ip, port = address
-                    msg_data = connection.recv(1024)
-                    print(f"==[Recv message: {msg_data}]==")
-                    # msg_arg = server_message_parser(msg_data)
-                    msg_arg = json.loads(msg_data)
-                    if msg_arg['task'] == 'inference':
-                        if msg_arg['state'] == 'submit':
-                            return_msg = self._handle_inference_submit(msg_arg['job_name'], msg_arg['infer_data'])
-                        elif msg_arg['state'] == 'join':
-                            return_msg = self._handle_inference_join(worker_ip, port)
-                        elif msg_arg['state'] == 'finish':
-                            return_msg = self._handle_inference_finish(worker_ip, port, msg_arg)
-                        elif msg_arg['state'] == 'worker_heartbeats':
-                            return_msg = self._handle_inference_worker_heartbeats(worker_ip, port)
-                        elif msg_arg['state'] == 'job_scheduler_heartbeats':
-                            return_msg = self._handle_job_scheduler_heartbeats()
-                        # elif msg_arg['state'] == 'fetcher_enqueue_job':
-                        #     return_msg = self._enqueue_job_from_job_fetcher(msg_arg['job_request'])
-                        # elif msg_arg['state'] == 'worker_dequeue':
-                        #    return_msg = self._dequeue_job_to_worker(msg_arg['model_name'])
-                        # elif msg_arg['state'] == 'worker_post_result':
-                        #     return_msg = self._get_result_from_worker(msg_arg['job_request'])
-                        else:
-                            assert False, f"Not valid operator for inference ({msg_arg['state']})"
-                    connection.sendall(return_msg.encode())
-                    connection.close()
-                    self._print_current_working_nodes()
+                for _ in range(5):
+                    try:
+                        connection, address = s.accept()
+                        with connection:
+                            worker_ip, port = address
+                            msg_data = connection.recv(1024)
+                            print(f"==[Recv message: {msg_data}]==")
+                            # msg_arg = server_message_parser(msg_data)
+                            msg_arg = json.loads(msg_data)
+                            if msg_arg['task'] == 'inference':
+                                if msg_arg['state'] == 'submit':
+                                    return_msg = self._handle_inference_submit(msg_arg['job_name'], msg_arg['infer_data'])
+                                elif msg_arg['state'] == 'join':
+                                    return_msg = self._handle_inference_join(worker_ip, port)
+                                elif msg_arg['state'] == 'finish':
+                                    return_msg = self._handle_inference_finish(worker_ip, port, msg_arg)
+                                elif msg_arg['state'] == 'worker_heartbeats':
+                                    return_msg = self._handle_inference_worker_heartbeats(worker_ip, port)
+                                elif msg_arg['state'] == 'job_scheduler_heartbeats':
+                                    return_msg = self._handle_job_scheduler_heartbeats()
+                                # elif msg_arg['state'] == 'fetcher_enqueue_job':
+                                #     return_msg = self._enqueue_job_from_job_fetcher(msg_arg['job_request'])
+                                # elif msg_arg['state'] == 'worker_dequeue':
+                                #    return_msg = self._dequeue_job_to_worker(msg_arg['model_name'])
+                                # elif msg_arg['state'] == 'worker_post_result':
+                                #     return_msg = self._get_result_from_worker(msg_arg['job_request'])
+                                else:
+                                    assert False, f"Not valid operator for inference ({msg_arg['state']})"
+                            connection.sendall(return_msg.encode())
+                            connection.close()
+                            self._print_current_working_nodes()
+                    except:
+                        time.sleep(10)
+                        continue
+                    break
 
 
 class CoordinatorHybridInferenceServer:

@@ -5,11 +5,22 @@ import pycouchdb
 
 class GlobalUserClient:
     def __init__(self, args):
-        server = pycouchdb.Server(args.db_server_address)
-        self.db = server.database("global_coordinator")
-        self.status_db = server.database("global_coordinator_status")
+        self.db_server_address = args.db_server_address
+        # server = pycouchdb.Server(args.db_server_address)
+        # self.db = server.database("global_coordinator")
+        # self.status_db = server.database("global_coordinator_status")
         self.task_keys = []
         self.active_models = {'gpt_j_6B', 'stable_diffusion'}
+
+    def _get_db(self):
+        server = pycouchdb.Server(self.db_server_address)
+        db = server.database("global_coordinator")
+        return db
+
+    def _get_status_db(self):
+        server = pycouchdb.Server(self.db_server_address)
+        status_db = server.database("global_coordinator_status")
+        return status_db
 
     def put_request_user_client(self, inference_details: dict):
         print("=========put_request_user_client=========")
@@ -24,7 +35,8 @@ class GlobalUserClient:
             },
             'task_api': inference_details
         }
-        doc = self.db.save(msg_dict)
+        db = self._get_db()
+        doc = db.save(msg_dict)
         current_job_key = doc['_id']
         self.task_keys.append(current_job_key)
         print(f"=========[user client] put result in key value store=========")
@@ -34,13 +46,14 @@ class GlobalUserClient:
 
     def get_request_user_client(self, request_key: str):
         print("=========get_request_user_client=========")
-        doc = self.db.get(request_key)
+        db = self._get_db()
+        doc = db.get(request_key)
         assert doc is not None
         print(f"=========[user client] get result in key value store=========")
         if doc['job_state'] == 'job_finished':
             doc['job_state'] = 'job_returned'
             doc['time']['job_returned_time'] = str(datetime.now())
-            self.db.save(doc)
+            db.save(doc)
         print(doc)
         print("------------------------------------------------------")
         return doc
@@ -48,7 +61,8 @@ class GlobalUserClient:
     def get_model_status_user_client(self):
         print("=========get_model_status_user_client=========")
         results = {}
-        for status_doc in self.status_db.all():
+        status_db = self._get_status_db()
+        for status_doc in status_db.all():
             status_doc = status_doc['doc']
             # print(status_doc)
             if status_doc['model_name'] in self.active_models:
@@ -70,7 +84,8 @@ class GlobalUserClient:
         print("=========get_model_status_user_client=========")
         last_time = None
         estimated_time = None
-        for doc in self.db.all():
+        db = self._get_db()
+        for doc in db.all():
             doc = doc['doc']
             if ("job_type_info" in doc and doc['job_state'] == 'job_returned'
                     and doc['task_api']['model_name'] == model_name and doc['task_api']['task_type'] == task_type):

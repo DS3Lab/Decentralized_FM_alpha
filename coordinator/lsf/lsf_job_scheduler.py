@@ -7,8 +7,6 @@ import json
 import sys
 import pycouchdb
 from filelock import Timeout, SoftFileLock
-sys.path.append("/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/GPT-home-private/coordinator/global_coordinator")
-from global_coordinator_client import GlobalCoordinatorClient
 
 
 model_name_and_task_type_list = [
@@ -40,12 +38,11 @@ class JobScheduler:
         self.working_directory = args.working_directory
         self.heartbeats_timelimit = 300
 
-        server = pycouchdb.Server(args.db_server_address)
-        self.db = server.database("global_coordinator")
-        self.status_db = server.database("global_coordinator_status")
-
+        self.db_server_address = args.db_server_address
+        # server = pycouchdb.Server(args.db_server_address)
+        # self.db = server.database("global_coordinator")
+        # self.status_db = server.database("global_coordinator_status")
         self.model_locks = {}
-
         for task_model_tuple in model_name_and_task_type_list:
             model_name = task_model_tuple[1]
             path = os.path.join(self.working_directory, model_name)
@@ -57,6 +54,17 @@ class JobScheduler:
             #        pass
             model_lock = SoftFileLock(lock_path, timeout=1)
             self.model_locks[model_name] = model_lock
+
+    def _get_db(self):
+        server = pycouchdb.Server(self.db_server_address)
+        db = server.database("global_coordinator")
+        return db
+
+    def _get_status_db(self):
+        server = pycouchdb.Server(self.db_server_address)
+        status_db = server.database("global_coordinator_status")
+        return status_db
+
 
     def _job_scheduler_notify_server_heartbeats(self):
         print("=========_job_scheduler_notify_server_heartbeats=========")
@@ -75,7 +83,8 @@ class JobScheduler:
     def _fetch_job_request_input_from_global_coordinator(self):
         # print("=========_fetch_job_request_input_from_global_coordinator=========")
         new_job_arr = []
-        for doc in self.db.all():
+        db = self._get_db()
+        for doc in db.all():
             # print(doc)
             # print('job_type_info' in doc['doc'])
             doc = doc['doc']
@@ -90,7 +99,7 @@ class JobScheduler:
                     if doc['job_state'] == 'job_queued':
                         doc['job_state'] = 'job_running'
                         doc['time']['job_start_time'] = str(datetime.now())
-                        doc = self.db.save(doc)
+                        doc = db.save(doc)
                         path = os.path.join(self.working_directory, model_name, 'input_' + doc['_id'] + '.json')
                         with self.model_locks[model_name]:
                             with open(path, 'w') as outfile:
@@ -102,6 +111,7 @@ class JobScheduler:
 
     def _post_job_request_output_to_global_coordinator(self):
         return_job_arr = []
+        db = self._get_db()
         for task_model_tuple in model_name_and_task_type_list:
             model_name = task_model_tuple[1]
             dir_path = os.path.join(self.working_directory, model_name)
@@ -119,7 +129,7 @@ class JobScheduler:
                     assert 'task_api' in doc and doc['task_api']['outputs'] is not None
                     doc['job_state'] = 'job_finished'
                     doc['time']['job_end_time'] = str(datetime.now())
-                    self.db.save(doc)
+                    db.save(doc)
                     return_job_arr.append(doc['_id'])
                     new_doc_path = os.path.join(dir_path, 'posted_'+filename)
                     os.rename(doc_path, new_doc_path)
