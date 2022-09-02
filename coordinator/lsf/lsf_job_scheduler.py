@@ -24,7 +24,8 @@ def alias_to_model_name(model_alias: str) -> str:
         'Image: stable_diffusion': 'stable_diffusion',
         'gpt_j_6B': 'gpt_j_6B',
         'gpt-j-6B': 'gpt_j_6B',
-        'EleutherAI/gpt-j-6B': 'gpt_j_6B'
+        'EleutherAI/gpt-j-6B': 'gpt_j_6B',
+        'multimodalart/latentdiffusion': None
     }
     return mappings[model_alias]
 
@@ -71,16 +72,18 @@ class JobScheduler:
             if 'job_type_info' in doc:
                 model_alias = doc['task_api']['model_name']
                 model_name = alias_to_model_name(model_alias)
-                os.path.join(self.working_directory, model_name)
-
-                if doc['job_state'] == 'job_queued':
-                    doc['job_state'] = 'job_running'
-                    doc['time']['job_start_time'] = str(datetime.now())
-                    doc = self.db.save(doc)
-                    path = os.path.join(self.working_directory, model_name, 'input_'+doc['_id']+'.json')
-                    with open(path, 'w') as outfile:
-                        json.dump(doc, outfile)
-                    new_job_arr.append(doc['_id'])
+                if model_name is None:
+                    print(f"!!!!! Unknown model_name: {model_alias} !!!!!")
+                else:
+                    os.path.join(self.working_directory, model_name)
+                    if doc['job_state'] == 'job_queued':
+                        doc['job_state'] = 'job_running'
+                        doc['time']['job_start_time'] = str(datetime.now())
+                        doc = self.db.save(doc)
+                        path = os.path.join(self.working_directory, model_name, 'input_'+doc['_id']+'.json')
+                        with open(path, 'w') as outfile:
+                            json.dump(doc, outfile)
+                        new_job_arr.append(doc['_id'])
         print("Get input job: ", new_job_arr)
 
     def _post_job_request_output_to_global_coordinator(self):
