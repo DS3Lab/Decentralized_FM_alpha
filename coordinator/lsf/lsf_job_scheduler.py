@@ -52,10 +52,10 @@ class JobScheduler:
             if not os.path.exists(path):
                 os.mkdir(path)
             lock_path = os.path.join(path, model_name+'.lock')
-            if not os.path.exists(lock_path):
-                with open(lock_path, mode='a'):
-                    pass
-            model_lock = FileLock(lock_path, timeout=10)
+            # if not os.path.exists(lock_path):
+            #     with open(lock_path, mode='a'):
+            #        pass
+            model_lock = FileLock(lock_path, timeout=5)
             self.model_locks[model_name] = model_lock
 
     def _job_scheduler_notify_server_heartbeats(self):
