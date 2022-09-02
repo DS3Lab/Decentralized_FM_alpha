@@ -20,7 +20,7 @@ def main():
     args = parser.parse_args()
     print_arguments(args)
 
-    lsf_coordinator_client = CoordinatorInferenceClient(args)
+    lsf_coordinator_client = CoordinatorInferenceClient(args, 'stable_diffusion')
     lsf_coordinator_client.notify_inference_join()
 
     lms = LMSDiscreteScheduler(
@@ -50,7 +50,7 @@ def main():
             last_timestamp = current_timestamp
             time.sleep(10)
 
-        return_msg = lsf_coordinator_client.load_input_job_from_dfs('stable_diffusion')
+        return_msg = lsf_coordinator_client.load_input_job_from_dfs()
 
         if return_msg is not None:
             print(f"Handel request: <{return_msg['_id']}>")
@@ -72,7 +72,7 @@ def main():
                         img_results.append(img_str)
                     # print(img_str)
                     job_request['task_api']['outputs'] = img_results
-                    lsf_coordinator_client.save_output_job_to_dfs('stable_diffusion', job_request)
+                    lsf_coordinator_client.save_output_job_to_dfs(job_request)
 
 
 if __name__ == '__main__':
