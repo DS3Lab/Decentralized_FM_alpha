@@ -106,9 +106,13 @@ class JobScheduler:
                 print(filename)
                 if filename.startswith('output_'):
                     doc_path = os.path.join(dir_path, filename)
-                    with self.model_locks[model_name]:
-                        with open(doc_path, 'r') as infile:
-                            doc = json.load(infile)
+                    try:
+                        with self.model_locks[model_name]:
+                            with open(doc_path, 'r') as infile:
+                                doc = json.load(infile)
+                    except Timeout:
+                        print("File lock timeout!")
+
                     assert 'task_api' in doc and doc['task_api']['outputs'] is not None
                     doc['job_state'] = 'job_finished'
                     doc['time']['job_end_time'] = str(datetime.now())

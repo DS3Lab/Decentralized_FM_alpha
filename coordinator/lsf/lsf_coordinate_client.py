@@ -129,7 +129,7 @@ class CoordinatorInferenceClient:
             with open(output_path, 'w') as outfile:
                 json.dump(result_doc, outfile)
         input_filename = 'input_' + result_doc['_id'] + '.json'
-        input_path = os.path.join(dir_path, input_filename)
+        input_path = os.path.join(self.dir_path, input_filename)
         assert os.path.exists(input_path)
         os.remove(input_path)
 
