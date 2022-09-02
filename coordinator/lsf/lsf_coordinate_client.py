@@ -121,11 +121,10 @@ class CoordinatorInferenceClient:
                 return doc
         return None
 
-    def save_output_job_to_dfs(self, model_name, result_doc):
+    def save_output_job_to_dfs(self, result_doc):
         print("++++++++++++++save_output_job_to_dfs++++++++++++")
-        dir_path = os.path.join(self.working_directory, model_name)
         output_filename = 'output_' + result_doc['_id'] + '.json'
-        output_path = os.path.join(dir_path, output_filename)
+        output_path = os.path.join(self.dir_path, output_filename)
         with self.model_lock:
             with open(output_path, 'w') as outfile:
                 json.dump(result_doc, outfile)
