@@ -2,7 +2,7 @@ import json
 import socket
 import argparse
 import os
-from filelock import FileLock
+from filelock import SoftFileLock
 
 
 def client_message_parser(msg: bytes, context: str):
@@ -54,7 +54,7 @@ class CoordinatorInferenceClient:
         self.model_name = model_name
         self.dir_path = os.path.join(self.working_directory, self.model_name)
         lock_path = os.path.join(self.dir_path, self.model_name+'.lock')
-        self.model_lock = FileLock(lock_path, timeout=10)
+        self.model_lock = SoftFileLock(lock_path, timeout=10)
 
     def notify_inference_join(self):
         print("++++++++++++++++++notify_inference_join++++++++++++++++++")
