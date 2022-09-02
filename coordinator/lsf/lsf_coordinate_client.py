@@ -118,11 +118,11 @@ class CoordinatorInferenceClient:
     def save_output_job_to_dfs(self, model_name, result_doc):
         print("++++++++++++++save_output_job_to_dfs++++++++++++")
         dir_path = os.path.join(self.working_directory, model_name)
-        output_filename = 'output_' + result_doc['_doc'] + '.json'
+        output_filename = 'output_' + result_doc['_id'] + '.json'
         output_path = os.path.join(dir_path, output_filename)
         with open(output_path, 'w') as outfile:
             json.dump(result_doc, outfile)
-        input_filename = 'input_' + result_doc['_doc'] + '.json'
+        input_filename = 'input_' + result_doc['_id'] + '.json'
         input_path = os.path.join(dir_path, input_filename)
         assert os.path.exists(input_path)
         os.remove(input_path)

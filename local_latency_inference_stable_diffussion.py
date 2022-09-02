@@ -53,7 +53,7 @@ def main():
         return_msg = lsf_coordinator_client.load_input_job_from_dfs('stable_diffusion')
 
         if return_msg is not None:
-            print(f"Handel request: <{return_msg['_doc']}>")
+            print(f"Handel request: <{return_msg['_id']}>")
 
             job_request = return_msg
 
@@ -72,7 +72,7 @@ def main():
                         img_results.append(img_str)
                     # print(img_str)
                     job_request['task_api']['outputs'] = img_results
-                    lsf_coordinator_client.notify_inference_post_result('stable_diffusion', job_request)
+                    lsf_coordinator_client.save_output_job_to_dfs('stable_diffusion', job_request)
 
 
 if __name__ == '__main__':
