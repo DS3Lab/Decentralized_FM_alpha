@@ -21,9 +21,10 @@ def alias_to_model_name(model_alias: str) -> str:
 
     mappings = {
         'stable_diffusion':'stable_diffusion',
-        'Image: stable_diffusion':'stable_diffusion',
-        'gpt_j_6B':'gpt_j_6B',
-        'gpt-j-6B':'gpt_j_6B'
+        'Image: stable_diffusion': 'stable_diffusion',
+        'gpt_j_6B': 'gpt_j_6B',
+        'gpt-j-6B': 'gpt_j_6B',
+        'EleutherAI/gpt-j-6B': 'gpt_j_6B'
     }
     return mappings[model_alias]
 
