@@ -72,7 +72,7 @@ def main():
                         img_results.append(img_str)
                     # print(img_str)
                     job_request['task_api']['outputs'] = img_results
-                    lsf_coordinator_client.notify_inference_post_result(job_request)
+                    lsf_coordinator_client.notify_inference_post_result('stable_diffusion', job_request)
 
 
 if __name__ == '__main__':

@@ -16,6 +16,18 @@ model_name_and_task_type_list = [
 ]
 
 
+def alias_to_model_name(model_alias: str) -> str:
+    # print(torch_type)
+
+    mappings = {
+        'stable_diffusion':'stable_diffusion',
+        'Image: stable_diffusion':'stable_diffusion',
+        'gpt_j_6B':'gpt_j_6B',
+        'gpt-j-6B':'gpt_j_6B'
+    }
+    return mappings[model_alias]
+
+
 # assume both worker and client
 class JobScheduler:
     def __init__(self, args):
@@ -56,7 +68,10 @@ class JobScheduler:
             # print('job_type_info' in doc['doc'])
             doc = doc['doc']
             if 'job_type_info' in doc:
-                model_name = doc['task_api']['model_name']
+                model_alias = doc['task_api']['model_name']
+                model_name = alias_to_model_name(model_alias)
+                os.path.join(self.working_directory, model_name)
+
                 if doc['job_state'] == 'job_queued':
                     doc['job_state'] = 'job_running'
                     doc['time']['job_start_time'] = str(datetime.now())

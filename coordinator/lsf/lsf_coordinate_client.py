@@ -114,9 +114,8 @@ class CoordinatorInferenceClient:
                     return doc
         return None
 
-    def save_output_job_to_dfs(self, result_doc):
+    def save_output_job_to_dfs(self, model_name, result_doc):
         print("++++++++++++++save_output_job_to_dfs++++++++++++")
-        model_name = result_doc['task_api']['model_name']
         dir_path = os.path.join(self.working_directory, model_name)
         output_filename = 'output_' + result_doc['_doc'] + '.json'
         output_path = os.path.join(dir_path, output_filename)
