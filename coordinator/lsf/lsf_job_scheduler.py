@@ -6,6 +6,7 @@ import argparse
 import json
 import sys
 import pycouchdb
+from filelock import Timeout, FileLock
 sys.path.append("/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/GPT-home-private/coordinator/global_coordinator")
 from global_coordinator_client import GlobalCoordinatorClient
 
@@ -43,11 +44,19 @@ class JobScheduler:
         self.db = server.database("global_coordinator")
         self.status_db = server.database("global_coordinator_status")
 
+        self.model_locks = {}
+
         for task_model_tuple in model_name_and_task_type_list:
             model_name = task_model_tuple[1]
             path = os.path.join(self.working_directory, model_name)
             if not os.path.exists(path):
                 os.mkdir(path)
+            lock_path = os.path.join(path, model_name+'.lock')
+            if not os.path.exists(lock_path):
+                with open(lock_path, mode='a'):
+                    pass
+            model_lock = FileLock(lock_path, timeout=10)
+            self.model_locks[model_name] = model_lock
 
     def _job_scheduler_notify_server_heartbeats(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -80,9 +89,10 @@ class JobScheduler:
                         doc['job_state'] = 'job_running'
                         doc['time']['job_start_time'] = str(datetime.now())
                         doc = self.db.save(doc)
-                        path = os.path.join(self.working_directory, model_name, 'input_'+doc['_id']+'.json')
-                        with open(path, 'w') as outfile:
-                            json.dump(doc, outfile)
+                        path = os.path.join(self.working_directory, model_name, 'input_' + doc['_id'] + '.json')
+                        with self.model_locks[model_name]:
+                            with open(path, 'w') as outfile:
+                                json.dump(doc, outfile)
                         new_job_arr.append(doc['_id'])
         print("Get input job: ", new_job_arr)
 
@@ -96,8 +106,9 @@ class JobScheduler:
                 print(filename)
                 if filename.startswith('output_'):
                     doc_path = os.path.join(dir_path, filename)
-                    with open(doc_path, 'r') as infile:
-                        doc = json.load(infile)
+                    with self.model_locks[model_name]:
+                        with open(doc_path, 'r') as infile:
+                            doc = json.load(infile)
                     assert 'task_api' in doc and doc['task_api']['outputs'] is not None
                     doc['job_state'] = 'job_finished'
                     doc['time']['job_end_time'] = str(datetime.now())
