@@ -9,6 +9,7 @@ class GlobalUserClient:
         self.db = server.database("global_coordinator")
         self.status_db = server.database("global_coordinator_status")
         self.task_keys = []
+        self.active_models = {'gpt_j_6B', 'stable_diffusion'}
 
     def put_request_user_client(self, inference_details: dict):
         print("=========put_request_user_client=========")
@@ -50,21 +51,22 @@ class GlobalUserClient:
         for status_doc in self.status_db.all():
             status_doc = status_doc['doc']
             # print(status_doc)
-            current_key = status_doc['task_type'] + '/' + status_doc['model_name']
-            if current_key not in results:
-                results[current_key] = status_doc
-            else:
-                current_time = datetime.strptime(results[current_key]['last_heartbeat_time'], "%a %b %d %H:%M:%S %Y")
-                tmp_time = datetime.strptime(status_doc['last_heartbeat_time'], "%a %b %d %H:%M:%S %Y")
-                if tmp_time.timestamp() > current_time.timestamp():
+            if status_doc['model_name'] in self.active_models:
+                current_key = status_doc['task_type'] + '/' + status_doc['model_name']
+                if current_key not in results:
                     results[current_key] = status_doc
+                else:
+                    current_time = datetime.strptime(results[current_key]['last_heartbeat_time'], "%a %b %d %H:%M:%S %Y")
+                    tmp_time = datetime.strptime(status_doc['last_heartbeat_time'], "%a %b %d %H:%M:%S %Y")
+                    if tmp_time.timestamp() > current_time.timestamp():
+                        results[current_key] = status_doc
         result_arr =[arr for arr in results.values()]
         for record in result_arr:
             print(record)
         print("------------------------------------------------------")
         return result_arr
 
-    def get_model_time_estimate_user_client(self, task_type:str, model_name: str):
+    def get_model_time_estimate_user_client(self, task_type: str, model_name: str):
         print("=========get_model_status_user_client=========")
         last_time = None
         estimated_time = None
