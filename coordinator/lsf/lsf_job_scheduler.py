@@ -140,7 +140,7 @@ def main():
     parser.add_argument('--coordinator-server-ip', type=str, default='localhost', metavar='S',
                         help='The IP of coordinator-server.')
     parser.add_argument('--working-directory', type=str,
-                        default='/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/fetch_cache', metavar='S',
+                        default='/cluster/scratch/biyuan/fetch_cache', metavar='S',
                         help='The IP of coordinator-server.')
     parser.add_argument('--db-server-address', type=str,
                         default="http://xzyao:agway-fondly-ell-hammer-flattered-coconut@db.yao.sh:5984/", metavar='N',
