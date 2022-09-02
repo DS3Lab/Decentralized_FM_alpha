@@ -34,8 +34,13 @@ Go to this directory in the Euler cluster:
 
   - Run coordinator server:
         
-python lsf_coordinate_server.py --coordinator-server-ip 129.132.93.90 --coordinator-type inference
+        python lsf_coordinate_server.py --coordinator-server-ip 129.132.93.85 --coordinator-type inference
 
+  - Run job scheduler:
 
-python job_submit_client.py --coordinator-server-ip 129.132.93.90 --submit-job inference --job-name lsf_latency_stable_diffusion
-python job_submit_client.py --coordinator-server-ip 129.132.93.90 --submit-job inference --job-name lsf_latency_gptj
+        python lsf_job_scheduler.py --coordinator-server-ip 129.132.93.85
+
+  - Submit jobs:
+  
+        python job_submit_client.py --coordinator-server-ip 129.132.93.85 --submit-job inference --job-name lsf_latency_stable_diffusion
+        python job_submit_client.py --coordinator-server-ip 129.132.93.85 --submit-job inference --job-name lsf_latency_gptj
