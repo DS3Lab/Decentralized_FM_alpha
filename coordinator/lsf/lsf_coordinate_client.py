@@ -69,17 +69,9 @@ class CoordinatorInferenceClient:
             msg = s.recv(1024)
             print(f"Received: {msg}")
             msg_arg = client_message_parser(msg, 'join_inference')
-            
-        # start heart beating in the background
-        self.keep_heart_beating()
-        
         return msg_arg['prime_ip'], msg_arg['my_rank'], msg_arg['port']
 
     def notify_inference_finish(self, rank: int, iter_time: float):
-        
-        # stop heart beating in the background
-        self.stop_keep_heart_beating()
-        
         print("++++++++++++++++++notify_inference_finish++++++++++++++++++")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
