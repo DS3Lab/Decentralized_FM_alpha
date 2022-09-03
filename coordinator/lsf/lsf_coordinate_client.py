@@ -3,6 +3,8 @@ import socket
 import argparse
 import os
 from filelock import SoftFileLock
+import time
+from threading import Thread
 
 
 def client_message_parser(msg: bytes, context: str):
@@ -49,6 +51,7 @@ class CoordinatorInferenceClient:
         self.host_ip = args.coordinator_server_ip
         self.host_port = args.coordinator_server_port
         self.client_port = int(args.lsf_job_no) % 10000 + 10000
+        self.__flag_keep_heart_beating = False
 
     def notify_inference_join(self):
         print("++++++++++++++++++notify_inference_join++++++++++++++++++")
@@ -134,6 +137,25 @@ class CoordinatorInferenceClient:
             msg = s.recv(8192)
         print(f"Received: {msg}")
         return msg
+    
+    def keep_heart_beating(self):
+        self.__flag_keep_heart_beating = True
+        
+        def _keep_heart_beating(self):
+            while True:
+                if not self.__flag_keep_heart_beating:
+                    break
+                print('@@@@heart beat@@@')
+                self.notify_inference_heartbeat()
+                time.sleep(10)
+        
+        self.__th_keep_heart_beating = Thread(target=_keep_heart_beating, args=(self,))
+        self.__th_keep_heart_beating.start()
+        
+    def stop_keep_heart_beating(self):
+        self.__flag_keep_heart_beating = False
+        self.__th_keep_heart_beating.join()
+        
 
 class CoordinatorInferenceFolderClient:
     def __init__(self, args, model_name:str):
