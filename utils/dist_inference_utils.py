@@ -12,7 +12,7 @@ import time
 from coordinator.crusoe.crusoe_coordinator_vm_client import VMClient
 
 
-def distributed_inference_foo_iter(args, pipeline, device, request_processor, vm_client: VMClient = None):
+def distributed_inference_foo_iter(args, pipeline, device, request_processor, vm_client: VMClient = None, coor_client = None):
     
     total_time = 0
     if get_pipeline_parallel_rank() == 0:
@@ -48,7 +48,7 @@ def distributed_inference_foo_iter(args, pipeline, device, request_processor, vm
     return averaged_time
 
 
-def distributed_inference_mask_iter(args, pipeline, device, request_processor, vm_client: VMClient = None):
+def distributed_inference_mask_iter(args, pipeline, device, request_processor, vm_client: VMClient = None, coor_client = None):
     
     total_time = 0
     if get_pipeline_parallel_rank() == 0:
@@ -62,6 +62,8 @@ def distributed_inference_mask_iter(args, pipeline, device, request_processor, v
             if vm_client is not None:
                 vm_client.send_message_to_coordinate("Iter<{}/{}> takes {:3.2f}s"
                                                      .format(i+1, args.num_iters, current_iter_time))
+            if coor_client is not None:
+                coor_client.notify_inference_heartbeat()
             
             if i > 0:
                 total_time += current_iter_time
@@ -80,6 +82,9 @@ def distributed_inference_mask_iter(args, pipeline, device, request_processor, v
             current_iter_time = pipeline.inference_batch(input_ids, output_ids_list, attention_mask=attention_mask)
             request_processor.add_result(inputs, output_ids_list, batch_time=current_iter_time)
             
+            if coor_client is not None:
+                coor_client.notify_inference_heartbeat()
+            
             if i > 0:
                 total_time += current_iter_time
             if i >= args.num_iters-1:
@@ -95,6 +100,10 @@ def distributed_inference_mask_iter(args, pipeline, device, request_processor, v
             input_ids = inputs['text'].to(device)
             attention_mask = inputs['attention_mask'].to(device)
             current_iter_time = pipeline.inference_batch(input_ids, attention_mask=attention_mask)
+            
+            if coor_client is not None:
+                coor_client.notify_inference_heartbeat()
+            
             if i > 0:
                 total_time += current_iter_time
             if i >= args.num_iters-1:
