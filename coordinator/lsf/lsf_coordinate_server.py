@@ -375,16 +375,14 @@ class CoordinatorInferenceServer:
                 # unlock if the current job is to be killed
                 if restart_index == len(self.working_pipeline_last_check_timestamp) - 1:
                     self.submit_locked = False
-            restart_job_name = self._kill_pipeline(restart_index)
-            print(f"<=====job <{restart_job_name}> is killed due to timeout. please resubmit later.=====>")
-            '''
+#             restart_job_name = self._kill_pipeline(restart_index)
+#             print(f"<=====job <{restart_job_name}> is killed due to timeout. please resubmit later.=====>")
             if self.submit_locked is False:
                 msg = self._start_job(restart_job_name, infer_data='foo')
                 print(f"<=====_auto_restart_timeout_jobs issues job <{restart_job_name}>=====>")
                 print(msg)
             else:
                 print(f"<=====_auto_restart_timeout_jobs detects timeout job, but submit lock is not released.=====>")
-            '''
 
     """
     def _enqueue_job_from_job_fetcher(self, job_request):
