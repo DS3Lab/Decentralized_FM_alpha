@@ -33,8 +33,6 @@ def main():
     coord_client = CoordinatorInferenceClient(args)
     prime_ip, rank, port = coord_client.notify_inference_join()
     print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
-
-    coord_client.keep_heart_beating()
     
     init_inference_communicators_with_coordinator(args, prime_ip, rank, port=port)
 
@@ -60,8 +58,6 @@ def main():
         else:
             print("No recognized profiler?")
             assert False
-            
-    coord_client.stop_keep_heart_beating()
     
     # train_finish_msg = str(rank) + '#' + str(round(avg_iter_time, 3))
     coord_client.notify_inference_finish(rank=rank, iter_time=round(avg_iter_time, 3))
