@@ -53,6 +53,8 @@ class CoordinatorInferenceClient:
         self.client_port = int(args.lsf_job_no) % 10000 + 10000
         self.__flag_keep_heart_beating = False
         self.__thread_keep_heart_beating = None
+        self.__last_timestamp = time.time()
+        self.__heartbeats_timelimit = args.heartbeats_timelimit
 
     def notify_inference_join(self):
         print("++++++++++++++++++notify_inference_join++++++++++++++++++")
@@ -139,7 +141,7 @@ class CoordinatorInferenceClient:
         print(f"Received: {msg}")
         return msg
     
-    def keep_heart_beating(self):
+    def _keep_heart_beating(self):
         self.__flag_keep_heart_beating = True
         
         def _keep_heart_beating(self):
@@ -147,15 +149,34 @@ class CoordinatorInferenceClient:
                 if not self.__flag_keep_heart_beating:
                     break
                 self.notify_inference_heartbeat()
-                time.sleep(30)
+                time.sleep(self.__heartbeats_timelimit)
         
         self.__thread_keep_heart_beating = Thread(target=_keep_heart_beating, args=(self,))
         self.__thread_keep_heart_beating.start()
         
-    def stop_keep_heart_beating(self):
+    def _stop_keep_heart_beating(self):
         self.__flag_keep_heart_beating = False
         if self.__thread_keep_heart_beating is not None:
             self.__thread_keep_heart_beating.join()
+
+    def decorate_run_heart_beating_during(self, func):
+        def decorated_func(*args, **kwargs):
+            self._keep_heart_beating()
+            ret = func(*args, **kwargs)
+            self._stop_keep_heart_beating()
+            return ret
+        return decorated_func
+
+    def decorate_run_heart_beating_before(self, func):
+        def decorated_func(*args, **kwargs):
+            last_timestamp = self.__last_timestamp
+            current_timestamp = time.time()
+            if current_timestamp - last_timestamp >= self.__heartbeats_timelimit:
+                self.notify_inference_heartbeat()
+                self.__last_timestamp = current_timestamp
+            ret = func(*args, **kwargs)
+            return ret
+        return decorated_func
         
 
 class CoordinatorInferenceFolderClient:

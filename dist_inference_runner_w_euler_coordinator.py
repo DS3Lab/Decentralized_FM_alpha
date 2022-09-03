@@ -31,6 +31,9 @@ def main():
         device = torch.device('cpu')
 
     coord_client = CoordinatorInferenceClient(args)
+    # keep beating during loading model
+    print(get_pp_inference_module)
+
     prime_ip, rank, port = coord_client.notify_inference_join()
     print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
     
@@ -38,8 +41,13 @@ def main():
 
     request_processor = get_request_processor(args)
     request_processor.set_arguments(args)
+    
+    # all ranks heart beating during model loading
+    pipe = coord_client.decorate_run_heart_beating_during(get_pp_inference_module)(args, device, rank=rank)
 
-    pipe = get_pp_inference_module(args, device, rank=rank)
+    # rank0: beat before inference
+    if rank == 0:
+        pipe.inference_batch = coord_client.decorate_run_heart_beating_before(pipe.inference_batch)
 
     if args.profiling == 'no-profiling':
         avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor)

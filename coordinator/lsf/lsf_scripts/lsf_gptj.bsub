@@ -1,6 +1,6 @@
 #!/bin/bash
 #BSUB -n 2                     # 1 cores
-#BSUB -W 11:59                   # 3-minutes run-time
+#BSUB -W 3:59                   # 3-minutes run-time
 #BSUB -R "rusage[mem=8000]"     # 32 GB per core
 #BSUB -R "rusage[ngpus_excl_p=1]"
 #BSUB -R "select[gpu_mtotal0>=10000]"
@@ -27,4 +27,4 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 
-python dist_inference_runner_w_euler_coordinator.py $DIST_CONF $MODEL_CONF $INFERENCE_CONF $COOR_CONF \
+python -u dist_inference_runner_w_euler_coordinator.py $DIST_CONF $MODEL_CONF $INFERENCE_CONF $COOR_CONF \

@@ -378,6 +378,7 @@ class CoordinatorInferenceServer:
 #             restart_job_name = self._kill_pipeline(restart_index)
 #             print(f"<=====job <{restart_job_name}> is killed due to timeout. please resubmit later.=====>")
             if self.submit_locked is False:
+                restart_job_name = self._kill_pipeline(restart_index)
                 msg = self._start_job(restart_job_name, infer_data='foo')
                 print(f"<=====_auto_restart_timeout_jobs issues job <{restart_job_name}>=====>")
                 print(msg)
@@ -464,7 +465,9 @@ class CoordinatorInferenceServer:
                             connection.sendall(return_msg.encode())
                             connection.close()
                             self._print_current_working_nodes()
-                    except:
+                    except Exception() as e:
+                        print(e)
+                        print('resuming...')
                         time.sleep(10)
                         continue
                     break
