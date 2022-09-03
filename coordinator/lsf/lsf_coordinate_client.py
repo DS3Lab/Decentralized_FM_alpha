@@ -52,6 +52,7 @@ class CoordinatorInferenceClient:
         self.host_port = args.coordinator_server_port
         self.client_port = int(args.lsf_job_no) % 10000 + 10000
         self.__flag_keep_heart_beating = False
+        self.__thread_keep_heart_beating = None
 
     def notify_inference_join(self):
         print("++++++++++++++++++notify_inference_join++++++++++++++++++")
@@ -68,9 +69,17 @@ class CoordinatorInferenceClient:
             msg = s.recv(1024)
             print(f"Received: {msg}")
             msg_arg = client_message_parser(msg, 'join_inference')
-            return msg_arg['prime_ip'], msg_arg['my_rank'], msg_arg['port']
+            
+        # start heart beating in the background
+        self.keep_heart_beating()
+        
+        return msg_arg['prime_ip'], msg_arg['my_rank'], msg_arg['port']
 
     def notify_inference_finish(self, rank: int, iter_time: float):
+        
+        # stop heart beating in the background
+        self.stop_keep_heart_beating()
+        
         print("++++++++++++++++++notify_inference_finish++++++++++++++++++")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -145,16 +154,16 @@ class CoordinatorInferenceClient:
             while True:
                 if not self.__flag_keep_heart_beating:
                     break
-                print('@@@@heart beat@@@')
                 self.notify_inference_heartbeat()
-                time.sleep(10)
+                time.sleep(30)
         
-        self.__th_keep_heart_beating = Thread(target=_keep_heart_beating, args=(self,))
-        self.__th_keep_heart_beating.start()
+        self.__thread_keep_heart_beating = Thread(target=_keep_heart_beating, args=(self,))
+        self.__thread_keep_heart_beating.start()
         
     def stop_keep_heart_beating(self):
         self.__flag_keep_heart_beating = False
-        self.__th_keep_heart_beating.join()
+        if self.__thread_keep_heart_beating is not None:
+            self.__thread_keep_heart_beating.join()
         
 
 class CoordinatorInferenceFolderClient:
