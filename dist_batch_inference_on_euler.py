@@ -5,7 +5,7 @@ from utils.dist_inference_utils import *
 from comm.comm_utils import *
 from coordinator.lsf.lsf_coordinate_client import CoordinatorInferenceHTTPClient
 from coordinator.lsf.lsf_job_scheduler import alias_to_model_name
-
+import requests
 
 def sync_setting(args, pipeline, device, return_msg=None):
     num_return_sequences_tensor = torch.zeros(1, dtype=torch.int64, device=device)
@@ -54,7 +54,7 @@ def main():
     add_global_coordinator_arguments(parser)
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
-    parser.add_argument('--job-id', type=str, default='-', metavar='S',
+    parser.add_argument('--job_id', type=str, default='-', metavar='S',
                         help='DB ID')
     parser.add_argument('--profiling', type=str, default='tidy_profiling', metavar='S',
                         help='enable which profiling? default: tidy mode')
@@ -87,8 +87,6 @@ def main():
 
     tokenizer = get_tokenizer(args)
     tokenizer.model_max_length = args.input_seq_length
-
-
 
     print(f"Inference pipeline loading model <{model_name_abbr}> is done!")
 
