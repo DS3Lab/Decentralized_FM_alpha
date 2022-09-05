@@ -54,6 +54,10 @@ def main():
     add_global_coordinator_arguments(parser)
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
+    parser.add_argument('--nccl-port', type=int, default=19000, metavar='S',
+                        help='random seed (default: 1)')
+    parser.add_argument('--job-id', type=str, default='-', metavar='S',
+                        help='DB ID')
     parser.add_argument('--profiling', type=str, default='tidy_profiling', metavar='S',
                         help='enable which profiling? default: tidy mode')
     parser.add_argument('--trace-postfix', type=str, default='default', metavar='S',
@@ -75,7 +79,7 @@ def main():
     res = coord_client.notify_inference_join()
     prime_ip = res['prime_ip']
     rank = res['rank']
-    port = define_nccl_port_by_job_id(args.job_id)
+    port = args.nccl_port
 
     print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
 
@@ -85,6 +89,8 @@ def main():
 
     tokenizer = get_tokenizer(args)
     tokenizer.model_max_length = args.input_seq_length
+
+
 
     print(f"Inference pipeline loading model <{model_name_abbr}> is done!")
 

@@ -6,7 +6,7 @@ import netifaces as ni
 import requests
 
 
-def define_nccl_port_by_job_id(job_id:int):
+def define_nccl_port_by_job_id(job_id: int):
     return 10000 + job_id % 3571  # make sure different job use different port
 
 
