@@ -5,7 +5,7 @@ from utils.dist_inference_utils import *
 from comm.hybrid_comm_utils import init_hybrid_inference_communicators_with_coordinator
 from task_datasets.inference_data import DummyRequestProcessor
 from pipeline_parallel.dist_pp_utils import *
-from coordinator.lsf.lsf_coordinate_client import CoordinatorHybridInferenceClient
+from coordinator.lsf.lsf_coordinate_client_deprecated import CoordinatorHybridInferenceClient
 
 
 def main():

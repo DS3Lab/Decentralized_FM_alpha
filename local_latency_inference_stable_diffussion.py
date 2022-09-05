@@ -6,7 +6,7 @@ import argparse
 import torch
 from torch import autocast
 from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler
-from coordinator.lsf.lsf_coordinate_client import CoordinatorInferenceClient
+from coordinator.lsf.lsf_coordinate_client_deprecated import CoordinatorInferenceClient
 from utils.dist_args_utils import *
 
 

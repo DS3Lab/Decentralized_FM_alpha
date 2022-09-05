@@ -5,6 +5,8 @@ import os
 from filelock import SoftFileLock
 import time
 from threading import Thread
+import netifaces as ni
+import requests
 
 
 def client_message_parser(msg: bytes, context: str):
