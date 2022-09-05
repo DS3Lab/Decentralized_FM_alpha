@@ -3,7 +3,7 @@ from pipeline_parallel.dist_pp_utils import get_pp_inference_module
 from utils.dist_args_utils import *
 from utils.dist_inference_utils import *
 from comm.comm_utils import *
-from coordinator.lsf.lsf_coordinate_client import CoordinatorInferenceHTTPClient, define_nccl_port_by_job_id
+from coordinator.lsf.lsf_coordinate_client import CoordinatorInferenceHTTPClient
 from coordinator.lsf.lsf_job_scheduler import alias_to_model_name
 
 
@@ -54,8 +54,6 @@ def main():
     add_global_coordinator_arguments(parser)
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
-    parser.add_argument('--nccl-port', type=int, default=19000, metavar='S',
-                        help='random seed (default: 1)')
     parser.add_argument('--job-id', type=str, default='-', metavar='S',
                         help='DB ID')
     parser.add_argument('--profiling', type=str, default='tidy_profiling', metavar='S',
@@ -79,7 +77,7 @@ def main():
     res = coord_client.notify_inference_join()
     prime_ip = res['prime_ip']
     rank = res['rank']
-    port = args.nccl_port
+    port = res['nccl_port']
 
     print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
 
