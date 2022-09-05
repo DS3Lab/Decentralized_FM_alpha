@@ -25,7 +25,7 @@ class CoordinatorInferenceHTTPClient:
     def notify_inference_join(self):
         ip = ni.ifaddresses('access')[ni.AF_INET][0]['addr']
         return requests.post("http://coordinator.shift.ml/eth/rank/"+str(self.job_id),
-                             json={"ip": ip, "rank": 0}).json()
+                             json={"ip": ip}).json()
 
     def load_input_job_from_dfs(self, job_id):
         doc_path = os.path.join(self.dir_path, 'input_' + job_id + '.json')
