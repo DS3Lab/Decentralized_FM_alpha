@@ -145,9 +145,9 @@ class RequestProcessor:
         first_request = self.data[0]['request']
         self.top_k = first_request.get('top_k', None)
         self.top_p = first_request.get('top_p', None)
-        self.temperature = first_request.get('temperature', 1)
-        self.echo_prompt = first_request.get('echo', 1)
-        self.top_k_per_token = first_request.get('logprobs', 1)
+        self.temperature = first_request.get('temperature', 0)
+        self.echo_prompt = first_request.get('echo', 0)
+        self.top_k_per_token = first_request.get('logprobs', 0)
         self.num_completions = first_request.get('n', 1)
         self.max_tokens = first_request.get('max_tokens', 1)
         self.best_of = first_request.get('best_of', 1)
@@ -182,9 +182,9 @@ class RequestProcessor:
                 
                 if seq_length > max_input_seq_length:
                     max_input_seq_length = seq_length
-                if i > 100:
+                #if i > 100:
                     # first 100 is enough
-                    break
+                    #break
 
             if args.model_type != 't5':
                 if self.tokenizer.model_max_length > 10000:
