@@ -245,6 +245,9 @@ def add_torch_distributed_inference_w_euler_coordinator_arguments(parser):
                         help='world-size (default: 4)')
     parser.add_argument('--heartbeats-timelimit', type=float, default=60, metavar='S',
                         help='time to issue heartbeats')
+    parser.add_argument('--working-directory', type=str,
+                        default='/cluster/scratch/biyuan/fetch_cache', metavar='S',
+                        help='The IP of coordinator-server.')
 
 
 def add_torch_distributed_inference_w_crusoe_coordinator_arguments(parser):
@@ -265,6 +268,9 @@ def add_lsf_coordinator_arguments(parser):
                         help='Which port to use, each client should have different value of this.')
     parser.add_argument('--heartbeats-timelimit', type=float, default=60, metavar='S',
                         help='time to issue heartbeats')
+    parser.add_argument('--working-directory', type=str,
+                        default='/cluster/scratch/biyuan/fetch_cache', metavar='S',
+                        help='The IP of coordinator-server.')
 
 
 def add_global_coordinator_arguments(parser):
@@ -320,6 +326,8 @@ def add_inference_details_arguments(parser):
                         help='budget: for each batch, auto-assign max(n_seq * n_tokens)')
     parser.add_argument('--stop', nargs='+', type=str, default=None,
                         help='stop words')
+    parser.add_argument('--share-prefix', type=lambda x: (str(x).lower() == 'true'), default=False,
+                        help='whether to share prefix of prompt')
 
 
 def get_inference_arguments_str(args, add_rank=True, rank=None):

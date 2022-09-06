@@ -5,7 +5,7 @@ from utils.dist_args_utils import *
 from utils.dist_inference_utils import *
 from comm.comm_utils import *
 from task_datasets.inference_data import get_request_processor
-from coordinator.lsf.lsf_coordinate_client import CoordinatorInferenceClient
+from coordinator.lsf.lsf_coordinate_client_deprecated import CoordinatorInferenceClient
 
 
 def main():
@@ -31,15 +31,23 @@ def main():
         device = torch.device('cpu')
 
     coord_client = CoordinatorInferenceClient(args)
+    # keep beating during loading model
+    print(get_pp_inference_module)
+
     prime_ip, rank, port = coord_client.notify_inference_join()
     print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
-
+    
     init_inference_communicators_with_coordinator(args, prime_ip, rank, port=port)
 
     request_processor = get_request_processor(args)
     request_processor.set_arguments(args)
+    
+    # all ranks heart beating during model loading
+    pipe = coord_client.decorate_run_heart_beating_during(get_pp_inference_module)(args, device, rank=rank)
 
-    pipe = get_pp_inference_module(args, device, rank=rank)
+    # rank0: beat before inference
+    if rank == 0:
+        pipe.inference_batch = coord_client.decorate_run_heart_beating_before(pipe.inference_batch)
 
     if args.profiling == 'no-profiling':
         avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor)
@@ -58,6 +66,7 @@ def main():
         else:
             print("No recognized profiler?")
             assert False
+    
     # train_finish_msg = str(rank) + '#' + str(round(avg_iter_time, 3))
     coord_client.notify_inference_finish(rank=rank, iter_time=round(avg_iter_time, 3))
 

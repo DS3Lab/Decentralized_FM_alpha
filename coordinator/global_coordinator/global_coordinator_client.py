@@ -5,17 +5,33 @@ from datetime import datetime
 
 class GlobalCoordinatorClient:
     def __init__(self, args):
-        server = pycouchdb.Server(args.db_server_address)
-        self.db = server.database("global_coordinator")
-        self.status_db = server.database("global_coordinator_status")
+        self.db_server_address = args.db_server_address
+        # server = pycouchdb.Server(args.db_server_address)
+        # self.db = server.database("global_coordinator")
+        # self.status_db = server.database("global_coordinator_status")
 
-    def put_request_cluster_coordinator(self, request_doc: dict, inference_result) -> dict:
+    def _get_db(self):
+        server = pycouchdb.Server(self.db_server_address)
+        db = server.database("global_coordinator")
+        return db
+
+    def _get_status_db(self):
+        server = pycouchdb.Server(self.db_server_address)
+        status_db = server.database("global_coordinator_status")
+        return status_db
+
+    def put_request_cluster_coordinator(self, request_doc: dict, inference_result=None) -> dict:
         print("=========put_request_cluster_coordinator=========")
         # print(request_doc)
-        request_doc['time']['job_end_time'] = str(datetime.now()),
-        request_doc['task_api']['outputs'] = inference_result
+
         request_doc['job_state'] = 'job_finished'
-        request_doc = self.db.save(request_doc)
+        request_doc['time']['job_end_time'] = str(datetime.now())
+        if inference_result is not None:
+            request_doc['task_api']['outputs'] = inference_result
+        else:
+            assert request_doc['task_api']['outputs'] is not None
+        db = self._get_db()
+        request_doc = db.save(request_doc)
         print(f"=========[cluster client] put result in key value store=========")
         # print(request_doc)
         print("-----------------------------------------------------------------")
@@ -25,7 +41,8 @@ class GlobalCoordinatorClient:
                                         model_name='gptj', task_type='seq_generation') -> dict:
         print("=========get_request_cluster_coordinator=========")
         # Note this is a preliminary version for latency based inference, we need to add more functionality here.
-        for doc in self.db.all():
+        db = self._get_db()
+        for doc in db.all():
             # print(doc)
             # print('job_type_info' in doc['doc'])
             doc = doc['doc']
@@ -34,7 +51,7 @@ class GlobalCoordinatorClient:
                     if doc['job_state'] == 'job_queued':
                         doc['job_state'] = 'job_running'
                         doc['time']['job_start_time'] = str(datetime.now())
-                        doc = self.db.save(doc)
+                        doc = db.save(doc)
                         print(f"=========[cluster client] get task in key value store=========")
                         # print(doc)
                         print("---------------------------------------------------------------")
@@ -50,7 +67,8 @@ class GlobalCoordinatorClient:
         assert 'model_name' in heartbeats_dict
         assert 'cluster_location' in heartbeats_dict
         assert 'last_heartbeat_time' in heartbeats_dict
-        status_doc = self.status_db.save(heartbeats_dict)
+        status_db = self._get_status_db()
+        status_doc = status_db.save(heartbeats_dict)
         print(f"=========[cluster client] post heartbeats in key value store=========")
         print(status_doc)
         print("---------------------------------------------------------------")

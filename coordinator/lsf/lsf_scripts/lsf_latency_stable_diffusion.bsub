@@ -16,7 +16,7 @@ nvidia-smi
 
 ifconfig
 
-COOR_CONF="--coordinator-server-ip 129.132.93.115"
+COOR_CONF="--coordinator-server-ip 129.132.93.85"
 #!/bin/bash
 
 # export http_proxy=http://proxy.ethz.ch:3128

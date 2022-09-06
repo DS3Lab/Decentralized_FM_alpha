@@ -5,10 +5,22 @@ import pycouchdb
 
 class GlobalUserClient:
     def __init__(self, args):
-        server = pycouchdb.Server(args.db_server_address)
-        self.db = server.database("global_coordinator")
-        self.status_db = server.database("global_coordinator_status")
+        self.db_server_address = args.db_server_address
+        # server = pycouchdb.Server(args.db_server_address)
+        # self.db = server.database("global_coordinator")
+        # self.status_db = server.database("global_coordinator_status")
         self.task_keys = []
+        self.active_models = {'gpt_j_6B', 'stable_diffusion'}
+
+    def _get_db(self):
+        server = pycouchdb.Server(self.db_server_address)
+        db = server.database("global_coordinator")
+        return db
+
+    def _get_status_db(self):
+        server = pycouchdb.Server(self.db_server_address)
+        status_db = server.database("global_coordinator_status")
+        return status_db
 
     def put_request_user_client(self, inference_details: dict):
         print("=========put_request_user_client=========")
@@ -23,7 +35,8 @@ class GlobalUserClient:
             },
             'task_api': inference_details
         }
-        doc = self.db.save(msg_dict)
+        db = self._get_db()
+        doc = db.save(msg_dict)
         current_job_key = doc['_id']
         self.task_keys.append(current_job_key)
         print(f"=========[user client] put result in key value store=========")
@@ -33,25 +46,70 @@ class GlobalUserClient:
 
     def get_request_user_client(self, request_key: str):
         print("=========get_request_user_client=========")
-        doc = self.db.get(request_key)
+        db = self._get_db()
+        doc = db.get(request_key)
         assert doc is not None
         print(f"=========[user client] get result in key value store=========")
-        print(doc)
-        print("------------------------------------------------------")
         if doc['job_state'] == 'job_finished':
             doc['job_state'] = 'job_returned'
-            self.db.save(doc)
+            doc['time']['job_returned_time'] = str(datetime.now())
+            db.save(doc)
+        print(doc)
+        print("------------------------------------------------------")
         return doc
 
-    def get_status_user_client(self):
-        print("=========get_status_user_client=========")
-        results = []
-        for status_doc in self.status_db.all():
+    def get_model_status_user_client(self):
+        print("=========get_model_status_user_client=========")
+        results = {}
+        status_db = self._get_status_db()
+        for status_doc in status_db.all():
             status_doc = status_doc['doc']
-            print(status_doc)
-            results.append(status_doc)
+            # print(status_doc)
+            if status_doc['model_name'] in self.active_models:
+                current_key = status_doc['task_type'] + '/' + status_doc['model_name']
+                if current_key not in results:
+                    results[current_key] = status_doc
+                else:
+                    current_time = datetime.strptime(results[current_key]['last_heartbeat_time'], "%a %b %d %H:%M:%S %Y")
+                    tmp_time = datetime.strptime(status_doc['last_heartbeat_time'], "%a %b %d %H:%M:%S %Y")
+                    if tmp_time.timestamp() > current_time.timestamp():
+                        results[current_key] = status_doc
+        result_arr =[arr for arr in results.values()]
+        for record in result_arr:
+            print(record)
         print("------------------------------------------------------")
-        return results
+        return result_arr
+
+    def get_model_time_estimate_user_client(self, task_type: str, model_name: str):
+        print("=========get_model_status_user_client=========")
+        last_time = None
+        estimated_time = None
+        db = self._get_db()
+        for doc in db.all():
+            doc = doc['doc']
+            if ("job_type_info" in doc and doc['job_state'] == 'job_returned'
+                    and doc['task_api']['model_name'] == model_name and doc['task_api']['task_type'] == task_type):
+                start_time = datetime.strptime(doc['time']['job_queued_time'], '%Y-%m-%d %H:%M:%S.%f')
+                if doc['time']['job_returned_time'] is not None:
+                    end_time = datetime.strptime(doc['time']['job_returned_time'], '%Y-%m-%d %H:%M:%S.%f')
+                else:
+                    continue
+                if last_time is None or last_time < start_time.timestamp():
+                    last_time = start_time.timestamp()
+                    estimated_time = end_time.timestamp() - start_time.timestamp()
+
+        if estimated_time is None:
+            estimated_record = 'N.A (No such record)'
+        else:
+            estimated_record = format(estimated_time, '.2f') + ' seconds'
+        result = {
+            "task_type": task_type,
+            "model_name": model_name,
+            "estimated_runtime": estimated_record
+        }
+        print(result)
+        print("------------------------------------------------------")
+        return result
 
 
 def main():
@@ -98,7 +156,9 @@ def main():
         }
         client.put_request_user_client(inference_details)
     elif args.op == 'status':
-        client.get_status_user_client()
+        client.get_model_status_user_client()
+    elif args.op == 'estimate':
+        client.get_model_time_estimate_user_client(args.task_type, args.model_name)
     else:
         assert False
 

@@ -1,14 +1,10 @@
 import argparse
-import time
-
-import torch.autograd.profiler as profiler
 from pipeline_parallel.dist_pp_utils import get_pp_inference_module
 from utils.dist_args_utils import *
 from utils.dist_inference_utils import *
 from comm.comm_utils import *
-from coordinator.lsf.lsf_coordinate_client import CoordinatorInferenceClient
-from coordinator.global_coordinator.global_coordinator_client import GlobalCoordinatorClient
-
+from coordinator.lsf.lsf_coordinate_client_deprecated import CoordinatorInferenceClient
+from coordinator.lsf.lsf_job_scheduler import alias_to_model_name
 
 def sync_setting(args, pipeline, device, return_msg=None):
     num_return_sequences_tensor = torch.zeros(1, dtype=torch.int64, device=device)
@@ -70,7 +66,10 @@ def main():
     else:
         device = torch.device('cpu')
 
-    coord_client = CoordinatorInferenceClient(args)
+    model_name_abbr = args.model_name.split('/')[-1]
+    print("model name abbr: ", model_name_abbr)
+    print("model name: ", alias_to_model_name(model_name_abbr))
+    coord_client = CoordinatorInferenceClient(args, alias_to_model_name(model_name_abbr))
     prime_ip, rank, port = coord_client.notify_inference_join()
     print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
 
@@ -87,8 +86,6 @@ def main():
     coord_client.notify_inference_heartbeat()
     last_timestamp = time.time()
 
-    model_name_abbr = args.model_name.split('/')[-1]
-    print("model name abbr: ", model_name_abbr)
     while True:
         if get_pipeline_parallel_rank() == 0:
 
@@ -97,18 +94,12 @@ def main():
                 coord_client.notify_inference_heartbeat()
                 last_timestamp = current_timestamp
 
-            global_coord_client = GlobalCoordinatorClient(args)
-            return_msg = global_coord_client.get_request_cluster_coordinator(job_type_info='latency_inference',
-                                                                             model_name=model_name_abbr,
-                                                                             task_type='seq_generation')
+            return_msg = coord_client.load_input_job_from_dfs()
             # print("<<<<<<<<<<<<<<Return_msg Dict>>>>>>>>>>>>")
             # print(return_msg)
-            if return_msg:
+            if return_msg is not None:
                 print(f"Handel request: <{return_msg['_id']}>")
 
-            if return_msg is None:
-                time.sleep(10)
-            else:
                 sync_setting(args, pipeline, device, return_msg)
                 pipeline.update_processors(args)
                 #####
@@ -135,7 +126,8 @@ def main():
                         results.append(return_msg['task_api']['inputs'] + tokenizer.decode(result[0]))
                     else:
                         results.append(tokenizer.decode(result[0]))
-                global_coord_client.put_request_cluster_coordinator(return_msg, results)
+                return_msg['task_api']['outputs'] = results
+                coord_client.save_output_job_to_dfs(return_msg)
 
         elif get_pipeline_parallel_rank() == pipeline.pipeline_group_size - 1:
             while True:

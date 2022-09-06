@@ -53,7 +53,7 @@ class JobSubmitClient:
     def client_heartbeats(self):
         # TODO, This is a dirty fix, change the client to multi-thread later;
         while True:
-            time.sleep(300)
+            time.sleep(100)
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.bind(('', self.client_port))
                 s.connect((self.host_ip, self.host_port))
