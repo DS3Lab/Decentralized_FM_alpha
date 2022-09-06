@@ -136,6 +136,7 @@ class RequestProcessor:
         self.request_path = request_path
         dirname = os.path.dirname(request_path)
         basename = os.path.basename(request_path)
+
         self.output_path = os.path.join(dirname, 'output_'+basename)
         print("<RequestProcessor> dir:", dirname)
         print("<RequestProcessor> file:", basename)
@@ -364,7 +365,7 @@ def get_request_processor(args, infer_data=None):
     if infer_data is None:
         assert args.infer_data is not None
         infer_data = args.infer_data
-    if args.infer_data.strip() == '':
+    if infer_data.strip() == '':
         return DummyRequestProcessor(tokenizer)
     else:
         return RequestProcessor(infer_data, tokenizer)
