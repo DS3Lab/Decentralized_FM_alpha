@@ -9,7 +9,7 @@
 
 module load gcc/6.3.0 cuda/11.0.3             # Load modules from Euler setup
 source activate pipeline                          # Activate my conda python environment
-cd /cluster/home/juewang/workspace/GPT-home-private     # Change directory
+cd /cluster/home/juewang/workspace/GPT-home-latest     # Change directory
 
 nvidia-smi
 
@@ -18,7 +18,7 @@ world_size=6
 DIST_CONF="--pp-mode pipe_async_sample_enc_dec_mask --pipeline-group-size $world_size --cuda-id 0"
 MODEL_CONF="--model-type t5 --model-name /nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/pretrained_models/t5-11b-new --num-iters 99999999999"
 INFERENCE_CONF="--budget 2600 --num-layers 4"
-COOR_CONF="--coordinator-server-ip 129.132.93.82"
+COOR_CONF="--coordinator-server-ip 129.132.93.89"
 #!/bin/bash
 
 export NCCL_SOCKET_IFNAME=access
