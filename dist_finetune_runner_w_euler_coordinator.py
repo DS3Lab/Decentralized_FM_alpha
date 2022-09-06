@@ -8,7 +8,7 @@ from task_datasets.arxiv21 import get_arxiv21_train_data_loader, get_arxiv21_tes
 from task_datasets.openwebtext import get_openwebtext_train_data_loader
 from task_datasets.fm_in_context_eval_data import get_fm_in_context_eval_train_data_loader
 from pipeline_parallel.dist_pp_utils import get_pp_finetune_module as get_pp_module
-from coordinator.lsf.lsf_coordinate_client import CoordinatorTrainClient
+from coordinator.lsf.lsf_coordinate_client_deprecated import CoordinatorTrainClient
 from transformers import AutoTokenizer, AutoConfig
 
 try:

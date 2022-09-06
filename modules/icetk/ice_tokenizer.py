@@ -93,8 +93,10 @@ class IceTokenizer:
         assert (text_ids is None) + (image_ids is None) == 1
         if text_ids is not None:
             ids = [int(_id) - self.num_image_tokens for _id in text_ids]
-            if any([i < 0 for i in ids]):
-                ids = [0 if i < 0 else i for i in ids]
+            if any([i < 0 or i >= self.num_text_tokens for i in ids]):
+                print('warning:', ids)
+                print(f'should between 0 and {self.num_text_tokens}')
+                ids = [0 if i < 0 or i >= self.num_text_tokens else i for i in ids]
             return self.text_tokenizer.decode(ids).replace('<n>', '\n')
         else:
             raise Exception('img tokenizer is missing')

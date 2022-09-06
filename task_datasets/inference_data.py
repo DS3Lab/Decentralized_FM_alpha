@@ -136,7 +136,11 @@ class RequestProcessor:
         self.request_path = request_path
         dirname = os.path.dirname(request_path)
         basename = os.path.basename(request_path)
+
         self.output_path = os.path.join(dirname, 'output_'+basename)
+        print("<RequestProcessor> dir:", dirname)
+        print("<RequestProcessor> file:", basename)
+        print("<RequestProcessor>, output file:", self.output_path)
         with open(self.request_path) as f:
             self.data = []
             for line in f:
@@ -145,9 +149,9 @@ class RequestProcessor:
         first_request = self.data[0]['request']
         self.top_k = first_request.get('top_k', None)
         self.top_p = first_request.get('top_p', None)
-        self.temperature = first_request.get('temperature', 1)
-        self.echo_prompt = first_request.get('echo', 1)
-        self.top_k_per_token = first_request.get('logprobs', 1)
+        self.temperature = first_request.get('temperature', 0)
+        self.echo_prompt = first_request.get('echo', 0)
+        self.top_k_per_token = first_request.get('logprobs', 0)
         self.num_completions = first_request.get('n', 1)
         self.max_tokens = first_request.get('max_tokens', 1)
         self.best_of = first_request.get('best_of', 1)
@@ -182,9 +186,9 @@ class RequestProcessor:
                 
                 if seq_length > max_input_seq_length:
                     max_input_seq_length = seq_length
-                if i > 100:
+                #if i > 100:
                     # first 100 is enough
-                    break
+                    #break
 
             if args.model_type != 't5':
                 if self.tokenizer.model_max_length > 10000:
@@ -354,12 +358,14 @@ def get_tokenizer(args):
         tokenizer.pad_token = tokenizer.eos_token
     
     return tokenizer
-            
-def get_request_processor(args):
-    
+
+
+def get_request_processor(args, infer_data=None):
     tokenizer = get_tokenizer(args)
-    
-    if args.infer_data.strip() == '':
+    if infer_data is None:
+        assert args.infer_data is not None
+        infer_data = args.infer_data
+    if infer_data.strip() == '':
         return DummyRequestProcessor(tokenizer)
     else:
-        return RequestProcessor(args.infer_data, tokenizer)
+        return RequestProcessor(infer_data, tokenizer)

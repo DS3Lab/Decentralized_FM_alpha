@@ -62,7 +62,7 @@ class CoordinatorInferenceServer:
         self.port = args.coordinator_server_port
         self.allocated_index = 0
         self.current_nccl_port = 15000
-        self.current_client_port = 0
+        self.current_client_port = 200
         # An array of dict object to store worker info
         self.working_pipelines = []
         self.prime_worker_ips = []
