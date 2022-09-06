@@ -150,7 +150,9 @@ class RequestProcessor:
                         self.data.append({'request': json.loads(line)})
         elif basename.endswith('json'):
             with open(self.request_path) as f:
-                self.data = json.load(f)
+                self.data = [
+                    {'request': line} for line in json.load(f)
+                ]
         else:
             assert False, "Not supported file format"
         first_request = self.data[0]['request']
