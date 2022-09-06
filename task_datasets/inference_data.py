@@ -137,6 +137,9 @@ class RequestProcessor:
         dirname = os.path.dirname(request_path)
         basename = os.path.basename(request_path)
         self.output_path = os.path.join(dirname, 'output_'+basename)
+        print("<RequestProcessor> dir:", dirname)
+        print("<RequestProcessor> file:", basename)
+        print("<RequestProcessor>, output file:", self.output_path)
         with open(self.request_path) as f:
             self.data = []
             for line in f:
@@ -354,12 +357,14 @@ def get_tokenizer(args):
         tokenizer.pad_token = tokenizer.eos_token
     
     return tokenizer
-            
-def get_request_processor(args):
-    
+
+
+def get_request_processor(args, infer_data=None):
     tokenizer = get_tokenizer(args)
-    
+    if infer_data is None:
+        assert args.infer_data is not None
+        infer_data = args.infer_data
     if args.infer_data.strip() == '':
         return DummyRequestProcessor(tokenizer)
     else:
-        return RequestProcessor(args.infer_data, tokenizer)
+        return RequestProcessor(infer_data, tokenizer)

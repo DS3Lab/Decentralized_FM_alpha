@@ -5,7 +5,8 @@ from utils.dist_inference_utils import *
 from comm.comm_utils import *
 from coordinator.lsf.lsf_coordinate_client import CoordinatorInferenceHTTPClient
 from coordinator.lsf.lsf_job_scheduler import alias_to_model_name
-import requests
+from task_datasets.inference_data import get_request_processor
+
 
 def sync_setting(args, pipeline, device, return_msg=None):
     num_return_sequences_tensor = torch.zeros(1, dtype=torch.int64, device=device)
@@ -83,22 +84,34 @@ def main():
 
     init_inference_communicators_with_coordinator(args, prime_ip, rank, port=port)
 
-    pipeline = get_pp_inference_module(args, device, rank=rank)
+    pipe = get_pp_inference_module(args, device, rank=rank)
 
     tokenizer = get_tokenizer(args)
     tokenizer.model_max_length = args.input_seq_length
 
     print(f"Inference pipeline loading model <{model_name_abbr}> is done!")
+    if get_pipeline_parallel_rank() == 0:
+        coord_client.update_status("running")
+
+    input_path = coord_client.load_input_job_from_dfs(args.job_id, return_path=True)
+    request_processor = get_request_processor(args, infer_data=input_path)
+    request_processor.set_arguments(args)
+
+    if args.profiling == 'no-profiling':
+        avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor)
+    else:
+        prefix = './trace_json/inference_' + args.pp_mode
+        trace_file = prefix + get_inference_arguments_str(args, rank=rank) + '_' + args.profiling + '_' + \
+                     args.trace_postfix + '.json'
+        if args.profiling == 'tidy_profiling':
+            avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor)
+            pipe.export_profiling_result(filename=trace_file)
+        else:
+            print("No recognized profiler?")
+            assert False
+    if get_pipeline_parallel_rank() == 0:
+        coord_client.update_status("finished", returned_payload=request_processor.data)
 
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-
-

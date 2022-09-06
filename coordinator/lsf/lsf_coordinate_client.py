@@ -27,15 +27,27 @@ class CoordinatorInferenceHTTPClient:
         return requests.post("http://coordinator.shift.ml/eth/rank/"+str(self.job_id),
                              json={"ip": ip}).json()
 
-    def load_input_job_from_dfs(self, job_id):
+    def update_status(self, new_status, returned_payload=None):
+        return requests.post(f"https://coordinator.shift.ml/eth/update_status/{self.job_id}", json={
+            "status": new_status,
+            "returned_payload": returned_payload
+        })
+
+    def load_input_job_from_dfs(self, job_id, return_path=False):
         doc_path = os.path.join(self.dir_path, 'input_' + job_id + '.json')
-        if os.path.exists(doc_path):
-            with self.model_lock:
-                with open(doc_path, 'r') as infile:
-                    doc = json.load(infile)
-            return doc
+        if return_path:
+            if os.path.exists(doc_path):
+                return doc_path
+            else:
+                return None
         else:
-            return None
+            if os.path.exists(doc_path):
+                with self.model_lock:
+                    with open(doc_path, 'r') as infile:
+                        doc = json.load(infile)
+                return doc
+            else:
+                return None
 
     def save_output_job_to_dfs(self, result_doc):
         output_filename = 'output_' + result_doc['_id'] + '.json'
