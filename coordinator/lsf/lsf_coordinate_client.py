@@ -15,7 +15,8 @@ class CoordinatorInferenceHTTPClient:
         self.working_directory = args.working_directory
         self.job_id = args.job_id
         self.model_name = model_name
-        self.dir_path = os.path.join(self.working_directory, self.model_name)
+        # self.dir_path = os.path.join(self.working_directory, self.model_name)
+        self.dir_path = os.path.join(self.working_directory)
         lock_path = os.path.join(self.dir_path, self.model_name + '.lock')
         self.model_lock = SoftFileLock(lock_path, timeout=10)
 

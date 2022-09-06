@@ -70,6 +70,7 @@ def main():
     else:
         device = torch.device('cpu')
 
+    print("Print working directory:", args.working_directory)
     model_name_abbr = args.model_name.split('/')[-1]
     print("model name abbr: ", model_name_abbr)
     print("model name: ", alias_to_model_name(model_name_abbr))

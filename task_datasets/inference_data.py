@@ -142,11 +142,17 @@ class RequestProcessor:
         print("<RequestProcessor> dir:", dirname)
         print("<RequestProcessor> file:", basename)
         print("<RequestProcessor>, output file:", self.output_path)
-        with open(self.request_path) as f:
-            self.data = []
-            for line in f:
-                if line.strip() != '':
-                    self.data.append({'request': json.loads(line)})
+        if basename.endswith('jsonl'):
+            with open(self.request_path) as f:
+                self.data = []
+                for line in f:
+                    if line.strip() != '':
+                        self.data.append({'request': json.loads(line)})
+        elif basename.endswith('json'):
+            with open(self.request_path) as f:
+                self.data = json.load(f)
+        else:
+            assert False, "Not supported file format"
         first_request = self.data[0]['request']
         self.top_k = first_request.get('top_k', None)
         self.top_p = first_request.get('top_p', None)
