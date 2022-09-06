@@ -35,10 +35,12 @@ class CoordinatorInferenceHTTPClient:
 
     def load_input_job_from_dfs(self, job_id, return_path=False):
         doc_path = os.path.join(self.dir_path, 'input_' + job_id + '.json')
+        print("<load_input_job_from_dfs - doc_path>:", doc_path)
         if return_path:
             if os.path.exists(doc_path):
                 return doc_path
             else:
+                print("Warning none input file found!!!!!!!!!!")
                 return None
         else:
             if os.path.exists(doc_path):
