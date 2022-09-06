@@ -40,6 +40,7 @@ class JsonDataset(torch.utils.data.Dataset):
 class DummyRequestProcessor:
     def __init__(self, tokenizer):
         self.tokenizer = tokenizer
+        print("<DummyRequestProcessor>")
         
     def set_arguments(self, args):
         self.top_k = args.top_k
@@ -361,10 +362,12 @@ def get_tokenizer(args):
 
 
 def get_request_processor(args, infer_data=None):
+    print("<get_request_processor>:", infer_data)
     tokenizer = get_tokenizer(args)
     if infer_data is None:
         assert args.infer_data is not None
         infer_data = args.infer_data
+
     if infer_data.strip() == '':
         return DummyRequestProcessor(tokenizer)
     else:
