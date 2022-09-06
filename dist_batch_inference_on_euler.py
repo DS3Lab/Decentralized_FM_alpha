@@ -84,6 +84,10 @@ def main():
 
     init_inference_communicators_with_coordinator(args, prime_ip, rank, port=port)
 
+    input_path = coord_client.load_input_job_from_dfs(args.job_id, return_path=True)
+    request_processor = get_request_processor(args, infer_data=input_path)
+    request_processor.set_arguments(args)
+
     pipe = get_pp_inference_module(args, device, rank=rank)
 
     tokenizer = get_tokenizer(args)
@@ -92,10 +96,6 @@ def main():
     print(f"Inference pipeline loading model <{model_name_abbr}> is done!")
     if get_pipeline_parallel_rank() == 0:
         coord_client.update_status("running")
-
-    input_path = coord_client.load_input_job_from_dfs(args.job_id, return_path=True)
-    request_processor = get_request_processor(args, infer_data=input_path)
-    request_processor.set_arguments(args)
 
     if args.profiling == 'no-profiling':
         avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor)
