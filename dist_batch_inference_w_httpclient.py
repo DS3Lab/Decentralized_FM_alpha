@@ -73,7 +73,7 @@ def main():
             print("No recognized profiler?")
             assert False
     if get_pipeline_parallel_rank() == get_pipeline_parallel_world_size()-1:
-        coord_client.update_status("finished", returned_payload=request_processor.data)
+        coord_client.update_status("finished", returned_payload={'result':request_processor.data})
 
 
 if __name__ == '__main__':
