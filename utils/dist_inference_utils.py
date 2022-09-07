@@ -9,11 +9,11 @@ from flask import Flask, request
 import threading
 import socket
 import time
-from coordinator.crusoe.crusoe_coordinator_vm_client import VMClient
+from coordinator.lsf.lsf_coordinate_client import CoordinatorInferenceHTTPClient
 
 
-def distributed_inference_foo_iter(args, pipeline, device, request_processor, vm_client: VMClient = None):
-    
+def distributed_inference_foo_iter(args, pipeline, device, request_processor,
+                                   vm_client: CoordinatorInferenceHTTPClient = None):
     total_time = 0
     if get_pipeline_parallel_rank() == 0:
         output_requests = []
@@ -24,8 +24,8 @@ def distributed_inference_foo_iter(args, pipeline, device, request_processor, vm
             current_iter_time = pipeline.inference_batch(input_ids, output_ids_list)
             request_processor.add_result(inputs, output_ids_list)
             if vm_client is not None:
-                vm_client.send_message_to_coordinate("Iter<{}/{}> takes {:3.2f}s"
-                                                     .format(i+1, args.num_iters, current_iter_time))
+                vm_client.update_status("running", returned_payload=
+                {'progress': {'finished':i+1, 'total':len(infer_data_loader)}})
             
             if i > 0:
                 total_time += current_iter_time
@@ -48,7 +48,8 @@ def distributed_inference_foo_iter(args, pipeline, device, request_processor, vm
     return averaged_time
 
 
-def distributed_inference_mask_iter(args, pipeline, device, request_processor, vm_client: VMClient = None):
+def distributed_inference_mask_iter(args, pipeline, device, request_processor,
+                                    vm_client: CoordinatorInferenceHTTPClient = None):
     
     total_time = 0
     if get_pipeline_parallel_rank() == 0:
@@ -60,8 +61,8 @@ def distributed_inference_mask_iter(args, pipeline, device, request_processor, v
             output_ids_list = []
             current_iter_time = pipeline.inference_batch(input_ids, output_ids_list, attention_mask=attention_mask)
             if vm_client is not None:
-                vm_client.send_message_to_coordinate("Iter<{}/{}> takes {:3.2f}s"
-                                                     .format(i+1, args.num_iters, current_iter_time))
+                vm_client.update_status("running", returned_payload=
+                {'progress': {'finished': i + 1, 'total': len(infer_data_loader)}})
             if i > 0:
                 total_time += current_iter_time
             if i >= args.num_iters-1:
