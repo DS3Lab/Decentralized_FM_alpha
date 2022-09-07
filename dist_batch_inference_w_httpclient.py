@@ -63,13 +63,13 @@ def main():
         coord_client.update_status("running", returned_payload={'state': 'model_loaded'})
 
     if args.profiling == 'no-profiling':
-        avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor)
+        avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor, client=coord_client)
     else:
         prefix = './trace_json/inference_' + args.pp_mode
         trace_file = prefix + get_inference_arguments_str(args, rank=rank) + '_' + args.profiling + '_' + \
                      args.trace_postfix + '.json'
         if args.profiling == 'tidy_profiling':
-            avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor)
+            avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor, client=coord_client)
             pipe.export_profiling_result(filename=trace_file)
         else:
             print("No recognized profiler?")

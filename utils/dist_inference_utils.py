@@ -13,7 +13,7 @@ from coordinator.lsf.lsf_coordinate_client import CoordinatorInferenceHTTPClient
 
 
 def distributed_inference_foo_iter(args, pipeline, device, request_processor,
-                                   vm_client: CoordinatorInferenceHTTPClient = None):
+                                   client: CoordinatorInferenceHTTPClient = None):
     total_time = 0
     if get_pipeline_parallel_rank() == 0:
         output_requests = []
@@ -23,8 +23,8 @@ def distributed_inference_foo_iter(args, pipeline, device, request_processor,
             output_ids_list = []
             current_iter_time = pipeline.inference_batch(input_ids, output_ids_list)
             request_processor.add_result(inputs, output_ids_list)
-            if vm_client is not None:
-                vm_client.update_status("running", returned_payload=
+            if client is not None:
+                client.update_status("running", returned_payload=
                 {'progress': {'finished':i+1, 'total':len(infer_data_loader)}})
             
             if i > 0:
@@ -49,7 +49,7 @@ def distributed_inference_foo_iter(args, pipeline, device, request_processor,
 
 
 def distributed_inference_mask_iter(args, pipeline, device, request_processor,
-                                    vm_client: CoordinatorInferenceHTTPClient = None):
+                                    client: CoordinatorInferenceHTTPClient = None):
     
     total_time = 0
     if get_pipeline_parallel_rank() == 0:
@@ -60,8 +60,8 @@ def distributed_inference_mask_iter(args, pipeline, device, request_processor,
             attention_mask = inputs['attention_mask'].to(device)
             output_ids_list = []
             current_iter_time = pipeline.inference_batch(input_ids, output_ids_list, attention_mask=attention_mask)
-            if vm_client is not None:
-                vm_client.update_status("running", returned_payload=
+            if client is not None:
+                client.update_status("running", returned_payload=
                 {'progress': {'finished': i + 1, 'total': len(infer_data_loader)}})
             if i > 0:
                 total_time += current_iter_time
