@@ -228,7 +228,7 @@ class RequestProcessor:
                 # T5 does not have length limit
                 args.input_seq_length = min(
                     max_input_seq_length + 1,
-                    self.tokenizer.model_max_length - args.generate_seq_length,
+                    self.tokenizer.model_max_length,
                 ) # max_input_seq_length
 
                 if args.budget is not None:
