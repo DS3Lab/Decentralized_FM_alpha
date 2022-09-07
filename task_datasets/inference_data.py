@@ -213,7 +213,8 @@ class RequestProcessor:
                 if args.budget is not None:
                     budget = args.budget
                 else:
-                    budget = 1300*8
+                    print('warn: budget is not set, will set batch size to 1')
+                    budget = 1
 
                 args.token_micro_batch_size = 2 # TODO: hard code
                 args.batch_size = max(budget // ((args.input_seq_length + args.generate_seq_length)*self.num_completions), 2) // args.token_micro_batch_size * args.token_micro_batch_size
@@ -225,12 +226,16 @@ class RequestProcessor:
                     self.tokenizer.model_max_length = 512
                 
                 # T5 does not have length limit
-                args.input_seq_length = max_input_seq_length
+                args.input_seq_length = min(
+                    max_input_seq_length + 1,
+                    self.tokenizer.model_max_length - args.generate_seq_length,
+                ) # max_input_seq_length
 
                 if args.budget is not None:
                     budget = args.budget
                 else:
-                    budget = 1300*16
+                    print('warn: budget is not set, will set batch size to 1')
+                    budget = 1
 
                 args.batch_size = max(budget // (args.input_seq_length + args.generate_seq_length), 1)
                 args.batch_size = min(args.batch_size, 64)
