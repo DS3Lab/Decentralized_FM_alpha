@@ -8,44 +8,6 @@ from coordinator.lsf.lsf_job_scheduler import alias_to_model_name
 from task_datasets.inference_data import get_request_processor
 
 
-def sync_setting(args, pipeline, device, return_msg=None):
-    num_return_sequences_tensor = torch.zeros(1, dtype=torch.int64, device=device)
-    generate_token_length_tensor = torch.zeros(1, dtype=torch.int64, device=device)
-    temperature_tensor = torch.zeros(1, dtype=torch.float32, device=device)
-    top_p_tensor = torch.zeros(1, dtype=torch.float32, device=device)
-    do_sample_tensor = torch.zeros(1, dtype=torch.uint8, device=device)
-
-    if get_pipeline_parallel_rank() == 0:
-        generate_token_length = return_msg['task_api']['parameters']['max_new_tokens']
-        do_sample = return_msg['task_api']['parameters']['do_sample']
-        temperature = return_msg['task_api']['parameters']['temperature']
-        top_p = return_msg['task_api']['parameters']['top_p']
-        num_return_sequences = return_msg['task_api']['parameters']['num_return_sequences']
-        num_return_sequences_tensor[:] = num_return_sequences
-        generate_token_length_tensor[:] = generate_token_length
-        temperature_tensor[:] = temperature
-        top_p_tensor[:] = top_p
-        do_sample_tensor[:] = do_sample
-
-    pipeline.comm.broadcast(num_return_sequences_tensor, src=0)
-    pipeline.num_completions = num_return_sequences_tensor.item()
-
-    pipeline.comm.broadcast(generate_token_length_tensor, src=0)
-    pipeline.generate_seq_length = generate_token_length_tensor.item()
-
-    pipeline.comm.broadcast(temperature_tensor, src=0)
-    args.temperature = temperature_tensor.item()
-
-    pipeline.comm.broadcast(top_p_tensor, src=0)
-    args.top_p = top_p_tensor.item()
-
-    pipeline.comm.broadcast(do_sample_tensor, src=0)
-    if do_sample_tensor.item() == 0:
-        args.temperature = 0
-
-    pipeline.change_buffer_size()
-
-
 def main():
     parser = argparse.ArgumentParser(description='Inference Runner with coordinator.')
     add_device_arguments(parser)
