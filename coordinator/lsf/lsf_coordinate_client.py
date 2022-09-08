@@ -23,6 +23,8 @@ def alias_to_model_name(model_alias: str) -> str:
         'T0pp-new': 't0_pp',
         't5-11b-new': 't5',
         'ul2-new': 'ul2',
+        'opt_66B': 'opt_66B',
+        'opt-66b-new': 'opt_66B',
         'multimodalart/latentdiffusion': None
     }
     return mappings[model_alias]
@@ -41,8 +43,8 @@ class CoordinatorInferenceHTTPClient:
     def notify_inference_heartbeat(self):
         pass
 
-    def notify_inference_join(self):
-        ip = ni.ifaddresses('access')[ni.AF_INET][0]['addr']
+    def notify_inference_join(self, netname='access'):
+        ip = ni.ifaddresses(netname)[ni.AF_INET][0]['addr']
         return requests.post("http://coordinator.shift.ml/eth/rank/"+str(self.job_id),
                              json={"ip": ip}).json()
 

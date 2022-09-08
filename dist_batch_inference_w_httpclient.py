@@ -22,6 +22,8 @@ def main():
                         help='enable which profiling? default: tidy mode')
     parser.add_argument('--trace-postfix', type=str, default='default', metavar='S',
                         help='postfix of the tracing file name.')
+    parser.add_argument('--net-interface', type=str, default='default', metavar='S',
+                        help='network interface name.')
     args = parser.parse_args()
     print_arguments(args)
     torch.manual_seed(args.seed)
@@ -37,7 +39,7 @@ def main():
     print("model name: ", alias_to_model_name(model_name_abbr))
     coord_client = CoordinatorInferenceHTTPClient(args, alias_to_model_name(model_name_abbr))
 
-    res = coord_client.notify_inference_join()
+    res = coord_client.notify_inference_join(args.net_interface)
     prime_ip = res['prime_ip']
     rank = res['rank']
     port = res['nccl_port']
