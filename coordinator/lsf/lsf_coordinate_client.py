@@ -19,16 +19,16 @@ def alias_to_model_name(model_alias: str) -> str:
         'gpt_j_6B': 'gpt_j_6B',
         'gpt-j-6B': 'gpt_j_6B',
         'EleutherAI/gpt-j-6B': 'gpt_j_6B',
-        'gpt-neox-20b-new': 'gpt_neox',
-        'T0pp-new': 't0_pp',
-        't5-11b-new': 't5',
-        'ul2-new': 'ul2',
+        'gpt-neox-20b-new': 'gpt_neox_20B',
+        'T0pp-new': 't0_pp_11B',
+        't5-11b-new': 't5_11B',
+        'ul2-new': 'ul2_20B',
         'opt_66B': 'opt_66B',
         'opt-66b-new': 'opt_66B',
         'opt-175b-new': 'opt_175B',
-        'bloom-new': 'bloom',
-        'yalm-100b-new': 'yalm',
-        'glm-130b-new': 'glm',
+        'bloom-new': 'bloom_175B',
+        'yalm-100b-new': 'yalm_100B',
+        'glm-130b-new': 'glm_130B',
         'multimodalart/latentdiffusion': None
     }
     return mappings[model_alias]
