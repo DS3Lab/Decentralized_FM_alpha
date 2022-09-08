@@ -25,6 +25,7 @@ def alias_to_model_name(model_alias: str) -> str:
         'ul2-new': 'ul2',
         'opt_66B': 'opt_66B',
         'opt-66b-new': 'opt_66B',
+        'opt-175b-new': 'opt_175B',
         'multimodalart/latentdiffusion': None
     }
     return mappings[model_alias]
