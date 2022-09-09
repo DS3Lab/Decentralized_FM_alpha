@@ -156,6 +156,20 @@ class RequestProcessor:
         else:
             assert False, "Not supported file format"
         first_request = self.data[0]['request']
+        """
+            A line of request:
+            request_type: ClassVar[str] = "language-model-inference"
+            model: str
+            prompt: str
+            max_tokens: Optional[int] # Maximum number of tokens to generate
+            temperature: Optional[float] # Annealing temperature
+            top_p: Optional[float] # Fraction of probability mass to keep (in top-p sampling)
+            n: Optional[int] # Number of samples to generate
+            logprobs: Optional[int] # Number of tokens to show logprobs
+            echo: Optional[bool] # Include the input as part of the output (e.g., for language modeling)
+            best_of: Optional[int] # Produce This many candidates per token
+            stop: Optional[List[str]]  # Stop when any of these strings are generated
+        """
         self.top_k = first_request.get('top_k', None)
         self.top_p = first_request.get('top_p', None)
         self.temperature = first_request.get('temperature', 0)

@@ -39,45 +39,48 @@ def main():
     print("model name: ", alias_to_model_name(model_name_abbr))
     coord_client = CoordinatorInferenceHTTPClient(args, alias_to_model_name(model_name_abbr))
 
-    res = coord_client.notify_inference_join(args.net_interface)
-    prime_ip = res['prime_ip']
-    rank = res['rank']
-    port = res['nccl_port']
+    try:
+        res = coord_client.notify_inference_join(args.net_interface)
+        prime_ip = res['prime_ip']
+        rank = res['rank']
+        port = res['nccl_port']
 
-    print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
+        print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
 
-    init_inference_communicators_with_coordinator(args, prime_ip, rank, port=port)
+        init_inference_communicators_with_coordinator(args, prime_ip, rank, port=port)
 
-    if get_pipeline_parallel_rank() == 0:
-        coord_client.update_status("running", returned_payload={'state': 'initialized'})
+        if get_pipeline_parallel_rank() == 0:
+            coord_client.update_status("running", returned_payload={'state': 'initialized'})
 
-    input_path = coord_client.load_input_job_from_dfs(args.job_id, return_path=True)
-    request_processor = get_request_processor(args, infer_data=input_path)
-    request_processor.set_arguments(args)
+        input_path = coord_client.load_input_job_from_dfs(args.job_id, return_path=True)
+        request_processor = get_request_processor(args, infer_data=input_path)
+        request_processor.set_arguments(args)
 
-    pipe = get_pp_inference_module(args, device, rank=rank)
+        pipe = get_pp_inference_module(args, device, rank=rank)
 
-    tokenizer = get_tokenizer(args)
-    tokenizer.model_max_length = args.input_seq_length
+        tokenizer = get_tokenizer(args)
+        tokenizer.model_max_length = args.input_seq_length
 
-    print(f"Inference pipeline loading model <{model_name_abbr}> is done!")
-    if get_pipeline_parallel_rank() == 0:
-        coord_client.update_status("running", returned_payload={'state': 'model_loaded'})
+        print(f"Inference pipeline loading model <{model_name_abbr}> is done!")
+        if get_pipeline_parallel_rank() == 0:
+            coord_client.update_status("running", returned_payload={'state': 'model_loaded'})
 
-    if args.profiling == 'no-profiling':
-        avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor, client=coord_client)
-    else:
-        prefix = './trace_json/inference_' + args.pp_mode
-        trace_file = prefix + get_inference_arguments_str(args, rank=rank) + '_' + args.profiling + '_' + \
-                     args.trace_postfix + '.json'
-        if args.profiling == 'tidy_profiling':
+        if args.profiling == 'no-profiling':
             avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor, client=coord_client)
-            pipe.export_profiling_result(filename=trace_file)
         else:
-            print("No recognized profiler?")
-            assert False
-    if get_pipeline_parallel_rank() == get_pipeline_parallel_world_size()-1:
-        coord_client.update_status("finished", returned_payload={'result': request_processor.data})
+            prefix = './trace_json/inference_' + args.pp_mode
+            trace_file = prefix + get_inference_arguments_str(args, rank=rank) + '_' + args.profiling + '_' + \
+                         args.trace_postfix + '.json'
+            if args.profiling == 'tidy_profiling':
+                avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor, client=coord_client)
+                pipe.export_profiling_result(filename=trace_file)
+            else:
+                print("No recognized profiler?")
+                assert False
+        if get_pipeline_parallel_rank() == get_pipeline_parallel_world_size()-1:
+            coord_client.update_status("finished", returned_payload={'result': request_processor.data})
+    except:
+        coord_client.update_status("failed", returned_payload={'state': 'exception during execution'})
 
 
 if __name__ == '__main__':

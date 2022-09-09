@@ -4,6 +4,7 @@ import os
 from filelock import SoftFileLock
 import netifaces as ni
 import requests
+import time
 
 
 def define_nccl_port_by_job_id(job_id: int):
@@ -14,21 +15,21 @@ def alias_to_model_name(model_alias: str) -> str:
     # print(torch_type)
 
     mappings = {
-        'stable_diffusion':'stable_diffusion',
+        'stable_diffusion': 'stable_diffusion',
         'Image: stable_diffusion': 'stable_diffusion',
-        'gpt_j_6B': 'gpt_j_6B',
-        'gpt-j-6B': 'gpt_j_6B',
-        'EleutherAI/gpt-j-6B': 'gpt_j_6B',
-        'gpt-neox-20b-new': 'gpt_neox_20B',
-        'T0pp-new': 't0_pp_11B',
-        't5-11b-new': 't5_11B',
-        'ul2-new': 'ul2_20B',
-        'opt_66B': 'opt_66B',
-        'opt-66b-new': 'opt_66B',
-        'opt-175b-new': 'opt_175B',
-        'bloom-new': 'bloom_175B',
-        'yalm-100b-new': 'yalm_100B',
-        'glm-130b-new': 'glm_130B',
+        'gpt_j_6B': 'gpt_j_6b',
+        'gpt-j-6B': 'gpt_j_6b',
+        'EleutherAI/gpt-j-6B': 'gpt_j_6b',
+        'gpt-neox-20b-new': 'gpt_neox_20b',
+        'T0pp-new': 't0_pp_11b',
+        't5-11b-new': 't5_11b',
+        'ul2-new': 'ul2',
+        'opt_66B': 'opt_66b',
+        'opt-66b-new': 'opt_66b',
+        'opt-175b-new': 'opt_175b',
+        'bloom-new': 'bloom',
+        'yalm-100b-new': 'yalm',
+        'glm-130b-new': 'glm',
         'multimodalart/latentdiffusion': None
     }
     return mappings[model_alias]
@@ -55,7 +56,8 @@ class CoordinatorInferenceHTTPClient:
     def update_status(self, new_status, returned_payload=None):
         return requests.post(f"https://coordinator.shift.ml/eth/update_status/{self.job_id}", json={
             "status": new_status,
-            "returned_payload": returned_payload
+            "returned_payload": returned_payload,
+            "timestamp": time.time()
         })
 
     def load_input_job_from_dfs(self, job_id, return_path=False):
