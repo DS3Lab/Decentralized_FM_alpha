@@ -57,7 +57,7 @@ def main():
         request_processor = get_request_processor(args, infer_data=input_path)
         request_processor.set_arguments(args)
 
-        pipe = get_pp_inference_module(args, device, rank=rank)
+        pipe = get_pp_inference_module(args, device, rank=rank, be_coordinated=True)
 
         tokenizer = get_tokenizer(args)
         tokenizer.model_max_length = args.input_seq_length

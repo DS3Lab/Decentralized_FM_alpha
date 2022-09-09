@@ -42,7 +42,7 @@ def get_pp_finetune_module(args, config, device, use_dp, rank=None):
         assert False
 
 
-def get_pp_inference_module(args, device, rank=None):
+def get_pp_inference_module(args, device, rank=None, be_coordinated=False):
     if args.pp_mode == 'pipe_async_greedy':
         return DistGreedyInferenceAsync(args, device, rank=rank)
     elif args.pp_mode == 'pipe_sync_greedy':
@@ -52,7 +52,7 @@ def get_pp_inference_module(args, device, rank=None):
     elif args.pp_mode == 'pipe_sync_greedy_mask_token_pipe':
         return DistGreedyInferenceMaskTokenPipeSync(args, device, rank=rank)
     elif args.pp_mode == 'pipe_sync_sample_mask_token_pipe':
-        return DistSampleInferenceMaskTokenPipeSync(args, device, rank=rank)
+        return DistSampleInferenceMaskTokenPipeSync(args, device, rank=rank, be_coordinated=be_coordinated)
     elif args.pp_mode == 'pipe_async_greedy_mask':
         return DistGreedyInferenceMaskAsync(args, device, rank=rank)
     elif args.pp_mode == 'pipe_async_sample_mask':
