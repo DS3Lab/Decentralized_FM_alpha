@@ -80,8 +80,8 @@ def main():
                 assert False
         if get_pipeline_parallel_rank() == get_pipeline_parallel_world_size()-1:
             coord_client.update_status("finished", returned_payload={'result': request_processor.data})
-    except:
-        coord_client.update_status("failed", returned_payload={'message': 'exception during execution'})
+    except Exception as e:
+        coord_client.update_status("failed", returned_payload={'message': str(e)})
 
 
 if __name__ == '__main__':
