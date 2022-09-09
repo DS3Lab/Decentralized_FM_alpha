@@ -4,9 +4,9 @@ error = osg_ping.error
 output = osg_ping.output
 log = osg_ping.log
 
-request_gpus = 1
 request_cpus = 1
-request_memory = 4 GB
-request_disk = 2 GB
+request_memory = 1 MB
+request_disk = 1 MB
+
 
 queue 1
