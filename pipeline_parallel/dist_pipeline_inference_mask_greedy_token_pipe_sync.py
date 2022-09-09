@@ -6,6 +6,7 @@ from comm.comm_utils import *
 from modules.generation_utils import get_logits_processor, get_logits_warper
 from .dist_pipeline_inference_greedy_token_pipe_sync import DistGreedyInferenceTokePipeSync
 from .share_prefix import SharePrefix
+from coordinator.http_coordinate_client import get_coordinator_client
 
 
 class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
@@ -17,8 +18,11 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         a group of events to check if computation finishes in the forward propagation.
     """
 
-    def __init__(self, args, device, rank=None):
-        
+    def __init__(self, args, device, rank=None, be_coordinated=False):
+        if be_coordinated:
+            self.coord_client = get_coordinator_client()
+        else:
+            self.coord_client = None
         self.echo_prompt = args.echo_prompt
         self.num_completions = args.num_completions
         self.top_k_per_token = args.top_k_per_token
@@ -201,6 +205,9 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             self.layers['block'+str(layer_index)] = GPTBlock.from_pretrained(
                 self.model_name, layer_index=global_layer_index
             ).to(self.dtype).eval().to(self.device)
+            if self.coord_client:
+                self.coord_client.update_status('running', returned_payload={
+                    'rank': self.pp_rank, 'loaded_layer': layer_index, 'total_layer': self.num_layers})
         if self.pp_rank == self.pipeline_group_size - 1:
             self.layers['lm'] = GPTLMHead.from_pretrained(
                 self.model_name
