@@ -3,6 +3,7 @@ import json
 import torch.nn.functional
 from comm.comm_utils import *
 from modules.generation_utils import get_logits_processor, get_logits_warper
+from coordinator.http_coordinate_client import get_coordinator_client
 
 
 class DistGreedyInferenceMaskAsync:
@@ -14,8 +15,12 @@ class DistGreedyInferenceMaskAsync:
         a group of events to check if computation finishes in the forward propagation.
     """
 
-    def __init__(self, args, device, rank=None):
+    def __init__(self, args, device, rank=None, be_coordinated=False):
         print("=======Initialize Dist Inference.")
+        if be_coordinated:
+            self.coord_client = get_coordinator_client()
+        else:
+            self.coord_client = None
         if args.fp16:
             self.use_fp16 = True
             print("=======Gpipe use FP16")
@@ -157,7 +162,7 @@ class DistGreedyInferenceMaskAsync:
     def _print_buffers(self):
         
         if self.generate_seq_length == 0:
-            # dont print when seq_length == 0
+            # don't print when seq_length == 0
             return
         
         if self.pp_rank == 0:
@@ -234,6 +239,9 @@ class DistGreedyInferenceMaskAsync:
             self.layers['block'+str(layer_index)] = GPTBlock.from_pretrained(
                 self.model_name, layer_index=global_layer_index
             ).to(self.dtype).eval().to(self.device)
+            if self.coord_client:
+                self.coord_client.update_status('running', returned_payload={
+                    'rank': self.pp_rank, 'loaded_layer': layer_index, 'total_layer': self.num_layers})
         if self.pp_rank == self.pipeline_group_size - 1:
             self.layers['lm'] = GPTLMHead.from_pretrained(
                 self.model_name
