@@ -81,6 +81,7 @@ def main():
         if get_pipeline_parallel_rank() == get_pipeline_parallel_world_size()-1:
             coord_client.update_status("finished", returned_payload={'result': request_processor.data})
     except Exception as e:
+        print('Exception:', e)
         coord_client.update_status("failed", returned_payload={'message': str(e)})
 
 
