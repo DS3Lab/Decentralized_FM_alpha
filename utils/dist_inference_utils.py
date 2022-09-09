@@ -1,15 +1,11 @@
-import os
 import json
-from datetime import datetime
 from comm.comm_utils import *
 from comm.hybrid_comm_utils import *
 
 from task_datasets.inference_data import get_tokenizer
 from flask import Flask, request
 import threading
-import socket
-import time
-from coordinator.lsf.lsf_coordinate_client import CoordinatorInferenceHTTPClient
+from coordinator.http_coordinate_client import CoordinatorInferenceHTTPClient
 
 
 def distributed_inference_foo_iter(args, pipeline, device, request_processor,

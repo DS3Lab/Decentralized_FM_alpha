@@ -3,7 +3,7 @@ from pipeline_parallel.dist_pp_utils import get_pp_inference_module
 from utils.dist_args_utils import *
 from utils.dist_inference_utils import *
 from comm.comm_utils import *
-from coordinator.lsf.lsf_coordinate_client import CoordinatorInferenceHTTPClient, alias_to_model_name
+from coordinator.http_coordinate_client import get_coordinator_client, init_coordinator_client, alias_to_model_name
 from task_datasets.inference_data import get_request_processor
 
 
@@ -37,7 +37,8 @@ def main():
     model_name_abbr = args.model_name.split('/')[-1]
     print("model name abbr: ", model_name_abbr)
     print("model name: ", alias_to_model_name(model_name_abbr))
-    coord_client = CoordinatorInferenceHTTPClient(args, alias_to_model_name(model_name_abbr))
+    init_coordinator_client(args, alias_to_model_name(model_name_abbr))
+    coord_client = get_coordinator_client()
 
     try:
         res = coord_client.notify_inference_join(args.net_interface)

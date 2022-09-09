@@ -6,6 +6,8 @@ import netifaces as ni
 import requests
 import time
 
+_COORDINATOR_CLIENT = None
+
 
 def define_nccl_port_by_job_id(job_id: int):
     return 10000 + job_id % 3571  # make sure different job use different port
@@ -17,16 +19,16 @@ def alias_to_model_name(model_alias: str) -> str:
     mappings = {
         'stable_diffusion': 'stable_diffusion',
         'Image: stable_diffusion': 'stable_diffusion',
-        'gpt_j_6B': 'gpt_j_6b',
-        'gpt-j-6B': 'gpt_j_6b',
-        'EleutherAI/gpt-j-6B': 'gpt_j_6b',
-        'gpt-neox-20b-new': 'gpt_neox_20b',
-        'T0pp-new': 't0_pp_11b',
-        't5-11b-new': 't5_11b',
+        'gpt_j_6B': 'gpt-j-6b',
+        'gpt-j-6B': 'gpt-j-6b',
+        'EleutherAI/gpt-j-6B': 'gpt-j-6b',
+        'gpt-neox-20b-new': 'gpt-neox-20b',
+        'T0pp-new': 't0pp',
+        't5-11b-new': 't5-11b”',
         'ul2-new': 'ul2',
-        'opt_66B': 'opt_66b',
-        'opt-66b-new': 'opt_66b',
-        'opt-175b-new': 'opt_175b',
+        'opt_66B': 'opt-66b',
+        'opt-66b-new': 'opt-66b',
+        'opt-175b-new': 'opt-175b',
         'bloom-new': 'bloom',
         'yalm-100b-new': 'yalm',
         'glm-130b-new': 'glm',
@@ -90,4 +92,11 @@ class CoordinatorInferenceHTTPClient:
         os.remove(input_path)
 
 
+def get_coordinator_client() -> CoordinatorInferenceHTTPClient:
+    assert _COORDINATOR_CLIENT is not None
+    return _COORDINATOR_CLIENT
 
+
+def init_coordinator_client(args, model_name: str):
+    global _COORDINATOR_CLIENT
+    _COORDINATOR_CLIENT = CoordinatorInferenceHTTPClient(args, model_name)
