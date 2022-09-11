@@ -100,8 +100,10 @@ def main():
                     for image_id in generated_image_ids:
                         os.remove(image_id)
 
-def waiting_for_instructions():
-    pass
-
+    # now finished the primary job, waiting and keep fetching instructions for next steps
+    while True:
+        instructions = local_cord_client.fetch_instructions("stable_diffusion")
+        logger.info(instructions)
+        
 if __name__ == '__main__':
     main()

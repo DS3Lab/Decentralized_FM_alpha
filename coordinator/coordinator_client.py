@@ -15,12 +15,6 @@ class LocalCoordinatorClient:
         self.working_directory = working_directory
         self.coordinator_url = coordinator_url
 
-    def notify_inference_heartbeat(self):
-        pass
-
-    def notify_inference_join(self):
-        pass
-
     def load_input_job_from_dfs(self, job_id):
         doc_path = os.path.join(self.working_directory,
                                 'input_' + job_id + '.json')
@@ -57,3 +51,6 @@ class LocalCoordinatorClient:
             logger.error(e)
             return False, None
         return True, object_name
+    
+    def fetch_instructions(self, model_name):
+        return requests.get(self.coordinator_url+f"/instructions/{model_name}").json()
