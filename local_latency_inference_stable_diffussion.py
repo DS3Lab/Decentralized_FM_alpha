@@ -100,5 +100,8 @@ def main():
                     for image_id in generated_image_ids:
                         os.remove(image_id)
 
+def waiting_for_instructions():
+    pass
+
 if __name__ == '__main__':
     main()

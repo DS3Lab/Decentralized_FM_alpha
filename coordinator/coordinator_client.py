@@ -47,7 +47,7 @@ class LocalCoordinatorClient:
             "returned_payload": returned_payload
         })
 
-    def upload_file(filename, object_name=None):
+    def upload_file(self, filename, object_name=None):
         if object_name is None:
             object_name = str(uuid4())+".png"
         s3_client = boto3.client('s3')
