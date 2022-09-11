@@ -1,36 +1,33 @@
-import argparse
 import os
 import torch
-from torch import autocast
-from loguru import logger
-from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler
 import random
+import argparse
+from loguru import logger
+from torch import autocast
+from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler
+from coordinator.coordinator_client import LocalCoordinatorClient
 from utils.dist_args_utils import *
-from utils.coordinator_client import LocalCoordinatorClient
-from utils.s3 import upload_file
-from utils.local_coord import update_status
 
 
 def main():
-
     parser = argparse.ArgumentParser(
         description='Inference Runner with coordinator.')
     parser.add_argument('--job_id', type=str, default='test',
                         metavar='S', help='Job ID')
-
+    parser.add_argument('--cord_url', type=str, default='localhost',)
     add_global_coordinator_arguments(parser)
     add_lsf_coordinator_arguments(parser)
     args = parser.parse_args()
     print_arguments(args)
-    update_status(args.job_id, "running")
-
-    lsf_coordinator_client = LocalCoordinatorClient(
-        "/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/new/working_dir/",
+    local_cord_client = LocalCoordinatorClient(
+        working_directory="/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/new/working_dir/",
+        coordinator_url=args.cord_url,
     )
+    local_cord_client.update_status(args.job_id, "running")
+
     output_dir = os.path.join(
         "/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/new/working_dir/",
     )
-    # lsf_coordinator_client.notify_inference_join()
     logger.info("Loading Stable Diffusion model...")
     lms = LMSDiscreteScheduler(
         beta_start=0.00085,
@@ -48,7 +45,7 @@ def main():
 
     logger.info("Stable Diffusion model loaded.")
 
-    return_msg = lsf_coordinator_client.load_input_job_from_dfs(args.job_id)
+    return_msg = local_cord_client.load_input_job_from_dfs(args.job_id)
     if return_msg is not None:
         logger.info(f"Received a new job. {return_msg}")
 
@@ -86,7 +83,7 @@ def main():
                                 output_dir, f"{image_id}.png"))
                             generated_image_ids.append(
                                 os.path.join(output_dir, f"{image_id}.png"))
-                            succ, img_id = upload_file(
+                            succ, img_id = local_cord_client.upload_file(
                                 os.path.join(output_dir, f"{image_id}.png"))
                             if succ:
                                 img_results.append(
@@ -94,7 +91,7 @@ def main():
                             else:
                                 logger.error("Upload image failed")
                         results["output"].append(img_results)
-                    update_status(
+                    local_cord_client.update_status(
                         args.job_id,
                         "finished",
                         returned_payload=results
@@ -102,7 +99,6 @@ def main():
                     # clear cache
                     for image_id in generated_image_ids:
                         os.remove(image_id)
-
 
 if __name__ == '__main__':
     main()
