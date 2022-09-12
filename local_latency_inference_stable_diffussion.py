@@ -118,7 +118,7 @@ def main():
 
                 elif isinstance(prompts, list):
                     if isinstance(num_of_returns, int):
-                        num_of_returns = [num_of_returns]*len(text)
+                        num_of_returns = [num_of_returns]*len(prompts)
                     else:
                         num_of_returns = num_of_returns
 
