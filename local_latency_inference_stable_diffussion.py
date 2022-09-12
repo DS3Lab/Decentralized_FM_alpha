@@ -104,6 +104,60 @@ def main():
     while True:
         instructions = local_cord_client.fetch_instructions("stable_diffusion")
         logger.info(instructions)
-        
+        # now only process one
+        instruction = instructions[0]
+        # here we are supposed to handle three commands: run, kill, keep
+        if instruction["message"] == "run":
+            prompts = instruction['payload']['payload']['input']
+            num_of_returns = instruction['payload']['payload']['num_returns']
+            job_id = instruction['payload']['id']
+            job_status = instruction['payload']['status']
+            if job_status == "submitted":
+                if isinstance(prompts, str):
+                    prompts = [prompts]
+                    num_of_returns = [num_of_returns]
+
+                elif isinstance(prompts, list):
+                    if isinstance(num_of_returns, int):
+                        num_return_sequences = [
+                            num_of_returns]*len(text)
+                    else:
+                        num_of_returns = num_of_returns
+
+                if len(prompts) != len(num_return_sequences):
+                    raise ValueError(
+                        "The length of text and num_return_sequences (if given as a list) should be the same.")
+
+                logger.info("received prompt: {}".format(prompts))
+                with torch.no_grad():
+                    with autocast("cuda"):
+                        img_results = []
+                        generated_image_ids = []
+                        for i in range(len(prompts)):
+                            for j in range(num_of_returns[i]):
+                                image = pipe(prompts[i])["sample"][0]
+                                # randomly generate a image id
+                                image_id = random.randint(0, 1000000)
+                                image.save(os.path.join(
+                                    output_dir, f"{image_id}.png"))
+                                generated_image_ids.append(
+                                    os.path.join(output_dir, f"{image_id}.png"))
+                                succ, img_id = local_cord_client.upload_file(
+                                    os.path.join(output_dir, f"{image_id}.png"))
+                                if succ:
+                                    img_results.append(
+                                        "https://planetd.shift.ml/files/"+img_id)
+                                else:
+                                    logger.error("Upload image failed")
+                            results["output"].append(img_results)
+                        local_cord_client.update_status(
+                            job_id,
+                            "finished",
+                            returned_payload=results
+                        )
+                        # clear cache
+                        for image_id in generated_image_ids:
+                            os.remove(image_id)
+                        
 if __name__ == '__main__':
     main()
