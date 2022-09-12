@@ -2,7 +2,7 @@ import os
 import torch
 import random
 import argparse
-from loguru import logger
+# from loguru import logger
 from torch import autocast
 from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler
 from coordinator.coordinator_client import LocalCoordinatorClient
@@ -28,7 +28,7 @@ def main():
     output_dir = os.path.join(
         "./",
     )
-    logger.info("Loading Stable Diffusion model...")
+    print("Loading Stable Diffusion model...")
     lms = LMSDiscreteScheduler(
         beta_start=0.00085,
         beta_end=0.012,
@@ -42,11 +42,11 @@ def main():
         revision="fp16"
     ).to("cuda:0")
 
-    logger.info("Stable Diffusion model loaded.")
+    print("Stable Diffusion model loaded.")
 
     return_msg = local_cord_client.load_input_job_from_dfs(args.job_id)
     if return_msg is not None:
-        logger.info(f"Received a new job. {return_msg}")
+        print(f"Received a new job. {return_msg}")
 
         job_requests = return_msg
 
@@ -88,7 +88,7 @@ def main():
                                 img_results.append(
                                     "https://planetd.shift.ml/files/"+img_id)
                             else:
-                                logger.error("Upload image failed")
+                                print("Upload image failed")
                         results["output"].append(img_results)
                     local_cord_client.update_status(
                         args.job_id,
@@ -102,7 +102,7 @@ def main():
     # now finished the primary job, waiting and keep fetching instructions for next steps
     while True:
         instructions = local_cord_client.fetch_instructions("stable_diffusion")
-        logger.info(instructions)
+        print(instructions)
         
 if __name__ == '__main__':
     main()
