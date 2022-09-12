@@ -107,8 +107,8 @@ def main():
         logger.info(instruction)
         # now only process one
         if instruction["message"] == "run":
-            prompts = instruction['payload']['payload']['input']
-            num_of_returns = instruction['payload']['payload']['num_returns']
+            prompts = instruction['payload']['payload'][0]['input']
+            num_of_returns = instruction['payload']['payload'][0]['num_returns']
             job_id = instruction['payload']['id']
             job_status = instruction['payload']['status']
             if job_status == "submitted":
