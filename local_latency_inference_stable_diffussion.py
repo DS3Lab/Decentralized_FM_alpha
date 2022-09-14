@@ -103,59 +103,66 @@ def main():
 
     # now finished the primary job, waiting and keep fetching instructions for next steps
     while True:
-        instruction = local_cord_client.fetch_instructions("stable_diffusion")
-        logger.info(instruction)
-        # now only process one
-        if instruction["message"] == "run":
-            prompts = instruction['payload']['payload'][0]['input']
-            num_of_returns = instruction['payload']['payload'][0]['num_returns']
-            job_id = instruction['payload']['id']
-            job_status = instruction['payload']['status']
-            if job_status == "submitted":
-                if isinstance(prompts, str):
-                    prompts = [prompts]
-                    num_of_returns = [num_of_returns]
 
-                elif isinstance(prompts, list):
-                    if isinstance(num_of_returns, int):
-                        num_of_returns = [num_of_returns]*len(prompts)
-                    else:
-                        num_of_returns = num_of_returns
+        instructions = local_cord_client.fetch_instructions("stable_diffusion")
+        last_instruction = instructions[-1]
+        if last_instruction["message"] == "break":
+            logger.info("Received stop instruction.")
+            break
+        elif last_instruction["message"] == "continue":
+            logger.info("Received keep instruction.")
+            continue
+        elif last_instruction["message"] == "run":
+            for instruction in [x for x in instructions if x["message"] == "run"]:
+                prompts = instruction['payload']['payload'][0]['input']
+                num_of_returns = instruction['payload']['payload'][0]['num_returns']
+                job_id = instruction['payload']['id']
+                job_status = instruction['payload']['status']
+                if job_status == "submitted":
+                    if isinstance(prompts, str):
+                        prompts = [prompts]
+                        num_of_returns = [num_of_returns]
 
-                if len(prompts) != len(num_of_returns):
-                    raise ValueError(
-                        "The length of text and num_return_sequences (if given as a list) should be the same.")
+                    elif isinstance(prompts, list):
+                        if isinstance(num_of_returns, int):
+                            num_of_returns = [num_of_returns]*len(prompts)
+                        else:
+                            num_of_returns = num_of_returns
 
-                logger.info("received prompt: {}".format(prompts))
-                with torch.no_grad():
-                    with autocast("cuda"):
-                        img_results = []
-                        generated_image_ids = []
-                        for i in range(len(prompts)):
-                            for j in range(num_of_returns[i]):
-                                image = pipe(prompts[i])["sample"][0]
-                                # randomly generate a image id
-                                image_id = random.randint(0, 1000000)
-                                image.save(os.path.join(
-                                    output_dir, f"{image_id}.png"))
-                                generated_image_ids.append(
-                                    os.path.join(output_dir, f"{image_id}.png"))
-                                succ, img_id = local_cord_client.upload_file(
-                                    os.path.join(output_dir, f"{image_id}.png"))
-                                if succ:
-                                    img_results.append(
-                                        "https://planetd.shift.ml/files/"+img_id)
-                                else:
-                                    logger.error("Upload image failed")
-                            results["output"].append(img_results)
-                        local_cord_client.update_status(
-                            job_id,
-                            "finished",
-                            returned_payload=results
-                        )
-                        # clear cache
-                        for image_id in generated_image_ids:
-                            os.remove(image_id)
+                    if len(prompts) != len(num_of_returns):
+                        raise ValueError(
+                            "The length of text and num_return_sequences (if given as a list) should be the same.")
+
+                    logger.info("received prompt: {}".format(prompts))
+                    with torch.no_grad():
+                        with autocast("cuda"):
+                            img_results = []
+                            generated_image_ids = []
+                            for i in range(len(prompts)):
+                                for j in range(num_of_returns[i]):
+                                    image = pipe(prompts[i])["sample"][0]
+                                    # randomly generate a image id
+                                    image_id = random.randint(0, 1000000)
+                                    image.save(os.path.join(
+                                        output_dir, f"{image_id}.png"))
+                                    generated_image_ids.append(
+                                        os.path.join(output_dir, f"{image_id}.png"))
+                                    succ, img_id = local_cord_client.upload_file(
+                                        os.path.join(output_dir, f"{image_id}.png"))
+                                    if succ:
+                                        img_results.append(
+                                            "https://planetd.shift.ml/files/"+img_id)
+                                    else:
+                                        logger.error("Upload image failed")
+                                results["output"].append(img_results)
+                            local_cord_client.update_status(
+                                job_id,
+                                "finished",
+                                returned_payload=results
+                            )
+                            # clear cache
+                            for image_id in generated_image_ids:
+                                os.remove(image_id)
         sleep(10)
 if __name__ == '__main__':
     main()
