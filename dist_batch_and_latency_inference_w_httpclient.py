@@ -71,7 +71,7 @@ def to_result(
                 choice['logprobs']['token_logprobs'][0] = None
                 if choice['logprobs']['top_logprobs'] is not None:
                     choice['logprobs']['top_logprobs'][0] = None
-            item['choices'].append(choice)
+        item['choices'].append(choice)
             
     return item
 
@@ -184,6 +184,9 @@ def main():
                         prompt = query['prompt']
                         job_id = instruction['payload']['id']
                         job_status = instruction['payload']['status']
+                        
+                        if job_status != "submitted":
+                            continue
 
                         # set input length
                         seq_length = tokenizer(
