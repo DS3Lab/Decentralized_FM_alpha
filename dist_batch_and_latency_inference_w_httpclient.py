@@ -11,8 +11,9 @@ from coordinator.coordinator_client import LocalCoordinatorClient # TODO: merge 
 from task_datasets.inference_data import get_request_processor
 
 
-def update_setting(pipeline, query):
+def update_setting(args, pipeline, query):
     
+    # update pipline
     pipeline.echo_prompt = query.get('echo', False)
     pipeline.top_k_per_token = query.get('logprobs', 0)
     pipeline.generate_seq_length = query.get('max_tokens', 1)
@@ -26,9 +27,12 @@ def update_setting(pipeline, query):
     pipeline.token_micro_batch_size = 1
     pipeline.token_micro_batch_num = 1
     
+    # update args
+    args.top_p = pipeline.top_p
+    
     pipeline.change_buffer_size()
-#     if hasattr(pipeline, 'update_processors'):
-#         pipeline.update_processors()
+    if hasattr(pipeline, 'update_processors'):
+        pipeline.update_processors(args)
         
 
 def to_result(
@@ -192,7 +196,7 @@ def main():
 
                         # update hyperparameters and buffers
                         logger.info(f"Update settings.")
-                        update_setting(pipe, query)
+                        update_setting(args, pipe, query)
 
                         # get inputs
                         inputs = tokenizer(prompt, return_tensors='pt', padding='max_length', truncation=True, )
