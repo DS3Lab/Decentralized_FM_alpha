@@ -11,8 +11,9 @@ from coordinator.coordinator_client import LocalCoordinatorClient # TODO: merge 
 from task_datasets.inference_data import get_request_processor
 
 
-def update_setting(pipeline, query):
+def update_setting(args, pipeline, query):
     
+    # update pipline
     pipeline.echo_prompt = query.get('echo', False)
     pipeline.top_k_per_token = query.get('logprobs', 0)
     pipeline.generate_seq_length = query.get('max_tokens', 1)
@@ -26,9 +27,12 @@ def update_setting(pipeline, query):
     pipeline.token_micro_batch_size = 1
     pipeline.token_micro_batch_num = 1
     
+    # update args
+    args.top_p = pipeline.top_p
+    
     pipeline.change_buffer_size()
     if hasattr(pipeline, 'update_processors'):
-        pipeline.update_processors()
+        pipeline.update_processors(args)
         
 
 def to_result(
@@ -171,6 +175,9 @@ def main():
                     
                     try: 
                         
+                        logger.info("Instruction:")
+                        logger.info(str(instruction))
+                        
                         # TODO: we assume len(payload) is 1, right?
                         query = instruction['payload']['payload'][0]
                         prompt = query['prompt']
@@ -182,11 +189,14 @@ def main():
                             prompt, return_tensors='pt', padding=True, truncation=False
                         )['input_ids'].size(1)
                         seq_length = min(seq_length, 2048 - query.get('max_tokens', 1)) # 2048 is hardcoded.
+                        
+                        logger.info(f"Set input length to {seq_length}.")
                         tokenizer.model_max_length = seq_length
                         pipe.input_seq_length = seq_length
 
                         # update hyperparameters and buffers
-                        update_setting(pipe, query)
+                        logger.info(f"Update settings.")
+                        update_setting(args, pipe, query)
 
                         # get inputs
                         inputs = tokenizer(prompt, return_tensors='pt', padding='max_length', truncation=True, )
@@ -194,6 +204,7 @@ def main():
                         attention_mask = inputs['attention_mask'].long().to(device)
                     
                         # run inference
+                        logger.info(f"Start Inference.")
                         output_ids_list = []
                         pipe.inference_batch(input_ids, output_ids_list, attention_mask=attention_mask)
 
