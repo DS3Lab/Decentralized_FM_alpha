@@ -39,6 +39,7 @@ def to_result(
     outputs, tokenizer, top_k_per_token, echo_prompt,
 ):
     
+    i = 0
     n_pads = 0 # in latency inference, #pad should be 0
         
     item = {
