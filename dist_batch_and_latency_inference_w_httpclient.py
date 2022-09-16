@@ -208,7 +208,7 @@ def main():
                         output_ids_list = []
                         pipe.inference_batch(input_ids, output_ids_list, attention_mask=attention_mask)
 
-                        if get_pipeline_parallel_rank() == pipeline.pipeline_group_size - 1:
+                        if get_pipeline_parallel_rank() == pipe.pipeline_group_size - 1:
                             result = to_result(output_ids_list, tokenizer, pipe.top_k_per_token, pipe.echo_prompt)
                             return_payload = {
                                 'request': query,
