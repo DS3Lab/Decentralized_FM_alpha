@@ -233,6 +233,9 @@ def main():
                         
                         raise e
             
+            sleep(10)
+            
+            
     except Exception as e:
         print('Exception in latency inference:', e)
 
