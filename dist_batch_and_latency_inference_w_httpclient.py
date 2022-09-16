@@ -27,8 +27,8 @@ def update_setting(pipeline, query):
     pipeline.token_micro_batch_num = 1
     
     pipeline.change_buffer_size()
-    if hasattr(pipeline, 'update_processors'):
-        pipeline.update_processors()
+#     if hasattr(pipeline, 'update_processors'):
+#         pipeline.update_processors()
         
 
 def to_result(
@@ -171,6 +171,9 @@ def main():
                     
                     try: 
                         
+                        logger.info("Instruction:")
+                        logger.info(str(instruction))
+                        
                         # TODO: we assume len(payload) is 1, right?
                         query = instruction['payload']['payload'][0]
                         prompt = query['prompt']
@@ -182,10 +185,13 @@ def main():
                             prompt, return_tensors='pt', padding=True, truncation=False
                         )['input_ids'].size(1)
                         seq_length = min(seq_length, 2048 - query.get('max_tokens', 1)) # 2048 is hardcoded.
+                        
+                        logger.info(f"Set input length to {seq_length}.")
                         tokenizer.model_max_length = seq_length
                         pipe.input_seq_length = seq_length
 
                         # update hyperparameters and buffers
+                        logger.info(f"Update settings.")
                         update_setting(pipe, query)
 
                         # get inputs
@@ -194,6 +200,7 @@ def main():
                         attention_mask = inputs['attention_mask'].long().to(device)
                     
                         # run inference
+                        logger.info(f"Start Inference.")
                         output_ids_list = []
                         pipe.inference_batch(input_ids, output_ids_list, attention_mask=attention_mask)
 
