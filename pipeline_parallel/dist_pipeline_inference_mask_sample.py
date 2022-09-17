@@ -50,49 +50,6 @@ class DistSampleInferenceMaskAsync(DistGreedyInferenceMaskAsync):
         self.ret_tokens[:, save_step] = indices.squeeze(-1)
         self.ret_token_logprobs[:, save_step] = logprobs.squeeze(-1)
 
-    def change_buffer_size(self):
-        if self.pp_rank == self.pipeline_group_size - 1:
-            ret_seq_length = self.generate_seq_length if not self.echo_prompt else self.input_seq_length + self.generate_seq_length - 1
-            self.ret_tokens = torch.zeros(
-                (self.seq_num * self.num_completions, ret_seq_length),
-                requires_grad=False, device=self.device, dtype=torch.int64
-            )
-            self.ret_token_logprobs = torch.zeros(
-                (self.seq_num * self.num_completions, ret_seq_length),
-                requires_grad=False, device=self.device, dtype=self.dtype
-            )
-            if self.top_k_per_token > 0:
-                self.ret_topk_tokens = torch.zeros(
-                    (self.seq_num * self.num_completions, ret_seq_length, self.top_k_per_token),
-                    requires_grad=False, device=self.device, dtype=torch.int64
-                )
-                self.ret_topk_token_logprobs = torch.zeros(
-                    (self.seq_num * self.num_completions, ret_seq_length, self.top_k_per_token),
-                    requires_grad=False, device=self.device, dtype=self.dtype
-                )
-        if self.pp_rank == 0:
-            self.recv_new_token = [torch.zeros((self.seq_num * self.num_completions, 1),
-                                               requires_grad=False, device=self.device, dtype=torch.int64)
-                                   for _ in range(self.seq_num)]
-        if self.pp_rank == self.pipeline_group_size - 1:
-            self.send_new_tokens = [torch.zeros((self.seq_num * self.num_completions, 1),
-                                                requires_grad=False, device=self.device, dtype=torch.int64)
-                                    for _ in range(self.seq_num)]
-
-        self.input_seq_emb = [torch.zeros((1, self.input_seq_length, self.embedding_dim),
-                                          requires_grad=False, device=self.device, dtype=self.dtype)
-                              for _ in range(self.seq_num)]
-        self.output_seq_emb = [torch.zeros((1, self.input_seq_length, self.embedding_dim),
-                                           requires_grad=False, device=self.device, dtype=self.dtype)
-                               for _ in range(self.seq_num)]
-        self.input_token_emb = [torch.zeros((self.seq_num * self.num_completions, 1, self.embedding_dim),
-                                            requires_grad=False, device=self.device, dtype=self.dtype)
-                                for _ in range(self.seq_num)]
-        self.output_token_emb = [
-            torch.zeros((self.seq_num * self.num_completions, 1, self.embedding_dim),
-                        requires_grad=False, device=self.device, dtype=self.dtype)
-            for _ in range(self.seq_num)]
-
     def _init_cached_seqs_and_attentions(self):
         self.merged = False
         self.cached_attention.clear()

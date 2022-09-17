@@ -92,6 +92,16 @@ class DistGreedyInferenceMaskAsync:
             self.init_event = torch.cuda.Event(enable_timing=True, blocking=False)
             self.init_time_stamp = None
 
+        self._init_buffers()
+
+        self._print_buffers()
+
+        self.cached_attention = []
+        self.layers = {}
+        self._create_layers()
+        self._init_cached_seqs_and_attentions()
+
+    def _init_buffers(self):
         if self.pp_rank == 0:
             self.recv_new_token = [torch.zeros((self.seq_num, 1),
                                                requires_grad=False, device=self.device, dtype=torch.int64)
@@ -101,17 +111,17 @@ class DistGreedyInferenceMaskAsync:
             self.send_new_tokens = [torch.zeros((self.seq_num, 1),
                                                 requires_grad=False, device=self.device, dtype=torch.int64)
                                     for _ in range(self.generate_seq_length)]
-            
+
         if self.pp_rank == self.pipeline_group_size - 1:
             self.initial_output_token_emb = torch.zeros(
                 (self.seq_num, 1, self.embedding_dim),
                 requires_grad=False, device=self.device, dtype=self.dtype
             )
 
-        self.input_seq_emb = [torch.zeros((args.micro_batch_size, self.input_seq_length, self.embedding_dim),
+        self.input_seq_emb = [torch.zeros((self.micro_batch_size, self.input_seq_length, self.embedding_dim),
                                           requires_grad=False, device=self.device, dtype=self.dtype)
                               for _ in range(self.seq_num)]
-        self.output_seq_emb = [torch.zeros((args.micro_batch_size, self.input_seq_length, self.embedding_dim),
+        self.output_seq_emb = [torch.zeros((self.micro_batch_size, self.input_seq_length, self.embedding_dim),
                                            requires_grad=False, device=self.device, dtype=self.dtype)
                                for _ in range(self.seq_num)]
         self.input_token_emb = [torch.zeros((self.seq_num, 1, self.embedding_dim),
@@ -120,44 +130,37 @@ class DistGreedyInferenceMaskAsync:
         self.output_token_emb = [torch.zeros((self.seq_num, 1, self.embedding_dim),
                                              requires_grad=False, device=self.device, dtype=self.dtype)
                                  for _ in range(self.generate_seq_length)]
-        
-        
+
         if self.pp_rank == self.pipeline_group_size - 1:
-            
             # donot support echo
             self.echo_prompt = False
             print('Echo prompt is not supported!')
-            
+
             ret_seq_length = self.generate_seq_length if not self.echo_prompt else self.input_seq_length + self.generate_seq_length - 1
-            
+
             self.ret_tokens = torch.zeros(
                 (self.seq_num, ret_seq_length),
                 requires_grad=False, device=self.device, dtype=torch.int64
             )
-            
+
             self.ret_token_logprobs = torch.zeros(
                 (self.seq_num, ret_seq_length),
                 requires_grad=False, device=self.device, dtype=self.dtype
             )
-            
+
             if self.top_k_per_token > 0:
                 self.ret_topk_tokens = torch.zeros(
                     (self.seq_num, ret_seq_length, self.top_k_per_token),
                     requires_grad=False, device=self.device, dtype=torch.int64
                 )
-                
+
                 self.ret_topk_token_logprobs = torch.zeros(
                     (self.seq_num, ret_seq_length, self.top_k_per_token),
                     requires_grad=False, device=self.device, dtype=self.dtype
                 )
 
-        self._print_buffers()
-
-        self.cached_attention = []
-        self.layers = {}
-        self._create_layers()
-        self._init_cached_seqs_and_attentions()
-        
+    def change_buffer_size(self):
+        self._init_buffers()
 
     def _print_buffers(self):
         
@@ -322,8 +325,7 @@ class DistGreedyInferenceMaskAsync:
             logprobs, indices = z.topk(k=self.top_k_per_token, dim=-1)
             self.ret_topk_tokens[:, save_step] = indices.squeeze(1)
             self.ret_topk_token_logprobs[:, save_step] = logprobs.squeeze(1)
-            
-            
+
     def _process_mask_during_generation(self, attention_mask):
         if attention_mask is not None:
             # increase one for the new token
