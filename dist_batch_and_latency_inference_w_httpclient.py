@@ -9,7 +9,7 @@ from comm.comm_utils import *
 from coordinator.http_coordinate_client import get_coordinator_client, init_coordinator_client, alias_to_model_name
 from coordinator.coordinator_client import LocalCoordinatorClient # TODO: merge two coor clients
 from task_datasets.inference_data import get_request_processor
-
+import traceback
 
 def update_setting(args, pipeline, query):
     
@@ -231,9 +231,9 @@ def main():
                         local_cord_client.update_status(
                             job_id,
                             "failed",
-                            returned_payload={"message": str(e)}
+                            returned_payload={"message": traceback.format_exc()}
                         )
-                        
+                        print(traceback.format_exc())
                         raise e
             
             sleep(10)
