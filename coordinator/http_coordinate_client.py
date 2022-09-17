@@ -24,7 +24,7 @@ def alias_to_model_name(model_alias: str) -> str:
         'EleutherAI/gpt-j-6B': 'gpt-j-6b',
         'gpt-neox-20b-new': 'gpt-neox-20b',
         'T0pp-new': 't0pp',
-        't5-11b-new': 't5-11b”',
+        't5-11b-new': 't5-11b',
         'ul2-new': 'ul2',
         'opt_66B': 'opt-66b',
         'opt-66b-new': 'opt-66b',
