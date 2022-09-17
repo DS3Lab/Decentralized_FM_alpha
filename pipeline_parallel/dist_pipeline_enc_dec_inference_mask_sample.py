@@ -26,7 +26,14 @@ class DistSampleEncDecInferenceMaskAsync(DistSampleInferenceMaskAsync):
             (args.batch_size, self.input_seq_length, self.embedding_dim),
             requires_grad=False, device=self.device, dtype=self.dtype
         )
-        
+
+    def change_buffer_size(self):
+        self._init_buffers()
+        self.encoder_seq_emb = torch.zeros(
+            (self.batch_size, self.input_seq_length, self.embedding_dim),
+            requires_grad=False, device=self.device, dtype=self.dtype
+        )
+
     def _get_embedding_size(self):
         if self.model_type == 't5':
             from modules.hf_t5_module import EncDecConfig
