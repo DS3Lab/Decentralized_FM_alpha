@@ -52,7 +52,7 @@ class DistSampleInferenceMaskAsync(DistGreedyInferenceMaskAsync):
 
     def change_buffer_size(self):
         if self.pp_rank == self.pipeline_group_size - 1:
-            ret_seq_length = self.generate_seq_length if not self.echo_prompt else self.input_seq_length + self.generate_seq_length
+            ret_seq_length = self.generate_seq_length if not self.echo_prompt else self.input_seq_length + self.generate_seq_length - 1
             self.ret_tokens = torch.zeros(
                 (self.seq_num * self.num_completions, ret_seq_length),
                 requires_grad=False, device=self.device, dtype=torch.int64
