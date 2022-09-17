@@ -4,3 +4,4 @@
 .ipynb_checkpoints
 __pycache__
 trace_json
+/us_coordinator.pem
