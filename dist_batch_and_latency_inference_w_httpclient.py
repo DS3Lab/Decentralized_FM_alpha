@@ -11,6 +11,7 @@ from coordinator.coordinator_client import LocalCoordinatorClient # TODO: merge 
 from task_datasets.inference_data import get_request_processor
 import traceback
 
+
 def update_setting(args, pipeline, query):
     
     # update pipline
@@ -109,6 +110,7 @@ def main():
     init_coordinator_client(args, alias_to_model_name(model_name_abbr))
     coord_client = get_coordinator_client()
 
+    pipe = None
     try:
         res = coord_client.notify_inference_join(args.net_interface)
         prime_ip = res['prime_ip']
@@ -133,13 +135,13 @@ def main():
             coord_client.update_status("running", returned_payload={'state': 'model_loaded'})
 
         if args.profiling == 'no-profiling':
-            avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor, client=coord_client)
+            _ = distributed_inference_mask_iter(args, pipe, device, request_processor, client=coord_client)
         else:
             prefix = './trace_json/inference_' + args.pp_mode
             trace_file = prefix + get_inference_arguments_str(args, rank=rank) + '_' + args.profiling + '_' + \
                          args.trace_postfix + '.json'
             if args.profiling == 'tidy_profiling':
-                avg_iter_time = distributed_inference_mask_iter(args, pipe, device, request_processor, client=coord_client)
+                _ = distributed_inference_mask_iter(args, pipe, device, request_processor, client=coord_client)
                 pipe.export_profiling_result(filename=trace_file)
             else:
                 print("No recognized profiler?")
@@ -149,10 +151,8 @@ def main():
     except Exception as e:
         print('Exception in batch inference:', e)
         coord_client.update_status("failed", returned_payload={'message': str(e)})
-        
-        
+
     try:
-        
         local_cord_client = LocalCoordinatorClient(
             working_directory="/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/new/working_dir/",
             coordinator_url="https://coordinator.shift.ml/eth",
@@ -173,7 +173,8 @@ def main():
                 sleep(10)
             elif last_instruction["message"] == "run":
                 for instruction in [x for x in instructions if x["message"] == "run"]:
-                    
+
+                    job_id = None
                     try: 
                         
                         logger.info("Instruction:")
@@ -237,7 +238,6 @@ def main():
                         raise e
             
             sleep(10)
-            
             
     except Exception as e:
         print('Exception in latency inference:', e)
