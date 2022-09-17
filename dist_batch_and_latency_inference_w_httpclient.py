@@ -227,13 +227,13 @@ def main():
                             )
                             
                     except Exception as e:
-                        
+                        error = traceback.format_exc()
                         local_cord_client.update_status(
                             job_id,
                             "failed",
-                            returned_payload={"message": traceback.format_exc()}
+                            returned_payload={"message": error}
                         )
-                        print(traceback.format_exc())
+                        print(error)
                         raise e
             
             sleep(10)
