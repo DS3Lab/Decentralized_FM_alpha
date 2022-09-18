@@ -24,9 +24,11 @@ def update_setting(args, pipeline, query):
     pipeline.top_p = query.get('top_p', 1.0)
 
     # in latency scenario, batch size is 1
+    pipeline.batch_size = 1
     pipeline.seq_num = 1
     pipeline.token_micro_batch_size = 1
     pipeline.token_micro_batch_num = 1
+    pipeline.micro_batch_size = 1
     
     # update args
     args.top_p = pipeline.top_p
