@@ -14,17 +14,20 @@ class DistSampleEncDecInferenceMaskAsync(DistSampleInferenceMaskAsync):
     def __init__(self, args, device, rank=None):
         super().__init__(args, device, rank=rank)
         self.num_completions = args.num_completions
+        self.update_processors(args)
+        
+        self.encoder_seq_emb = torch.zeros(
+            (self.seq_num * self.micro_batch_size, self.input_seq_length, self.embedding_dim),
+            requires_grad=False, device=self.device, dtype=self.dtype
+        )
+        
+    def update_processors(self, args):
         self.logits_processor = get_logits_processor()
         self.logits_warper = get_logits_warper(
             top_k = (None if args.top_k is None or args.top_k == 0 else args.top_k),
             top_p = (None if args.top_p is None or args.top_p <= 0 else args.top_p),
             temperature = args.temperature,
             num_beams = 1,
-        )
-        
-        self.encoder_seq_emb = torch.zeros(
-            (self.seq_num * self.micro_batch_size, self.input_seq_length, self.embedding_dim),
-            requires_grad=False, device=self.device, dtype=self.dtype
         )
 
     def change_buffer_size(self):
