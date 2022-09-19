@@ -52,5 +52,5 @@ class LocalCoordinatorClient:
             return False, None
         return True, object_name
     
-    def fetch_instructions(self, model_name):
-        return requests.get(self.coordinator_url+f"/instructions/{model_name}").json()
+    def fetch_instructions(self, model_name, rank):
+        return requests.get(self.coordinator_url+f"/instructions/{model_name}/{rank}").json()

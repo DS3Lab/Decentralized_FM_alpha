@@ -164,7 +164,7 @@ def main():
         while True:
             
             # TODO: please check here
-            instructions = local_cord_client.fetch_instructions(alias_to_model_name(model_name_abbr))
+            instructions = local_cord_client.fetch_instructions(alias_to_model_name(model_name_abbr), rank)
             last_instruction = instructions[-1]
             
             if last_instruction["message"] == "break":
