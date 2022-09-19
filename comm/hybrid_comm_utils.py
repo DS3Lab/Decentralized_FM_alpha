@@ -1,4 +1,4 @@
-from .nccl_backend import *
+from .cupy_nccl_backend import *
 
 
 _GPU_PIPELINE_COMM = None
@@ -7,7 +7,7 @@ _GPU_PIPELINE_WORLD_SIZE = None
 _CPU_RANKS = None
 
 
-def get_gpu_pipeline_comm() -> NCCLCommunicator:
+def get_gpu_pipeline_comm() -> CuPyNCCLCommunicator:
     assert _GPU_PIPELINE_COMM is not None
     return _GPU_PIPELINE_COMM
 
@@ -54,7 +54,7 @@ def _init_hybrid_communicators(args, rank=None):
     _GPU_PIPELINE_WORLD_SIZE = args.pipeline_group_size
     if rank < args.pipeline_group_size:
         _GPU_PIPELINE_RANK = rank
-        _GPU_PIPELINE_COMM = NCCLCommunicator(_GPU_PIPELINE_RANK, args.cuda_id, args.pipeline_group_size,
+        _GPU_PIPELINE_COMM = CuPyNCCLCommunicator(_GPU_PIPELINE_RANK, args.cuda_id, args.pipeline_group_size,
                                               "pipeline_GPU_group")
     _CPU_RANKS = [i for i in range(args.pipeline_group_size, args.world_size)]
 

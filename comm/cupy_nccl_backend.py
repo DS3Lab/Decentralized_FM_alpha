@@ -36,7 +36,7 @@ def _type_torch_to_cupy(torch_type: torch.dtype):
     return mappings[torch_type]
 
 
-class NCCLCommunicator:
+class CuPyNCCLCommunicator:
     def __init__(self,
                  comm_rank: int,
                  cuda_id: int,

@@ -3,7 +3,7 @@ import torch
 import argparse
 import time
 import torch.distributed as dist
-from comm.nccl_backend import NCCLCommunicator
+from comm.cupy_nccl_backend import CuPyNCCLCommunicator
 
 
 def test_send_recv_cpu(args, device, communicator):
@@ -137,8 +137,8 @@ def main():
         device = torch.device('cpu')
     if args.dist_backend == 'cupy_nccl':
         dist.init_process_group(backend='gloo', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
-        communicator = NCCLCommunicator(comm_rank=args.rank, cuda_id=args.cuda_id,
-                                        comm_group_size=args.world_size, comm_name="foo")
+        communicator = CuPyNCCLCommunicator(comm_rank=args.rank, cuda_id=args.cuda_id,
+                                            comm_group_size=args.world_size, comm_name="foo")
     else:
         dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
                                 rank=args.rank, world_size=args.world_size)
