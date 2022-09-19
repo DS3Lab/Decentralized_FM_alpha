@@ -82,7 +82,7 @@ def main():
             has_updated = False
             while not has_updated:
                 try:
-                    res = coord_client.update_status("running", returned_payload={'result': request_processor.data})
+                    res = coord_client.update_status("finished", returned_payload={'result': request_processor.data})
                     if res.json()['status'] == 'finished':
                         has_updated = True
                 except Exception as e:
