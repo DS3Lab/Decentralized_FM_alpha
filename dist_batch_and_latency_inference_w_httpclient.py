@@ -29,7 +29,8 @@ def update_setting(args, pipeline, query):
     pipeline.token_micro_batch_size = 1
     pipeline.token_micro_batch_num = 1
     pipeline.micro_batch_size = 1
-    
+
+    print("<update_setting> generate_seq_length:", pipeline.generate_seq_length)
     # update args
     args.top_p = pipeline.top_p
     

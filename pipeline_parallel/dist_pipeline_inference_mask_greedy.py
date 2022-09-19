@@ -69,6 +69,7 @@ class DistGreedyInferenceMaskAsync:
         self._init_cached_seqs_and_attentions()
 
     def _init_events(self):
+        print("=========_init_events=========")
         self.forward_seq_recv_ready_events = [torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
                                               for _ in range(self.seq_num)]
         self.forward_seq_comp_ready_events = [torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
@@ -106,6 +107,7 @@ class DistGreedyInferenceMaskAsync:
             self.init_time_stamp = None
 
     def _init_buffers(self):
+        print("=========_init_buffers=========")
         if self.pp_rank == 0:
             self.recv_new_token = [torch.zeros((self.seq_num, 1),
                                                requires_grad=False, device=self.device, dtype=torch.int64)
