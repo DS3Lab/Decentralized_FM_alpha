@@ -58,14 +58,27 @@ class DistGreedyInferenceMaskAsync:
         self.torch_recv_stream = torch.cuda.Stream(device=device, priority=-1)
         self.torch_send_stream = torch.cuda.Stream(device=device, priority=0)
 
+        self._init_events()
+        self._init_buffers()
+
+        self._print_buffers()
+
+        self.cached_attention = []
+        self.layers = {}
+        self._create_layers()
+        self._init_cached_seqs_and_attentions()
+
+    def _init_events(self):
         self.forward_seq_recv_ready_events = [torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
                                               for _ in range(self.seq_num)]
         self.forward_seq_comp_ready_events = [torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
                                               for _ in range(self.seq_num)]
-        self.forward_token_recv_ready_events = [torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
-                                                for _ in range(self.generate_seq_length)]
-        self.forward_token_comp_ready_events = [torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
-                                                for _ in range(self.generate_seq_length)]
+        self.forward_token_recv_ready_events = [
+            torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
+            for _ in range(self.generate_seq_length)]
+        self.forward_token_comp_ready_events = [
+            torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
+            for _ in range(self.generate_seq_length)]
 
         if self.enable_tidy_profiling:
             self.profiling_log = []
@@ -84,22 +97,13 @@ class DistGreedyInferenceMaskAsync:
                                                         for _ in range(self.generate_seq_length)]
             else:
                 self.forward_token_comp_start_events = [torch.cuda.Event(enable_timing=True, blocking=False)
-                                                        for _ in range(self.generate_seq_length+1)]
+                                                        for _ in range(self.generate_seq_length + 1)]
             self.forward_token_send_start_events = [torch.cuda.Event(enable_timing=True, blocking=False)
                                                     for _ in range(self.generate_seq_length)]
             self.forward_token_send_end_events = [torch.cuda.Event(enable_timing=True, blocking=False)
                                                   for _ in range(self.generate_seq_length)]
             self.init_event = torch.cuda.Event(enable_timing=True, blocking=False)
             self.init_time_stamp = None
-
-        self._init_buffers()
-
-        self._print_buffers()
-
-        self.cached_attention = []
-        self.layers = {}
-        self._create_layers()
-        self._init_cached_seqs_and_attentions()
 
     def _init_buffers(self):
         if self.pp_rank == 0:
@@ -160,6 +164,7 @@ class DistGreedyInferenceMaskAsync:
                 )
 
     def change_buffer_size(self):
+        self._init_events()
         self._init_buffers()
 
     def _print_buffers(self):
