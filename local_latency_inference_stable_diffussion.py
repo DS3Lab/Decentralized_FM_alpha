@@ -104,7 +104,7 @@ def main():
     # now finished the primary job, waiting and keep fetching instructions for next steps
     while True:
 
-        instructions = local_cord_client.fetch_instructions("stable_diffusion")
+        instructions = local_cord_client.fetch_instructions("stable_diffusion", 0)
         last_instruction = instructions[-1]
         if last_instruction["message"] == "break":
             logger.info("Received stop instruction.")
