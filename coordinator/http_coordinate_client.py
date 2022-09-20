@@ -56,11 +56,23 @@ class CoordinatorInferenceHTTPClient:
                              json={"ip": ip}).json()
 
     def update_status(self, new_status, returned_payload=None):
-        return requests.post(f"https://coordinator.shift.ml/eth/update_status/{self.job_id}", json={
-            "status": new_status,
-            "returned_payload": returned_payload,
-            "timestamp": time.time()
-        })
+        res = None
+        for i in range(5):
+            try:
+                res = requests.post(f"https://coordinator.shift.ml/eth/update_status/{self.job_id}", json={
+                    "status": new_status,
+                    "returned_payload": returned_payload,
+                    "timestamp": time.time()
+                })
+                if res.json()['status'] == new_status or res.json()['status'] == 'finished':
+                    break
+            except Exception as e:
+                pass
+            print(f"Failed to update status to coordinator, retrying {i} time...")
+            time.sleep(5)
+        else:
+            print("Failed to update status to coordinator!")
+        return res
 
     def load_input_job_from_dfs(self, job_id, return_path=False):
         doc_path = os.path.join(self.dir_path, 'input_' + job_id + '.json')
