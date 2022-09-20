@@ -53,3 +53,6 @@ cd ~
 git clone https://github.com/BinhangYuan/tc_cluster_setting.git
 git config credential.helper 'cache --timeout=30000'
 cd ~
+
+# Follow this link to fix the installation on Datacrunch
+# https://github.com/pytorch/pytorch/issues/35710#
