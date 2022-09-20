@@ -31,6 +31,7 @@ class DistSampleEncDecInferenceMaskAsync(DistSampleInferenceMaskAsync):
         )
 
     def change_buffer_size(self):
+        self._init_events()
         self._init_buffers()
         self.encoder_seq_emb = torch.zeros(
             (self.seq_num * self.micro_batch_size, self.input_seq_length, self.embedding_dim),

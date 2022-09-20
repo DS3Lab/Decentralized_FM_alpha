@@ -50,6 +50,7 @@ class DummyRequestProcessor:
         self.top_k_per_token = args.top_k_per_token
         self.num_completions = args.num_completions
         self.max_tokens = args.generate_seq_length
+        self.stop = args.stop
         
         if (args.echo_prompt and args.input_seq_length == self.tokenizer.model_max_length+1 and args.generate_seq_length==0):
             # special case! to support 2049 tokens
@@ -124,6 +125,19 @@ class DummyRequestProcessor:
                         if choice['logprobs']['top_logprobs'] is not None:
                             choice['logprobs']['top_logprobs'][0] = None    
                 item['choices'].append(choice)
+
+            # handle early stop
+            for c in item['choices']:
+                c['finish_reason'] = 'length'
+
+            if self.stop is not None:
+                for c in item['choices']:
+                    for stop in self.stop:
+                        if stop in c['text']:
+                            c['text'] = c['text'][:c['text'].find(stop)]
+                            c['finish_reason'] = 'stop'
+                            
+            for choice in item['choices']:
                 print([choice['text']])
         
     def write_scenario_state(self):
@@ -343,6 +357,17 @@ class RequestProcessor:
                         c['index'] = _i
             except:
                 print('fail to sort choices')
+                
+            # handle early stop
+            for c in item['choices']:
+                c['finish_reason'] = 'length'
+
+            if self.stop is not None:
+                for c in item['choices']:
+                    for stop in self.stop:
+                        if stop in c['text']:
+                            c['text'] = c['text'][:c['text'].find(stop)]
+                            c['finish_reason'] = 'stop'
         
     def write_scenario_state(self):
         with open(self.output_path, 'w') as f:

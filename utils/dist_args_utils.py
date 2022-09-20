@@ -76,6 +76,7 @@ def add_training_model_arguments(parser):
     parser.add_argument('--task', type=str, default='SeqClassification', metavar='S',
                         help='What task to run? SeqClassification or Seq2SeqClassification')
 
+
 def add_finetuning_model_arguments(parser):
     parser.add_argument('--model-name', type=str, default='gpt2', metavar='S',
                         help='model name or path')
