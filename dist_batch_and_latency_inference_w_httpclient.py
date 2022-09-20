@@ -1,4 +1,5 @@
 import os
+import time
 from time import sleep
 import argparse
 from loguru import logger
@@ -162,7 +163,17 @@ def main():
         )
         tokenizer = get_tokenizer(args)
         
+        begin_time = time.time()
+        max_time = 3600
+        
         while True:
+            
+            now = time.time()
+            if now - begin_time > max_time:
+                logger.info("Reaching max time. Exit interactive mode.")
+                break
+            else:
+                logger.info(f"{now - begin_time} seconds remaining for interactive mode.")
             
             # TODO: please check here
             instructions = local_cord_client.fetch_instructions(alias_to_model_name(model_name_abbr), rank)
