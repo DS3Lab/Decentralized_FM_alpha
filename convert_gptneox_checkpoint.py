@@ -21,6 +21,26 @@ if __name__ == '__main__':
     torch.save(item, 'gpt-neox-20b-new/pytorch_embs.pt')
 
 
+    ## out
+    item = {}
+    item['embed_out.weight'] = torch.load(
+        'gpt-neox-20b/' + index['weight_map']['embed_out.weight'],
+        map_location=torch.device('cpu'),
+    )['embed_out.weight']
+
+    item['final_layer_norm.weight'] = torch.load(
+        'gpt-neox-20b/' + index['weight_map']['gpt_neox.final_layer_norm.weight'],
+        map_location=torch.device('cpu'),
+    )['gpt_neox.final_layer_norm.weight']
+
+    item['final_layer_norm.bias'] = torch.load(
+        'gpt-neox-20b/' + index['weight_map']['gpt_neox.final_layer_norm.bias'],
+        map_location=torch.device('cpu'),
+    )['gpt_neox.final_layer_norm.bias']
+
+    torch.save(item, 'gpt-neox-20b-new/pytorch_lm_head.pt')
+    
+    
     ## layers
 
     for i in range(0, 44):
