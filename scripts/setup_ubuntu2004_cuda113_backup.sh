@@ -54,5 +54,5 @@ git clone https://github.com/BinhangYuan/tc_cluster_setting.git
 git config credential.helper 'cache --timeout=30000'
 cd ~
 
-# Follow this link to fix the installation on Datacrunch
+# Follow this link to fix the installation on Datacrunch (Remember to use the instance without any cuda+docker)
 # https://github.com/pytorch/pytorch/issues/35710#
