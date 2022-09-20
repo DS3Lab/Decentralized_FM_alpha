@@ -230,8 +230,8 @@ class RequestProcessor:
                     print('warn: budget is not set, will set batch size to 1')
                     budget = 1
 
-                args.token_micro_batch_size = 2 # TODO: hard code
-                args.batch_size = max(budget // ((args.input_seq_length + args.generate_seq_length)*self.num_completions), 2) // args.token_micro_batch_size * args.token_micro_batch_size
+                #args.token_micro_batch_size = 2 # TODO: hard code
+                args.batch_size = max(budget // ((args.input_seq_length + args.generate_seq_length)*self.num_completions), args.token_micro_batch_size) // args.token_micro_batch_size * args.token_micro_batch_size
                 args.batch_size = min(args.batch_size, 64) # TODO: if batch size is too large, the comm will stuck.
                 #args.token_micro_batch_size = args.batch_size
 

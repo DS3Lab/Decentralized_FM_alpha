@@ -309,7 +309,7 @@ def add_inference_details_arguments(parser):
                         help='sample from top p')
     parser.add_argument('--temperature', type=float, default=0, metavar='S',
                         help='temperature on logits')
-    parser.add_argument('--token-micro-batch-size', type=int, default=1, metavar='S',
+    parser.add_argument('--token-micro-batch-size', type=int, default=2, metavar='S',
                         help='token generation micro batch size.')
     parser.add_argument('--prompt-micro-batch-size', type=int, default=1, metavar='S',
                         help='token generation micro batch size.')
