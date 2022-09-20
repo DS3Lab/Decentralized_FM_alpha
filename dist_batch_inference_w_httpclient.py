@@ -79,26 +79,28 @@ def main():
                 print("No recognized profiler?")
                 assert False
         if get_pipeline_parallel_rank() == get_pipeline_parallel_world_size()-1:
-            has_updated = False
-            while not has_updated:
-                try:
-                    res = coord_client.update_status("finished", returned_payload={'result': request_processor.data})
-                    if res.json()['status'] == 'finished':
-                        has_updated = True
-                except Exception as e:
-                    print("Failed to update status to coordinator, retrying...")
-                    time.sleep(5)
+            coord_client.update_status("finished", returned_payload={'result': request_processor.data})
+#             has_updated = False
+#             while not has_updated:
+#                 try:
+#                     res = coord_client.update_status("finished", returned_payload={'result': request_processor.data})
+#                     if res.json()['status'] == 'finished':
+#                         has_updated = True
+#                 except Exception as e:
+#                     print("Failed to update status to coordinator, retrying...")
+#                     time.sleep(5)
     except Exception as e:
         print('Exception:', e)
-        has_updated = False
-        while not has_updated:
-            try:
-                res = coord_client.update_status("failed", returned_payload={'message': str(e)})
-                if res.json()['status'] == 'failed':
-                    has_updated = True
-            except Exception as e:
-                print("Failed to update status to coordinator, retrying...")
-                time.sleep(5)
+        coord_client.update_status("failed", returned_payload={'message': str(e)})
+#         has_updated = False
+#         while not has_updated:
+#             try:
+#                 res = coord_client.update_status("failed", returned_payload={'message': str(e)})
+#                 if res.json()['status'] == 'failed':
+#                     has_updated = True
+#             except Exception as e:
+#                 print("Failed to update status to coordinator, retrying...")
+#                 time.sleep(5)
 
 if __name__ == '__main__':
     main()
