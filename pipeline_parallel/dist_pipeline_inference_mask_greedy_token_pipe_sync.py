@@ -586,19 +586,29 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             self.profile_token_pipeline_step(step)
 
     def inference_batch(self, input_=None, output_=None, attention_mask=None):
-        self._init_cached_seqs_and_attentions()  # TODO: should I put here
+        print(f"<inference_batch> rank-<{self.pp_rank}> Enter!")
         self.comm.barrier()
+        print(f"<inference_batch> rank-<{self.pp_rank}> after first barrier!")
+        self._init_cached_seqs_and_attentions()  # TODO: should I put here
+        print(f"<inference_batch> rank-<{self.pp_rank}> after first _init_cached_seqs_and_attentions!")
+        self.comm.barrier()
+        print(f"<inference_batch> rank-<{self.pp_rank}> after second barrier!")
         start_time = time.time()
         if self.enable_tidy_profiling:
             torch.cuda.synchronize()
             self.init_time_stamp = time.time() * 1e+6
             self.init_event.record()
-        
+
+        print(f"<inference_batch> rank-<{self.pp_rank}> enter computation!")
         with torch.no_grad():
             self.forward_seq_pipeline_stage(input_data=input_, attention_mask=attention_mask)
+            print(f"<inference_batch> rank-<{self.pp_rank}> forward_seq_pipeline_stage is done!")
             self.forward_new_token_pipeline_stage(attention_mask=attention_mask)
+            print(f"<inference_batch> rank-<{self.pp_rank}> forward_seq_pipeline_stage is done!")
 
         self.comm.barrier()
+        print(f"<inference_batch> rank-<{self.pp_rank}> after third barrier!")
+
         if self.pp_rank == self.pipeline_group_size - 1 and output_ is not None:
             
             # token_micro_batch_num * num_completions
@@ -607,7 +617,9 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             if self.top_k_per_token > 0:
                 ret_topk_tokens = self.ret_topk_tokens[:, :self.i_current_token].cpu().split(self.token_micro_batch_size)
                 ret_topk_token_logprobs = self.ret_topk_token_logprobs[:, :self.i_current_token].cpu().split(self.token_micro_batch_size)
-            
+
+            print(f"<inference_batch> rank-<{self.pp_rank}> after marker1 !")
+
             for i in range(self.num_completions):
                 item = {
                     'token_ids': torch.cat(ret_tokens[i::self.num_completions], 0),
@@ -617,6 +629,8 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
                     item['topk_ids'] = torch.cat(ret_topk_tokens[i::self.num_completions], 0)
                     item['topk_logprobs'] = torch.cat(ret_topk_token_logprobs[i::self.num_completions], 0)
                 output_.append(item)
+            print(f"<inference_batch> rank-<{self.pp_rank}> after marker2 !")
+
         end_time = time.time()
         iter_time = end_time - start_time
         print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
