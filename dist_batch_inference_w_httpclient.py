@@ -26,7 +26,7 @@ def main():
                         help='network interface name.')
     args = parser.parse_args()
     print_arguments(args)
-    torch.manual_seed(args.seed)
+    # torch.manual_seed(args.seed)
     if args.use_cuda:
         assert (torch.cuda.is_available())
         device = torch.device('cuda', args.cuda_id)
