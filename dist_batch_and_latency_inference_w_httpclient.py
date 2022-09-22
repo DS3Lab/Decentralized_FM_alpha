@@ -34,6 +34,7 @@ def update_setting(args, pipeline, query):
     print("<update_setting> generate_seq_length:", pipeline.generate_seq_length)
     # update args
     args.top_p = pipeline.top_p
+    args.temperature = pipeline.temperature
     
     pipeline.change_buffer_size()
     if hasattr(pipeline, 'update_processors'):
