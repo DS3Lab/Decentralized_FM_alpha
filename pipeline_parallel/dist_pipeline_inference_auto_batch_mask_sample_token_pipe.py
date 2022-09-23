@@ -11,23 +11,14 @@ class DistInferenceMaskTokenPipeAutoBatch:
         print("=======Initialize Dist Inference(DistInferenceMaskTokenPipeAutoBatch).=======")
         self.device = device
         self.coord_client = get_coordinator_client()
-
-        self.echo_prompt = args.echo_prompt
-        self.num_completions = args.num_completions
-        self.top_k_per_token = args.top_k_per_token
+        # Model info for pipeline
         self.max_layers = args.max_layers
         self.num_layers = args.num_layers
         self.model_name = args.model_name
         self.model_type = args.model_type
+        self.embedding_dim = self._get_embedding_size()
         self._layer_begin = args.num_layers * get_pipeline_parallel_rank()
         self._layer_end = args.num_layers * (get_pipeline_parallel_rank() + 1)
-
-        self.stop = args.stop
-        if self.stop is not None:
-            from task_datasets.inference_data import get_tokenizer
-            self.tokenizer = get_tokenizer(args)
-            self.stop_flag = torch.zeros(1, requires_grad=False, device=device).long()
-
         if args.fp16:
             self.use_fp16 = True
             print("=======Gpipe use FP16=======")
@@ -36,6 +27,19 @@ class DistInferenceMaskTokenPipeAutoBatch:
             print("=======Gpipe use FP32=======")
         self.dtype = torch.float16 if self.use_fp16 else torch.float32
 
+        # Inference setting hyper-parameters
+        self.echo_prompt = args.echo_prompt
+        self.num_completions = args.num_completions
+        self.top_k_per_token = args.top_k_per_token
+        self.stop = args.stop
+        if self.stop is not None:
+            from task_datasets.inference_data import get_tokenizer
+            self.tokenizer = get_tokenizer(args)
+            self.stop_flag = torch.zeros(1, requires_grad=False, device=device).long()
+        self.input_seq_length = args.input_seq_length
+        self.generate_seq_length = args.generate_seq_length
+
+        # Pipeline info
         self.pipeline_group_size = args.pipeline_group_size
         self.pp_rank = get_pipeline_parallel_rank()  # Rank is the pipeline rank by default.
         self.pre_node_rank = self.pp_rank - 1
@@ -44,9 +48,6 @@ class DistInferenceMaskTokenPipeAutoBatch:
 
         self.micro_batch_size = 1
         self.seq_num = args.batch_size
-        self.input_seq_length = args.input_seq_length
-        self.generate_seq_length = args.generate_seq_length
-        self.embedding_dim = self._get_embedding_size()
 
         assert (self.seq_num % args.token_micro_batch_size == 0)
         self.token_micro_batch_size = args.token_micro_batch_size
@@ -59,7 +60,6 @@ class DistInferenceMaskTokenPipeAutoBatch:
         self._print_buffers()
 
         self.cached_attention = []
-
         self._init_cached_seqs_and_attentions()
 
         self.logits_processor = get_logits_processor()  # not needed now
@@ -70,6 +70,76 @@ class DistInferenceMaskTokenPipeAutoBatch:
             num_beams=1,
         )
         self.update_processors(args)
+
+    def _create_layers(self):
+        if self.model_type == 'gpt2':
+            from modules.hf_gpt2_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'gptj':
+            from modules.hf_gptj_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'gptneox':
+            from modules.hf_gptneox_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'opt':
+            from modules.hf_opt_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'bloom':
+            from modules.hf_bloom_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'yalm':
+            from modules.yalm_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'glm':
+            from modules.glm_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        else:
+            raise Exception(f'unknown model type {self.model_type}')
+
+        if self.pp_rank == 0:
+            self.layers['emb'] = GPTEmbeddings.from_pretrained(self.model_name).to(self.dtype).eval().to(self.device)
+        for layer_index in range(self.num_layers):
+            # global layer indexing could be an argument
+            global_layer_index = self.num_layers * self.pp_rank + layer_index
+            # in case the total number of layers are not dividable by pipeline group size.
+            if self.max_layers is not None and global_layer_index >= self.max_layers:
+                self.num_layers = layer_index
+                break
+            print(f'loading layer {global_layer_index}')
+            self.layers['block' + str(layer_index)] = GPTBlock.from_pretrained(
+                self.model_name, layer_index=global_layer_index).to(self.dtype).eval().to(self.device)
+            if self.coord_client:
+                self.coord_client.update_status('running', returned_payload={
+                    'rank': self.pp_rank, 'loaded_layer': layer_index, 'total_layer': self.num_layers})
+        if self.pp_rank == self.pipeline_group_size - 1:
+            self.layers['lm'] = GPTLMHead.from_pretrained(
+                self.model_name
+            ).to(self.dtype).eval().to(self.device)
+
+    def _get_embedding_size(self):
+        if self.model_type == 'gpt2':
+            from modules.hf_gpt2_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.n_embd
+        elif self.model_type == 'gptj':
+            from modules.hf_gptj_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.n_embd
+        elif self.model_type == 'gptneox':
+            from modules.hf_gptneox_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.hidden_size
+        elif self.model_type == 'opt':
+            from modules.hf_opt_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.hidden_size
+        elif self.model_type == 'bloom':
+            from modules.hf_bloom_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.hidden_size
+        elif self.model_type == 'yalm':
+            from modules.yalm_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.hidden_size
+        elif self.model_type == 'glm':
+            from modules.glm_module import GPTConfig
+            config = GPTConfig.from_pretrained(self.model_name)
+            return config.hidden_size
+        else:
+            raise Exception(f'unknown model type {self.model_type}')
 
     def _init_buffers(self):
         if self.pp_rank == self.pipeline_group_size - 1:
@@ -222,75 +292,9 @@ class DistInferenceMaskTokenPipeAutoBatch:
                   .format(token_emb_num * 4 // 1024 // 1024, self.output_token_emb[0].shape,
                           self.token_micro_batch_num))
 
-    def _get_embedding_size(self):
-        if self.model_type == 'gpt2':
-            from modules.hf_gpt2_module import GPTConfig
-            config = GPTConfig.from_pretrained(self.model_name)
-            return config.n_embd
-        elif self.model_type == 'gptj':
-            from modules.hf_gptj_module import GPTConfig
-            config = GPTConfig.from_pretrained(self.model_name)
-            return config.n_embd
-        elif self.model_type == 'gptneox':
-            from modules.hf_gptneox_module import GPTConfig
-            config = GPTConfig.from_pretrained(self.model_name)
-            return config.hidden_size
-        elif self.model_type == 'opt':
-            from modules.hf_opt_module import GPTConfig
-            config = GPTConfig.from_pretrained(self.model_name)
-            return config.hidden_size
-        elif self.model_type == 'bloom':
-            from modules.hf_bloom_module import GPTConfig
-            config = GPTConfig.from_pretrained(self.model_name)
-            return config.hidden_size
-        elif self.model_type == 'yalm':
-            from modules.yalm_module import GPTConfig
-            config = GPTConfig.from_pretrained(self.model_name)
-            return config.hidden_size
-        elif self.model_type == 'glm':
-            from modules.glm_module import GPTConfig
-            config = GPTConfig.from_pretrained(self.model_name)
-            return config.hidden_size
-        else:
-            raise Exception(f'unknown model type {self.model_type}')
 
-    def _create_layers(self):
-        if self.model_type == 'gpt2':
-            from modules.hf_gpt2_module import GPTEmbeddings, GPTBlock, GPTLMHead
-        elif self.model_type == 'gptj':
-            from modules.hf_gptj_module import GPTEmbeddings, GPTBlock, GPTLMHead
-        elif self.model_type == 'gptneox':
-            from modules.hf_gptneox_module import GPTEmbeddings, GPTBlock, GPTLMHead
-        elif self.model_type == 'opt':
-            from modules.hf_opt_module import GPTEmbeddings, GPTBlock, GPTLMHead
-        elif self.model_type == 'bloom':
-            from modules.hf_bloom_module import GPTEmbeddings, GPTBlock, GPTLMHead
-        elif self.model_type == 'yalm':
-            from modules.yalm_module import GPTEmbeddings, GPTBlock, GPTLMHead
-        elif self.model_type == 'glm':
-            from modules.glm_module import GPTEmbeddings, GPTBlock, GPTLMHead
-        else:
-            raise Exception(f'unknown model type {self.model_type}')
 
-        if self.pp_rank == 0:
-            self.layers['emb'] = GPTEmbeddings.from_pretrained(self.model_name).to(self.dtype).eval().to(self.device)
-        for layer_index in range(self.num_layers):
-            # global layer indexing could be an argument
-            global_layer_index = self.num_layers * self.pp_rank + layer_index
-            if self.max_layers is not None and global_layer_index >= self.max_layers:
-                # TODO: this is a hack
-                self.num_layers = layer_index
-                break
-            print(f'loading layer {global_layer_index}')
-            self.layers['block' + str(layer_index)] = GPTBlock.from_pretrained(
-                self.model_name, layer_index=global_layer_index).to(self.dtype).eval().to(self.device)
-            if self.coord_client:
-                self.coord_client.update_status('running', returned_payload={
-                    'rank': self.pp_rank, 'loaded_layer': layer_index, 'total_layer': self.num_layers})
-        if self.pp_rank == self.pipeline_group_size - 1:
-            self.layers['lm'] = GPTLMHead.from_pretrained(
-                self.model_name
-            ).to(self.dtype).eval().to(self.device)
+
 
     def _merge_cached_seqs_and_attentions(self):
         if not self.echo_prompt:
