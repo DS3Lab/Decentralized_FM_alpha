@@ -6,9 +6,9 @@ from modules.generation_utils import get_logits_warper
 from coordinator.http_coordinate_client import get_coordinator_client
 
 
-class DistInferenceMaskTokenPipeAutoBatch:
+class DistInferenceMaskTokenPipeHomoBatch:
     def __init__(self, args, device):
-        print("=======Initialize Dist Inference(DistInferenceMaskTokenPipeAutoBatch).=======")
+        print("=======Initialize Dist Inference(DistInferenceMaskTokenPipeHomoBatch).=======")
         self.device = device
         self.coord_client = get_coordinator_client()
         # Model info for pipeline
@@ -38,6 +38,13 @@ class DistInferenceMaskTokenPipeAutoBatch:
             self.stop_flag = torch.zeros(1, requires_grad=False, device=device).long()
         self.input_seq_length = args.input_seq_length
         self.generate_seq_length = args.generate_seq_length
+        self.logits_warper = get_logits_warper(
+            top_k=args.top_k,
+            top_p=args.top_p,
+            temperature=args.temperature,
+            num_beams=1,
+        )
+        self.update_processors(args)
 
         # Pipeline info
         self.pipeline_group_size = args.pipeline_group_size
@@ -61,14 +68,6 @@ class DistInferenceMaskTokenPipeAutoBatch:
 
         self.cached_attention = []
         self._init_cached_seqs_and_attentions()
-
-        self.logits_warper = get_logits_warper(
-            top_k=args.top_k,
-            top_p=args.top_p,
-            temperature=args.temperature,
-            num_beams=1,
-        )
-        self.update_processors(args)
 
     def _create_layers(self):
         if self.model_type == 'gpt2':
