@@ -2,7 +2,7 @@ import time
 import torch.nn.functional as func
 import torch.nn.functional
 from comm.comm_utils import *
-from modules.generation_utils import get_logits_processor, get_logits_warper
+from modules.generation_utils import get_logits_warper
 from coordinator.http_coordinate_client import get_coordinator_client
 
 
@@ -62,7 +62,6 @@ class DistInferenceMaskTokenPipeAutoBatch:
         self.cached_attention = []
         self._init_cached_seqs_and_attentions()
 
-        self.logits_processor = get_logits_processor()  # not needed now
         self.logits_warper = get_logits_warper(
             top_k=args.top_k,
             top_p=args.top_p,
@@ -186,72 +185,6 @@ class DistInferenceMaskTokenPipeAutoBatch:
                                              requires_grad=False, device=self.device, dtype=self.dtype)
                                  for _ in range(self.token_micro_batch_num)]
 
-    def change_buffer_size(self):
-        self._init_buffers()
-
-    def _init_cached_seqs_and_attentions(self):
-        self._is_merged = False
-        if not self.echo_prompt:
-            self.i_current_token = 0
-        else:
-            self.i_current_token = self.input_seq_length
-
-        self.cached_attention.clear()
-        for _ in range(self.num_layers):
-            self.cached_attention.append([None for _ in range(self.seq_num)])
-
-        self.token_cached_attention = []
-        for _ in range(self.num_layers):
-            self.token_cached_attention.append([None for _ in range(self.seq_num)])
-
-        if self.stop is not None:
-            self.stop_flag[:] = 0
-
-    def update_processors(self, args):
-        self.logits_processor = get_logits_processor()
-        self.logits_warper = get_logits_warper(
-            top_k=(None if args.top_k is None or args.top_k == 0 else args.top_k),
-            top_p=(None if args.top_p is None or args.top_p <= 0 else args.top_p),
-            temperature=args.temperature,
-            num_beams=1,
-        )
-
-    def _generate_new_token_sampling(self, index):
-        assert self.pp_rank == self.pipeline_group_size - 1
-        z = self.layers['lm'](self.output_token_emb[index])
-        if torch.isnan(z).any():
-            print('containing nan, setting them to zero!')
-            print(z)
-        z = z.float().nan_to_num()  # test if fp32 whether cause inf
-        z = torch.nn.functional.log_softmax(z, -1)
-
-        if self.top_k_per_token > 0:
-            logprobs, indices = z.topk(k=self.top_k_per_token, dim=-1)
-            self.ret_topk_tokens[index * self.token_micro_batch_size * self.num_completions:
-                                 (index + 1) * self.token_micro_batch_size * self.num_completions,
-                                 self.i_current_token] = indices.squeeze(1)
-            self.ret_topk_token_logprobs[index * self.token_micro_batch_size * self.num_completions:
-                                         (index + 1) * self.token_micro_batch_size * self.num_completions,
-                                         self.i_current_token] = logprobs.squeeze(1)
-
-        # [:, -1] because multinomial only accept 1/2d tensors
-        z_to_sample = z[:, -1]  # bs, vocab
-        z_to_sample = self.logits_warper(None, z_to_sample)
-        p_to_sample = z_to_sample.softmax(-1).clamp(0, 1).nan_to_num()
-        indices = torch.multinomial(p_to_sample, num_samples=1)  # bs, 1
-        logprobs = torch.gather(z[:, -1], -1, indices)  # bs, 1
-        self.send_new_tokens[index] = indices
-
-        self.ret_tokens[index * self.token_micro_batch_size * self.num_completions:
-                        (index + 1) * self.token_micro_batch_size * self.num_completions,
-                        self.i_current_token] = indices.squeeze(-1)
-        self.ret_token_logprobs[index * self.token_micro_batch_size * self.num_completions:
-                                (index + 1) * self.token_micro_batch_size * self.num_completions,
-                                self.i_current_token] = logprobs.squeeze(-1)
-
-        if index == self.token_micro_batch_num - 1:
-            self.i_current_token += 1
-
     def _print_buffers(self):
         if self.pp_rank == 0:
             if self.use_fp16:
@@ -292,9 +225,69 @@ class DistInferenceMaskTokenPipeAutoBatch:
                   .format(token_emb_num * 4 // 1024 // 1024, self.output_token_emb[0].shape,
                           self.token_micro_batch_num))
 
+    def change_buffer_size(self):
+        self._init_buffers()
 
+    def _init_cached_seqs_and_attentions(self):
+        if not self.echo_prompt:
+            self.i_current_token = 0
+        else:
+            self.i_current_token = self.input_seq_length
 
+        self.cached_attention.clear()
+        for _ in range(self.num_layers):
+            self.cached_attention.append([None for _ in range(self.seq_num)])
 
+        self.token_cached_attention = []
+        for _ in range(self.num_layers):
+            self.token_cached_attention.append([None for _ in range(self.seq_num)])
+
+        if self.stop is not None:
+            self.stop_flag[:] = 0
+
+    def update_processors(self, args):
+        self.logits_warper = get_logits_warper(
+            top_k=(None if args.top_k is None or args.top_k == 0 else args.top_k),
+            top_p=(None if args.top_p is None or args.top_p <= 0 else args.top_p),
+            temperature=args.temperature,
+            num_beams=1,
+        )
+
+    def _generate_new_token(self, index):
+        assert self.pp_rank == self.pipeline_group_size - 1
+        z = self.layers['lm'](self.output_token_emb[index])
+        if torch.isnan(z).any():
+            print('containing nan, setting them to zero!')
+            print(z)
+        z = z.float().nan_to_num()  # test if fp32 whether cause inf
+        z = torch.nn.functional.log_softmax(z, -1)
+
+        if self.top_k_per_token > 0:
+            logprobs, indices = z.topk(k=self.top_k_per_token, dim=-1)
+            self.ret_topk_tokens[index * self.token_micro_batch_size * self.num_completions:
+                                 (index + 1) * self.token_micro_batch_size * self.num_completions,
+                                 self.i_current_token] = indices.squeeze(1)
+            self.ret_topk_token_logprobs[index * self.token_micro_batch_size * self.num_completions:
+                                         (index + 1) * self.token_micro_batch_size * self.num_completions,
+                                         self.i_current_token] = logprobs.squeeze(1)
+
+        # [:, -1] because multinomial only accept 1/2d tensors
+        z_to_sample = z[:, -1]  # bs, vocab
+        z_to_sample = self.logits_warper(None, z_to_sample)
+        p_to_sample = z_to_sample.softmax(-1).clamp(0, 1).nan_to_num()
+        indices = torch.multinomial(p_to_sample, num_samples=1)  # bs, 1
+        logprobs = torch.gather(z[:, -1], -1, indices)  # bs, 1
+        self.send_new_tokens[index] = indices
+
+        self.ret_tokens[index * self.token_micro_batch_size * self.num_completions:
+                        (index + 1) * self.token_micro_batch_size * self.num_completions,
+                        self.i_current_token] = indices.squeeze(-1)
+        self.ret_token_logprobs[index * self.token_micro_batch_size * self.num_completions:
+                                (index + 1) * self.token_micro_batch_size * self.num_completions,
+                                self.i_current_token] = logprobs.squeeze(-1)
+
+        if index == self.token_micro_batch_num - 1:
+            self.i_current_token += 1
 
     def _merge_cached_seqs_and_attentions(self):
         if not self.echo_prompt:
@@ -302,65 +295,41 @@ class DistInferenceMaskTokenPipeAutoBatch:
         else:
             self.i_current_token = self.input_seq_length
 
-        if self._is_merged:
-            if self.pp_rank == self.pipeline_group_size - 1:
-                for i in range(self.token_micro_batch_num):
-                    self._copy_initial_token_emb(i)
-                    self._generate_new_token(i)
-
-            for layer_index in range(self.num_layers):
-                for index in range(self.token_micro_batch_num):
-                    key, value = self.cached_attention[layer_index][index]
-                    self.cached_attention[layer_index][index] = (
-                    key[:, :, :self.input_seq_length], value[:, :, :self.input_seq_length])
-        else:
-            for layer_index in range(self.num_layers):
-                key = torch.split(torch.cat([kv[0] for kv in self.cached_attention[layer_index]], dim=0),
-                                  self.token_micro_batch_size, dim=0)
-                value = torch.split(torch.cat([kv[1] for kv in self.cached_attention[layer_index]], dim=0),
-                                    self.token_micro_batch_size, dim=0)
-                self.cached_attention[layer_index] = list(zip(key, value))
-                if self.use_fp16:
-                    print("=======Layer {} cached key: {} MB shape: {} (fp16)======="
-                          .format(layer_index, torch.numel(key[0]) * self.token_micro_batch_num * 2 // 1024 // 1024,
-                                  key[0].shape))
-                    print("=======Layer {} cached key: {} MB shape: {} (fp16)======="
-                          .format(layer_index, torch.numel(value[0]) * self.token_micro_batch_num * 2 // 1024 // 1024,
-                                  value[0].shape))
-                else:
-                    print("=======Layer {} cached key: {} MB shape: {} (fp32)======="
-                          .format(layer_index, torch.numel(key[0]) * self.token_micro_batch_num * 4 // 1024 // 1024,
-                                  key[0].shape))
-                    print("=======Layer {} cached key: {} MB shape: {} (fp32)======="
-                          .format(layer_index, torch.numel(value[0]) * self.token_micro_batch_num * 4 // 1024 // 1024,
-                                  value[0].shape))
-            if self.pp_rank == self.pipeline_group_size - 1:
-                for i in range(self.token_micro_batch_num):
-                    self._generate_new_token(i)
-            self._is_merged = True
+        for layer_index in range(self.num_layers):
+            key = torch.split(torch.cat([kv[0] for kv in self.cached_attention[layer_index]], dim=0),
+                              self.token_micro_batch_size, dim=0)
+            value = torch.split(torch.cat([kv[1] for kv in self.cached_attention[layer_index]], dim=0),
+                                self.token_micro_batch_size, dim=0)
+            self.cached_attention[layer_index] = list(zip(key, value))
+            if self.use_fp16:
+                print("=======Layer {} cached key: {} MB shape: {} (fp16)======="
+                      .format(layer_index, torch.numel(key[0]) * self.token_micro_batch_num * 2 // 1024 // 1024,
+                              key[0].shape))
+                print("=======Layer {} cached key: {} MB shape: {} (fp16)======="
+                      .format(layer_index, torch.numel(value[0]) * self.token_micro_batch_num * 2 // 1024 // 1024,
+                              value[0].shape))
+            else:
+                print("=======Layer {} cached key: {} MB shape: {} (fp32)======="
+                      .format(layer_index, torch.numel(key[0]) * self.token_micro_batch_num * 4 // 1024 // 1024,
+                              key[0].shape))
+                print("=======Layer {} cached key: {} MB shape: {} (fp32)======="
+                      .format(layer_index, torch.numel(value[0]) * self.token_micro_batch_num * 4 // 1024 // 1024,
+                              value[0].shape))
+        if self.pp_rank == self.pipeline_group_size - 1:
+            for i in range(self.token_micro_batch_num):
+                self._generate_new_token(i)
 
         if self.stop is not None:
             self.stop_flag[:] = 0
 
-    def _forward_compute_prompt_seq(self, index, seq, mask):
-        print("Compute prompt seq<", index, ">.")
-        if self.pp_rank == 0:
-            self.input_seq_emb[index] = self.layers['emb'](seq, mask=mask)
-        current_emb = self.input_seq_emb[index]
-        caches = [None] * self.num_layers
-
-        for layer_index in range(self.num_layers):
-            current_emb, caches[layer_index] = \
-                self.layers['block' + str(layer_index)](current_emb, caches[layer_index], mask=mask)
-            self.cached_attention[layer_index][index] = caches[layer_index]
-
-        self.output_seq_emb[index] = current_emb
-
-        if self.pp_rank == self.pipeline_group_size - 1:
-            self._copy_initial_token_emb(index)
-
-            if self.echo_prompt:
-                self._generate_echo_token_logprobs(index, indices=seq)
+    def _copy_initial_token_emb(self, index):
+        assert self.pp_rank == self.pipeline_group_size - 1
+        buff_i = index // self.token_micro_batch_size
+        pos = index % self.token_micro_batch_size
+        print("_copy_initial_token_emb")
+        for k in range(self.num_completions):
+            print(f"_copy_initial_token_emb {k}/{self.num_completions}")
+            self.output_token_emb[buff_i][pos + k * self.token_micro_batch_size] = self.output_seq_emb[index][:, -1:]
 
     def _generate_echo_token_logprobs(self, index, indices):
         assert self.pp_rank == self.pipeline_group_size - 1
@@ -393,23 +362,35 @@ class DistInferenceMaskTokenPipeAutoBatch:
                 1:self.i_current_token
             ] = logprobs
 
-    def _copy_initial_token_emb(self, index):
-        assert self.pp_rank == self.pipeline_group_size - 1
-        buff_i = index // self.token_micro_batch_size
-        pos = index % self.token_micro_batch_size
-        print("_copy_initial_token_emb")
-        for k in range(self.num_completions):
-            print(f"_copy_initial_token_emb {k}/{self.num_completions}")
-            self.output_token_emb[buff_i][pos + k * self.token_micro_batch_size] = self.output_seq_emb[index][:, -1:]
+    def _forward_compute_prompt_seq(self, index, seq, mask):
+        print("Compute prompt seq<", index, ">.")
+        if self.pp_rank == 0:
+            self.input_seq_emb[index] = self.layers['emb'](seq, mask=mask)
+        current_emb = self.input_seq_emb[index]
+        caches = [None] * self.num_layers
+
+        for layer_index in range(self.num_layers):
+            current_emb, caches[layer_index] = \
+                self.layers['block' + str(layer_index)](current_emb, caches[layer_index], mask=mask)
+            self.cached_attention[layer_index][index] = caches[layer_index]
+
+        self.output_seq_emb[index] = current_emb
+
+        if self.pp_rank == self.pipeline_group_size - 1:
+            self._copy_initial_token_emb(index)
+
+            if self.echo_prompt:
+                self._generate_echo_token_logprobs(index, indices=seq)
 
     def _get_cached_attention(self, layer_index, token_batch_index):
         if self.num_completions == 1:
             return self.cached_attention[layer_index][token_batch_index]
         else:
-            prompt_cache = self.cached_attention[layer_index][token_batch_index]  # 2* (token_bs, ., seq_len, .)
-            token_cache = self.token_cached_attention[layer_index][
-                token_batch_index]  # 2* (token_bs * num_compl, ., seq_len, .)
-            # 2*(token_bs * num_compl, ., seq_len, .)
+            # 2* (token_bs, ., seq_len, .)
+            prompt_cache = self.cached_attention[layer_index][token_batch_index]
+            # 2* (token_bs * num_completion, ., seq_len, .)
+            token_cache = self.token_cached_attention[layer_index][token_batch_index]
+            # 2*(token_bs * num_completion, ., seq_len, .)
             prompt_cache = [prompt_cache[0].repeat(self.num_completions, 1, 1, 1),
                             prompt_cache[1].repeat(self.num_completions, 1, 1, 1)]
             if token_cache is not None:
@@ -432,7 +413,6 @@ class DistInferenceMaskTokenPipeAutoBatch:
             mask = mask.repeat(self.num_completions, 1)
         # print("Compute generate seq micro-batch <", index, ">.")
         if self.pp_rank == 0:
-            cache = self._get_cached_attention(0, index)
             current_emb = self.layers['emb'](self.recv_new_token[index], self.cached_attention[0][index], mask=mask)
         else:
             current_emb = self.input_token_emb[index]
@@ -446,38 +426,6 @@ class DistInferenceMaskTokenPipeAutoBatch:
 
         if self.pp_rank == self.pipeline_group_size - 1:
             self._generate_new_token(index)
-
-    def _generate_new_token(self, index):
-        assert self.pp_rank == self.pipeline_group_size - 1
-        z = self.layers['lm'](self.output_token_emb[index])
-        z = z.float()
-        z = func.log_softmax(z, -1)
-        logprobs, indices = z.topk(k=1, dim=-1)
-        self.send_new_tokens[index] = indices
-        self.ret_tokens[
-            index*self.token_micro_batch_size*self.num_completions:
-            (index+1)*self.token_micro_batch_size*self.num_completions,
-            self.i_current_token
-        ] = indices.squeeze(-1).squeeze(-1)
-        self.ret_token_logprobs[
-            index*self.token_micro_batch_size*self.num_completions:
-            (index + 1) * self.token_micro_batch_size * self.num_completions,
-            self.i_current_token
-        ] = logprobs.squeeze(-1).squeeze(-1)
-        if self.top_k_per_token > 0:
-            logprobs, indices = z.topk(k=self.top_k_per_token, dim=-1)
-            self.ret_topk_tokens[
-                index * self.token_micro_batch_size * self.num_completions:
-                (index + 1) * self.token_micro_batch_size * self.num_completions,
-                self.i_current_token
-            ]=indices.squeeze(1)
-            self.ret_topk_token_logprobs[
-                index * self.token_micro_batch_size * self.num_completions:
-                (index + 1) * self.token_micro_batch_size * self.num_completions,
-                self.i_current_token
-            ] = logprobs.squeeze(1)
-        if index == self.token_micro_batch_num - 1:
-            self.i_current_token += 1
 
     def _process_mask_during_generation(self, attention_mask):
         if attention_mask is not None:
@@ -628,7 +576,8 @@ class DistInferenceMaskTokenPipeAutoBatch:
         print(f"<inference_batch> rank-<{self.pp_rank}> after third barrier!")
 
         if self.pp_rank == self.pipeline_group_size - 1 and output_ is not None:
-
+            ret_topk_tokens = None
+            ret_topk_token_logprobs = None
             # token_micro_batch_num * num_completions
             ret_tokens = self.ret_tokens[:, :self.i_current_token].cpu().split(self.token_micro_batch_size)
             ret_token_logprobs = self.ret_token_logprobs[:, :self.i_current_token].cpu().split(
