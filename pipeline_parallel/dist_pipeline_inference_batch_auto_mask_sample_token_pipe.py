@@ -380,9 +380,10 @@ class DistInferenceMaskTokenPipeAutoBatch:
             self._generate_new_token(index)
 
     def _process_mask_during_generation(self, attention_mask):
-        if attention_mask is not None:
-            # increase one for the new token
-            attention_mask = func.pad(attention_mask, pad=(0, 1), mode='constant', value=1)
+        for i in range(self.seq_num):
+            if attention_mask[i] is not None:
+                # increase one for the new token
+                attention_mask[i] = func.pad(attention_mask[i], pad=(0, 1), mode='constant', value=1)
         return attention_mask
 
     def forward_seq_pipeline_stage(self, input_data=None, attention_mask=None):
@@ -400,9 +401,10 @@ class DistInferenceMaskTokenPipeAutoBatch:
 
         if attention_mask is not None:
             for i in range(self.seq_num):
-                if self.generate_seq_length[i] == 0:
-                    # attention reduce 1
-                    attention_mask[i] = attention_mask[i][:-1]
+                if attention_mask[i] is not None:
+                    if self.generate_seq_length[i] == 0:
+                        # attention reduce 1
+                        attention_mask[i] = attention_mask[i][:-1]
         else:
             attention_mask = [None] * self.seq_num
 

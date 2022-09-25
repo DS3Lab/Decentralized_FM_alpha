@@ -10,7 +10,8 @@ from .dist_pipeline_inference_mask_greedy_token_pipe_sync import DistGreedyInfer
 from .dist_pipeline_inference_mask_sample_token_pipe_sync import DistSampleInferenceMaskTokenPipeSync
 from .dist_hybrid_inference_greedy_token_deprecated import DistHybridGreedyInference
 from .dist_hybrid_inference_greedy_token_async_deprecated import DistHybridGreedyAsyncInference
-
+from .dist_pipeline_inference_batch_homo_mask_sample_token_pipe import DistInferenceMaskTokenPipeHomoBatch
+from .dist_pipeline_inference_batch_auto_mask_sample_token_pipe import DistInferenceMaskTokenPipeAutoBatch
 
 def get_pp_module(args, vocab_size, num_classes, device, use_dp, rank=None):
     if args.pp_mode == 'gpipe':
@@ -53,6 +54,10 @@ def get_pp_inference_module(args, device, rank=None, be_coordinated=False):
         return DistGreedyInferenceMaskTokenPipeSync(args, device, rank=rank)
     elif args.pp_mode == 'pipe_sync_sample_mask_token_pipe':
         return DistSampleInferenceMaskTokenPipeSync(args, device, rank=rank, be_coordinated=be_coordinated)
+    elif args.pp_mode == 'pipe_sync_sample_mask_token_pipe_refactored':
+        return DistInferenceMaskTokenPipeHomoBatch(args, device)
+    elif args.pp_mode == 'pipe_sync_sample_mask_token_pipe_auto_batch':
+        return DistInferenceMaskTokenPipeAutoBatch(args, device)
     elif args.pp_mode == 'pipe_async_greedy_mask':
         return DistGreedyInferenceMaskAsync(args, device, rank=rank)
     elif args.pp_mode == 'pipe_async_sample_mask':
