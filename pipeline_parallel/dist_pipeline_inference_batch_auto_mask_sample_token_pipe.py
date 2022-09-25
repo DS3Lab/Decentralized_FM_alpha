@@ -7,7 +7,7 @@ from coordinator.http_coordinate_client import get_coordinator_client
 
 
 class DistInferenceMaskTokenPipeAutoBatch:
-    def __init__(self, args, device, task_settings: List(dict)):
+    def __init__(self, args, device):
         print("=======Initialize Dist Inference(DistInferenceMaskTokenPipeAutoBatch).=======")
         self.device = device
         self.coord_client = get_coordinator_client()
@@ -37,7 +37,8 @@ class DistInferenceMaskTokenPipeAutoBatch:
         self.input_seq_length = []
         self.generate_seq_length = []
         self.logits_warpers = []
-        self._init_batch_settings(task_settings)
+        self.i_current_token = []
+        # self._init_batch_settings(task_settings)
 
         # Pipeline info
         self.pipeline_group_size = args.pipeline_group_size
@@ -64,12 +65,9 @@ class DistInferenceMaskTokenPipeAutoBatch:
         self.output_seq_emb = []
         self.input_token_emb = []
         self.output_token_emb = []
-
-        self._init_buffers()
-        self._print_buffers()
-
+        # self._init_buffers()
         self.cached_attention = []
-        self._init_cached_seqs_and_attentions()
+        # self._init_cached_seqs_and_attentions()
 
     def _init_batch_settings(self, task_settings: List(dict)):
         self.echo_prompt.clear()
@@ -100,6 +98,7 @@ class DistInferenceMaskTokenPipeAutoBatch:
                 num_beams=1,
             )
             self.logits_warpers.append(current_logits_warper)
+            self.i_current_token.append(None)
 
     def _create_layers(self):
         if self.model_type == 'gpt2':
@@ -224,7 +223,6 @@ class DistInferenceMaskTokenPipeAutoBatch:
                                                     requires_grad=False, device=self.device, dtype=self.dtype)
                 current_output_seq_emb = torch.zeros((1, self.input_seq_length[i] - 1, self.embedding_dim),
                                                      requires_grad=False, device=self.device, dtype=self.dtype)
-
             else:
                 current_input_seq_emb = torch.zeros((1, self.input_seq_length[i], self.embedding_dim),
                                                     requires_grad=False, device=self.device, dtype=self.dtype)
@@ -242,64 +240,55 @@ class DistInferenceMaskTokenPipeAutoBatch:
     def _print_buffers(self):
         print(f"=======Rank-({self.pp_rank}) _print_buffers to be implemented later.=======")
 
-    def change_buffer_size(self):
+    def update_batch_setting(self, task_settings):
+        self._init_batch_settings(task_settings)
         self._init_buffers()
+        self._init_cached_seqs_and_attentions()
 
     def _init_cached_seqs_and_attentions(self):
-        if not self.echo_prompt:
-            self.i_current_token = 0
-        else:
-            self.i_current_token = self.input_seq_length
-
+        for i in range(self.seq_num):
+            if not self.echo_prompt[i]:
+                self.i_current_token[i] = 0
+            else:
+                self.i_current_token[i] = self.input_seq_length[i]
         self.cached_attention.clear()
         for _ in range(self.num_layers):
             self.cached_attention.append([None for _ in range(self.seq_num)])
-
         self.token_cached_attention = []
         for _ in range(self.num_layers):
             self.token_cached_attention.append([None for _ in range(self.seq_num)])
 
     def _generate_new_token(self, index):
-        if self.i_current_token < self.generate_seq_length[index]:
-            assert self.pp_rank == self.pipeline_group_size - 1
-            z = self.layers['lm'](self.output_token_emb[index])
-            if torch.isnan(z).any():
-                print('containing nan, setting them to zero!')
-                print(z)
-            z = z.float().nan_to_num()  # test if fp32 whether cause inf
-            z = torch.nn.functional.log_softmax(z, -1)
+        assert self.pp_rank == self.pipeline_group_size - 1
+        z = self.layers['lm'](self.output_token_emb[index])
+        if torch.isnan(z).any():
+            print('containing nan, setting them to zero!')
+            print(z)
+        z = z.float().nan_to_num()  # test if fp32 whether cause inf
+        z = torch.nn.functional.log_softmax(z, -1)
 
-            if self.top_k_per_token[index] > 0:
-                logprobs, indices = z.topk(k=self.top_k_per_token, dim=-1)
-                self.ret_topk_tokens[index * self.token_micro_batch_size * self.num_completions:
-                                     (index + 1) * self.token_micro_batch_size * self.num_completions,
-                                     self.i_current_token] = indices.squeeze(1)
-                self.ret_topk_token_logprobs[index * self.token_micro_batch_size * self.num_completions:
-                                             (index + 1) * self.token_micro_batch_size * self.num_completions,
-                                             self.i_current_token] = logprobs.squeeze(1)
-            # [:, -1] because multinomial only accept 1/2d tensors
-            z_to_sample = z[:, -1]  # bs, vocab
-            z_to_sample = self.logits_warpers[index](None, z_to_sample)
-            p_to_sample = z_to_sample.softmax(-1).clamp(0, 1).nan_to_num()
-            indices = torch.multinomial(p_to_sample, num_samples=1)  # bs, 1
-            logprobs = torch.gather(z[:, -1], -1, indices)  # bs, 1
-            self.send_new_tokens[index] = indices
+        if self.top_k_per_token[index] > 0:
+            logprobs, indices = z.topk(k=self.top_k_per_token[index], dim=-1)
+            self.ret_topk_tokens[index][:, self.i_current_token[index]] = indices.squeeze(1)
+            self.ret_topk_token_logprobs[index][:, self.i_current_token[index]] = logprobs.squeeze(1)
+        # [:, -1] because multinomial only accept 1/2d tensors
+        z_to_sample = z[:, -1]  # bs, vocab
+        z_to_sample = self.logits_warpers[index](None, z_to_sample)
+        p_to_sample = z_to_sample.softmax(-1).clamp(0, 1).nan_to_num()
+        indices = torch.multinomial(p_to_sample, num_samples=1)  # bs, 1
+        logprobs = torch.gather(z[:, -1], -1, indices)  # bs, 1
+        self.send_new_tokens[index] = indices
 
-            self.ret_tokens[index * self.token_micro_batch_size * self.num_completions:
-                            (index + 1) * self.token_micro_batch_size * self.num_completions,
-                            self.i_current_token] = indices.squeeze(-1)
-            self.ret_token_logprobs[index * self.token_micro_batch_size * self.num_completions:
-                                    (index + 1) * self.token_micro_batch_size * self.num_completions,
-                                    self.i_current_token] = logprobs.squeeze(-1)
-        # TODO This is wrong for different seq_length.
-        if index == self.seq_num - 1:
-            self.i_current_token += 1
+        self.ret_tokens[index][:, self.i_current_token[index]] = indices.squeeze(-1)
+        self.ret_token_logprobs[index][:, self.i_current_token[index]] = logprobs.squeeze(-1)
+        self.i_current_token[index] += 1
 
     def _merge_cached_seqs_and_attentions(self):
-        if not self.echo_prompt:
-            self.i_current_token = 0
-        else:
-            self.i_current_token = self.input_seq_length
+        for i in range(self.seq_num):
+            if not self.echo_prompt[i]:
+                self.i_current_token[i] = 0
+            else:
+                self.i_current_token[i] = self.input_seq_length[i]
         if self.pp_rank == self.pipeline_group_size - 1:
             for i in range(self.seq_num):
                 if self.generate_seq_length[i] != 0:
@@ -309,7 +298,7 @@ class DistInferenceMaskTokenPipeAutoBatch:
         assert self.pp_rank == self.pipeline_group_size - 1
         print("_copy_initial_token_emb")
         for k in range(self.num_completions[index]):
-            print(f"_copy_initial_token_emb {k}/{self.num_completions}")
+            print(f"_copy_initial_token_emb {k}/{self.num_completions[index]}")
             self.output_token_emb[index][k] = self.output_seq_emb[index][:, -1:]
 
     def _generate_echo_token_logprobs(self, index, indices):
@@ -325,12 +314,12 @@ class DistInferenceMaskTokenPipeAutoBatch:
         indices = indices[:, 1:]  # skip first
 
         logprobs = torch.gather(z, -1, indices.unsqueeze(-1)).squeeze(-1)
-        self.ret_tokens[index:(index + 1), :self.i_current_token] = original_indices
-        self.ret_token_logprobs[index:(index + 1), 1:self.i_current_token] = logprobs
+        self.ret_tokens[index][:, :self.i_current_token[index]] = original_indices
+        self.ret_token_logprobs[index][:, 1:self.i_current_token[index]] = logprobs
         if self.top_k_per_token[index] > 0:
             logprobs, indices = z.topk(k=self.top_k_per_token[index], dim=-1)
-            self.ret_topk_tokens[index:(index + 1), 1:self.i_current_token] = indices
-            self.ret_topk_token_logprobs[index:(index + 1), 1:self.i_current_token] = logprobs
+            self.ret_topk_tokens[index][:, 1:self.i_current_token[index]] = indices
+            self.ret_topk_token_logprobs[index][:, 1:self.i_current_token[index]] = logprobs
 
     def _forward_compute_prompt_seq(self, index, seq, mask):
         print("Compute prompt seq<", index, ">.")
@@ -345,7 +334,7 @@ class DistInferenceMaskTokenPipeAutoBatch:
         self.output_seq_emb[index] = current_emb
         if self.pp_rank == self.pipeline_group_size - 1:
             self._copy_initial_token_emb(index)
-            if self.echo_prompt:
+            if self.echo_prompt[index]:
                 self._generate_echo_token_logprobs(index, indices=seq)
 
     def _get_cached_attention(self, layer_index, index):
@@ -447,6 +436,10 @@ class DistInferenceMaskTokenPipeAutoBatch:
 
     def forward_new_token_pipeline_step(self, step: int, attention_masks=None):
         for i in range(self.seq_num):
+            # This seq does not need these much seq.
+            if step >= self.generate_seq_length[i]:
+                continue
+
             # Last node:
             if self.pp_rank == self.pipeline_group_size - 1:
                 if step == 0:
@@ -462,7 +455,7 @@ class DistInferenceMaskTokenPipeAutoBatch:
                         self.comm.send(self.send_new_tokens[i], dst=0)
             # Rank-0 node:
             elif self.pp_rank == 0:
-                if step != self.generate_seq_length - 1 and (self.stop is None or self.stop_flag.item() == 0):
+                if step != self.generate_seq_length[i] - 1:
                     # Receive
                     self.comm.recv(self.recv_new_token[i], src=self.pipeline_group_size - 1)
                     # Compute
@@ -470,7 +463,7 @@ class DistInferenceMaskTokenPipeAutoBatch:
                     # Send
                     self.comm.send(self.output_token_emb[i], dst=self.post_node_rank)
             else:  # Middle nodes:
-                if step != self.generate_seq_length - 1 and (self.stop is None or self.stop_flag.item() == 0):
+                if step != self.generate_seq_length[i] - 1:
                     # Receive
                     self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank)
                     # Compute
@@ -479,53 +472,53 @@ class DistInferenceMaskTokenPipeAutoBatch:
                     self.comm.send(self.output_token_emb[i], dst=self.post_node_rank)
 
     def inference_batch(self, input_=None, output_=None, attention_mask=None):
-        print(f"<inference_batch> rank-<{self.pp_rank}> Enter!")
+        print(f"<AutoBatch inference_batch> rank-<{self.pp_rank}> Enter!")
         self.comm.barrier()
-        print(f"<inference_batch> rank-<{self.pp_rank}> after first barrier!")
+        print(f"<AutoBatch inference_batch> rank-<{self.pp_rank}> after first barrier!")
         self._init_cached_seqs_and_attentions()  # TODO: should I put here
-        print(f"<inference_batch> rank-<{self.pp_rank}> after first _init_cached_seqs_and_attentions!")
+        print(f"<AutoBatch inference_batch> rank-<{self.pp_rank}> after first _init_cached_seqs_and_attentions!")
         self.comm.barrier()
-        print(f"<inference_batch> rank-<{self.pp_rank}> after second barrier!")
+        print(f"<AutoBatch inference_batch> rank-<{self.pp_rank}> after second barrier!")
         start_time = time.time()
 
-        print(f"<inference_batch> rank-<{self.pp_rank}> enter computation!")
+        print(f"<AutoBatch inference_batch> rank-<{self.pp_rank}> enter computation!")
         with torch.no_grad():
             self.forward_seq_pipeline_stage(input_data=input_, attention_mask=attention_mask)
-            print(f"<inference_batch> rank-<{self.pp_rank}> forward_seq_pipeline_stage is done!")
+            print(f"<AutoBatch inference_batch> rank-<{self.pp_rank}> forward_seq_pipeline_stage is done!")
             self.forward_new_token_pipeline_stage(attention_mask=attention_mask)
-            print(f"<inference_batch> rank-<{self.pp_rank}> forward_seq_pipeline_stage is done!")
+            print(f"<AutoBatch inference_batch> rank-<{self.pp_rank}> forward_new_token_pipeline_stage is done!")
 
         self.comm.barrier()
-        print(f"<inference_batch> rank-<{self.pp_rank}> after third barrier!")
+        print(f"<AutoBatch inference_batch> rank-<{self.pp_rank}> after third barrier!")
 
         if self.pp_rank == self.pipeline_group_size - 1 and output_ is not None:
-            ret_topk_tokens = None
-            ret_topk_token_logprobs = None
-            # token_micro_batch_num * num_completions
-            ret_tokens = self.ret_tokens[:, :self.i_current_token].cpu().split(self.token_micro_batch_size)
-            ret_token_logprobs = self.ret_token_logprobs[:, :self.i_current_token].cpu().split(
-                self.token_micro_batch_size)
-            if self.top_k_per_token > 0:
-                ret_topk_tokens = self.ret_topk_tokens[:, :self.i_current_token].cpu().split(
-                    self.token_micro_batch_size)
-                ret_topk_token_logprobs = self.ret_topk_token_logprobs[:, :self.i_current_token].cpu().split(
-                    self.token_micro_batch_size)
+            ret_tokens = []
+            ret_token_logprobs = []
+            ret_topk_tokens = []
+            ret_topk_token_logprobs = []
+            for i in range(self.seq_num):
+                ret_tokens.append(self.ret_tokens[i][:, :self.i_current_token[i]].cpu())
+                ret_token_logprobs.append(self.ret_token_logprobs[i][:, :self.i_current_token[i]].cpu())
+                if self.top_k_per_token[i] > 0:
+                    ret_topk_tokens.append(self.ret_topk_tokens[i][:, :self.i_current_token[i]].cpu())
+                    ret_topk_token_logprobs.append(self.ret_topk_token_logprobs[i][:, :self.i_current_token[i]].cpu())
+                else:
+                    ret_topk_tokens.append(None)
+                    ret_topk_token_logprobs.append(None)
+            print(f"<AutoBatch inference_batch> rank-<{self.pp_rank}> after marker1 !")
 
-            print(f"<inference_batch> rank-<{self.pp_rank}> after marker1 !")
-
-            for i in range(self.num_completions):
+            for i in range(self.seq_num):
                 item = {
-                    'token_ids': torch.cat(ret_tokens[i::self.num_completions], 0),
-                    'token_logprobs': torch.cat(ret_token_logprobs[i::self.num_completions], 0),
+                    'token_ids': ret_tokens[i],
+                    'token_logprobs': ret_token_logprobs[i],
+                    'topk_ids': ret_topk_tokens[i],
+                    'topk_logprobs': ret_topk_token_logprobs[i]
                 }
-                if self.top_k_per_token > 0:
-                    item['topk_ids'] = torch.cat(ret_topk_tokens[i::self.num_completions], 0)
-                    item['topk_logprobs'] = torch.cat(ret_topk_token_logprobs[i::self.num_completions], 0)
                 output_.append(item)
             print(f"<inference_batch> rank-<{self.pp_rank}> after marker2 !")
 
         end_time = time.time()
         iter_time = end_time - start_time
-        print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.pp_rank, iter_time))
+        print("<AutoBatch inference_batch> rank-{} INFERENCE iteration takes {:3.2f}s".format(self.pp_rank, iter_time))
         print("-------------------------------------------")
         return iter_time
