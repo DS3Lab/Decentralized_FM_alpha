@@ -262,11 +262,11 @@ class DistInferenceMaskTokenPipeAutoBatch:
             if self.pp_rank == self.pipeline_group_size - 1:
                 print(f"ret_tokens: <{self.ret_tokens[i].shape}>")
                 print(f"ret_token_logprobs: <{self.ret_token_logprobs[i].shape}>")
-                if self.ret_topk_tokens[i]:
+                if self.ret_topk_tokens[i] is not None:
                     print(f"ret_topk_tokens: <{self.ret_topk_tokens[i].shape}>")
                 else:
                     print(f"ret_topk_tokens: <None>")
-                if self.ret_topk_token_logprobs[i]:
+                if self.ret_topk_token_logprobs[i] is not None:
                     print(f"ret_topk_token_logprobs: <{self.ret_topk_token_logprobs[i].shape}>")
                 else:
                     print(f"ret_topk_token_logprobs: <None>")
