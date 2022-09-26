@@ -102,12 +102,13 @@ def main():
 
     except Exception as e:
         print('Exception in model initialization inference:', e)
-        local_cord_client.update_status(args.job_id, "failed", returned_payload={'message': str(e)})
+        error = traceback.format_exc()
+        local_cord_client.update_status(args.job_id, "failed", returned_payload={"message": error})
+        print(error)
+        raise e
 
     try:
-
         tokenizer = pipe.tokenizer
-
         while True:
             # TODO: please check here
             instructions = local_cord_client.fetch_instructions(alias_to_model_name(model_name_abbr), rank)
