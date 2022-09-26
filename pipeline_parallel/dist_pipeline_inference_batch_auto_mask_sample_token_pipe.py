@@ -5,13 +5,18 @@ from comm.comm_utils import *
 from modules.generation_utils import get_logits_warper
 from coordinator.http_coordinate_client import get_coordinator_client
 from typing import List, Dict
+from coordinator.coordinator_client import LocalCoordinatorClient
 
 
 class DistInferenceMaskTokenPipeAutoBatch:
-    def __init__(self, args, device):
+    def __init__(self, args, device, coord_client: LocalCoordinatorClient = None):
         print("=======Initialize Dist Inference(DistInferenceMaskTokenPipeAutoBatch).=======")
         self.device = device
-        self.coord_client = get_coordinator_client()
+        if coord_client is not None:
+            self.coord_client = coord_client
+        else:
+            self.coord_client = None  # get_coordinator_client()
+        self.init_job_id = args.job_id  # This should be changed to model ID later.
         # Model info for pipeline
         self.max_layers = args.max_layers
         self.num_layers = args.num_layers
@@ -132,7 +137,7 @@ class DistInferenceMaskTokenPipeAutoBatch:
             self.layers['block' + str(layer_index)] = GPTBlock.from_pretrained(
                 self.model_name, layer_index=global_layer_index).to(self.dtype).eval().to(self.device)
             if self.coord_client:
-                self.coord_client.update_status('running', returned_payload={
+                self.coord_client.update_status(self.init_job_id, 'running', returned_payload={
                     'rank': self.pp_rank, 'loaded_layer': layer_index, 'total_layer': self.num_layers})
         if self.pp_rank == self.pipeline_group_size - 1:
             self.layers['lm'] = GPTLMHead.from_pretrained(

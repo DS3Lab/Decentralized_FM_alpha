@@ -5,8 +5,8 @@ from pipeline_parallel.dist_pipeline_inference_batch_auto_mask_sample_token_pipe
     import DistInferenceMaskTokenPipeAutoBatch
 from utils.dist_args_utils import *
 from comm.comm_utils import *
-from coordinator.http_coordinate_client import get_coordinator_client, init_coordinator_client, alias_to_model_name
-from coordinator.coordinator_client import LocalCoordinatorClient  # TODO: merge two coord clients
+from coordinator.http_coordinate_client import alias_to_model_name
+from coordinator.coordinator_client import LocalCoordinatorClient
 import traceback
 import math
 
