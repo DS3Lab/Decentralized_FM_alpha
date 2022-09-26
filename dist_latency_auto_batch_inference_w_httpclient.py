@@ -75,13 +75,16 @@ def main():
     model_name_abbr = args.model_name.split('/')[-1]
     print("model name abbr: ", model_name_abbr)
     print("model name: ", alias_to_model_name(model_name_abbr))
-    init_coordinator_client(args, alias_to_model_name(model_name_abbr))
-    coord_client = get_coordinator_client()
+
+    local_cord_client = LocalCoordinatorClient(
+        working_directory=args.working_directory,
+        coordinator_url="http://localhost:5000/eth",
+    )
 
     pipe = None
     rank = None
     try:
-        res = coord_client.notify_inference_join(args.net_interface)
+        res = local_cord_client.notify_inference_join(args.job_id, args.net_interface)
         prime_ip = res['prime_ip']
         rank = res['rank']
         port = res['nccl_port']
@@ -89,23 +92,20 @@ def main():
         init_inference_communicators_with_coordinator(args, prime_ip, rank, port=port)
 
         if get_pipeline_parallel_rank() == 0:
-            coord_client.update_status("running", returned_payload={'state': 'initialized'})
+            local_cord_client.update_status(args.job_id, "running", returned_payload={'state': 'initialized'})
 
         pipe = DistInferenceMaskTokenPipeAutoBatch(args, device)
 
         print(f"Inference pipeline loading model <{model_name_abbr}> is done!")
         if get_pipeline_parallel_rank() == 0:
-            coord_client.update_status("running", returned_payload={'state': 'model_loaded'})
+            local_cord_client.update_status(args.job_id, "running", returned_payload={'state': 'model_loaded'})
 
     except Exception as e:
         print('Exception in model initialization inference:', e)
-        coord_client.update_status("failed", returned_payload={'message': str(e)})
+        local_cord_client.update_status(args.job_id, "failed", returned_payload={'message': str(e)})
 
     try:
-        local_cord_client = LocalCoordinatorClient(
-            working_directory=args.working_directory,
-            coordinator_url="http://localhost:5000/eth",
-        )
+
         tokenizer = pipe.tokenizer
 
         while True:

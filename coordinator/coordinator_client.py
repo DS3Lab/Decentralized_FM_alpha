@@ -6,6 +6,8 @@ import os
 from uuid import uuid4
 from botocore.exceptions import ClientError
 from loguru import logger
+import netifaces as ni
+
 
 class LocalCoordinatorClient:
     def __init__(self,
@@ -34,6 +36,10 @@ class LocalCoordinatorClient:
         input_path = os.path.join(self.working_directory, input_filename)
         assert os.path.exists(input_path)
         os.remove(input_path)
+
+    def notify_inference_join(self, job_id, netname='access'):
+        ip = ni.ifaddresses(netname)[ni.AF_INET][0]['addr']
+        return requests.post(self.coordinator_url+f"/rank/"+str(job_id), json={"ip": ip}).json()
 
     def update_status(self, job_id, new_status, returned_payload=None):
         return requests.post(self.coordinator_url+f"/update_status/{job_id}", json={
