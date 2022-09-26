@@ -103,7 +103,7 @@ def main():
 
     try:
         local_cord_client = LocalCoordinatorClient(
-            working_directory=args.working_dir,
+            working_directory=args.working_directory,
             coordinator_url="http://localhost:5000/eth",
         )
         tokenizer = pipe.tokenizer
