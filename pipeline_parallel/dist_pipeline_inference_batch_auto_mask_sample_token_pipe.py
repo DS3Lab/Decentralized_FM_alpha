@@ -106,6 +106,17 @@ class DistInferenceMaskTokenPipeAutoBatch:
             self.logits_warpers.append(current_logits_warper)
             self.i_current_token.append(None)
 
+    def _print_batch_settings(self):
+        print("<DistInferenceMaskTokenPipeAutoBatch-_print_batch_settings>:")
+        for i in range(self.seq_num):
+            print("-----------------------------------------------------------")
+            print(f"Seq index <{i}>")
+            print(f"echo_prompt: <{self.echo_prompt[i]}>")
+            print(f"num_completions: <{self.num_completions[i]}>")
+            print(f"top_k_per_token: <{self.top_k_per_token[i]}>")
+            print(f"input_seq_length: <{self.input_seq_length[i]}>")
+            print(f"generate_seq_length: <{self.generate_seq_length[i]}>")
+
     def _create_layers(self):
         if self.model_type == 'gpt2':
             from modules.hf_gpt2_module import GPTEmbeddings, GPTBlock, GPTLMHead
@@ -244,11 +255,35 @@ class DistInferenceMaskTokenPipeAutoBatch:
             self.output_token_emb.append(current_output_token_emb)
 
     def _print_buffers(self):
-        print(f"=======Rank-({self.pp_rank}) _print_buffers to be implemented later.=======")
+        print(f"<DistInferenceMaskTokenPipeAutoBatch-_print_buffers>: rank-<{self.pp_rank}>=======")
+        for i in range(self.seq_num):
+            print("-----------------------------------------------------------")
+            print(f"Seq index <{i}>")
+            if self.pp_rank == self.pipeline_group_size - 1:
+                print(f"ret_tokens: <{self.ret_tokens[i].shape}>")
+                print(f"ret_token_logprobs: <{self.ret_token_logprobs[i].shape}>")
+                if self.ret_topk_tokens[i]:
+                    print(f"ret_topk_tokens: <{self.ret_topk_tokens[i].shape}>")
+                else:
+                    print(f"ret_topk_tokens: <None>")
+                if self.ret_topk_token_logprobs[i]:
+                    print(f"ret_topk_token_logprobs: <{self.ret_topk_token_logprobs[i].shape}>")
+                else:
+                    print(f"ret_topk_token_logprobs: <None>")
+            if self.pp_rank == 0:
+                print(f"recv_new_token: <{self.recv_new_token[i].shape}>")
+            if self.pp_rank == self.pipeline_group_size - 1:
+                print(f"send_new_tokens: <{self.send_new_tokens[i].shape}>")
+            print(f"input_seq_emb: <{self.input_seq_emb[i].shape}>")
+            print(f"output_seq_emb: <{self.output_seq_emb[i].shape}>")
+            print(f"input_token_emb: <{self.input_token_emb[i].shape}>")
+            print(f"output_token_emb: <{self.output_token_emb[i].shape}>")
 
     def update_batch_setting(self, task_settings):
         self._init_batch_settings(task_settings)
+        self._print_batch_settings()
         self._init_buffers()
+
         self._init_cached_seqs_and_attentions()
 
     def _init_cached_seqs_and_attentions(self):
