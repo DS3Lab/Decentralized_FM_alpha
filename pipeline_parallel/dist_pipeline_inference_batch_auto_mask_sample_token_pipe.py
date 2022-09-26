@@ -283,7 +283,7 @@ class DistInferenceMaskTokenPipeAutoBatch:
         self._init_batch_settings(task_settings)
         self._print_batch_settings()
         self._init_buffers()
-
+        self._print_buffers()
         self._init_cached_seqs_and_attentions()
 
     def _init_cached_seqs_and_attentions(self):
