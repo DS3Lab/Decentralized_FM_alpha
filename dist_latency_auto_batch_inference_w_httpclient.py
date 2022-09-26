@@ -12,27 +12,26 @@ import math
 
 
 def to_result(outputs, tokenizer, top_k_per_token, echo_prompt):
-    i = 0
     n_pads = 0  # in latency inference, #pad should be 0
 
     item = {'choices': [], }
 
     for i_ret, output_dict in enumerate(outputs):
         choice = {
-            "text": (tokenizer.decode(output_dict['token_ids'][i][n_pads:]) if 'token_ids' in output_dict else ''),
+            "text": (tokenizer.decode(output_dict['token_ids'][n_pads:]) if 'token_ids' in output_dict else ''),
             "index": i_ret,
             "logprobs": {
                 "tokens": (tokenizer.convert_ids_to_tokens(
-                    output_dict['token_ids'][i][n_pads:] if 'token_ids' in output_dict else [])),
+                    output_dict['token_ids'][n_pads:] if 'token_ids' in output_dict else [])),
                 "token_logprobs": (
-                    output_dict['token_logprobs'][i][n_pads:].tolist() if 'token_logprobs' in output_dict else []),
+                    output_dict['token_logprobs'][n_pads:].tolist() if 'token_logprobs' in output_dict else []),
                 "top_logprobs": ([
                                      {
                                          tokenizer.convert_ids_to_tokens(topk_id.item()): top_logprob.item() for
                                          topk_id, top_logprob in zip(topk_ids, top_logprobs)
                                      }
-                                     for topk_ids, top_logprobs in zip(output_dict['topk_ids'][i][n_pads:],
-                                                                       output_dict['topk_logprobs'][i][n_pads:])
+                                     for topk_ids, top_logprobs in zip(output_dict['topk_ids'][n_pads:],
+                                                                       output_dict['topk_logprobs'][n_pads:])
                                  ] if top_k_per_token > 0 else None),
                 "text_offset": [],
             },
