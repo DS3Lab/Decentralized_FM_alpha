@@ -162,6 +162,7 @@ def main():
 
                         if get_pipeline_parallel_rank() == pipe.pipeline_group_size - 1:
                             for i in range(len(job_ids)):
+                                print(output_ids_list[i])
                                 result = to_result(output_ids_list[i], tokenizer, pipe.top_k_per_token[i],
                                                    pipe.echo_prompt[i])
                                 return_payload = {
