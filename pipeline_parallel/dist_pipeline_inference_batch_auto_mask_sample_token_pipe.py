@@ -4,6 +4,7 @@ import torch.nn.functional
 from comm.comm_utils import *
 from modules.generation_utils import get_logits_warper
 from coordinator.http_coordinate_client import get_coordinator_client
+from typing import List, Dict
 
 
 class DistInferenceMaskTokenPipeAutoBatch:
@@ -69,7 +70,7 @@ class DistInferenceMaskTokenPipeAutoBatch:
         self.cached_attention = []
         # self._init_cached_seqs_and_attentions()
 
-    def _init_batch_settings(self, task_settings: List(dict)):
+    def _init_batch_settings(self, task_settings: List[Dict]):
         self.echo_prompt.clear()
         self.num_completions.clear()
         self.top_k_per_token.clear()
