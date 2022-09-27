@@ -14,11 +14,11 @@ from parallelformers import parallelize
 
 def main():
 
-    batch_size = 32
+    batch_size = 1
     prompt_length = 512
     token_length = 50
-    model_name_or_path = 'facebook/opt-1.3b'
-    num_gpus = 8
+    model_name_or_path = 'facebook/opt-125m'
+    num_gpus = 1
     fp16 = False
     
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
@@ -35,7 +35,10 @@ def main():
                 # skip first
                 tic = time.time()
             input_ids = tokenizer(['hello'] * batch_size, max_length=prompt_length, padding='max_length', return_tensors='pt')['input_ids'].cuda()
-            model.generate(input_ids, max_new_tokens=token_length)
+            result = model.generate(input_ids, max_new_tokens=token_length, return_dict_in_generate=True, do_sample=True, output_scores=True)
+            print(result)
+            print('\n')
+            print(tokenizer.decode(result['sequences'][0]))
 
         toc = time.time()
 
