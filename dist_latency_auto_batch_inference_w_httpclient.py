@@ -103,34 +103,33 @@ def main():
     try:
         tokenizer = pipe.tokenizer
         while True:
-            # TODO: please check here
-            instructions = local_cord_client.fetch_instructions(alias_to_model_name(model_name_abbr), rank)
-            last_instruction = instructions[-1]
+            try:
+                task_settings = None
+                input_ids = None
+                job_ids = None
+                output_ids_list = None
+                attention_masks = None
+                if get_pipeline_parallel_rank() == 0:
+                    instructions = local_cord_client.fetch_instructions(alias_to_model_name(model_name_abbr), rank)
+                    last_instruction = instructions[-1]
 
-            if last_instruction["message"] == "break":
-                logger.info("Received stop instruction.")
-                logger.info("# BREAK ")
-                break
-            elif last_instruction["message"] == "continue":
-                logger.info("Received keep instruction.")
-                sleep(10)
-            elif last_instruction["message"] == "run":
-                fetched_tasks = [x for x in instructions
-                                 if x["message"] == "run" and x['payload']['status'] == 'submitted']
+                    if last_instruction["message"] == "break":
+                        logger.info("Received stop instruction.")
+                        logger.info("# BREAK ")
+                        break
+                    elif last_instruction["message"] == "continue":
+                        logger.info("Received keep instruction.")
+                        sleep(10)
+                    elif last_instruction["message"] == "run":
+                        fetched_tasks = [x for x in instructions
+                                         if x["message"] == "run" and x['payload']['status'] == 'submitted']
 
-                iters = math.ceil(len(fetched_tasks)/args.auto_batch_size)
-                for iter_i in range(iters):
-                    task_settings = []
-                    input_ids = []
-                    attention_masks = []
-                    job_ids = []
-                    output_ids_list = []
+                        batch_size = max(len(fetched_tasks), args.auto_batch_size)
+                        current_tasks = fetched_tasks[:batch_size]
 
-                    try:
-                        if iter_i < iters-1:
-                            current_tasks = fetched_tasks[iter_i*args.auto_batch_size: (iter_i+1)*args.auto_batch_size]
-                        else:
-                            current_tasks = fetched_tasks[iter_i*args.auto_batch_size:]
+                        task_settings = []
+                        input_ids = []
+                        job_ids = []
 
                         for instruction in current_tasks:
                             logger.info("Instruction:")
@@ -146,40 +145,41 @@ def main():
                             current_input = tokenizer(prompt, return_tensors='pt', padding='max_length',
                                                       truncation=True)
                             current_input_ids = current_input['input_ids'].long().to(device)
-                            current_attention_mask = current_input['attention_mask'].long().to(device)
                             input_ids.append(current_input_ids)
-                            attention_masks.append(current_attention_mask)
+                elif get_pipeline_parallel_rank() == get_pipeline_parallel_world_size() - 1:
+                    output_ids_list = []
 
-                        pipe.update_batch_setting(task_settings=task_settings)
-                        pipe.inference_batch(input_ids, output_ids_list, attention_mask=attention_masks)
+                pipe.update_batch_setting(task_settings=task_settings, job_ids=job_ids)
+                pipe.inference_batch(input_ids, output_ids_list, attention_mask=attention_masks)
 
-                        if get_pipeline_parallel_rank() == pipe.pipeline_group_size - 1:
-                            for i in range(len(job_ids)):
-                                print(output_ids_list[i])
-                                result = to_result(output_ids_list[i], tokenizer, pipe.top_k_per_token[i],
-                                                   pipe.echo_prompt[i])
-                                return_payload = {
-                                    'request': task_settings[i],
-                                    'result': result,
-                                }
+                if get_pipeline_parallel_rank() == pipe.pipeline_group_size - 1:
+                    job_ids = pipe.current_job_ids
+                    for i in range(len(job_ids)):
+                        print(output_ids_list[i])
+                        result = to_result(output_ids_list[i], tokenizer, pipe.top_k_per_token[i],
+                                           pipe.echo_prompt[i])
+                        return_payload = {
+                            'request': task_settings[i],
+                            'result': result,
+                        }
 
-                                local_cord_client.update_status(
-                                    job_ids[i],
-                                    "finished",
-                                    returned_payload=return_payload
-                                )
+                        local_cord_client.update_status(
+                            job_ids[i],
+                            "finished",
+                            returned_payload=return_payload
+                        )
 
-                    except Exception as e:
-                        error = traceback.format_exc()
-                        for job_id in job_ids:
-                            local_cord_client.update_status(
-                                job_id,
-                                "failed",
-                                returned_payload={"message": error}
-                            )
-                        print(error)
-                        raise e
-                    sleep(1)
+            except Exception as e:
+                error = traceback.format_exc()
+                for job_id in pipe.current_job_ids:
+                    local_cord_client.update_status(
+                        job_id,
+                        "failed",
+                        returned_payload={"message": error}
+                    )
+                print(error)
+                raise e
+            sleep(1)
 
     except Exception as e:
         print('Exception in latency inference:', e)

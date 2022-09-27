@@ -3,7 +3,7 @@ import torch.nn.functional as func
 import torch.nn.functional
 from comm.comm_utils import *
 from modules.generation_utils import get_logits_warper
-from coordinator.http_coordinate_client import get_coordinator_client
+import json
 from typing import List, Dict
 from coordinator.coordinator_client import LocalCoordinatorClient
 
@@ -11,6 +11,9 @@ from coordinator.coordinator_client import LocalCoordinatorClient
 class DistInferenceMaskTokenPipeAutoBatch:
     def __init__(self, args, device, coord_client: LocalCoordinatorClient = None):
         print("=======Initialize Dist Inference(DistInferenceMaskTokenPipeAutoBatch).=======")
+        self.dist_store = dist.distributed_c10d._get_default_store()
+        self.task_count = 0
+        self.current_job_ids = []
         self.device = device
         if coord_client is not None:
             self.coord_client = coord_client
@@ -279,7 +282,24 @@ class DistInferenceMaskTokenPipeAutoBatch:
             print(f"input_token_emb: <{self.input_token_emb[i].shape}>")
             print(f"output_token_emb: <{self.output_token_emb[i].shape}>")
 
-    def update_batch_setting(self, task_settings):
+    def update_batch_setting(self, task_settings: List[Dict] = None, job_ids: List[str] = None):
+        print(f"<DistInferenceMaskTokenPipeAutoBatch-update_batch_setting>: rank-<{self.pp_rank}>=======")
+        self.task_count += 1
+        if self.pp_rank == 0:
+            assert task_settings is not None and job_ids is not None
+            task_settings_str = json.dumps({'task_settings': task_settings, 'job_ids': job_ids})
+            self.dist_store.set('current_task_'+str(self.task_count), task_settings_str)
+            print(task_settings_str)
+            self.current_job_ids.clear()
+            self.current_job_ids.extend(job_ids)
+        else:
+            assert task_settings is None
+            task_settings_str = self.dist_store.get('current_task_'+str(self.task_count))
+            print(task_settings_str)
+            task_dict = json.loads(task_settings_str)
+            task_settings = task_dict['task_settings']
+            self.current_job_ids.clear()
+            self.current_job_ids.extend(task_dict['job_ids'])
         self._init_batch_settings(task_settings)
         self._print_batch_settings()
         self._init_buffers()
