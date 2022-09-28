@@ -119,8 +119,7 @@ def main():
                         break
                     elif last_instruction["message"] == "continue":
                         logger.info("Received keep instruction.")
-                        sleep(10)
-                        continue
+                        pipe.has_work[:] = 0
                     elif last_instruction["message"] == "run":
                         fetched_tasks = [x for x in instructions
                                          if x["message"] == "run" and x['payload']['status'] == 'submitted']
@@ -147,29 +146,35 @@ def main():
                                                       truncation=True)
                             current_input_ids = current_input['input_ids'].long().to(device)
                             input_ids.append(current_input_ids)
+                        pipe.has_work[:] = 1
                 elif get_pipeline_parallel_rank() == get_pipeline_parallel_world_size() - 1:
                     output_ids_list = []
 
-                torch.distributed.barrier()
-                pipe.update_batch_setting(task_settings=task_settings, job_ids=job_ids)
-                pipe.inference_batch(input_ids, output_ids_list, attention_mask=attention_masks)
+                # torch.distributed.barrier() This is a bad practice, which leads to timeout.
+                pipe.sync_has_work()
 
-                if get_pipeline_parallel_rank() == pipe.pipeline_group_size - 1:
-                    job_ids = pipe.current_job_ids
-                    for i in range(len(job_ids)):
-                        print(output_ids_list[i])
-                        result = to_result(output_ids_list[i], tokenizer, pipe.top_k_per_token[i],
-                                           pipe.echo_prompt[i])
-                        return_payload = {
-                            'request': task_settings[i],
-                            'result': result,
-                        }
+                if pipe.has_work[:] == 1:
+                    pipe.update_batch_setting(task_settings=task_settings, job_ids=job_ids)
+                    pipe.inference_batch(input_ids, output_ids_list, attention_mask=attention_masks)
 
-                        local_cord_client.update_status(
-                            job_ids[i],
-                            "finished",
-                            returned_payload=return_payload
-                        )
+                    if get_pipeline_parallel_rank() == pipe.pipeline_group_size - 1:
+                        job_ids = pipe.current_job_ids
+                        for i in range(len(job_ids)):
+                            print(output_ids_list[i])
+                            result = to_result(output_ids_list[i], tokenizer, pipe.top_k_per_token[i],
+                                               pipe.echo_prompt[i])
+                            return_payload = {
+                                'request': task_settings[i],
+                                'result': result,
+                            }
+
+                            local_cord_client.update_status(
+                                job_ids[i],
+                                "finished",
+                                returned_payload=return_payload
+                            )
+                else:
+                    sleep(10)
 
             except Exception as e:
                 error = traceback.format_exc()

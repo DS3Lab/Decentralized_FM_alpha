@@ -11,6 +11,7 @@ from coordinator.coordinator_client import LocalCoordinatorClient
 class DistInferenceMaskTokenPipeAutoBatch:
     def __init__(self, args, device, coord_client: LocalCoordinatorClient = None):
         print("=======Initialize Dist Inference(DistInferenceMaskTokenPipeAutoBatch).=======")
+        self.has_work = torch.zeros(1, dtype=torch.int, device=device)
         self.dist_store = dist.distributed_c10d._get_default_store()
         self.task_count = 0
         self.current_job_ids = []
@@ -77,6 +78,10 @@ class DistInferenceMaskTokenPipeAutoBatch:
         # self._init_buffers()
         self.cached_attention = []
         # self._init_cached_seqs_and_attentions()
+
+    def sync_has_work(self):
+        self.comm.broadcast(self.has_work, src=0)
+        self.comm.barrier()
 
     def _init_batch_settings(self, task_settings: List[Dict]):
         self.echo_prompt.clear()
