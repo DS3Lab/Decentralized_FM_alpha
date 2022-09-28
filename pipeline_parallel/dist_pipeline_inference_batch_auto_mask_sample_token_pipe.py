@@ -503,7 +503,8 @@ class DistInferenceMaskTokenPipeAutoBatch:
             print("Compute generate token step <", step, ">.")
             # for last node, the first step does not compute
             if step != 0 or self.pp_rank != self.pipeline_group_size - 1:
-                attention_mask = self._process_mask_during_generation(attention_mask)
+                if attention_mask:
+                    attention_mask = self._process_mask_during_generation(attention_mask)
             self.forward_new_token_pipeline_step(step, attention_masks=attention_mask)
 
     def forward_new_token_pipeline_step(self, step: int, attention_masks=None):
