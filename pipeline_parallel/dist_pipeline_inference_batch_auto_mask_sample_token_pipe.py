@@ -284,6 +284,8 @@ class DistInferenceMaskTokenPipeAutoBatch:
 
     def update_batch_setting(self, task_settings: List[Dict] = None, job_ids: List[str] = None):
         print(f"<DistInferenceMaskTokenPipeAutoBatch-update_batch_setting>: rank-<{self.pp_rank}>=======")
+        print(task_settings)
+        print(job_ids)
         self.task_count += 1
         if self.pp_rank == 0:
             assert task_settings is not None and job_ids is not None

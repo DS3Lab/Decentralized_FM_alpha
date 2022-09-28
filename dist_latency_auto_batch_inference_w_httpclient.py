@@ -119,7 +119,8 @@ def main():
                         break
                     elif last_instruction["message"] == "continue":
                         logger.info("Received keep instruction.")
-                        sleep(10)
+                        # sleep(10)
+                        continue
                     elif last_instruction["message"] == "run":
                         fetched_tasks = [x for x in instructions
                                          if x["message"] == "run" and x['payload']['status'] == 'submitted']
