@@ -17,8 +17,8 @@ def main():
     batch_size = 1
     prompt_length = 512
     token_length = 50
-    model_name_or_path = 'facebook/opt-125m'
-    num_gpus = 1
+    model_name_or_path = 'facebook/opt-66b'
+    num_gpus = 8
     fp16 = False
     
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
