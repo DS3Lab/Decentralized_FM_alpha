@@ -456,7 +456,8 @@ class DistInferenceMaskTokenPipeAutoBatch:
         return attention_mask
 
     def forward_seq_pipeline_stage(self, input_data=None, attention_mask=None):
-        if self.pp_rank == 0 or self.pp_rank == self.pipeline_group_size - 1:
+        # if self.pp_rank == 0 or self.pp_rank == self.pipeline_group_size - 1:
+        if self.pp_rank == 0:
             assert (input_data is not None)
             if self.pp_rank == 0:
                 for i in range(self.seq_num):
