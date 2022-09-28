@@ -81,6 +81,7 @@ class DistInferenceMaskTokenPipeAutoBatch:
 
     def sync_has_work(self):
         self.comm.broadcast(self.has_work, src=0)
+        print("sync_has_work:", self.has_work.item())
         self.comm.barrier()
 
     def _init_batch_settings(self, task_settings: List[Dict]):
