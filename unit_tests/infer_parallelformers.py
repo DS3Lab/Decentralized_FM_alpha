@@ -24,8 +24,10 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
     config = OPTConfig.from_pretrained(model_name_or_path)
     model = OPTForCausalLM(config)
+    print("HF model loaded.")
 
     parallelize(model, num_gpus=num_gpus, fp16=fp16, verbose='detail')
+    print("Parallelized model is done.")
 
     torch.cuda.empty_cache()
 
@@ -34,6 +36,7 @@ def main():
             if i == 1:
                 # skip first
                 tic = time.time()
+            print(f"Task <{i}>")
             input_ids = tokenizer(['hello'] * batch_size, max_length=prompt_length, padding='max_length', return_tensors='pt')['input_ids'].cuda()
             result = model.generate(input_ids, max_new_tokens=token_length, return_dict_in_generate=True, do_sample=True, output_scores=True)
             print(result)
