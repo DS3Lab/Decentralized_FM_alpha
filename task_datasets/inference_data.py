@@ -394,7 +394,14 @@ def get_tokenizer(args):
         return tokenizer
     
     # default: huggingface's implementation
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+    # TODO, a dirty fix, for GPT-66B, we find the default implementation has some issue:
+    # See: https://github.com/huggingface/tokenizers/pull/1005. so that the fast tokenizer works correctly.
+    if args.model_name == '/home/ubuntu/fm/models/opt-66b-new':
+        from transformers import GPT2Tokenizer
+        tokenizer = GPT2Tokenizer.from_pretrained('/home/ubuntu/fm/models/opt-66b-new')
+    else:
+        tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     if tokenizer.bos_token is None:
