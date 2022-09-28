@@ -150,6 +150,7 @@ def main():
                 elif get_pipeline_parallel_rank() == get_pipeline_parallel_world_size() - 1:
                     output_ids_list = []
 
+                torch.distributed.barrier()
                 pipe.update_batch_setting(task_settings=task_settings, job_ids=job_ids)
                 pipe.inference_batch(input_ids, output_ids_list, attention_mask=attention_masks)
 
