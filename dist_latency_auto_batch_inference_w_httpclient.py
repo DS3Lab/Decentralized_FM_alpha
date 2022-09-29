@@ -146,7 +146,8 @@ def main():
                                                       truncation=True)
                             current_input_ids = current_input['input_ids'].long().to(device)
                             input_ids.append(current_input_ids)
-                        pipe.has_work[:] = 1
+                        if len(job_ids) > 0:
+                            pipe.has_work[:] = 1
                 elif get_pipeline_parallel_rank() == get_pipeline_parallel_world_size() - 1:
                     output_ids_list = []
 
