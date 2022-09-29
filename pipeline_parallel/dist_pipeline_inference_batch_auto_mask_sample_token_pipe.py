@@ -12,6 +12,7 @@ class DistInferenceMaskTokenPipeAutoBatch:
     def __init__(self, args, device, coord_client: LocalCoordinatorClient = None):
         print("=======Initialize Dist Inference(DistInferenceMaskTokenPipeAutoBatch).=======")
         self.has_work = torch.zeros(1, dtype=torch.int, device=device)
+        self.task_settings = []
         self.dist_store = dist.distributed_c10d._get_default_store()
         self.task_count = 0
         self.current_job_ids = []
@@ -84,7 +85,7 @@ class DistInferenceMaskTokenPipeAutoBatch:
         print("sync_has_work:", self.has_work.item())
         self.comm.barrier()
 
-    def _init_batch_settings(self, task_settings: List[Dict]):
+    def _init_batch_settings(self):
         self.echo_prompt.clear()
         self.num_completions.clear()
         self.top_k_per_token.clear()
@@ -92,20 +93,20 @@ class DistInferenceMaskTokenPipeAutoBatch:
         self.generate_seq_length.clear()
         self.logits_warpers.clear()
 
-        self.seq_num = len(task_settings)
+        self.seq_num = len(self.task_settings)
         for i in range(self.seq_num):
-            self.echo_prompt.append(task_settings[i].get('echo', False))
-            self.num_completions.append(task_settings[i].get('n', 1))
-            self.top_k_per_token.append(task_settings[i].get('logprobs', 0))
-            current_seq_length = self.tokenizer(task_settings[i]['prompt'], return_tensors='pt', padding=True,
+            self.echo_prompt.append(self.task_settings[i].get('echo', False))
+            self.num_completions.append(self.task_settings[i].get('n', 1))
+            self.top_k_per_token.append(self.task_settings[i].get('logprobs', 0))
+            current_seq_length = self.tokenizer(self.task_settings[i]['prompt'], return_tensors='pt', padding=True,
                                                 truncation=False)['input_ids'].size(1)
             # 2048 is hardcoded.
-            current_seq_length = min(current_seq_length, 2048 - task_settings[i].get('max_tokens', 1))
+            current_seq_length = min(current_seq_length, 2048 - self.task_settings[i].get('max_tokens', 1))
             self.input_seq_length.append(current_seq_length)
-            self.generate_seq_length.append(task_settings[i].get('max_tokens', 1))
+            self.generate_seq_length.append(self.task_settings[i].get('max_tokens', 1))
 
-            current_top_p = task_settings[i].get('top_p', 1.0)
-            current_temperature = task_settings[i].get('temperature', 0)
+            current_top_p = self.task_settings[i].get('top_p', 1.0)
+            current_temperature = self.task_settings[i].get('temperature', 0)
             current_logits_warper = get_logits_warper(
                 top_k=(None if self.top_k is None or self.top_k == 0 else self.top_k),
                 top_p=(None if current_top_p is None or current_top_p <= 0 else current_top_p),
@@ -298,6 +299,8 @@ class DistInferenceMaskTokenPipeAutoBatch:
             task_settings_str = json.dumps({'task_settings': task_settings, 'job_ids': job_ids})
             self.dist_store.set('current_task_'+str(self.task_count), task_settings_str)
             print(task_settings_str)
+            self.task_settings.clear()
+            self.task_settings.extend(task_settings)
             self.current_job_ids.clear()
             self.current_job_ids.extend(job_ids)
         else:
@@ -306,9 +309,11 @@ class DistInferenceMaskTokenPipeAutoBatch:
             print(task_settings_str)
             task_dict = json.loads(task_settings_str)
             task_settings = task_dict['task_settings']
+            self.task_settings.clear()
+            self.task_settings.extend(task_settings)
             self.current_job_ids.clear()
             self.current_job_ids.extend(task_dict['job_ids'])
-        self._init_batch_settings(task_settings)
+        self._init_batch_settings()
         self._print_batch_settings()
         self._init_buffers()
         self._print_buffers()

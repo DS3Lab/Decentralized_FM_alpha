@@ -164,7 +164,7 @@ def main():
                             result = to_result(output_ids_list[i], tokenizer, pipe.top_k_per_token[i],
                                                pipe.echo_prompt[i])
                             return_payload = {
-                                'request': task_settings[i],
+                                'request': pipe.task_settings[i],
                                 'result': result,
                             }
 
@@ -173,6 +173,7 @@ def main():
                                 "finished",
                                 returned_payload=return_payload
                             )
+                    pipe.has_work[:] = 0
                 else:
                     sleep(10)
 
