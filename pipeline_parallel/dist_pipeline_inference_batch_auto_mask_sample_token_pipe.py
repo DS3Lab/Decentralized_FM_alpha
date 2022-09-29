@@ -522,7 +522,7 @@ class DistInferenceMaskTokenPipeAutoBatch:
                     # Receive
                     self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank)
                     # Compute
-                    self._forward_compute_generate_token(i, mask=attention_masks[i])
+                    self._forward_compute_generate_token(i, mask=attention_masks[i] if attention_masks else None)
                     if step != self.generate_seq_length[i] - 1:
                         # Send
                         self.comm.send(self.send_new_tokens[i], dst=0)
@@ -532,7 +532,7 @@ class DistInferenceMaskTokenPipeAutoBatch:
                     # Receive
                     self.comm.recv(self.recv_new_token[i], src=self.pipeline_group_size - 1)
                     # Compute
-                    self._forward_compute_generate_token(i, mask=attention_masks[i])
+                    self._forward_compute_generate_token(i, mask=attention_masks[i] if attention_masks else None)
                     # Send
                     self.comm.send(self.output_token_emb[i], dst=self.post_node_rank)
             else:  # Middle nodes:
@@ -540,7 +540,7 @@ class DistInferenceMaskTokenPipeAutoBatch:
                     # Receive
                     self.comm.recv(self.input_token_emb[i], src=self.pre_node_rank)
                     # Compute
-                    self._forward_compute_generate_token(i, mask=attention_masks[i])
+                    self._forward_compute_generate_token(i, mask=attention_masks[i] if attention_masks else None)
                     # Send
                     self.comm.send(self.output_token_emb[i], dst=self.post_node_rank)
 
