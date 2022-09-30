@@ -456,12 +456,17 @@ def main(args):
                         job_id = instruction['payload']['id']
                         print(f"Job <{job_id}> has been batched")
                         has_work = True
+
+                dist.barrier()
+                if dist.get_rank() == 0:
                     dist.broadcast_object_list([raw_text, has_work])
                 else:
                     info = [raw_text, has_work]
                     torch.distributed.broadcast_object_list(info)
+                dist.barrier()
 
                 if has_work:
+                    print(f"Rank-<{dist.get_rank()}> join inference.")
                     answers, answers_with_style, blanks = fill_blanks(raw_text, model, tokenizer, strategy)
                     print(f"Rank-<{dist.get_rank()}>: answer:")
                     print(answers)
