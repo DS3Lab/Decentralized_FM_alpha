@@ -94,7 +94,7 @@ def batch_filling_sequence(
     # step-by-step generation
     print("<batch_filling_sequence> I am here 2")
     while counter < seqs.shape[1] - 1:
-        print(f"<batch_filling_sequence> counter:{counter}")
+        print(f"<batch_filling_sequence> counter:{counter}/{seqs.shape[1] - 1}")
         # Now, we want to generate seq[counter + 1],
         # token[:, index: counter+1] needs forwarding.
         # forward
