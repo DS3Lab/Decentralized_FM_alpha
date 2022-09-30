@@ -290,7 +290,7 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy) -> Tuple[List[str], L
         ["" for _ in range(num_output)],
         [[] for _ in range(num_output)],
     )
-
+    print("I am here 1")
     # continually detect the first mark position
     while True:
         seq = output_list[0]
@@ -306,6 +306,7 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy) -> Tuple[List[str], L
             [seq + [tokenizer.get_command("sop")]],
             device=args.device,
         )
+        print("I am here 2")
         output, _ = batch_filling_sequence(
             model,
             input_seq,
@@ -318,6 +319,7 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy) -> Tuple[List[str], L
                 gmask=use_gmask,
             ),
         )
+        print("I am here 3")
         if isinstance(output, torch.Tensor):  # different strategies
             output = output.tolist()
         output = output[0]  # batch_size = 1
@@ -348,12 +350,15 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy) -> Tuple[List[str], L
             last_pos[i] = mask_position + unfinished - (bog + 1)
             output_list[i] = output[:mask_position] + output[bog + 1 : unfinished] + output[mask_position + 1 : bog]
 
+        print("I am here 4")
+
     for i, output in enumerate(output_list):
         if output[-1] == tokenizer.get_command("eos"):
             output = output[:-1]
         answers_with_style[i] += tokenizer.detokenize(output[last_pos[i] :])
         answers[i] = tokenizer.detokenize(output)
 
+    print("I am here 5")
     return answers, answers_with_style, blanks
 
 
