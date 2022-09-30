@@ -449,7 +449,7 @@ def main(args):
                 if has_work:
                     print(f"Rank-<{dist.get_rank()}> join inference.")
                     start_time = time.time()
-                    strategy = BaseStrategy(batch_size=1, temperature=config['temperature'], top_k=config['args.top_k'],
+                    strategy = BaseStrategy(batch_size=1, temperature=config['temperature'], top_k=config['top_k'],
                                             top_p=config['top_p'], end_tokens=end_tokens)
                     answers, answers_with_style, blanks = fill_blanks(raw_text, model, tokenizer, strategy, config)
                     end_time = time.time()
