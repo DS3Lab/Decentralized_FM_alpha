@@ -24,7 +24,6 @@ import torch.distributed as dist
 from time import sleep
 
 
-
 class BaseStrategy:
     def __init__(self, batch_size, invalid_slices=[], temperature=1., top_k=200, eps=1e-4, top_p=0.0, end_tokens=None):
         self.batch_size = batch_size
@@ -257,7 +256,7 @@ def get_masks_and_position_ids(seq, mask_position, max_gen_length, gmask=False):
     return tokens, attention_mask, position_ids
 
 
-def fill_blanks(raw_text: str, model, tokenizer, strategy) -> Tuple[List[str], List[str], List[List[str]]]:
+def fill_blanks(raw_text: str, model, tokenizer, strategy, config=None) -> Tuple[List[str], List[str], List[List[str]]]:
     # add MASK
     generation_mask = "[MASK]" if "[MASK]" in raw_text else "[gMASK]"
     use_gmask = "[MASK]" not in raw_text
@@ -281,7 +280,7 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy) -> Tuple[List[str], L
         seq = seq + [tokenizer.get_command("eos")]
     if mpu.get_model_parallel_rank() == 0:
         print("\nInput: {}\n".format(raw_text))
-    if len(seq) > args.max_sequence_length:
+    if config is None and len(seq) > args.max_sequence_length:
         raise ValueError("text too long.")
 
     # generation
@@ -319,7 +318,7 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy) -> Tuple[List[str], L
             get_masks_and_position_ids=partial(
                 get_masks_and_position_ids,
                 mask_position=mask_position,
-                max_gen_length=args.out_seq_length - input_seq.shape[-1],
+                max_gen_length=config['max_tokens'] if config else args.out_seq_length - input_seq.shape[-1],
                 gmask=use_gmask,
             ),
         )
@@ -402,6 +401,7 @@ def main(args):
             try:
                 has_work = False
                 raw_text = ""
+                config = {}
                 if dist.get_rank() == 0:
                     instructions = local_cord_client.fetch_instructions('glm', 0)
                     last_instruction = instructions[-1]
@@ -427,10 +427,11 @@ def main(args):
                             raw_text = raw_text.strip()
                             job_id = instruction['payload']['id']
                             print(f"Job <{job_id}> has been batched")
-                            strategy_config = {
+                            config = {
                                 'temperature': query.get('temperature', 0.9),
                                 'top_k': query.get('top_k', 1),
-                                'top_p': query.get('top_p', 0)
+                                'top_p': query.get('top_p', 0),
+                                'max_tokens': query.get('max_tokens',10)
                             }
                             has_work = True
                         else:
@@ -438,20 +439,19 @@ def main(args):
 
                 dist.barrier()
                 if dist.get_rank() == 0:
-                    dist.broadcast_object_list([raw_text, strategy_config, has_work])
+                    dist.broadcast_object_list([raw_text, config, has_work])
                 else:
-                    info = [raw_text, strategy_config, has_work]
+                    info = [raw_text, config, has_work]
                     torch.distributed.broadcast_object_list(info)
-                    raw_text, strategy_config, has_work = info
+                    raw_text, config, has_work = info
                 dist.barrier()
 
                 if has_work:
                     print(f"Rank-<{dist.get_rank()}> join inference.")
                     start_time = time.time()
-                    strategy = BaseStrategy(batch_size=1, temperature=strategy_config['temperature'],
-                                            top_k=strategy_config['args.top_k'],
-                                            top_p=strategy_config['top_p'], end_tokens=end_tokens)
-                    answers, answers_with_style, blanks = fill_blanks(raw_text, model, tokenizer, strategy)
+                    strategy = BaseStrategy(batch_size=1, temperature=config['temperature'], top_k=config['args.top_k'],
+                                            top_p=config['top_p'], end_tokens=end_tokens)
+                    answers, answers_with_style, blanks = fill_blanks(raw_text, model, tokenizer, strategy, config)
                     end_time = time.time()
                     # print(f"Rank-<{dist.get_rank()}>: answer:")
                     # print(answers)
