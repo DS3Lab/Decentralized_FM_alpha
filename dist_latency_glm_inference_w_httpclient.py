@@ -451,6 +451,7 @@ def main(args):
                     start_time = time.time()
                     strategy = BaseStrategy(batch_size=1, temperature=args.temperature, top_k=args.top_k,
                                             top_p=args.top_p, end_tokens=end_tokens)
+                    # TODO some of our input config is illegal for GLM, need a fix!
                     # strategy = BaseStrategy(batch_size=1, temperature=config['temperature'], top_k=config['top_k'],
                     #                        top_p=config['top_p'], end_tokens=end_tokens)
                     # TODO change config to our config, to make it work desired seq length.
