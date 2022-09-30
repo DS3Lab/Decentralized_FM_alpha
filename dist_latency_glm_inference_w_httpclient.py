@@ -365,45 +365,16 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy) -> Tuple[List[str], L
     return answers, answers_with_style, blanks
 
 
-def main_original(args):
-    model, tokenizer = initialize_model_and_tokenizer(args)
-
-    end_tokens = [tokenizer.get_command("eop"), tokenizer.get_command("eos")]
-
-    if args.sampling_strategy == "BaseStrategy":
-        strategy = BaseStrategy(batch_size=1, temperature=args.temperature, top_k=args.top_k, top_p=args.top_p,
-                                end_tokens=end_tokens)
-    else:
-        raise ValueError(f"unknown strategy {args.sampling_strategy}")
-
-    def process(raw_text):
-        if args.with_id:
-            query_id, raw_text = raw_text.split("\t")
-
-        answers, answers_with_style, blanks = fill_blanks(raw_text, model, tokenizer, strategy)
-
-        # save
-        if args.with_id:
-            full_path = os.path.join(args.output_path, query_id + ".txt")
-        else:
-            prefix = raw_text.replace("/", "")[:20]
-            full_path = timed_name(prefix, ".txt", args.output_path)
-        if mpu.get_model_parallel_rank() == 0:
-            if args.print_all_beams and len(answers) > 1:
-                for idx, answer_with_style in enumerate(answers_with_style):
-                    print(f"Output beam {idx}:", answer_with_style)  # print the first.
-                    if len(answer_with_style) > 120:
-                        print("")
-            else:
-                print(f"Output:", answers_with_style[0])  # print the first.
-            with open(full_path, "w", encoding="utf-8") as fout:
-                for answer in answers:
-                    fout.write(answer + "\n")
-
-            os.chmod(full_path, stat.S_IRWXO + stat.S_IRWXG + stat.S_IRWXU)
-
-    os.makedirs(args.output_path, exist_ok=True)
-    generate_continually(process, args.input_source)
+def to_result(output):
+    # TODO, Lots of missing attributes here!!!!
+    item = {'choices': [], }
+    choice = {
+        "text": (output[0]),
+        "index": 0,
+        "finish_reason": "length",
+    }
+    item['choices'].append(choice)
+    return item
 
 
 def main(args):
@@ -471,7 +442,18 @@ def main(args):
                     answers, answers_with_style, blanks = fill_blanks(raw_text, model, tokenizer, strategy)
                     print(f"Rank-<{dist.get_rank()}>: answer:")
                     print(answers)
-                    # TODO send results back.
+                    if dist.get_rank() == 0:
+                        result = to_result(answers)
+                        return_payload = {
+                            'request': query,
+                            'result': result,
+                        }
+                        local_cord_client.update_status(
+                            job_id,
+                            "finished",
+                            returned_payload=return_payload
+                        )
+
             except Exception as e:
                 error = traceback.format_exc()
                 if dist.get_rank() == 0:
