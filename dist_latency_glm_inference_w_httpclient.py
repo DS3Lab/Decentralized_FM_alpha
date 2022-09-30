@@ -463,6 +463,7 @@ def main(args):
                 else:
                     info = [raw_text, has_work]
                     torch.distributed.broadcast_object_list(info)
+                    raw_text, has_work = info
                 dist.barrier()
 
                 if has_work:
