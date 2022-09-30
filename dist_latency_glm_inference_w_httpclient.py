@@ -79,7 +79,7 @@ def batch_filling_sequence(
         mems=None,
         **kw_args
         ):
-    print("<batch_filling_sequence> I am here 1")
+    # print("<batch_filling_sequence> I am here 1")
     assert len(seqs.shape) == 2
     # building the initial tokens, attention_mask, and position_ids
     batch_size, context_length = seqs.shape
@@ -92,9 +92,10 @@ def batch_filling_sequence(
     index = 0 if mems is None else mems.shape[2] # Next forward starting index, also the length of cache.
     num_beams = 1
     # step-by-step generation
-    print("<batch_filling_sequence> I am here 2")
+    # print("<batch_filling_sequence> I am here 2")
     while counter < seqs.shape[1] - 1:
-        print(f"<batch_filling_sequence> counter:{counter}/{seqs.shape[1] - 1}")
+        if dist.get_rank() == 0:
+            print(f"<batch_filling_sequence> counter:{counter}/{seqs.shape[1] - 1}")
         # Now, we want to generate seq[counter + 1],
         # token[:, index: counter+1] needs forwarding.
         # forward
@@ -293,7 +294,7 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy) -> Tuple[List[str], L
         ["" for _ in range(num_output)],
         [[] for _ in range(num_output)],
     )
-    print("<fill_blanks> I am here 1")
+    # print("<fill_blanks> I am here 1")
     # continually detect the first mark position
     while True:
         seq = output_list[0]
@@ -309,7 +310,7 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy) -> Tuple[List[str], L
             [seq + [tokenizer.get_command("sop")]],
             device=args.device,
         )
-        print("<fill_blanks> I am here 2")
+        # print("<fill_blanks> I am here 2")
         output, _ = batch_filling_sequence(
             model,
             input_seq,
@@ -322,7 +323,7 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy) -> Tuple[List[str], L
                 gmask=use_gmask,
             ),
         )
-        print("<fill_blanks> I am here 3")
+        # print("<fill_blanks> I am here 3")
         if isinstance(output, torch.Tensor):  # different strategies
             output = output.tolist()
         output = output[0]  # batch_size = 1
@@ -353,7 +354,7 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy) -> Tuple[List[str], L
             last_pos[i] = mask_position + unfinished - (bog + 1)
             output_list[i] = output[:mask_position] + output[bog + 1 : unfinished] + output[mask_position + 1 : bog]
 
-        print("<fill_blanks> I am here 4")
+        # print("<fill_blanks> I am here 4")
 
     for i, output in enumerate(output_list):
         if output[-1] == tokenizer.get_command("eos"):
@@ -361,7 +362,7 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy) -> Tuple[List[str], L
         answers_with_style[i] += tokenizer.detokenize(output[last_pos[i] :])
         answers[i] = tokenizer.detokenize(output)
 
-    print("<fill_blanks> I am here 5")
+    # print("<fill_blanks> I am here 5")
     return answers, answers_with_style, blanks
 
 
@@ -378,7 +379,8 @@ def to_result(output):
 
 
 def main(args):
-    print(args)
+    if dist.get_rank() == 0:
+        print(args)
 
     local_cord_client = LocalCoordinatorClient(
         working_directory=args.working_directory,
@@ -387,8 +389,6 @@ def main(args):
     try:
         model, tokenizer = initialize_model_and_tokenizer(args)
         end_tokens = [tokenizer.get_command("eop"), tokenizer.get_command("eos")]
-        strategy = BaseStrategy(batch_size=1, temperature=args.temperature, top_k=args.top_k, top_p=args.top_p,
-                                end_tokens=end_tokens)
         local_cord_client.update_status(args.job_id, "running")
     except Exception as e:
         print('Exception in model initialization inference:', e)
@@ -400,7 +400,7 @@ def main(args):
     try:
         while True:
             try:
-                has_work=False
+                has_work = False
                 raw_text = ""
                 if dist.get_rank() == 0:
                     instructions = local_cord_client.fetch_instructions('glm', 0)
@@ -417,32 +417,46 @@ def main(args):
                         fetched_tasks = [x for x in instructions
                                          if x["message"] == "run" and x['payload']['status'] == 'submitted']
 
-                        instruction = fetched_tasks[0]
-                        logger.info("Instruction:")
-                        logger.info(str(instruction))
-                        # TODO: we assume len(payload) is 1, right?
-                        query = instruction['payload']['payload'][0]
-                        raw_text = query['prompt']
-                        raw_text = raw_text.strip()
-                        job_id = instruction['payload']['id']
-                        print(f"Job <{job_id}> has been batched")
-                        has_work = True
+                        if len(fetched_tasks) > 0:
+                            instruction = fetched_tasks[0]
+                            logger.info("Instruction:")
+                            logger.info(str(instruction))
+                            # TODO: we assume len(payload) is 1, right?
+                            query = instruction['payload']['payload'][0]
+                            raw_text = query['prompt']
+                            raw_text = raw_text.strip()
+                            job_id = instruction['payload']['id']
+                            print(f"Job <{job_id}> has been batched")
+                            strategy_config = {
+                                'temperature': query.get('temperature', 0.9),
+                                'top_k': query.get('top_k', 1),
+                                'top_p': query.get('top_p', 0)
+                            }
+                            has_work = True
+                        else:
+                            has_work = False
 
                 dist.barrier()
                 if dist.get_rank() == 0:
-                    dist.broadcast_object_list([raw_text, has_work])
+                    dist.broadcast_object_list([raw_text, strategy_config, has_work])
                 else:
-                    info = [raw_text, has_work]
+                    info = [raw_text, strategy_config, has_work]
                     torch.distributed.broadcast_object_list(info)
-                    raw_text, has_work = info
+                    raw_text, strategy_config, has_work = info
                 dist.barrier()
 
                 if has_work:
                     print(f"Rank-<{dist.get_rank()}> join inference.")
+                    start_time = time.time()
+                    strategy = BaseStrategy(batch_size=1, temperature=strategy_config['temperature'],
+                                            top_k=strategy_config['args.top_k'],
+                                            top_p=strategy_config['top_p'], end_tokens=end_tokens)
                     answers, answers_with_style, blanks = fill_blanks(raw_text, model, tokenizer, strategy)
-                    print(f"Rank-<{dist.get_rank()}>: answer:")
-                    print(answers)
+                    end_time = time.time()
+                    # print(f"Rank-<{dist.get_rank()}>: answer:")
+                    # print(answers)
                     if dist.get_rank() == 0:
+                        print(f"Job-{job_id} GLM Inference takes {end_time-start_time}s")
                         result = to_result(answers)
                         return_payload = {
                             'request': query,
