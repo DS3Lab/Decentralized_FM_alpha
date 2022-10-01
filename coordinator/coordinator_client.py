@@ -64,6 +64,8 @@ class LocalCoordinatorClient:
 
     def update_status_global_coordinator(self, job_id, new_status, returned_payload=None):
         return requests.patch(self.global_coordinator_url + f"/{job_id}", json={
+            "type": "general",
+            "source": "dalle",
             "status": new_status,
             "returned_payload": returned_payload
         })
