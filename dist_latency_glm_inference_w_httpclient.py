@@ -455,7 +455,7 @@ def main(args):
                     strategy = BaseStrategy(batch_size=1, temperature=config['temperature'], top_k=config['top_k'],
                                             top_p=args.top_p, end_tokens=end_tokens)
                     # TODO change config to our config, to make it work desired seq length.
-                    answers, answers_with_style, blanks = fill_blanks(raw_text, model, tokenizer, strategy, config)
+                    answers, answers_with_style, blanks = fill_blanks(raw_text, model, tokenizer, strategy, config=None)
                     end_time = time.time()
                     # print(f"Rank-<{dist.get_rank()}>: answer:")
                     # print(answers)
