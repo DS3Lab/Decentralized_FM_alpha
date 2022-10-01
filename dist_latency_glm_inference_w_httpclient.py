@@ -365,11 +365,11 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy, config=None) -> Tuple
     return answers, answers_with_style, blanks
 
 
-def to_result(output):
+def to_result(output, query):
     # TODO, Lots of missing attributes here!!!!
     item = {'choices': [], }
     choice = {
-        "text": (output[0]),
+        "text": (output[0] if query.get('echo', False) else output[-query.get('max_tokens', 10):]),
         "index": 0,
         "finish_reason": "length",
     }
@@ -455,13 +455,14 @@ def main(args):
                     strategy = BaseStrategy(batch_size=1, temperature=args.temperature, top_k=config['top_k'],
                                             top_p=args.top_p, end_tokens=end_tokens)
                     # TODO change config to our config, to make it work desired seq length.
-                    answers, answers_with_style, blanks = fill_blanks(raw_text, model, tokenizer, strategy, config)
+                    answers, answers_with_style, blanks = \
+                        fill_blanks(raw_text, model, tokenizer, strategy, config)
                     end_time = time.time()
                     # print(f"Rank-<{dist.get_rank()}>: answer:")
                     # print(answers)
                     if dist.get_rank() == 0:
                         print(f"Job-{job_id} GLM Inference takes {end_time-start_time}s")
-                        result = to_result(answers)
+                        result = to_result(answers, query)
                         return_payload = {
                             'request': query,
                             'result': result,
