@@ -365,11 +365,11 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy, config=None) -> Tuple
     return answers, answers_with_style, blanks
 
 
-def to_result(output, query):
+def to_result(output, query, prompt_str_length):
     # TODO, Lots of missing attributes here!!!!
     item = {'choices': [], }
     choice = {
-        "text": (output[0] if query.get('echo', False) else output[0][-query.get('max_tokens', 10):]),
+        "text": (output[0] if query.get('echo', False) else output[0][prompt_str_length:]),
         "index": 0,
         "finish_reason": "length",
     }
@@ -423,7 +423,13 @@ def main(args):
                             logger.info(str(instruction))
                             # TODO: we assume len(payload) is 1, right?
                             query = instruction['payload']['payload'][0]
-                            raw_text = query['prompt']
+                            if isinstance(query['prompt'], list):
+                                raw_text = query['prompt'][0]
+                            elif isinstance(query['prompt'], str):
+                                raw_text = query['prompt']
+                            else:
+                                print("wrong prompt format, it can only be str or list of str")
+                                print(query['prompt'])
                             raw_text = raw_text.strip()
                             job_id = instruction['payload']['id']
                             print(f"Job <{job_id}> has been batched")
@@ -462,7 +468,7 @@ def main(args):
                     # print(answers)
                     if dist.get_rank() == 0:
                         print(f"Job-{job_id} GLM Inference takes {end_time-start_time}s")
-                        result = to_result(answers, query)
+                        result = to_result(answers, query, len(raw_text))
                         return_payload = {
                             'request': query,
                             'result': result,
