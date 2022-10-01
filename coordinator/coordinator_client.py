@@ -16,6 +16,7 @@ class LocalCoordinatorClient:
                  ) -> None:
         self.working_directory = working_directory
         self.coordinator_url = coordinator_url
+        self.global_coordinator_url = "https://planetd.shift.ml/jobs"
 
     def load_input_job_from_dfs(self, job_id):
         doc_path = os.path.join(self.working_directory,
@@ -60,3 +61,9 @@ class LocalCoordinatorClient:
     
     def fetch_instructions(self, model_name, rank):
         return requests.get(self.coordinator_url+f"/instructions/{model_name}/{rank}").json()
+
+    def update_status_global_coordinator(self, job_id, new_status, returned_payload=None):
+        return requests.patch(self.global_coordinator_url + f"/{job_id}", json={
+            "status": new_status,
+            "returned_payload": returned_payload
+        })

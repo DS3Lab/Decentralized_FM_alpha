@@ -478,7 +478,8 @@ def main(args):
                             'request': query,
                             'result': result,
                         }
-                        local_cord_client.update_status(
+                        # local_cord_client.update_status(
+                        local_cord_client.update_status_global_coordinator(
                             job_id,
                             "finished",
                             returned_payload=return_payload
