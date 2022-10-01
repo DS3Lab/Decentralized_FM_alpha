@@ -412,6 +412,7 @@ def main(args):
                         break
                     elif last_instruction["message"] == "continue":
                         logger.info("Received keep instruction.")
+                        sleep(1)
                         has_work = False
                     elif last_instruction["message"] == "run":
                         fetched_tasks = [x for x in instructions
@@ -495,7 +496,6 @@ def main(args):
                     )
                 print(error)
                 raise e
-            sleep(1)
 
     except Exception as e:
         print('Exception in latency inference:', e)
