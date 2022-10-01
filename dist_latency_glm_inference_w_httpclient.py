@@ -369,7 +369,7 @@ def to_result(output, query):
     # TODO, Lots of missing attributes here!!!!
     item = {'choices': [], }
     choice = {
-        "text": (output[0] if query.get('echo', False) else output[-query.get('max_tokens', 10):]),
+        "text": (output[0] if query.get('echo', False) else output[0][-query.get('max_tokens', 10):]),
         "index": 0,
         "finish_reason": "length",
     }
