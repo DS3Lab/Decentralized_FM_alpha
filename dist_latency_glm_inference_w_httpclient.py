@@ -435,7 +435,7 @@ def main(args):
                             print(f"Job <{job_id}> has been batched")
                             config = {
                                 'temperature': query.get('temperature', 0.9),
-                                'top_k': query.get('top_k', 1),
+                                # 'top_k': query.get('top_k', 1),
                                 'top_p': query.get('top_p', 0),
                                 'max_tokens': query.get('max_tokens',10)
                             }
@@ -457,9 +457,14 @@ def main(args):
                     start_time = time.time()
                     # strategy = BaseStrategy(batch_size=1, temperature=args.temperature, top_k=args.top_k,
                     #                        top_p=args.top_p, end_tokens=end_tokens)
-                    # TODO some of our input config is illegal for GLM, need a fix!
-                    strategy = BaseStrategy(batch_size=1, temperature=args.temperature, top_k=config['top_k'],
-                                            top_p=args.top_p, end_tokens=end_tokens)
+                    # Followed Jue's suggestion for temperature
+                    if config['temperature'] == 0:
+                        strategy = BaseStrategy(batch_size=1, temperature=1, top_k=1,
+                                                top_p=config['top_p'], end_tokens=end_tokens)
+                    else:
+                        strategy = BaseStrategy(batch_size=1, temperature=config['temperature'], top_k=args.top_k,
+                                                top_p=config['top_p'], end_tokens=end_tokens)
+
                     # TODO change config to our config, to make it work desired seq length.
                     answers, answers_with_style, blanks = \
                         fill_blanks(raw_text, model, tokenizer, strategy, config)
