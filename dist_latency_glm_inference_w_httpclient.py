@@ -485,6 +485,7 @@ def main(args):
                             "finished",
                             returned_payload=return_payload
                         )
+                        local_cord_client.update_status(job_id, "finished", returned_payload={})
 
             except Exception as e:
                 error = traceback.format_exc()
