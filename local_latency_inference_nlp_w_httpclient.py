@@ -147,12 +147,11 @@ def main():
 
             except Exception as e:
                 error = traceback.format_exc()
-                if dist.get_rank() == 0:
-                    local_cord_client.update_status(
-                        job_id,
-                        "failed",
-                        returned_payload={"message": error}
-                    )
+                local_cord_client.update_status(
+                    job_id,
+                    "failed",
+                    returned_payload={"message": error}
+                )
                 print(error)
                 raise e
 
