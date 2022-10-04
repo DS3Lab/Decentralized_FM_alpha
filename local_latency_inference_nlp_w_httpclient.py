@@ -47,7 +47,7 @@ def main():
     parser.add_argument('--model-name', type=str, default='t5-11b', metavar='S',
                         help='trained model path')
     parser.add_argument('cuda-id', type=int, default=0, metavar='S',
-                        help='cuda-id (default:0)')
+                        help='--cuda-id (default:0)')
     parser.add_argument('--fp16', action='store_true',
                         help='Run model in fp16 mode.')
     args = parser.parse_args()
