@@ -136,6 +136,7 @@ def demo_cupy():
 
 
 def copy_tensor_torch_cupy(n: int, dim: int):
+    print(f"Dim: ({dim},{dim})")
     input_pin_numpy_cpu = [_pin_memory(numpy.eye(dim, dtype=numpy.float16) * (1 + 0.01 * float(i))) for i in range(n)]
     output_pin_numpy_cpu = [_pin_memory(numpy.zeros((dim, dim), dtype=numpy.float16)) for _ in range(n)]
 
@@ -187,6 +188,7 @@ def copy_tensor_torch_cupy(n: int, dim: int):
 
     print("Total time: ", start_event.elapsed_time(end_event))
 
+    '''
     for i in range(n):
         print("===============================", i, "===============================")
         print("input_numpy_cpu:", input_pin_numpy_cpu[i])
@@ -195,33 +197,38 @@ def copy_tensor_torch_cupy(n: int, dim: int):
         print("Output torch gpu:", output_tensors_torch_gpu[i])
         print("Output cupy gpu:", output_tensors_cupy_gpu[i])
         print("Output numpy cpu:", output_pin_numpy_cpu[i])
+    '''
 
     profile_logs = []
+
+    block_size_mb = 2 * dim * dim // 1024 // 1024
 
     for i in range(n):
         copy_to_gpu_ts = start_event.elapsed_time(copy_to_gpu_start_events[i]) * 1e+3
         copy_to_gpu_slot = copy_to_gpu_start_events[i].elapsed_time(copy_to_gpu_ready_events[i]) * 1e+3
         copy_to_gpu_log = {"name": "to_gpu", "ph": "X", "pid": 0, "tid": "1. Copy to GPU", "ts": copy_to_gpu_ts,
-                           "dur": copy_to_gpu_slot, "args": {"micro-batch": i}, "cname": "startup"}
+                           "dur": copy_to_gpu_slot, "args": {"micro-batch": i, "block-size-MB": block_size_mb}, "cname": "startup"}
         profile_logs.append(copy_to_gpu_log)
+        print(f"CPU to GPU load bandwidth {block_size_mb / 1024/(copy_to_gpu_slot/1e+6)} GB/s")
 
         gpu_compute_ts = start_event.elapsed_time(gpu_compute_start_events[i]) * 1e+3
         gpu_compute_slot = gpu_compute_start_events[i].elapsed_time(gpu_compute_ready_events[i]) * 1e+3
         gpu_compute_log = {"name": "matrix_power", "ph": "X", "pid": 0, "tid": "2. GPU Compute", "ts": gpu_compute_ts,
-                           "dur": gpu_compute_slot, "args": {"micro-batch": i}, "cname": "good"}
+                           "dur": gpu_compute_slot, "args": {"micro-batch": i, "block-size-MB": block_size_mb}, "cname": "good"}
         profile_logs.append(gpu_compute_log)
 
         copy_to_cpu_ts = start_event.elapsed_time(copy_to_cpu_start_events[i]) * 1e+3
         copy_to_cpu_slot = copy_to_cpu_start_events[i].elapsed_time(copy_to_cpu_ready_events[i]) * 1e+3
         copy_to_cpu_log = {"name": "to_cpu", "ph": "X", "pid": 0, "tid": "3. Copy to CPU", "ts": copy_to_cpu_ts,
-                           "dur": copy_to_cpu_slot, "args": {"micro-batch": i}, "cname": "thread_state_iowait"}
+                           "dur": copy_to_cpu_slot, "args": {"micro-batch": i, "block-size-MB": block_size_mb}, "cname": "thread_state_iowait"}
         profile_logs.append(copy_to_cpu_log)
+        print(f"GPU to CPU load bandwidth {block_size_mb / 1024 / (copy_to_cpu_slot / 1e+6)} GB/s")
 
     path = '../trace_json/local_debug_CPU_GPU_torch_cupy_copy_both.json'
     with open(path, 'w') as outfile:
         json.dump(profile_logs, outfile)
 
 
-copy_tensor_torch(10, 2048, True, True)
+# copy_tensor_torch(10, 2048, True, True)
 # demo_cupy()
-copy_tensor_torch_cupy(10, 2048)
+copy_tensor_torch_cupy(10, 4096)
