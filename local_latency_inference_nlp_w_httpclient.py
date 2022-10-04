@@ -146,13 +146,10 @@ def main():
                             )
 
                         texts = tokenizer.batch_decode(outputs.sequences, skip_special_tokens=True)
-
-                        print(texts)
-
                         end_time = time.time()
-                        print(f"Job-{job_id} GLM Inference takes {end_time-start_time}s")
-                        print(f"outputs by hf model: {outputs}")
-
+                        print(f"Job-{job_id} {args.model_name} Inference takes {end_time-start_time}s")
+                        print(f"Output: {texts[0]}")
+                        # print(f"outputs by hf model: {outputs}")
                         result = to_result(tokenizer.batch_decode(outputs.sequences, skip_special_tokens=True))
 
                         return_payload = {
