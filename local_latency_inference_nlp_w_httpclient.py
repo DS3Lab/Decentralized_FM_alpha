@@ -114,6 +114,7 @@ def main():
                             return_tensors="pt",
                         )
 
+                        inputs.to(device)
 
                         if query.get('temperature', 0.9) == 0:
                             outputs = model.generate(
