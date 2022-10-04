@@ -59,7 +59,7 @@ def main():
     assert (torch.cuda.is_available())
     device = torch.device('cuda', args.cuda_id)
     try:
-        tokenizer, model = get_huggingface_tokenizer_model(args.model_name, device)
+        tokenizer, model = get_huggingface_tokenizer_model(args, device)
         local_cord_client.update_status(args.job_id, "running")
     except Exception as e:
         print('Exception in model initialization inference:', e)
