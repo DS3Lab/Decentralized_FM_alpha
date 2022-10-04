@@ -3,7 +3,6 @@ import time
 from coordinator.coordinator_client import LocalCoordinatorClient
 import traceback
 from loguru import logger
-import torch.distributed as dist
 from time import sleep
 from transformers import AutoTokenizer, AutoModelForCausalLM, T5ForConditionalGeneration, AutoModelForSeq2SeqLM
 import torch
@@ -35,6 +34,17 @@ def get_huggingface_tokenizer_model(args, device):
         model = model.half()
     model = model.to(device)
     return tokenizer, model
+
+
+def to_result(output):
+    item = {'choices': [], }
+    choice = {
+        "text": (output[0]),
+        "index": 0,
+        "finish_reason": "length",
+    }
+    item['choices'].append(choice)
+    return item
 
 
 def main():
@@ -142,20 +152,20 @@ def main():
                         end_time = time.time()
                         print(f"Job-{job_id} GLM Inference takes {end_time-start_time}s")
                         print(f"outputs by hf model: {outputs}")
-                        # result = to_result(answers, query, len(raw_text))
-                        '''
+
+                        result = to_result(tokenizer.batch_decode(outputs.sequences, skip_special_tokens=True))
+
                         return_payload = {
                             'request': query,
                             'result': result,
                         }
-                        local_cord_client.update_status(
+                        # local_cord_client.update_status(
                         local_cord_client.update_status_global_coordinator(
                             job_id,
                             "finished",
                             returned_payload=return_payload
                         )
                         local_cord_client.update_status(job_id, "finished", returned_payload={})
-                        '''
 
             except Exception as e:
                 error = traceback.format_exc()
@@ -173,6 +183,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
