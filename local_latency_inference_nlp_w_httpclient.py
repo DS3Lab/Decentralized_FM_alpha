@@ -114,14 +114,25 @@ def main():
                             return_tensors="pt",
                         )
 
-                        outputs = model.generate(
-                            **inputs, do_sample=True, top_p=query.get('top_p', 0),
-                            temperature=query.get('temperature', 0.9),
-                            max_new_tokens=query.get('max_tokens', 16),
-                            return_dict_in_generate=True,
-                            output_scores=True,  # return logit score
-                            output_hidden_states=True,  # return embeddings
-                        )
+
+                        if query.get('temperature', 0.9) == 0:
+                            outputs = model.generate(
+                                **inputs, do_sample=True, top_p=query.get('top_p', 0),
+                                temperature=1.0, top_k=1,
+                                max_new_tokens=query.get('max_tokens', 16),
+                                return_dict_in_generate=True,
+                                output_scores=True,  # return logit score
+                                output_hidden_states=True,  # return embeddings
+                            )
+                        else:
+                            outputs = model.generate(
+                                **inputs, do_sample=True, top_p=query.get('top_p', 0),
+                                temperature=query.get('temperature', 0.9),
+                                max_new_tokens=query.get('max_tokens', 16),
+                                return_dict_in_generate=True,
+                                output_scores=True,  # return logit score
+                                output_hidden_states=True,  # return embeddings
+                            )
 
                         texts = tokenizer.batch_decode(outputs.sequences, skip_special_tokens=True)
 
