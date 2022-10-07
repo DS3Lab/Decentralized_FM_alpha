@@ -76,6 +76,7 @@ def batch_filling_sequence(
         max_memory_length=100000,
         get_masks_and_position_ids=get_masks_and_position_ids_default,
         mems=None,
+        get_last_layer_embedding=False,
         **kw_args
         ):
     # print("<batch_filling_sequence> I am here 1")
@@ -100,11 +101,13 @@ def batch_filling_sequence(
         # forward
         tokens = tokens.reshape(batch_size * num_beams, -1)
         mems = mems.reshape(mems.shape[0], batch_size * num_beams, mems.shape[-2], mems.shape[-1]) if mems is not None else None
+        
         logits, *output_per_layers = model(
             tokens[:, index:],
             position_ids[..., index: counter+1],
             attention_mask[..., index: counter+1, :counter+1], # TODO memlen
             mems=mems,
+            output_hidden_states=get_last_layer_embedding and counter == context_length - 1
             **kw_args
         )
         mem_kv = [o['mem_kv'] for o in output_per_layers]
@@ -130,7 +133,10 @@ def batch_filling_sequence(
                 batch_size * num_beams, *attention_mask_shape)
         if strategy.is_done:
             break
-    return strategy.finalize(tokens, mems)
+    if get_last_layer_embedding:
+        return strategy.finalize(tokens, mems), output_per_layers[-1]['hidden_states']
+    else:
+        return strategy.finalize(tokens, mems)
 
 
 def add_bminf_args(parser):
@@ -256,7 +262,7 @@ def get_masks_and_position_ids(seq, mask_position, max_gen_length, gmask=False):
     return tokens, attention_mask, position_ids
 
 
-def fill_blanks(raw_text: str, model, tokenizer, strategy, config=None) -> Tuple[List[str], List[str], List[List[str]]]:
+def fill_blanks(raw_text: str, model, tokenizer, strategy, config=None):
     # add MASK
     generation_mask = "[MASK]" if "[MASK]" in raw_text else "[gMASK]"
     use_gmask = "[MASK]" not in raw_text
@@ -295,6 +301,8 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy, config=None) -> Tuple
     )
     # print("<fill_blanks> I am here 1")
     # continually detect the first mark position
+    firt_prompt_flag = True
+    last_layer_embedding = None
     while True:
         seq = output_list[0]
         # detect mask position
@@ -310,18 +318,40 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy, config=None) -> Tuple
             device=args.device,
         )
         # print("<fill_blanks> I am here 2")
-        output, _ = batch_filling_sequence(
-            model,
-            input_seq,
-            torch.cuda.LongTensor([input_seq.shape[-1]], device=args.device),
-            strategy=strategy,
-            get_masks_and_position_ids=partial(
-                get_masks_and_position_ids,
-                mask_position=mask_position,
-                max_gen_length=config['max_tokens'] if config else args.out_seq_length - input_seq.shape[-1],
-                gmask=use_gmask,
-            ),
-        )
+        get_last_layer_embedding = False
+        if firt_prompt_flag:
+            if config is not None and config['prompt_embedding']:
+                get_last_layer_embedding = True
+            firt_prompt_flag = False
+
+        if get_last_layer_embedding:
+            output, _, last_layer_embedding = batch_filling_sequence(
+                model,
+                input_seq,
+                torch.cuda.LongTensor([input_seq.shape[-1]], device=args.device),
+                strategy=strategy,
+                get_masks_and_position_ids=partial(
+                    get_masks_and_position_ids,
+                    mask_position=mask_position,
+                    max_gen_length=config['max_tokens'] if config else args.out_seq_length - input_seq.shape[-1],
+                    gmask=use_gmask,
+                ),
+                get_last_layer_embedding=get_last_layer_embedding
+            )
+        else:
+            output, _ = batch_filling_sequence(
+                model,
+                input_seq,
+                torch.cuda.LongTensor([input_seq.shape[-1]], device=args.device),
+                strategy=strategy,
+                get_masks_and_position_ids=partial(
+                    get_masks_and_position_ids,
+                    mask_position=mask_position,
+                    max_gen_length=config['max_tokens'] if config else args.out_seq_length - input_seq.shape[-1],
+                    gmask=use_gmask,
+                ),
+                get_last_layer_embedding=get_last_layer_embedding
+            )
         # print("<fill_blanks> I am here 3")
         if isinstance(output, torch.Tensor):  # different strategies
             output = output.tolist()
@@ -362,17 +392,19 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy, config=None) -> Tuple
         answers[i] = tokenizer.detokenize(output)
 
     # print("<fill_blanks> I am here 5")
-    return answers, answers_with_style, blanks
+    return answers, answers_with_style, blanks, last_layer_embedding
 
 
-def to_result(output, query, prompt_str_length):
+def to_result(output, query, prompt_str_length, last_layer_embedding):
     # TODO, Lots of missing attributes here!!!!
     item = {'choices': [], }
     choice = {
         "text": (output[0] if query.get('echo', False) else output[0][prompt_str_length:]),
         "index": 0,
-        "finish_reason": "length",
+        "finish_reason": "length"
     }
+    if last_layer_embedding:
+        choice['embedding'] = last_layer_embedding
     item['choices'].append(choice)
     return item
 
@@ -438,7 +470,8 @@ def main(args):
                                 'temperature': query.get('temperature', 0.9),
                                 # 'top_k': query.get('top_k', 1),
                                 'top_p': query.get('top_p', 0),
-                                'max_tokens': query.get('max_tokens',10)
+                                'max_tokens': query.get('max_tokens',10),
+                                'prompt_embedding': query.get('prompt_embedding', False)
                             }
                             has_work = True
                         else:
@@ -467,17 +500,18 @@ def main(args):
                                                 top_p=config['top_p'], end_tokens=end_tokens)
 
                     # TODO change config to our config, to make it work desired seq length.
-                    answers, answers_with_style, blanks = \
+                    answers, answers_with_style, blanks, last_layer_embedding = \
                         fill_blanks(raw_text, model, tokenizer, strategy, config)
                     end_time = time.time()
                     # print(f"Rank-<{dist.get_rank()}>: answer:")
                     # print(answers)
                     if dist.get_rank() == 0:
                         print(f"Job-{job_id} GLM Inference takes {end_time-start_time}s")
-                        result = to_result(answers, query, len(raw_text))
+                        result = to_result(answers, query, len(raw_text), last_layer_embedding)
                         return_payload = {
                             'request': query,
                             'result': result,
+                            'raw_compute_time': end_time-start_time
                         }
                         # local_cord_client.update_status(
                         local_cord_client.update_status_global_coordinator(
