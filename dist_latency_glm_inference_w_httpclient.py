@@ -22,6 +22,7 @@ import traceback
 from loguru import logger
 import torch.distributed as dist
 from time import sleep
+import requests
 
 
 class BaseStrategy:
@@ -93,6 +94,7 @@ def batch_filling_sequence(
     num_beams = 1
     # step-by-step generation
     # print("<batch_filling_sequence> I am here 2")
+    output_embedding=None
     while counter < seqs.shape[1] - 1:
         if dist.get_rank() == 0:
             print(f"<batch_filling_sequence> counter:{counter}/{seqs.shape[1] - 1}")
@@ -102,14 +104,16 @@ def batch_filling_sequence(
         tokens = tokens.reshape(batch_size * num_beams, -1)
         mems = mems.reshape(mems.shape[0], batch_size * num_beams, mems.shape[-2], mems.shape[-1]) if mems is not None else None
         
+        output_embedding_flag = get_last_layer_embedding and counter == context_length - 1
         logits, *output_per_layers = model(
             tokens[:, index:],
             position_ids[..., index: counter+1],
             attention_mask[..., index: counter+1, :counter+1], # TODO memlen
             mems=mems,
-            output_hidden_states=get_last_layer_embedding and counter == context_length - 1
-            **kw_args
+            output_hidden_states=output_embedding_flag
         )
+        if output_embedding_flag:
+            output_embedding = output_per_layers[-1]['hidden_states']
         mem_kv = [o['mem_kv'] for o in output_per_layers]
         mems = update_mems(mem_kv, mems, max_memory_length=max_memory_length)
         if counter == context_length - 1:
@@ -134,7 +138,8 @@ def batch_filling_sequence(
         if strategy.is_done:
             break
     if get_last_layer_embedding:
-        return strategy.finalize(tokens, mems), output_per_layers[-1]['hidden_states']
+        tokens, mems = strategy.finalize(tokens, mems)
+        return tokens, mems, output_embedding
     else:
         return strategy.finalize(tokens, mems)
 
@@ -159,8 +164,8 @@ def foo_port_add_coordinator_args(parser):
     parser.add_argument('--job_id', type=str, default='-', metavar='S',
                         help='DB ID')
     parser.add_argument('--working-directory', type=str,
-                        default='/cluster/scratch/biyuan/fetch_cache', metavar='S',
-                        help='The IP of coordinator-server.')
+                        default='/root/fm/working_dir', metavar='S',
+                        help='Working_dir for file cache.')
 
 
 def initialize(extra_args_provider):
@@ -301,9 +306,12 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy, config=None):
     )
     # print("<fill_blanks> I am here 1")
     # continually detect the first mark position
-    firt_prompt_flag = True
-    last_layer_embedding = None
+    foo_counter = 0
     while True:
+        if dist.get_rank() == 0:
+            print(f"<batch_filling_sequence> counter:{foo_counter}")
+            foo_counter += 1
+            
         seq = output_list[0]
         # detect mask position
         mask_token = tokenizer.get_command(generation_mask)
@@ -318,11 +326,10 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy, config=None):
             device=args.device,
         )
         # print("<fill_blanks> I am here 2")
-        get_last_layer_embedding = False
-        if firt_prompt_flag:
-            if config is not None and config['prompt_embedding']:
-                get_last_layer_embedding = True
-            firt_prompt_flag = False
+        if config is not None and config['prompt_embedding']:
+            get_last_layer_embedding = True
+        else:
+            get_last_layer_embedding = False
 
         if get_last_layer_embedding:
             output, _, last_layer_embedding = batch_filling_sequence(
@@ -395,7 +402,7 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy, config=None):
     return answers, answers_with_style, blanks, last_layer_embedding
 
 
-def to_result(output, query, prompt_str_length, last_layer_embedding):
+def to_result(output, query, prompt_str_length, last_layer_embedding, job_id=None, working_directory=None):
     # TODO, Lots of missing attributes here!!!!
     item = {'choices': [], }
     choice = {
@@ -403,8 +410,16 @@ def to_result(output, query, prompt_str_length, last_layer_embedding):
         "index": 0,
         "finish_reason": "length"
     }
-    if last_layer_embedding:
-        choice['embedding'] = last_layer_embedding
+    if last_layer_embedding is not None:
+        last_layer_embedding = torch.transpose(last_layer_embedding, 0, 1)
+        print(f"serialize last layer embedding, shape {last_layer_embedding.shape} ")
+        tensor_filename = working_directory+'/'+job_id+'_embedding.pt'
+        torch.save(last_layer_embedding, tensor_filename)
+        with open(tensor_filename, "rb") as fp:
+            files = {"file": fp}
+            res = requests.post("https://planetd.shift.ml/file", files=files).json()
+            choice['embedding'] = res["filename"]
+            os.remove(tensor_filename)
     item['choices'].append(choice)
     return item
 
@@ -507,7 +522,8 @@ def main(args):
                     # print(answers)
                     if dist.get_rank() == 0:
                         print(f"Job-{job_id} GLM Inference takes {end_time-start_time}s")
-                        result = to_result(answers, query, len(raw_text), last_layer_embedding)
+                        result = to_result(answers, query, len(raw_text), last_layer_embedding, job_id=job_id, 
+                                           working_directory=args.working_directory)
                         return_payload = {
                             'request': query,
                             'result': result,
