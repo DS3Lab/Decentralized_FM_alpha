@@ -12,7 +12,7 @@ from SwissArmyTransformer import mpu
 from SwissArmyTransformer.generation.autoregressive_sampling import update_mems, get_masks_and_position_ids_default
 from SwissArmyTransformer.mpu import vocab_parallel_cross_entropy
 from SwissArmyTransformer.generation.utils import timed_name, generate_continually
-from SwissArmyTransformer.generation.sampling_strategies.base_strategy import top_k_logits
+# from SwissArmyTransformer.generation.sampling_strategies.base_strategy import top_k_logits
 from SwissArmyTransformer import get_args, get_tokenizer
 from SwissArmyTransformer.arguments import initialize_distributed
 from SwissArmyTransformer.training import load_checkpoint
@@ -23,6 +23,32 @@ from loguru import logger
 import torch.distributed as dist
 from time import sleep
 import requests
+
+
+def top_k_logits(logits, top_k=0, top_p=0.0, filter_value=-65504):
+    if top_k > 0:
+        # Remove all tokens with a probability less than the last token of the top-k
+        indices_to_remove = logits < torch.topk(logits, top_k)[0][..., -1, None]
+        logits[indices_to_remove] = filter_value
+
+    if top_p > 0.0:
+        #batch_size = logits.shape[0]
+        # convert to 1D
+        # logits = logits.view(-1).contiguous()
+        sorted_logits, sorted_indices = torch.sort(logits, descending=True)
+        cumulative_probs = torch.cumsum(F.softmax(sorted_logits, dim=-1), dim=-1)
+
+        # Remove tokens with cumulative probability above the threshold
+        sorted_indices_to_remove = cumulative_probs > top_p
+        # Shift the indices to the right to keep also the first token above the threshold
+        sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()
+        sorted_indices_to_remove[..., 0] = 0
+        indices_to_remove = sorted_indices[sorted_indices_to_remove]
+        logits[indices_to_remove] = filter_value
+        # going back to 2D
+        # logits = logits.view(1, -1).contiguous()
+
+    return logits
 
 
 class BaseStrategy:
@@ -36,21 +62,26 @@ class BaseStrategy:
         if end_tokens is None:
             end_tokens = []
         self.end_tokens = end_tokens
-        self._is_done = np.zeros(self.batch_size, dtype=np.bool)
+        self._is_done = np.zeros(self.batch_size, dtype=np.bool_)
 
     @property
     def is_done(self) -> bool:
         return self._is_done.all()
 
     def forward(self, logits, tokens, mems, temperature=None):
+        if dist.get_rank() == 0:
+            print(f"<BaseStrategy.forward>1 logits {logits.shape}, tokens {tokens.shape}, mems {mems.shape}")
         logits = logits.view(-1, logits.size(-1))
+        if dist.get_rank() == 0:
+            print(f"<BaseStrategy.forward>2 logits {logits.shape}")
         batch_size = tokens.shape[0]
         if temperature is None:
             temperature = self.temperature
         logits = logits / temperature
         for invalid_slice in self.invalid_slices:
             logits[..., invalid_slice] = -65504
-
+        if dist.get_rank() == 0:
+            print(f"<BaseStrategy.forward>3 logits {logits.shape}")
         logits = top_k_logits(logits, self.topk, self.top_p)
         probs = F.softmax(logits.float(), dim=-1)  # float is essetial, due to a bug in Pytorch
         pred = torch.multinomial(probs, num_samples=1)
@@ -65,7 +96,7 @@ class BaseStrategy:
         return tokens, mems
 
     def finalize(self, tokens, mems):
-        self._is_done = np.zeros(self.batch_size, dtype=np.bool)
+        self._is_done = np.zeros(self.batch_size, dtype=np.bool_)
         return tokens, mems
 
 
@@ -81,9 +112,12 @@ def batch_filling_sequence(
         **kw_args
         ):
     # print("<batch_filling_sequence> I am here 1")
+    if dist.get_rank() == 0:
+        print(f"<batch_filling_sequence> seqs: {seqs}")
     assert len(seqs.shape) == 2
     # building the initial tokens, attention_mask, and position_ids
     batch_size, context_length = seqs.shape
+   
     seqs, attention_mask, position_ids = get_masks_and_position_ids(seqs)
     tokens = seqs[..., :context_length]
     if attention_mask.dtype != torch.bool:
@@ -267,10 +301,30 @@ def get_masks_and_position_ids(seq, mask_position, max_gen_length, gmask=False):
     return tokens, attention_mask, position_ids
 
 
+def get_masks_and_position_ids_batch(seqs, mask_position, max_gen_length, gmask=False):
+    batch_size = seqs.shape[0]
+    context_length = seqs.shape[1]
+    tokens = torch.nn.functional.pad(seqs, (0, max_gen_length), mode='constant', value=-1)
+    # TODO This might be wrong, double check.
+    attention_mask = torch.ones((batch_size, tokens.shape[-1], tokens.shape[-1]), device=tokens.device)
+    attention_mask.tril_()
+    attention_mask[..., : context_length - 1] = 1
+    attention_mask.unsqueeze_(1)
+    attention_mask = (attention_mask < 0.5).bool()
+    position_ids = torch.arange(tokens.shape[-1], dtype=torch.long, device=tokens.device)
+    if not gmask:
+        position_ids[context_length - 1:] = mask_position
+
+    position_ids = position_ids.unsqueeze(0)
+
+    return tokens, attention_mask, position_ids
+
+
 def fill_blanks(raw_text: str, model, tokenizer, strategy, config=None):
     # add MASK
     generation_mask = "[MASK]" if "[MASK]" in raw_text else "[gMASK]"
     use_gmask = "[MASK]" not in raw_text
+    last_layer_embedding = None
 
     mask_pattern = r"\[g?MASK\]"
     text_list = re.split(mask_pattern, raw_text)
@@ -396,32 +450,196 @@ def fill_blanks(raw_text: str, model, tokenizer, strategy, config=None):
         if output[-1] == tokenizer.get_command("eos"):
             output = output[:-1]
         answers_with_style[i] += tokenizer.detokenize(output[last_pos[i] :])
+        if dist.get_rank() == 0:
+            print(f"<fill_blanks> output: {output}")
         answers[i] = tokenizer.detokenize(output)
 
     # print("<fill_blanks> I am here 5")
     return answers, answers_with_style, blanks, last_layer_embedding
 
 
+
+def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config=None):
+    seqs = []
+    generation_mask = "[gMASK]"
+    use_gmask = True
+    last_layer_embedding = None
+    for raw_text in raw_texts:
+        mask_pattern = r"\[g?MASK\]"
+        text_list = re.split(mask_pattern, raw_text)
+        pattern_list = re.compile(mask_pattern).findall(raw_text)
+        seq = []
+        for i in range(len(pattern_list)):
+            pattern = pattern_list[i]
+            sub_text = text_list[i]
+            seq.extend(tokenizer.tokenize(sub_text))
+            seq.append(tokenizer.get_command(pattern))
+
+        seq.extend(tokenizer.tokenize(text_list[-1]))
+
+        if "MASK]" not in raw_text:
+            seq += [tokenizer.get_command(generation_mask)]
+            raw_text += " " + generation_mask
+        if not raw_text.endswith("MASK]"):
+            seq = seq + [tokenizer.get_command("eos")]
+        if mpu.get_model_parallel_rank() == 0:
+            print("\nInput: {}\n".format(raw_text))
+        if config is None and len(seq) > args.max_sequence_length:
+            raise ValueError("text too long.")
+        seqs.append(seq)
+
+    # for ii in range(len(seqs)-1):
+    #    assert len(seqs[ii]) == len(seqs[ii+1])
+
+    # generation
+    num_output = args.num_beams if args.sampling_strategy == "BeamSearchStrategy" else 1
+
+    # print("<fill_blanks> I am here 1")
+    # continually detect the first mark position
+
+    if dist.get_rank() == 0:
+        print(f"<fill_blanks_efficient> seqs :{seqs}")
+
+    # detect mask position
+    mask_token = tokenizer.get_command(generation_mask)
+    
+    batch_size = len(seqs)
+    context_length = 0
+    for seq in seqs:
+        if len(seq) > context_length:
+            context_length = len(seq)
+    if dist.get_rank() == 0:
+        print(f"<fill_blanks_efficient> batch_size: {batch_size}, context_length: {context_length}")
+    
+    padding_pos = []
+    for seq in seqs:
+        padding_pos.append(context_length - len(seq))
+        
+    if dist.get_rank() == 0:
+        print(f"<fill_blanks_efficient> padding_pos {padding_pos}")
+    
+    input_seqs = torch.cuda.LongTensor(
+        [[0] * (context_length - len(seq)) + seq + [tokenizer.get_command("sop")] for seq in seqs],
+        device=args.device,
+    )
+    
+    
+    if dist.get_rank() == 0:
+        print(f"<fill_blanks_efficient> input_seqs.shape :{input_seqs.shape}, input_seqs: {input_seqs}")
+    mask_position = context_length - 1    
+    
+    if dist.get_rank() == 0:
+        print(f"<fill_blanks_efficient> input_seqs {input_seqs}")
+    
+    # print("<fill_blanks> I am here 2")
+    if config is not None and config['prompt_embedding']:
+        get_last_layer_embedding = True
+    else:
+        get_last_layer_embedding = False
+
+    if get_last_layer_embedding:
+        outputs, _, last_layer_embedding = batch_filling_sequence(
+            model,
+            input_seqs,
+            torch.cuda.LongTensor([input_seqs.shape[-1] for _ in range(input_seqs.shape[0])], device=args.device),
+            strategy=strategy,
+            get_masks_and_position_ids=partial(
+                get_masks_and_position_ids_batch,
+                mask_position=mask_position,
+                max_gen_length=config['max_tokens'] if config else args.out_seq_length - input_seqs.shape[-1],
+                gmask=use_gmask,
+            ),
+            get_last_layer_embedding=get_last_layer_embedding
+        )
+    else:
+        outputs, _ = batch_filling_sequence(
+            model,
+            input_seqs,
+            torch.cuda.LongTensor([input_seqs.shape[-1] for _ in range(input_seqs.shape[0])], device=args.device),
+            strategy=strategy,
+            get_masks_and_position_ids=partial(
+                get_masks_and_position_ids_batch,
+                mask_position=mask_position,
+                max_gen_length=config['max_tokens'] if config else args.out_seq_length - input_seqs.shape[-1],
+                gmask=use_gmask,
+            ),
+            get_last_layer_embedding=get_last_layer_embedding
+        )
+    if dist.get_rank() == 0:
+        print(f"<fill_blanks_efficient> outputs:{outputs.shape}")
+    answers = []
+    for i in range(outputs.shape[0]):
+        answers_per_seq = []
+        for j in range(num_output):
+            output = outputs[i][j]
+            if output[-1] == tokenizer.get_command("eos"):
+                output = output[:-1]
+            if dist.get_rank() == 0:
+                print(f"<fill_blanks_efficient> output :{output.shape}")
+            answers_per_seq.append(tokenizer.detokenize(output[padding_pos[i]:].tolist()))
+        answers.append(answers_per_seq)
+    if dist.get_rank() == 0:
+        print(f"<fill_blanks_efficient> answers: {answers}")
+    return answers, last_layer_embedding
+
+
 def to_result(output, query, prompt_str_length, last_layer_embedding, job_id=None, working_directory=None):
+    print(f"<to_result> output: {output}")
     # TODO, Lots of missing attributes here!!!!
-    item = {'choices': [], }
-    choice = {
-        "text": (output[0] if query.get('echo', False) else output[0][prompt_str_length:]),
-        "index": 0,
-        "finish_reason": "length"
-    }
-    if last_layer_embedding is not None:
-        last_layer_embedding = torch.transpose(last_layer_embedding, 0, 1)
-        print(f"serialize last layer embedding, shape {last_layer_embedding.shape} ")
-        tensor_filename = working_directory+'/'+job_id+'_embedding.pt'
-        torch.save(last_layer_embedding, tensor_filename)
-        with open(tensor_filename, "rb") as fp:
-            files = {"file": fp}
-            res = requests.post("https://planetd.shift.ml/file", files=files).json()
-            choice['embedding'] = res["filename"]
-            os.remove(tensor_filename)
-    item['choices'].append(choice)
-    return item
+    if len(output) == 1:
+        item = {'choices': [], }
+        if query.get('echo', False):
+            text = output[0][0].replace("[[gMASK]][sop]", " ")  
+        else:
+            text = output[0][0][prompt_str_length[0]:].replace("[[gMASK]][sop]", "")
+        choice = {
+            "text": text,
+            "index": 0,
+            "finish_reason": "length"
+        }
+        if last_layer_embedding is not None:
+            last_layer_embedding = torch.transpose(last_layer_embedding, 0, 1)
+            print(f"serialize last layer embedding, shape {last_layer_embedding.shape} ")
+            tensor_filename = working_directory+'/'+job_id+'_embedding.pt'
+            torch.save(last_layer_embedding, tensor_filename)
+            with open(tensor_filename, "rb") as fp:
+                files = {"file": fp}
+                res = requests.post("https://planetd.shift.ml/file", files=files).json()
+                choice['embedding'] = res["filename"]
+                os.remove(tensor_filename)
+        item['choices'].append(choice)
+        return item
+    else:
+        items = []
+        if last_layer_embedding is not None:
+            last_layer_embedding = torch.transpose(last_layer_embedding, 0, 1)
+            print(f"serialize last layer embedding, shape {last_layer_embedding.shape} ")
+        for i in range(len(output)):
+            item = {'choices': [], }
+            print(f"<to_result> output{i}: {prompt_str_length[i]} / {len(output[i][0])}")
+            if query.get('echo', False):
+                text = output[i][0].replace("[[gMASK]][sop]", " ")  
+            else:
+                text = output[i][0][prompt_str_length[i]:].replace("[[gMASK]][sop]", "")
+            choice = {
+                "text": text,
+                "index": 0,
+                "finish_reason": "length"
+            }
+            if last_layer_embedding is not None:
+                current_last_layer_embedding = last_layer_embedding[i]
+                print(f"serialize last layer embedding, shape {current_last_layer_embedding.shape} ")
+                tensor_filename = working_directory+'/'+job_id+'_'+str(i)+'_embedding.pt'
+                torch.save(current_last_layer_embedding, tensor_filename)
+                with open(tensor_filename, "rb") as fp:
+                    files = {"file": fp}
+                    res = requests.post("https://planetd.shift.ml/file", files=files).json()
+                    choice['embedding'] = res["filename"]
+                    os.remove(tensor_filename)
+            item['choices'].append(choice)
+            items.append(item)
+        return items
+    
 
 
 def main(args):
@@ -454,11 +672,11 @@ def main(args):
                     last_instruction = instructions[-1]
 
                     if last_instruction["message"] == "break":
-                        logger.info("Received stop instruction.")
+                        logger.info("Received stop instruction. <GLM>")
                         logger.info("# BREAK ")
                         break
                     elif last_instruction["message"] == "continue":
-                        logger.info("Received keep instruction.")
+                        logger.info("Received keep instruction. <GLM>")
                         sleep(1)
                         has_work = False
                     elif last_instruction["message"] == "run":
@@ -469,23 +687,27 @@ def main(args):
                             instruction = fetched_tasks[0]
                             logger.info("Instruction:")
                             logger.info(str(instruction))
+                            job_id = instruction['payload']['id']
+                            print(f"Job <{job_id}> has been batched")
+                            
                             # TODO: we assume len(payload) is 1, right?
                             query = instruction['payload']['payload'][0]
                             if isinstance(query['prompt'], list):
-                                raw_text = query['prompt'][0]
+                                raw_text = query['prompt']
+                                for i in range(len(raw_text)):
+                                    raw_text[i] = raw_text[i].strip()
                             elif isinstance(query['prompt'], str):
                                 raw_text = query['prompt']
+                                raw_text = [raw_text.strip()]
                             else:
                                 print("wrong prompt format, it can only be str or list of str")
                                 print(query['prompt'])
-                            raw_text = raw_text.strip()
-                            job_id = instruction['payload']['id']
-                            print(f"Job <{job_id}> has been batched")
+                            
                             config = {
                                 'temperature': query.get('temperature', 0.9),
                                 # 'top_k': query.get('top_k', 1),
                                 'top_p': query.get('top_p', 0),
-                                'max_tokens': query.get('max_tokens',10),
+                                'max_tokens': query.get('max_tokens',10) if query.get('max_tokens',10) > 0 else 1,
                                 'prompt_embedding': query.get('prompt_embedding', False)
                             }
                             has_work = True
@@ -508,21 +730,25 @@ def main(args):
                     #                        top_p=args.top_p, end_tokens=end_tokens)
                     # Followed Jue's suggestion for temperature
                     if config['temperature'] == 0:
-                        strategy = BaseStrategy(batch_size=1, temperature=1, top_k=1,
+                        strategy = BaseStrategy(batch_size=len(raw_text), temperature=1, top_k=1,
                                                 top_p=config['top_p'], end_tokens=end_tokens)
                     else:
-                        strategy = BaseStrategy(batch_size=1, temperature=config['temperature'], top_k=args.top_k,
-                                                top_p=config['top_p'], end_tokens=end_tokens)
+                        strategy = BaseStrategy(batch_size=len(raw_text), temperature=config['temperature'],
+                                                top_k=args.top_k, top_p=config['top_p'], end_tokens=end_tokens)
 
                     # TODO change config to our config, to make it work desired seq length.
-                    answers, answers_with_style, blanks, last_layer_embedding = \
-                        fill_blanks(raw_text, model, tokenizer, strategy, config)
+                    # answers, answers_with_style, blanks, last_layer_embedding = \
+                    #    fill_blanks(raw_text[0], model, tokenizer, strategy, config)
+                    answers, last_layer_embedding = fill_blanks_efficient(raw_text, model, tokenizer, strategy, config)
                     end_time = time.time()
                     # print(f"Rank-<{dist.get_rank()}>: answer:")
                     # print(answers)
                     if dist.get_rank() == 0:
                         print(f"Job-{job_id} GLM Inference takes {end_time-start_time}s")
-                        result = to_result(answers, query, len(raw_text), last_layer_embedding, job_id=job_id, 
+                        prompt_str_lengths = []
+                        for text in raw_text:
+                            prompt_str_lengths.append(len(text))
+                        result = to_result(answers, query, prompt_str_lengths, last_layer_embedding, job_id=job_id, 
                                            working_directory=args.working_directory)
                         return_payload = {
                             'request': query,
