@@ -26,6 +26,9 @@ import requests
 
 
 def top_k_logits(logits, top_k=0, top_p=0.0, filter_value=-65504):
+    # This function has been mostly taken from huggingface conversational ai code at
+    # https://medium.com/huggingface/how-to-build-a-state-of-the-art-conversational-ai-with-transfer-learning-2d818ac26313
+
     if top_k > 0:
         # Remove all tokens with a probability less than the last token of the top-k
         indices_to_remove = logits < torch.topk(logits, top_k)[0][..., -1, None]
@@ -301,21 +304,35 @@ def get_masks_and_position_ids(seq, mask_position, max_gen_length, gmask=False):
     return tokens, attention_mask, position_ids
 
 
-def get_masks_and_position_ids_batch(seqs, mask_position, max_gen_length, gmask=False):
+def get_masks_and_position_ids_batch(seqs, mask_position, max_gen_length, pad_pos, gmask=False):
     batch_size = seqs.shape[0]
     context_length = seqs.shape[1]
     tokens = torch.nn.functional.pad(seqs, (0, max_gen_length), mode='constant', value=-1)
     # TODO This might be wrong, double check.
     attention_mask = torch.ones((batch_size, tokens.shape[-1], tokens.shape[-1]), device=tokens.device)
     attention_mask.tril_()
-    attention_mask[..., : context_length - 1] = 1
+    
+    for i in range(batch_size):
+        attention_mask[i, :, 0:pad_pos[i]] = 0
+        attention_mask[i, :, pad_pos[i]: context_length - 1] = 1
+    
     attention_mask.unsqueeze_(1)
     attention_mask = (attention_mask < 0.5).bool()
-    position_ids = torch.arange(tokens.shape[-1], dtype=torch.long, device=tokens.device)
+    
+    position_ids = torch.zeros((batch_size,tokens.shape[-1]), dtype=torch.long, device=tokens.device)
+    
+    for i in range(batch_size):
+        position_ids[i] = torch.arange(tokens.shape[-1], dtype=torch.long, device=tokens.device) - pad_pos[i]
+        position_ids[i, 0:pad_pos[i]] = 0
+        
     if not gmask:
-        position_ids[context_length - 1:] = mask_position
+        position_ids[:, context_length - 1:] = mask_position
 
-    position_ids = position_ids.unsqueeze(0)
+    if dist.get_rank() == 0:
+        print(f"<get_masks_and_position_ids_batch> tokens: {tokens}")
+        print(f"<get_masks_and_position_ids_batch> attention_mask: {attention_mask}")
+        print(f"<get_masks_and_position_ids_batch> position_ids: {position_ids}")
+
 
     return tokens, attention_mask, position_ids
 
@@ -547,6 +564,7 @@ def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config=Non
                 get_masks_and_position_ids_batch,
                 mask_position=mask_position,
                 max_gen_length=config['max_tokens'] if config else args.out_seq_length - input_seqs.shape[-1],
+                pad_pos = padding_pos,
                 gmask=use_gmask,
             ),
             get_last_layer_embedding=get_last_layer_embedding
@@ -561,6 +579,7 @@ def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config=Non
                 get_masks_and_position_ids_batch,
                 mask_position=mask_position,
                 max_gen_length=config['max_tokens'] if config else args.out_seq_length - input_seqs.shape[-1],
+                pad_pos = padding_pos,
                 gmask=use_gmask,
             ),
             get_last_layer_embedding=get_last_layer_embedding
@@ -640,7 +659,6 @@ def to_result(output, query, prompt_str_length, last_layer_embedding, job_id=Non
             items.append(item)
         return items
     
-
 
 def main(args):
     if dist.get_rank() == 0:
@@ -733,8 +751,8 @@ def main(args):
                         strategy = BaseStrategy(batch_size=len(raw_text), temperature=1, top_k=1,
                                                 top_p=config['top_p'], end_tokens=end_tokens)
                     else:
-                        strategy = BaseStrategy(batch_size=len(raw_text), temperature=config['temperature'],
-                                                top_k=args.top_k, top_p=config['top_p'], end_tokens=end_tokens)
+                        strategy = BaseStrategy(batch_size=len(raw_text), temperature=config['temperature'], top_k=args.top_k,
+                                                top_p=config['top_p'], end_tokens=end_tokens)
 
                     # TODO change config to our config, to make it work desired seq length.
                     # answers, answers_with_style, blanks, last_layer_embedding = \
