@@ -599,7 +599,19 @@ def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config=Non
         answers.append(answers_per_seq)
     if dist.get_rank() == 0:
         print(f"<fill_blanks_efficient> answers: {answers}")
-    return answers, last_layer_embedding
+    
+    if last_layer_embedding is not None:
+        last_layer_embedding = torch.transpose(last_layer_embedding, 0, 1)
+        last_layer_embeddings = []
+        for i in range(batch_size):
+            current_sample_embedding = last_layer_embedding[i, padding_pos[i]:, :]
+            if dist.get_rank() == 0:
+                print(f"<fill_blanks_efficient> current_sample_embedding_{i} .shape: {current_sample_embedding.shape}")
+            last_layer_embeddings.append(current_sample_embedding)
+    else:
+        last_layer_embeddings = None
+    
+    return answers, last_layer_embeddings
 
 
 def to_result(output, query, prompt_str_length, last_layer_embedding, job_id=None, working_directory=None):
@@ -607,7 +619,9 @@ def to_result(output, query, prompt_str_length, last_layer_embedding, job_id=Non
     # TODO, Lots of missing attributes here!!!!
     if len(output) == 1:
         item = {'choices': [], }
-        if query.get('echo', False):
+        if query.get('max_tokens') == 0:
+            text = ""
+        elif query.get('echo', False):
             text = output[0][0].replace("[[gMASK]][sop]", " ")  
         else:
             text = output[0][0][prompt_str_length[0]:].replace("[[gMASK]][sop]", "")
@@ -617,8 +631,7 @@ def to_result(output, query, prompt_str_length, last_layer_embedding, job_id=Non
             "finish_reason": "length"
         }
         if last_layer_embedding is not None:
-            last_layer_embedding = torch.transpose(last_layer_embedding, 0, 1)
-            print(f"serialize last layer embedding, shape {last_layer_embedding.shape} ")
+            print(f"serialize last layer embedding, shape {last_layer_embedding} ")
             tensor_filename = working_directory+'/'+job_id+'_embedding.pt'
             torch.save(last_layer_embedding, tensor_filename)
             with open(tensor_filename, "rb") as fp:
@@ -629,14 +642,25 @@ def to_result(output, query, prompt_str_length, last_layer_embedding, job_id=Non
         item['choices'].append(choice)
         return item
     else:
+        result = {}
         items = []
         if last_layer_embedding is not None:
-            last_layer_embedding = torch.transpose(last_layer_embedding, 0, 1)
-            print(f"serialize last layer embedding, shape {last_layer_embedding.shape} ")
+            #last_layer_embedding = torch.transpose(last_layer_embedding, 0, 1)
+            print(f"serialize last layer embeddings {last_layer_embedding} ")
+            tensor_filename = working_directory+'/'+job_id+'_embedding.pt'
+            torch.save(last_layer_embedding, tensor_filename)
+            with open(tensor_filename, "rb") as fp:
+                files = {"file": fp}
+                res = requests.post("https://planetd.shift.ml/file", files=files).json()
+                result['embedding'] = res["filename"]
+                os.remove(tensor_filename)
+        
         for i in range(len(output)):
             item = {'choices': [], }
             print(f"<to_result> output{i}: {prompt_str_length[i]} / {len(output[i][0])}")
-            if query.get('echo', False):
+            if query.get('max_tokens') == 0:
+                text = ""
+            elif query.get('echo', False):
                 text = output[i][0].replace("[[gMASK]][sop]", " ")  
             else:
                 text = output[i][0][prompt_str_length[i]:].replace("[[gMASK]][sop]", "")
@@ -645,20 +669,12 @@ def to_result(output, query, prompt_str_length, last_layer_embedding, job_id=Non
                 "index": 0,
                 "finish_reason": "length"
             }
-            if last_layer_embedding is not None:
-                current_last_layer_embedding = last_layer_embedding[i]
-                print(f"serialize last layer embedding, shape {current_last_layer_embedding.shape} ")
-                tensor_filename = working_directory+'/'+job_id+'_'+str(i)+'_embedding.pt'
-                torch.save(current_last_layer_embedding, tensor_filename)
-                with open(tensor_filename, "rb") as fp:
-                    files = {"file": fp}
-                    res = requests.post("https://planetd.shift.ml/file", files=files).json()
-                    choice['embedding'] = res["filename"]
-                    os.remove(tensor_filename)
             item['choices'].append(choice)
             items.append(item)
-        return items
+        result['inference_result'] = items
+        return result
     
+
 
 def main(args):
     if dist.get_rank() == 0:
