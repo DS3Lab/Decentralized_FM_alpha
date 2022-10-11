@@ -23,6 +23,7 @@ from loguru import logger
 import torch.distributed as dist
 from time import sleep
 import requests
+import math
 
 
 def top_k_logits(logits, top_k=0, top_p=0.0, filter_value=-65504):
@@ -513,8 +514,17 @@ def post_processing_text(output_text, query, prompt_str_length):
     else:
         text = output_text[prompt_str_length:].replace("[[gMASK]][sop]", "")
     end_pos = len(text)
-    for stop_token in query.get('stop', []):
+
+    stop_tokens = []
+    if isinstance(query.get('stop_words', ""), str):
+        stop_tokens.extend(query.get('stop_words', "").split(";"))
+    stop_tokens.extend(query.get('stop', []))
+
+    print(f"<post_processing_text>: {stop_tokens}.")
+
+    for stop_token in stop_tokens:
         end_pos = min(text.find(stop_token) + len(stop_token), end_pos)
+
     if query.get('echo', False):
         end_pos = min(end_pos, prompt_str_length)
     post_processed_text = text[:end_pos]
@@ -527,8 +537,9 @@ def to_result(output, query, prompt_str_length, last_layer_embedding, top_logpro
               working_directory=None):
     print(f"<to_result> output: {output}")
     # TODO, Lots of missing attributes here!!!!
+    '''
     if len(output) == 1:
-        item = {'choices': [], }
+        item={'choices':[],}
         choice = {
             "text": post_processing_text(output[0][0], query, prompt_str_length[0]),
             "index": 0,
@@ -538,7 +549,7 @@ def to_result(output, query, prompt_str_length, last_layer_embedding, top_logpro
             choice['logprobs'] = top_logprobs[0]
         if last_layer_embedding is not None:
             print(f"serialize last layer embedding, shape {last_layer_embedding} ")
-            tensor_filename = working_directory + '/' + job_id + '_embedding.pt'
+            tensor_filename = working_directory+'/'+job_id+'_embedding.pt'
             torch.save(last_layer_embedding, tensor_filename)
             with open(tensor_filename, "rb") as fp:
                 files = {"file": fp}
@@ -548,33 +559,34 @@ def to_result(output, query, prompt_str_length, last_layer_embedding, top_logpro
         item['choices'].append(choice)
         return item
     else:
-        result = {}
-        items = []
-        if last_layer_embedding is not None:
-            # last_layer_embedding = torch.transpose(last_layer_embedding, 0, 1)
-            print(f"serialize last layer embeddings {last_layer_embedding} ")
-            tensor_filename = working_directory + '/' + job_id + '_embedding.pt'
-            torch.save(last_layer_embedding, tensor_filename)
-            with open(tensor_filename, "rb") as fp:
-                files = {"file": fp}
-                res = requests.post("https://planetd.shift.ml/file", files=files).json()
-                result['embedding'] = res["filename"]
-                os.remove(tensor_filename)
+    '''
+    result = {}
+    items = []
+    if last_layer_embedding is not None:
+        # last_layer_embedding = torch.transpose(last_layer_embedding, 0, 1)
+        # print(f"serialize last layer embeddings {last_layer_embedding} ")
+        tensor_filename = working_directory + '/' + job_id + '_embedding.pt'
+        torch.save(last_layer_embedding, tensor_filename)
+        with open(tensor_filename, "rb") as fp:
+            files = {"file": fp}
+            res = requests.post("https://planetd.shift.ml/file", files=files).json()
+            result['embedding'] = res["filename"]
+            os.remove(tensor_filename)
 
-        for i in range(len(output)):
-            item = {'choices': [], }
-            print(f"<to_result> output{i}: {prompt_str_length[i]} / {len(output[i][0])}")
-            choice = {
-                "text": post_processing_text(output[i][0], query, prompt_str_length[i]),
-                "index": 0,
-                "finish_reason": "length"
-            }
-            if top_logprobs is not None:
-                choice['logprobs'] = top_logprobs[i]
-            item['choices'].append(choice)
-            items.append(item)
-        result['inference_result'] = items
-        return result
+    for i in range(len(output)):
+        item = {'choices': [], }
+        print(f"<to_result> output{i}: {prompt_str_length[i]} / {len(output[i][0])}")
+        choice = {
+            "text": post_processing_text(output[i][0], query, prompt_str_length[i]),
+            "index": 0,
+            "finish_reason": "length"
+        }
+        if top_logprobs is not None:
+            choice['token_logprobs'] = top_logprobs[i]
+        item['choices'].append(choice)
+        items.append(item)
+    result['inference_result'] = items
+    return result
 
 
 def main(args):
@@ -667,19 +679,38 @@ def main(args):
                     # strategy = BaseStrategy(batch_size=1, temperature=args.temperature, top_k=args.top_k,
                     #                        top_p=args.top_p, end_tokens=end_tokens)
                     # Followed Jue's suggestion for temperature
-                    if config['temperature'] == 0:
-                        strategy = BaseStrategy(batch_size=len(raw_text), temperature=1, top_k=1,
-                                                top_p=config['top_p'], end_tokens=end_tokens)
-                    else:
-                        strategy = BaseStrategy(batch_size=len(raw_text), temperature=config['temperature'],
-                                                top_k=args.top_k,
-                                                top_p=config['top_p'], end_tokens=end_tokens)
 
-                    # TODO change config to our config, to make it work desired seq length.
-                    # answers, answers_with_style, blanks, last_layer_embedding = \
-                    #    fill_blanks(raw_text[0], model, tokenizer, strategy, config)
-                    answers, last_layer_embedding, top_logprobs = fill_blanks_efficient(raw_text, model, tokenizer,
-                                                                                        strategy, config)
+                    batch_size = min(len(raw_text), 32)
+                    num_iter = math.ceil(len(raw_text) / batch_size)
+                    answers = []
+                    last_layer_embedding = []
+                    top_logprobs = []
+
+                    for iter_i in range(num_iter):
+                        current_raw_text = raw_text[iter_i * batch_size: (iter_i + 1) * batch_size]
+                        if config['temperature'] == 0:
+                            strategy = BaseStrategy(batch_size=len(current_raw_text), temperature=1, top_k=1,
+                                                    top_p=config['top_p'], end_tokens=end_tokens)
+                        else:
+                            strategy = BaseStrategy(batch_size=len(current_raw_text), temperature=config['temperature'],
+                                                    top_k=args.top_k,
+                                                    top_p=config['top_p'], end_tokens=end_tokens)
+
+                        cur_answer, cur_last_layer_embedding, cur_top_logprobs = fill_blanks_efficient(current_raw_text,
+                                                                                                       model, tokenizer,
+                                                                                                       strategy, config)
+                        answers.extend(cur_answer)
+                        if cur_last_layer_embedding is None:
+                            last_layer_embedding = None
+                        else:
+                            last_layer_embedding.extend(cur_last_layer_embedding)
+                        if cur_top_logprobs is None:
+                            top_logprobs = None
+                        else:
+                            top_logprobs.extend(cur_top_logprobs)
+                        if dist.get_rank() == 0:
+                            print(f"<Main> Current iter handled: {len(answers)}/{len(raw_text)}")
+
                     end_time = time.time()
                     # print(f"Rank-<{dist.get_rank()}>: answer:")
                     # print(answers)
