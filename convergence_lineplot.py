@@ -4,8 +4,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(10, 5))
-plt.subplots_adjust(wspace=0.25, hspace=0.55)
+fig, axes = plt.subplots(nrows=2, ncols=5, figsize=(20, 4))
+plt.subplots_adjust(wspace=0.3, hspace=0.1)
 
 for case_idx in range(5):
     iterations = 15000 if case_idx == 1 else 1500
@@ -32,7 +32,7 @@ for case_idx in range(5):
         data.append([i, our_scheduler_results[i], 'Ours'])
 
     df = pd.DataFrame(data, columns=['trial', 'cost', 'scheduler'])
-    ax = sns.lineplot(ax=axes[case_idx // 3, case_idx % 3], hue_order=['Ours', 'Hybrid', 'Random'], linewidth=2,
+    ax = sns.lineplot(ax=axes[0, case_idx], hue_order=['Ours', 'Hybrid', 'Random'], linewidth=2,
                       palette=['tab:green', 'tab:orange', 'tab:blue'],
                       data=df, x="trial", y="cost", hue='scheduler')
     ax.lines[2].set_linestyle("--")
@@ -67,15 +67,16 @@ for case_idx in range(5):
         ax.set_xticks([0, 500, 1000, 1500])
         ax.set_xticklabels([0, 500, 1000, 1500], fontsize=13)
 
-    if case_idx == 4:
+    if case_idx == 3:
         ax.get_legend().set_title(None)
         handles, labels = ax.get_legend_handles_labels()
         handles[2].set_linestyle('--')
         handles = [handles[2], handles[1], handles[0]]
         labels = [labels[2], labels[1], labels[0]]
-        ax.legend(handles, labels, ncol=1, handletextpad=0.3,
-                  loc='upper left', bbox_to_anchor=(1.2, 1), fontsize=13)
+        ax.legend(handles, labels, ncol=3, handletextpad=0.3,
+                  loc='lower center', bbox_to_anchor=(-0.85, -0.9), fontsize=13)
     else:
         ax.get_legend().remove()
-axes[1, 2].remove()
+    axes[1, case_idx].remove()
+
 plt.savefig("convergence.pdf", dpi=1000)
