@@ -35,7 +35,7 @@ def top_k_logits(logits, top_k=0, top_p=0.0, filter_value=-65504):
         logits[indices_to_remove] = filter_value
 
     if top_p > 0.0:
-        #batch_size = logits.shape[0]
+        # batch_size = logits.shape[0]
         # convert to 1D
         # logits = logits.view(-1).contiguous()
         sorted_logits, sorted_indices = torch.sort(logits, descending=True)
@@ -112,26 +112,28 @@ def batch_filling_sequence(
         get_masks_and_position_ids=get_masks_and_position_ids_default,
         mems=None,
         get_last_layer_embedding=False,
+        get_logprobs=0,
         **kw_args
-        ):
+):
     # print("<batch_filling_sequence> I am here 1")
-    if dist.get_rank() == 0:
-        print(f"<batch_filling_sequence> seqs: {seqs}")
+    # if dist.get_rank() == 0:
+    #    print(f"<batch_filling_sequence> seqs: {seqs}")
     assert len(seqs.shape) == 2
     # building the initial tokens, attention_mask, and position_ids
     batch_size, context_length = seqs.shape
-   
+
     seqs, attention_mask, position_ids = get_masks_and_position_ids(seqs)
     tokens = seqs[..., :context_length]
     if attention_mask.dtype != torch.bool:
-        attention_mask = attention_mask.type_as(next(model.parameters())) # if fp16
+        attention_mask = attention_mask.type_as(next(model.parameters()))  # if fp16
     # initialize generation
-    counter = context_length - 1 # Last fixed index is ``counter''
-    index = 0 if mems is None else mems.shape[2] # Next forward starting index, also the length of cache.
+    counter = context_length - 1  # Last fixed index is ``counter''
+    index = 0 if mems is None else mems.shape[2]  # Next forward starting index, also the length of cache.
     num_beams = 1
     # step-by-step generation
     # print("<batch_filling_sequence> I am here 2")
-    output_embedding=None
+    output_embedding = None
+    logprobs = {'topk_indices': [], 'topk_logprobs': []}
     while counter < seqs.shape[1] - 1:
         if dist.get_rank() == 0:
             print(f"<batch_filling_sequence> counter:{counter}/{seqs.shape[1] - 1}")
@@ -139,18 +141,19 @@ def batch_filling_sequence(
         # token[:, index: counter+1] needs forwarding.
         # forward
         tokens = tokens.reshape(batch_size * num_beams, -1)
-        mems = mems.reshape(mems.shape[0], batch_size * num_beams, mems.shape[-2], mems.shape[-1]) if mems is not None else None
-        
+        mems = mems.reshape(mems.shape[0], batch_size * num_beams, mems.shape[-2],
+                            mems.shape[-1]) if mems is not None else None
+
         output_embedding_flag = get_last_layer_embedding and counter == context_length - 1
         logits, *output_per_layers = model(
             tokens[:, index:],
-            position_ids[..., index: counter+1],
-            attention_mask[..., index: counter+1, :counter+1], # TODO memlen
+            position_ids[..., index: counter + 1],
+            attention_mask[..., index: counter + 1, :counter + 1],  # TODO memlen
             mems=mems,
             output_hidden_states=output_embedding_flag
         )
         if output_embedding_flag:
-            output_embedding = output_per_layers[-1]['hidden_states']
+            output_embedding = output_per_layers[-1]['hidden_states'].detach()
         mem_kv = [o['mem_kv'] for o in output_per_layers]
         mems = update_mems(mem_kv, mems, max_memory_length=max_memory_length)
         if counter == context_length - 1:
@@ -166,19 +169,39 @@ def batch_filling_sequence(
         tokens = tokens.reshape(batch_size, num_beams, -1)
         mems = mems.reshape(mems.shape[0], batch_size, num_beams, mems.shape[-2], mems.shape[-1])
         tokens, mems = strategy.forward(logits, tokens, mems)
+
+        if dist.get_rank() == 0:
+            print(f"<batch_filling_sequence> logits.shape: {logits.shape}")
+
+        if get_logprobs != 0:  # TODO: currently this encoding assumes num_completion=1
+            logits = F.log_softmax(logits.detach(), -1)
+            current_topk_logprobs, current_topk_indices = logits.topk(1 + get_logprobs, dim=-1)
+            if dist.get_rank() == 0:
+                print(f"<batch_filling_sequence> current_topk_logprobs.shape: {current_topk_logprobs.shape}")
+                print(f"<batch_filling_sequence> current_topk_indices.shape: {current_topk_indices.shape}")
+
+            logprobs['topk_logprobs'].append(current_topk_logprobs)
+            logprobs['topk_indices'].append(current_topk_indices)
+
         if len(tokens.shape) == 3 and num_beams == 1:
             num_beams = tokens.shape[1]
-            position_ids = position_ids.unsqueeze(1).expand(batch_size, num_beams, -1).reshape(batch_size * num_beams, -1)
+            position_ids = position_ids.unsqueeze(1).expand(batch_size, num_beams, -1).reshape(batch_size * num_beams,
+                                                                                               -1)
             attention_mask_shape = attention_mask.shape[-3:]
             attention_mask = attention_mask.unsqueeze(1).expand(batch_size, num_beams, -1, -1, -1).reshape(
                 batch_size * num_beams, *attention_mask_shape)
         if strategy.is_done:
             break
+
+    tokens, mems = strategy.finalize(tokens, mems)
+    results = {}
+    results['tokens'] = tokens
+    results['mems'] = mems
     if get_last_layer_embedding:
-        tokens, mems = strategy.finalize(tokens, mems)
-        return tokens, mems, output_embedding
-    else:
-        return strategy.finalize(tokens, mems)
+        results['output_embedding'] = output_embedding
+    if get_logprobs != 0:
+        results['logprobs'] = logprobs
+    return results
 
 
 def add_bminf_args(parser):
@@ -297,7 +320,7 @@ def get_masks_and_position_ids(seq, mask_position, max_gen_length, gmask=False):
 
     position_ids = torch.arange(tokens.shape[-1], dtype=torch.long, device=tokens.device)
     if not gmask:
-        position_ids[context_length - 1 :] = mask_position
+        position_ids[context_length - 1:] = mask_position
 
     position_ids = position_ids.unsqueeze(0)
 
@@ -311,169 +334,29 @@ def get_masks_and_position_ids_batch(seqs, mask_position, max_gen_length, pad_po
     # TODO This might be wrong, double check.
     attention_mask = torch.ones((batch_size, tokens.shape[-1], tokens.shape[-1]), device=tokens.device)
     attention_mask.tril_()
-    
+
     for i in range(batch_size):
         attention_mask[i, :, 0:pad_pos[i]] = 0
         attention_mask[i, :, pad_pos[i]: context_length - 1] = 1
-    
+
     attention_mask.unsqueeze_(1)
     attention_mask = (attention_mask < 0.5).bool()
-    
-    position_ids = torch.zeros((batch_size,tokens.shape[-1]), dtype=torch.long, device=tokens.device)
-    
+
+    position_ids = torch.zeros((batch_size, tokens.shape[-1]), dtype=torch.long, device=tokens.device)
+
     for i in range(batch_size):
         position_ids[i] = torch.arange(tokens.shape[-1], dtype=torch.long, device=tokens.device) - pad_pos[i]
         position_ids[i, 0:pad_pos[i]] = 0
-        
+
     if not gmask:
         position_ids[:, context_length - 1:] = mask_position
 
-    if dist.get_rank() == 0:
-        print(f"<get_masks_and_position_ids_batch> tokens: {tokens}")
-        print(f"<get_masks_and_position_ids_batch> attention_mask: {attention_mask}")
-        print(f"<get_masks_and_position_ids_batch> position_ids: {position_ids}")
-
+    # if dist.get_rank() == 0:
+    #    print(f"<get_masks_and_position_ids_batch> tokens: {tokens}")
+    #    print(f"<get_masks_and_position_ids_batch> attention_mask: {attention_mask}")
+    #    print(f"<get_masks_and_position_ids_batch> position_ids: {position_ids}")
 
     return tokens, attention_mask, position_ids
-
-
-def fill_blanks(raw_text: str, model, tokenizer, strategy, config=None):
-    # add MASK
-    generation_mask = "[MASK]" if "[MASK]" in raw_text else "[gMASK]"
-    use_gmask = "[MASK]" not in raw_text
-    last_layer_embedding = None
-
-    mask_pattern = r"\[g?MASK\]"
-    text_list = re.split(mask_pattern, raw_text)
-    pattern_list = re.compile(mask_pattern).findall(raw_text)
-    seq = []
-    for i in range(len(pattern_list)):
-        pattern = pattern_list[i]
-        sub_text = text_list[i]
-        seq.extend(tokenizer.tokenize(sub_text))
-        seq.append(tokenizer.get_command(pattern))
-
-    seq.extend(tokenizer.tokenize(text_list[-1]))
-
-    if "MASK]" not in raw_text:
-        seq += [tokenizer.get_command(generation_mask)]
-        raw_text += " " + generation_mask
-    if not raw_text.endswith("MASK]"):
-        seq = seq + [tokenizer.get_command("eos")]
-    if mpu.get_model_parallel_rank() == 0:
-        print("\nInput: {}\n".format(raw_text))
-    if config is None and len(seq) > args.max_sequence_length:
-        raise ValueError("text too long.")
-
-    # generation
-    is_english = isEnglish(raw_text)
-    output_list = [seq]
-    num_output = args.num_beams if args.sampling_strategy == "BeamSearchStrategy" else 1
-    last_pos, answers, answers_with_style, blanks = (
-        [0] * num_output,
-        ["" for _ in range(num_output)],
-        ["" for _ in range(num_output)],
-        [[] for _ in range(num_output)],
-    )
-    # print("<fill_blanks> I am here 1")
-    # continually detect the first mark position
-    foo_counter = 0
-    while True:
-        if dist.get_rank() == 0:
-            print(f"<batch_filling_sequence> counter:{foo_counter}")
-            foo_counter += 1
-            
-        seq = output_list[0]
-        # detect mask position
-        mask_token = tokenizer.get_command(generation_mask)
-        if mask_token not in seq:
-            break
-        mask_position = seq.index(mask_token)
-
-        output_list = []
-
-        input_seq = torch.cuda.LongTensor(
-            [seq + [tokenizer.get_command("sop")]],
-            device=args.device,
-        )
-        # print("<fill_blanks> I am here 2")
-        if config is not None and config['prompt_embedding']:
-            get_last_layer_embedding = True
-        else:
-            get_last_layer_embedding = False
-
-        if get_last_layer_embedding:
-            output, _, last_layer_embedding = batch_filling_sequence(
-                model,
-                input_seq,
-                torch.cuda.LongTensor([input_seq.shape[-1]], device=args.device),
-                strategy=strategy,
-                get_masks_and_position_ids=partial(
-                    get_masks_and_position_ids,
-                    mask_position=mask_position,
-                    max_gen_length=config['max_tokens'] if config else args.out_seq_length - input_seq.shape[-1],
-                    gmask=use_gmask,
-                ),
-                get_last_layer_embedding=get_last_layer_embedding
-            )
-        else:
-            output, _ = batch_filling_sequence(
-                model,
-                input_seq,
-                torch.cuda.LongTensor([input_seq.shape[-1]], device=args.device),
-                strategy=strategy,
-                get_masks_and_position_ids=partial(
-                    get_masks_and_position_ids,
-                    mask_position=mask_position,
-                    max_gen_length=config['max_tokens'] if config else args.out_seq_length - input_seq.shape[-1],
-                    gmask=use_gmask,
-                ),
-                get_last_layer_embedding=get_last_layer_embedding
-            )
-        # print("<fill_blanks> I am here 3")
-        if isinstance(output, torch.Tensor):  # different strategies
-            output = output.tolist()
-        output = output[0]  # batch_size = 1
-        output_list.extend(output)
-
-        # clip -1s and fill back generated things into seq
-        for i in range(len(output_list)):
-            output = output_list[i].tolist() if isinstance(output_list[i], torch.Tensor) else output_list[i]
-            try:
-                unfinished = output.index(-1)
-            except ValueError:
-                unfinished = len(output)
-            if output[unfinished - 1] in strategy.end_tokens:
-                unfinished -= 1
-            bog = output.index(tokenizer.get_command("sop"))
-
-            prefix = tokenizer.detokenize(output[last_pos[i] : mask_position])
-            blank = tokenizer.detokenize(output[bog + 1 : unfinished])
-            answers_with_style[i] += (
-                prefix
-                + (" " if is_english else "")
-                + ("\033[4m" if use_gmask else "\x1b[0;32m\033[4m")
-                + blank
-                + ("\033[0m" if use_gmask else "\033[0m\x1b[0m")
-                + (" " if is_english else "")
-            )
-            blanks[i].append(blank)
-            last_pos[i] = mask_position + unfinished - (bog + 1)
-            output_list[i] = output[:mask_position] + output[bog + 1 : unfinished] + output[mask_position + 1 : bog]
-
-        # print("<fill_blanks> I am here 4")
-
-    for i, output in enumerate(output_list):
-        if output[-1] == tokenizer.get_command("eos"):
-            output = output[:-1]
-        answers_with_style[i] += tokenizer.detokenize(output[last_pos[i] :])
-        if dist.get_rank() == 0:
-            print(f"<fill_blanks> output: {output}")
-        answers[i] = tokenizer.detokenize(output)
-
-    # print("<fill_blanks> I am here 5")
-    return answers, answers_with_style, blanks, last_layer_embedding
-
 
 
 def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config=None):
@@ -481,6 +364,7 @@ def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config=Non
     generation_mask = "[gMASK]"
     use_gmask = True
     last_layer_embedding = None
+    result_logprobs = None
     for raw_text in raw_texts:
         mask_pattern = r"\[g?MASK\]"
         text_list = re.split(mask_pattern, raw_text)
@@ -514,12 +398,12 @@ def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config=Non
     # print("<fill_blanks> I am here 1")
     # continually detect the first mark position
 
-    if dist.get_rank() == 0:
-        print(f"<fill_blanks_efficient> seqs :{seqs}")
+    # if dist.get_rank() == 0:
+    #    print(f"<fill_blanks_efficient> seqs :{seqs}")
 
     # detect mask position
     mask_token = tokenizer.get_command(generation_mask)
-    
+
     batch_size = len(seqs)
     context_length = 0
     for seq in seqs:
@@ -527,63 +411,70 @@ def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config=Non
             context_length = len(seq)
     if dist.get_rank() == 0:
         print(f"<fill_blanks_efficient> batch_size: {batch_size}, context_length: {context_length}")
-    
+
     padding_pos = []
     for seq in seqs:
         padding_pos.append(context_length - len(seq))
-        
-    if dist.get_rank() == 0:
-        print(f"<fill_blanks_efficient> padding_pos {padding_pos}")
-    
+
+    # if dist.get_rank() == 0:
+    #    print(f"<fill_blanks_efficient> padding_pos {padding_pos}")
+
     input_seqs = torch.cuda.LongTensor(
         [[0] * (context_length - len(seq)) + seq + [tokenizer.get_command("sop")] for seq in seqs],
         device=args.device,
     )
-    
-    
+
     if dist.get_rank() == 0:
-        print(f"<fill_blanks_efficient> input_seqs.shape :{input_seqs.shape}, input_seqs: {input_seqs}")
-    mask_position = context_length - 1    
-    
-    if dist.get_rank() == 0:
-        print(f"<fill_blanks_efficient> input_seqs {input_seqs}")
-    
+        print(f"<fill_blanks_efficient> input_seqs.shape :{input_seqs.shape}")
+    mask_position = context_length - 1
+
+    # if dist.get_rank() == 0:
+    #    print(f"<fill_blanks_efficient> input_seqs {input_seqs}")
+
     # print("<fill_blanks> I am here 2")
     if config is not None and config['prompt_embedding']:
         get_last_layer_embedding = True
     else:
         get_last_layer_embedding = False
 
-    if get_last_layer_embedding:
-        outputs, _, last_layer_embedding = batch_filling_sequence(
-            model,
-            input_seqs,
-            torch.cuda.LongTensor([input_seqs.shape[-1] for _ in range(input_seqs.shape[0])], device=args.device),
-            strategy=strategy,
-            get_masks_and_position_ids=partial(
-                get_masks_and_position_ids_batch,
-                mask_position=mask_position,
-                max_gen_length=config['max_tokens'] if config else args.out_seq_length - input_seqs.shape[-1],
-                pad_pos = padding_pos,
-                gmask=use_gmask,
-            ),
-            get_last_layer_embedding=get_last_layer_embedding
-        )
+    if config is not None and config['logprobs'] != 0:
+        logprobs_n = config['logprobs']
     else:
-        outputs, _ = batch_filling_sequence(
-            model,
-            input_seqs,
-            torch.cuda.LongTensor([input_seqs.shape[-1] for _ in range(input_seqs.shape[0])], device=args.device),
-            strategy=strategy,
-            get_masks_and_position_ids=partial(
-                get_masks_and_position_ids_batch,
-                mask_position=mask_position,
-                max_gen_length=config['max_tokens'] if config else args.out_seq_length - input_seqs.shape[-1],
-                pad_pos = padding_pos,
-                gmask=use_gmask,
-            ),
-            get_last_layer_embedding=get_last_layer_embedding
-        )
+        logprobs_n = 0
+
+    results = batch_filling_sequence(
+        model,
+        input_seqs,
+        torch.cuda.LongTensor([input_seqs.shape[-1] for _ in range(input_seqs.shape[0])], device=args.device),
+        strategy=strategy,
+        get_masks_and_position_ids=partial(
+            get_masks_and_position_ids_batch,
+            mask_position=mask_position,
+            max_gen_length=config['max_tokens'] if config else args.out_seq_length - input_seqs.shape[-1],
+            pad_pos=padding_pos,
+            gmask=use_gmask,
+        ),
+        get_last_layer_embedding=get_last_layer_embedding,
+        get_logprobs=logprobs_n
+    )
+    outputs = results['tokens']
+
+    if get_last_layer_embedding:
+        last_layer_embedding = results['output_embedding']
+
+    if logprobs_n != 0:
+        raw_top_indices = torch.cat(results['logprobs']['topk_indices'], dim=1)
+        raw_top_logprobs = torch.cat(results['logprobs']['topk_logprobs'], dim=1)
+        result_logprobs = [[] for _ in range(batch_size)]
+        for i in range(batch_size):
+            for j in range(raw_top_indices.shape[1]):
+                current_sample_pos_prob = raw_top_logprobs[i, j, :].tolist()
+                # current_sample_pos_tokens = tokenizer.convert_ids_to_tokens(raw_top_indices[i,j,:].tolist())
+                current_sample_pos_tokens = [tokenizer.IdToToken(id) for id in raw_top_indices[i, j, :].tolist()]
+                result_logprobs[i].append(list(zip(current_sample_pos_tokens, current_sample_pos_prob)))
+        if dist.get_rank() == 0:
+            print(f"<fill_blanks_efficient> result_logprobs: {result_logprobs}")
+
     if dist.get_rank() == 0:
         print(f"<fill_blanks_efficient> outputs:{outputs.shape}")
     answers = []
@@ -599,7 +490,7 @@ def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config=Non
         answers.append(answers_per_seq)
     if dist.get_rank() == 0:
         print(f"<fill_blanks_efficient> answers: {answers}")
-    
+
     if last_layer_embedding is not None:
         last_layer_embedding = torch.transpose(last_layer_embedding, 0, 1)
         last_layer_embeddings = []
@@ -610,29 +501,44 @@ def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config=Non
             last_layer_embeddings.append(current_sample_embedding)
     else:
         last_layer_embeddings = None
-    
-    return answers, last_layer_embeddings
+
+    return answers, last_layer_embeddings, result_logprobs
 
 
-def to_result(output, query, prompt_str_length, last_layer_embedding, job_id=None, working_directory=None):
+def post_processing_text(output_text, query, prompt_str_length):
+    if query.get('max_tokens') == 0:
+        return ""
+    elif query.get('echo', False):
+        text = output_text.replace("[[gMASK]][sop]", " ")
+    else:
+        text = output_text[prompt_str_length:].replace("[[gMASK]][sop]", "")
+    end_pos = len(text)
+    for stop_token in query.get('stop', []):
+        end_pos = min(text.find(stop_token) + len(stop_token), end_pos)
+    if query.get('echo', False):
+        end_pos = min(end_pos, prompt_str_length)
+    post_processed_text = text[:end_pos]
+    print(f"<post_processing_text> input: {output_text}")
+    print(f"<post_processing_text> output: {post_processed_text}")
+    return post_processed_text
+
+
+def to_result(output, query, prompt_str_length, last_layer_embedding, top_logprobs, job_id=None,
+              working_directory=None):
     print(f"<to_result> output: {output}")
     # TODO, Lots of missing attributes here!!!!
     if len(output) == 1:
         item = {'choices': [], }
-        if query.get('max_tokens') == 0:
-            text = ""
-        elif query.get('echo', False):
-            text = output[0][0].replace("[[gMASK]][sop]", " ")  
-        else:
-            text = output[0][0][prompt_str_length[0]:].replace("[[gMASK]][sop]", "")
         choice = {
-            "text": text,
+            "text": post_processing_text(output[0][0], query, prompt_str_length[0]),
             "index": 0,
             "finish_reason": "length"
         }
+        if top_logprobs is not None:
+            choice['logprobs'] = top_logprobs[0]
         if last_layer_embedding is not None:
             print(f"serialize last layer embedding, shape {last_layer_embedding} ")
-            tensor_filename = working_directory+'/'+job_id+'_embedding.pt'
+            tensor_filename = working_directory + '/' + job_id + '_embedding.pt'
             torch.save(last_layer_embedding, tensor_filename)
             with open(tensor_filename, "rb") as fp:
                 files = {"file": fp}
@@ -645,35 +551,30 @@ def to_result(output, query, prompt_str_length, last_layer_embedding, job_id=Non
         result = {}
         items = []
         if last_layer_embedding is not None:
-            #last_layer_embedding = torch.transpose(last_layer_embedding, 0, 1)
+            # last_layer_embedding = torch.transpose(last_layer_embedding, 0, 1)
             print(f"serialize last layer embeddings {last_layer_embedding} ")
-            tensor_filename = working_directory+'/'+job_id+'_embedding.pt'
+            tensor_filename = working_directory + '/' + job_id + '_embedding.pt'
             torch.save(last_layer_embedding, tensor_filename)
             with open(tensor_filename, "rb") as fp:
                 files = {"file": fp}
                 res = requests.post("https://planetd.shift.ml/file", files=files).json()
                 result['embedding'] = res["filename"]
                 os.remove(tensor_filename)
-        
+
         for i in range(len(output)):
             item = {'choices': [], }
             print(f"<to_result> output{i}: {prompt_str_length[i]} / {len(output[i][0])}")
-            if query.get('max_tokens') == 0:
-                text = ""
-            elif query.get('echo', False):
-                text = output[i][0].replace("[[gMASK]][sop]", " ")  
-            else:
-                text = output[i][0][prompt_str_length[i]:].replace("[[gMASK]][sop]", "")
             choice = {
-                "text": text,
+                "text": post_processing_text(output[i][0], query, prompt_str_length[i]),
                 "index": 0,
                 "finish_reason": "length"
             }
+            if top_logprobs is not None:
+                choice['logprobs'] = top_logprobs[i]
             item['choices'].append(choice)
             items.append(item)
         result['inference_result'] = items
         return result
-    
 
 
 def main(args):
@@ -723,7 +624,7 @@ def main(args):
                             logger.info(str(instruction))
                             job_id = instruction['payload']['id']
                             print(f"Job <{job_id}> has been batched")
-                            
+
                             # TODO: we assume len(payload) is 1, right?
                             query = instruction['payload']['payload'][0]
                             if isinstance(query['prompt'], list):
@@ -736,17 +637,20 @@ def main(args):
                             else:
                                 print("wrong prompt format, it can only be str or list of str")
                                 print(query['prompt'])
-                            
+
                             config = {
                                 'temperature': query.get('temperature', 0.9),
                                 # 'top_k': query.get('top_k', 1),
                                 'top_p': query.get('top_p', 0),
-                                'max_tokens': query.get('max_tokens',10) if query.get('max_tokens',10) > 0 else 1,
-                                'prompt_embedding': query.get('prompt_embedding', False)
+                                'max_tokens': query.get('max_tokens', 10) if query.get('max_tokens', 10) > 0 else 1,
+                                'prompt_embedding': query.get('prompt_embedding', False),
+                                'logprobs': query.get('logprobs', 0)
                             }
                             has_work = True
                         else:
                             has_work = False
+
+                torch.cuda.empty_cache()
 
                 dist.barrier()
                 if dist.get_rank() == 0:
@@ -767,27 +671,30 @@ def main(args):
                         strategy = BaseStrategy(batch_size=len(raw_text), temperature=1, top_k=1,
                                                 top_p=config['top_p'], end_tokens=end_tokens)
                     else:
-                        strategy = BaseStrategy(batch_size=len(raw_text), temperature=config['temperature'], top_k=args.top_k,
+                        strategy = BaseStrategy(batch_size=len(raw_text), temperature=config['temperature'],
+                                                top_k=args.top_k,
                                                 top_p=config['top_p'], end_tokens=end_tokens)
 
                     # TODO change config to our config, to make it work desired seq length.
                     # answers, answers_with_style, blanks, last_layer_embedding = \
                     #    fill_blanks(raw_text[0], model, tokenizer, strategy, config)
-                    answers, last_layer_embedding = fill_blanks_efficient(raw_text, model, tokenizer, strategy, config)
+                    answers, last_layer_embedding, top_logprobs = fill_blanks_efficient(raw_text, model, tokenizer,
+                                                                                        strategy, config)
                     end_time = time.time()
                     # print(f"Rank-<{dist.get_rank()}>: answer:")
                     # print(answers)
                     if dist.get_rank() == 0:
-                        print(f"Job-{job_id} GLM Inference takes {end_time-start_time}s")
+                        print(f"Job-{job_id} GLM Inference takes {end_time - start_time}s")
                         prompt_str_lengths = []
                         for text in raw_text:
                             prompt_str_lengths.append(len(text))
-                        result = to_result(answers, query, prompt_str_lengths, last_layer_embedding, job_id=job_id, 
+                        result = to_result(answers, query, prompt_str_lengths, last_layer_embedding, top_logprobs,
+                                           job_id=job_id,
                                            working_directory=args.working_directory)
                         return_payload = {
                             'request': query,
                             'result': result,
-                            'raw_compute_time': end_time-start_time
+                            'raw_compute_time': end_time - start_time
                         }
                         # local_cord_client.update_status(
                         local_cord_client.update_status_global_coordinator(
