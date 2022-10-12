@@ -1,4 +1,4 @@
-import argparse
+\import argparse
 import time
 import os
 import torch
@@ -36,7 +36,7 @@ def top_k_logits(logits, top_k=0, top_p=0.0, filter_value=-65504):
         logits[indices_to_remove] = filter_value
 
     if top_p > 0.0:
-        # batch_size = logits.shape[0]
+        #batch_size = logits.shape[0]
         # convert to 1D
         # logits = logits.view(-1).contiguous()
         sorted_logits, sorted_indices = torch.sort(logits, descending=True)
@@ -115,9 +115,9 @@ def batch_filling_sequence(
         get_last_layer_embedding=False,
         get_logprobs=0,
         **kw_args
-):
+        ):
     # print("<batch_filling_sequence> I am here 1")
-    # if dist.get_rank() == 0:
+    #if dist.get_rank() == 0:
     #    print(f"<batch_filling_sequence> seqs: {seqs}")
     assert len(seqs.shape) == 2
     # building the initial tokens, attention_mask, and position_ids
@@ -126,15 +126,15 @@ def batch_filling_sequence(
     seqs, attention_mask, position_ids = get_masks_and_position_ids(seqs)
     tokens = seqs[..., :context_length]
     if attention_mask.dtype != torch.bool:
-        attention_mask = attention_mask.type_as(next(model.parameters()))  # if fp16
+        attention_mask = attention_mask.type_as(next(model.parameters())) # if fp16
     # initialize generation
-    counter = context_length - 1  # Last fixed index is ``counter''
-    index = 0 if mems is None else mems.shape[2]  # Next forward starting index, also the length of cache.
+    counter = context_length - 1 # Last fixed index is ``counter''
+    index = 0 if mems is None else mems.shape[2] # Next forward starting index, also the length of cache.
     num_beams = 1
     # step-by-step generation
     # print("<batch_filling_sequence> I am here 2")
-    output_embedding = None
-    logprobs = {'topk_indices': [], 'topk_logprobs': []}
+    output_embedding=None
+    logprobs = {'topk_indices':[], 'topk_logprobs':[]}
     while counter < seqs.shape[1] - 1:
         if dist.get_rank() == 0:
             print(f"<batch_filling_sequence> counter:{counter}/{seqs.shape[1] - 1}")
@@ -142,14 +142,13 @@ def batch_filling_sequence(
         # token[:, index: counter+1] needs forwarding.
         # forward
         tokens = tokens.reshape(batch_size * num_beams, -1)
-        mems = mems.reshape(mems.shape[0], batch_size * num_beams, mems.shape[-2],
-                            mems.shape[-1]) if mems is not None else None
+        mems = mems.reshape(mems.shape[0], batch_size * num_beams, mems.shape[-2], mems.shape[-1]) if mems is not None else None
 
         output_embedding_flag = get_last_layer_embedding and counter == context_length - 1
         logits, *output_per_layers = model(
             tokens[:, index:],
-            position_ids[..., index: counter + 1],
-            attention_mask[..., index: counter + 1, :counter + 1],  # TODO memlen
+            position_ids[..., index: counter+1],
+            attention_mask[..., index: counter+1, :counter+1], # TODO memlen
             mems=mems,
             output_hidden_states=output_embedding_flag
         )
@@ -176,7 +175,7 @@ def batch_filling_sequence(
 
         if get_logprobs != 0:  # TODO: currently this encoding assumes num_completion=1
             logits = F.log_softmax(logits.detach(), -1)
-            current_topk_logprobs, current_topk_indices = logits.topk(1 + get_logprobs, dim=-1)
+            current_topk_logprobs, current_topk_indices = logits.topk(1+get_logprobs, dim=-1)
             if dist.get_rank() == 0:
                 print(f"<batch_filling_sequence> current_topk_logprobs.shape: {current_topk_logprobs.shape}")
                 print(f"<batch_filling_sequence> current_topk_indices.shape: {current_topk_indices.shape}")
@@ -184,10 +183,10 @@ def batch_filling_sequence(
             logprobs['topk_logprobs'].append(current_topk_logprobs)
             logprobs['topk_indices'].append(current_topk_indices)
 
+
         if len(tokens.shape) == 3 and num_beams == 1:
             num_beams = tokens.shape[1]
-            position_ids = position_ids.unsqueeze(1).expand(batch_size, num_beams, -1).reshape(batch_size * num_beams,
-                                                                                               -1)
+            position_ids = position_ids.unsqueeze(1).expand(batch_size, num_beams, -1).reshape(batch_size * num_beams, -1)
             attention_mask_shape = attention_mask.shape[-3:]
             attention_mask = attention_mask.unsqueeze(1).expand(batch_size, num_beams, -1, -1, -1).reshape(
                 batch_size * num_beams, *attention_mask_shape)
@@ -321,7 +320,7 @@ def get_masks_and_position_ids(seq, mask_position, max_gen_length, gmask=False):
 
     position_ids = torch.arange(tokens.shape[-1], dtype=torch.long, device=tokens.device)
     if not gmask:
-        position_ids[context_length - 1:] = mask_position
+        position_ids[context_length - 1 :] = mask_position
 
     position_ids = position_ids.unsqueeze(0)
 
@@ -343,7 +342,7 @@ def get_masks_and_position_ids_batch(seqs, mask_position, max_gen_length, pad_po
     attention_mask.unsqueeze_(1)
     attention_mask = (attention_mask < 0.5).bool()
 
-    position_ids = torch.zeros((batch_size, tokens.shape[-1]), dtype=torch.long, device=tokens.device)
+    position_ids = torch.zeros((batch_size,tokens.shape[-1]), dtype=torch.long, device=tokens.device)
 
     for i in range(batch_size):
         position_ids[i] = torch.arange(tokens.shape[-1], dtype=torch.long, device=tokens.device) - pad_pos[i]
@@ -352,7 +351,7 @@ def get_masks_and_position_ids_batch(seqs, mask_position, max_gen_length, pad_po
     if not gmask:
         position_ids[:, context_length - 1:] = mask_position
 
-    # if dist.get_rank() == 0:
+    #if dist.get_rank() == 0:
     #    print(f"<get_masks_and_position_ids_batch> tokens: {tokens}")
     #    print(f"<get_masks_and_position_ids_batch> attention_mask: {attention_mask}")
     #    print(f"<get_masks_and_position_ids_batch> position_ids: {position_ids}")
@@ -417,7 +416,7 @@ def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config=Non
     for seq in seqs:
         padding_pos.append(context_length - len(seq))
 
-    # if dist.get_rank() == 0:
+    #if dist.get_rank() == 0:
     #    print(f"<fill_blanks_efficient> padding_pos {padding_pos}")
 
     input_seqs = torch.cuda.LongTensor(
@@ -438,7 +437,7 @@ def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config=Non
     else:
         get_last_layer_embedding = False
 
-    if config is not None and config['logprobs'] != 0:
+    if config is not None and config['logprobs'] !=0:
         logprobs_n = config['logprobs']
     else:
         logprobs_n = 0
@@ -452,7 +451,7 @@ def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config=Non
             get_masks_and_position_ids_batch,
             mask_position=mask_position,
             max_gen_length=config['max_tokens'] if config else args.out_seq_length - input_seqs.shape[-1],
-            pad_pos=padding_pos,
+            pad_pos = padding_pos,
             gmask=use_gmask,
         ),
         get_last_layer_embedding=get_last_layer_embedding,
@@ -469,9 +468,9 @@ def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config=Non
         result_logprobs = [[] for _ in range(batch_size)]
         for i in range(batch_size):
             for j in range(raw_top_indices.shape[1]):
-                current_sample_pos_prob = raw_top_logprobs[i, j, :].tolist()
+                current_sample_pos_prob = raw_top_logprobs[i,j,:].tolist()
                 # current_sample_pos_tokens = tokenizer.convert_ids_to_tokens(raw_top_indices[i,j,:].tolist())
-                current_sample_pos_tokens = [tokenizer.IdToToken(id) for id in raw_top_indices[i, j, :].tolist()]
+                current_sample_pos_tokens = [tokenizer.IdToToken(id) for id in raw_top_indices[i,j,:].tolist()]
                 result_logprobs[i].append(list(zip(current_sample_pos_tokens, current_sample_pos_prob)))
         if dist.get_rank() == 0:
             print(f"<fill_blanks_efficient> result_logprobs: {result_logprobs}")
@@ -516,25 +515,24 @@ def post_processing_text(output_text, query, prompt_str_length):
     end_pos = len(text)
 
     stop_tokens = []
-    if isinstance(query.get('stop_words', ""), str):
-        stop_tokens.extend(query.get('stop_words', "").split(";"))
-    stop_tokens.extend(query.get('stop', []))
+    if isinstance(query.get('stop_words',""), str):
+        stop_tokens.extend(query.get('stop_words',"").split(";"))
+    stop_tokens.extend(query.get('stop',[]))
 
     print(f"<post_processing_text>: {stop_tokens}.")
 
     for stop_token in stop_tokens:
-        end_pos = min(text.find(stop_token) + len(stop_token), end_pos)
+        end_pos = min(text.find(stop_token)+ len(stop_token), end_pos)
 
     if query.get('echo', False):
         end_pos = min(end_pos, prompt_str_length)
-    post_processed_text = text[:end_pos]
+    post_processed_text = text[:end_pos+1]
     print(f"<post_processing_text> input: {output_text}")
     print(f"<post_processing_text> output: {post_processed_text}")
     return post_processed_text
 
 
-def to_result(output, query, prompt_str_length, last_layer_embedding, top_logprobs, job_id=None,
-              working_directory=None):
+def to_result(output, query, prompt_str_length, last_layer_embedding, top_logprobs, job_id=None, working_directory=None):
     print(f"<to_result> output: {output}")
     # TODO, Lots of missing attributes here!!!!
     '''
@@ -563,9 +561,9 @@ def to_result(output, query, prompt_str_length, last_layer_embedding, top_logpro
     result = {}
     items = []
     if last_layer_embedding is not None:
-        # last_layer_embedding = torch.transpose(last_layer_embedding, 0, 1)
+        #last_layer_embedding = torch.transpose(last_layer_embedding, 0, 1)
         # print(f"serialize last layer embeddings {last_layer_embedding} ")
-        tensor_filename = working_directory + '/' + job_id + '_embedding.pt'
+        tensor_filename = working_directory+'/'+job_id+'_embedding.pt'
         torch.save(last_layer_embedding, tensor_filename)
         with open(tensor_filename, "rb") as fp:
             files = {"file": fp}
@@ -587,6 +585,7 @@ def to_result(output, query, prompt_str_length, last_layer_embedding, top_logpro
         items.append(item)
     result['inference_result'] = items
     return result
+
 
 
 def main(args):
@@ -654,7 +653,7 @@ def main(args):
                                 'temperature': query.get('temperature', 0.9),
                                 # 'top_k': query.get('top_k', 1),
                                 'top_p': query.get('top_p', 0),
-                                'max_tokens': query.get('max_tokens', 10) if query.get('max_tokens', 10) > 0 else 1,
+                                'max_tokens': query.get('max_tokens',10) if query.get('max_tokens',10) > 0 else 1,
                                 'prompt_embedding': query.get('prompt_embedding', False),
                                 'logprobs': query.get('logprobs', 0)
                             }
@@ -681,24 +680,21 @@ def main(args):
                     # Followed Jue's suggestion for temperature
 
                     batch_size = min(len(raw_text), 32)
-                    num_iter = math.ceil(len(raw_text) / batch_size)
+                    num_iter = math.ceil(len(raw_text)/batch_size)
                     answers = []
                     last_layer_embedding = []
-                    top_logprobs = []
+                    top_logprobs =[]
 
                     for iter_i in range(num_iter):
-                        current_raw_text = raw_text[iter_i * batch_size: (iter_i + 1) * batch_size]
+                        current_raw_text = raw_text[iter_i*batch_size: (iter_i+1)*batch_size]
                         if config['temperature'] == 0:
                             strategy = BaseStrategy(batch_size=len(current_raw_text), temperature=1, top_k=1,
                                                     top_p=config['top_p'], end_tokens=end_tokens)
                         else:
-                            strategy = BaseStrategy(batch_size=len(current_raw_text), temperature=config['temperature'],
-                                                    top_k=args.top_k,
+                            strategy = BaseStrategy(batch_size=len(current_raw_text), temperature=config['temperature'], top_k=args.top_k,
                                                     top_p=config['top_p'], end_tokens=end_tokens)
 
-                        cur_answer, cur_last_layer_embedding, cur_top_logprobs = fill_blanks_efficient(current_raw_text,
-                                                                                                       model, tokenizer,
-                                                                                                       strategy, config)
+                        cur_answer, cur_last_layer_embedding, cur_top_logprobs = fill_blanks_efficient(current_raw_text, model, tokenizer, strategy, config)
                         answers.extend(cur_answer)
                         if cur_last_layer_embedding is None:
                             last_layer_embedding = None
@@ -711,21 +707,21 @@ def main(args):
                         if dist.get_rank() == 0:
                             print(f"<Main> Current iter handled: {len(answers)}/{len(raw_text)}")
 
+
                     end_time = time.time()
                     # print(f"Rank-<{dist.get_rank()}>: answer:")
                     # print(answers)
                     if dist.get_rank() == 0:
-                        print(f"Job-{job_id} GLM Inference takes {end_time - start_time}s")
+                        print(f"Job-{job_id} GLM Inference takes {end_time-start_time}s")
                         prompt_str_lengths = []
                         for text in raw_text:
                             prompt_str_lengths.append(len(text))
-                        result = to_result(answers, query, prompt_str_lengths, last_layer_embedding, top_logprobs,
-                                           job_id=job_id,
+                        result = to_result(answers, query, prompt_str_lengths, last_layer_embedding, top_logprobs, job_id=job_id,
                                            working_directory=args.working_directory)
                         return_payload = {
                             'request': query,
                             'result': result,
-                            'raw_compute_time': end_time - start_time
+                            'raw_compute_time': end_time-start_time
                         }
                         # local_cord_client.update_status(
                         local_cord_client.update_status_global_coordinator(
