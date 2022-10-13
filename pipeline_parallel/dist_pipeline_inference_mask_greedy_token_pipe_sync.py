@@ -24,7 +24,12 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         else:
             self.coord_client = None
         self.echo_prompt = args.echo_prompt
-        self.num_completions = args.num_completions
+        if args.num_completions % 2 == 0:
+            self.num_completions = 2
+            self.num_completion_loops = args.num_completions // 2
+        else:
+            self.num_completions = 1
+            self.num_completion_loops = args.num_completions
         self.top_k_per_token = args.top_k_per_token
         self.micro_batch_size = 1
         
@@ -243,14 +248,19 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         if self._is_merged:
             
             if self.pp_rank == self.pipeline_group_size - 1:
-                for i in range(self.token_micro_batch_num):
+                for i in range(self.seq_num):
                     self._copy_initial_token_emb(i)
-                    self._generate_new_token(i)
+                    if i % self.token_micro_batch_size == self.token_micro_batch_size - 1:
+                        self._generate_new_token(i//self.token_micro_batch_size)
             
             for layer_index in range(self.num_layers):
                 for index in range(self.token_micro_batch_num):
                     key, value = self.cached_attention[layer_index][index]
                     self.cached_attention[layer_index][index] = (key[:, :, :self.input_seq_length], value[:, :, :self.input_seq_length])
+                    
+            self.token_cached_attention = []
+            for _ in range(self.num_layers):
+                self.token_cached_attention.append([None for _ in range(self.seq_num)])
         else:
             super()._merge_cached_seqs_and_attentions()
             self._is_merged = True
@@ -332,15 +342,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
     def _get_cached_attention(self, layer_index, token_batch_index):
         
         if self.num_completions == 1:
-            return self.cached_attention[layer_index][token_batch_index]
-        
-        # else:
-        #     cache = self.cached_attention[layer_index][token_batch_index]
-        #     if cache[0].size(0) == self.seq_num:
-        #         cache = [cache[0].repeat(self.num_completions, 1, 1, 1), 
-        #                  cache[1].repeat(self.num_completions, 1, 1, 1)]
-        #     return cache
-                
+            return self.cached_attention[layer_index][token_batch_index]    
             
         else:
             prompt_cache = self.cached_attention[layer_index][token_batch_index] # 2* (token_bs, ., seq_len, .)
@@ -477,7 +479,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
                 
         if self.enable_tidy_profiling:
             self.profile_seq_pipeline_stage()
-
+        
     def forward_new_token_pipeline_stage(self, attention_mask=None):
         if self.generate_seq_length == 0:
             # handle seq_length == 0
@@ -603,33 +605,35 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         with torch.no_grad():
             self.forward_seq_pipeline_stage(input_data=input_, attention_mask=attention_mask)
             print(f"<inference_batch> rank-<{self.pp_rank}> forward_seq_pipeline_stage is done!")
-            self.forward_new_token_pipeline_stage(attention_mask=attention_mask)
-            print(f"<inference_batch> rank-<{self.pp_rank}> forward_seq_pipeline_stage is done!")
-
-        self.comm.barrier()
-        print(f"<inference_batch> rank-<{self.pp_rank}> after third barrier!")
-
-        if self.pp_rank == self.pipeline_group_size - 1 and output_ is not None:
             
-            # token_micro_batch_num * num_completions
-            ret_tokens = self.ret_tokens[:, :self.i_current_token].cpu().split(self.token_micro_batch_size)
-            ret_token_logprobs = self.ret_token_logprobs[:, :self.i_current_token].cpu().split(self.token_micro_batch_size)
-            if self.top_k_per_token > 0:
-                ret_topk_tokens = self.ret_topk_tokens[:, :self.i_current_token].cpu().split(self.token_micro_batch_size)
-                ret_topk_token_logprobs = self.ret_topk_token_logprobs[:, :self.i_current_token].cpu().split(self.token_micro_batch_size)
+            for nc in range(self.num_completion_loops):
+                self.forward_new_token_pipeline_stage(attention_mask=attention_mask)
+                print(f"<inference_batch> rank-<{self.pp_rank}> forward_seq_pipeline_stage is done!")
 
-            print(f"<inference_batch> rank-<{self.pp_rank}> after marker1 !")
+                self.comm.barrier()
+                print(f"<inference_batch> rank-<{self.pp_rank}> after third barrier!")
+                
+                if self.pp_rank == self.pipeline_group_size - 1 and output_ is not None:
 
-            for i in range(self.num_completions):
-                item = {
-                    'token_ids': torch.cat(ret_tokens[i::self.num_completions], 0),
-                    'token_logprobs': torch.cat(ret_token_logprobs[i::self.num_completions], 0),
-                }
-                if self.top_k_per_token > 0:
-                    item['topk_ids'] = torch.cat(ret_topk_tokens[i::self.num_completions], 0)
-                    item['topk_logprobs'] = torch.cat(ret_topk_token_logprobs[i::self.num_completions], 0)
-                output_.append(item)
-            print(f"<inference_batch> rank-<{self.pp_rank}> after marker2 !")
+                    # token_micro_batch_num * num_completions
+                    ret_tokens = self.ret_tokens[:, :self.i_current_token].cpu().split(self.token_micro_batch_size)
+                    ret_token_logprobs = self.ret_token_logprobs[:, :self.i_current_token].cpu().split(self.token_micro_batch_size)
+                    if self.top_k_per_token > 0:
+                        ret_topk_tokens = self.ret_topk_tokens[:, :self.i_current_token].cpu().split(self.token_micro_batch_size)
+                        ret_topk_token_logprobs = self.ret_topk_token_logprobs[:, :self.i_current_token].cpu().split(self.token_micro_batch_size)
+
+                    print(f"<inference_batch> rank-<{self.pp_rank}> after marker1 !")
+
+                    for i in range(self.num_completions):
+                        item = {
+                            'token_ids': torch.cat(ret_tokens[i::self.num_completions], 0),
+                            'token_logprobs': torch.cat(ret_token_logprobs[i::self.num_completions], 0),
+                        }
+                        if self.top_k_per_token > 0:
+                            item['topk_ids'] = torch.cat(ret_topk_tokens[i::self.num_completions], 0)
+                            item['topk_logprobs'] = torch.cat(ret_topk_token_logprobs[i::self.num_completions], 0)
+                        output_.append(item)
+                    print(f"<inference_batch> rank-<{self.pp_rank}> after marker2 !")
 
         end_time = time.time()
         iter_time = end_time - start_time
