@@ -1,3 +1,8 @@
+import sys
+
+sys.path.append("../GLM-130B")
+from quantization import quantize
+
 import argparse
 import time
 import os
@@ -254,6 +259,11 @@ def initialize_model_and_tokenizer(args):
     torch.distributed.barrier()
     start = time.time()
     load_checkpoint(model, args)
+
+    if args.quantization_bit_width is not None and not args.from_quantized_checkpoint:
+        # Quantize model before moving to GPU
+        model = quantize(model, args.quantization_bit_width)
+
     torch.distributed.barrier()
     if torch.distributed.get_rank() == 0:
         print(f"> Checkpoint loaded in {time.time() - start:.1f}s")
@@ -514,19 +524,23 @@ def post_processing_text(output_text, query, prompt_str_length):
     else:
         text = output_text[prompt_str_length:].replace("[[gMASK]][sop]", "")
     end_pos = len(text)
+    print(f"<post_processing_text>1 end_pos: {end_pos}.")
 
     stop_tokens = []
     if isinstance(query.get('stop_words', ""), str):
-        stop_tokens.extend(query.get('stop_words', "").split(";"))
+        if query.get('stop_words', "") != "":
+            stop_tokens.extend(query.get('stop_words', "").split(";"))
     stop_tokens.extend(query.get('stop', []))
 
-    print(f"<post_processing_text>: {stop_tokens}.")
+    print(f"<post_processing_text> stop_tokens: {stop_tokens}.")
 
     for stop_token in stop_tokens:
         end_pos = min(text.find(stop_token) + len(stop_token), end_pos)
+        print(f"<post_processing_text>2 end_pos: {end_pos}.")
 
     if query.get('echo', False):
-        end_pos = min(end_pos, prompt_str_length)
+        end_pos = max(end_pos, prompt_str_length)
+    print(f"<post_processing_text> text: {text}, end_pos: {end_pos}")
     post_processed_text = text[:end_pos + 1]
     print(f"<post_processing_text> input: {output_text}")
     print(f"<post_processing_text> output: {post_processed_text}")
@@ -612,6 +626,9 @@ def main(args):
     if args.quantization_bit_width is not None:
         glm_model_name = glm_model_name + '-int' + str(args.quantization_bit_width)
 
+    if dist.get_rank() == 0:
+        print("<Main> GLM name: ", glm_model_name)
+
     try:
         while True:
             try:
@@ -620,6 +637,7 @@ def main(args):
                 config = {}
                 if dist.get_rank() == 0:
                     instructions = local_cord_client.fetch_instructions(glm_model_name, 0)
+                    print(instructions)
                     last_instruction = instructions[-1]
 
                     if last_instruction["message"] == "break":
@@ -751,6 +769,8 @@ def main(args):
                 raise e
 
     except Exception as e:
+        error = traceback.format_exc()
+        print(error)
         print('Exception in latency inference:', e)
 
 
