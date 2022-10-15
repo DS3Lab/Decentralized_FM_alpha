@@ -62,36 +62,3 @@ class DistSampleInferenceMaskTokenPipeSync(DistGreedyInferenceMaskTokenPipeSync)
         
         if index == self.token_micro_batch_num - 1:
             self.i_current_token += 1
-        
-        
-#     def inference_batch(self, input_=None, output_=None, attention_mask=None):
-#         self.comm.barrier()
-#         start_time = time.time()
-#         self._init_cached_seqs_and_attentions() # TODO: should I put here
-#         if self.enable_tidy_profiling:
-#             torch.cuda.synchronize()
-#             self.init_time_stamp = time.time() * 1e+6
-#             self.init_event.record()
-
-#         with torch.no_grad():
-#             self.forward_seq_pipeline_stage(input_data=input_, attention_mask=attention_mask)
-#             for nc in range(self.num_completions):
-#                 self.forward_new_token_pipeline_stage(attention_mask=attention_mask)
-#                 self.comm.barrier()
-#                 if self.pp_rank == self.pipeline_group_size - 1 and output_ is not None:
-#                     assert isinstance(output_, list)
-#                     item = {
-#                         'token_ids': self.ret_tokens[:, :self.i_current_token].cpu(),
-#                         'token_logprobs': self.ret_token_logprobs[:, :self.i_current_token].cpu(),
-#                     }
-#                     if self.top_k_per_token > 0:
-#                         item['topk_ids'] = self.ret_topk_tokens[:, :self.i_current_token].cpu()
-#                         item['topk_logprobs'] = self.ret_topk_token_logprobs[:, :self.i_current_token].cpu()
-#                     output_.append(item)
-
-#         end_time = time.time()
-#         iter_time = end_time - start_time
-#         print("Rank {} node whole INFERENCE iteration takes {:3.2f}s".format(self.global_rank, iter_time))
-#         print("-------------------------------------------")
-        
-#         return iter_time

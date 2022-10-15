@@ -5,29 +5,18 @@ from comm.comm_utils import *
 from modules.generation_utils import get_logits_processor, get_logits_warper
 
 
-from .dist_pipeline_inference_mask_sample import DistSampleInferenceMaskAsync
+from .dist_pipeline_inference_mask_sample_token_pipe_sync import DistSampleInferenceMaskTokenPipeSync
 
 
-class DistSampleEncDecInferenceMaskAsync(DistSampleInferenceMaskAsync):
+class DistSampleEncDecInferenceMaskSync(DistSampleInferenceMaskTokenPipeSync):
     #TODO
     
     def __init__(self, args, device, rank=None):
         super().__init__(args, device, rank=rank)
-        self.num_completions = args.num_completions
-        self.update_processors(args)
         
         self.encoder_seq_emb = torch.zeros(
             (self.seq_num * self.micro_batch_size, self.input_seq_length, self.embedding_dim),
             requires_grad=False, device=self.device, dtype=self.dtype
-        )
-        
-    def update_processors(self, args):
-        self.logits_processor = get_logits_processor()
-        self.logits_warper = get_logits_warper(
-            top_k = (None if args.top_k is None or args.top_k == 0 else args.top_k),
-            top_p = (None if args.top_p is None or args.top_p <= 0 else args.top_p),
-            temperature = args.temperature,
-            num_beams = 1,
         )
 
     def change_buffer_size(self):
@@ -80,6 +69,8 @@ class DistSampleEncDecInferenceMaskAsync(DistSampleInferenceMaskAsync):
             self.layers['dec_head'] = DecHead.from_pretrained(
                 self.model_name
             ).to(self.dtype).eval().to(self.device)
+            # alias
+            self.layers['lm'] = self.layers['dec_head']
             
     def _init_cached_seqs_and_attentions(self):
         self.merged = False
@@ -109,71 +100,59 @@ class DistSampleEncDecInferenceMaskAsync(DistSampleInferenceMaskAsync):
         else:
             self.output_seq_emb[index] = current_emb
             
-    def _forward_compute_generate_token(self, step, mask=None):
-        print("Compute generate seq<", step, ">.")
+    def _forward_compute_generate_token(self, index, mask=None):
+        print("Compute generate token batch<", index, ">.")
+        
+        if mask is not None and self.num_completions > 1:
+            # repeat n times
+            mask = mask.repeat(self.num_completions, 1)
+            
         if self.pp_rank == 0:
-            current_emb = self.layers['emb'](self.recv_new_token[step])
+            current_emb = self.layers['emb'](self.recv_new_token[index])
         else:
-            current_emb = self.input_token_emb[step]
+            current_emb = self.input_token_emb[index]
         for layer_index in range(self.num_layers):
             if layer_index != self.num_layers - 1:
-                current_emb, self.cached_attention[layer_index], self.cached_cross_attention[layer_index] = \
+                current_emb, self.cached_attention[layer_index][index], self.cached_cross_attention[layer_index][index] = \
                     self.layers['dec_block' + str(layer_index)](
                     current_emb, 
-                    layer_past=self.cached_attention[layer_index],
-                    encoder_hidden_states=self.encoder_seq_emb,
-                    encoder_layer_past=self.cached_cross_attention[layer_index],
+                    layer_past=self.cached_attention[layer_index][index],
+                    encoder_hidden_states=self.encoder_seq_emb[index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size].repeat(self.num_completions, 1, 1),
+                    encoder_layer_past=self.cached_cross_attention[layer_index][index],
                     encoder_mask=mask,
                 )
             else:
-                self.output_token_emb[step], self.cached_attention[layer_index], self.cached_cross_attention[layer_index] = \
+                self.output_token_emb[index], self.cached_attention[layer_index][index], self.cached_cross_attention[layer_index][index] = \
                     self.layers['dec_block' + str(layer_index)](
                     current_emb, 
-                    layer_past=self.cached_attention[layer_index],
-                    encoder_hidden_states=self.encoder_seq_emb,
-                    encoder_layer_past=self.cached_cross_attention[layer_index],
+                    layer_past=self.cached_attention[layer_index][index],
+                    encoder_hidden_states=self.encoder_seq_emb[index*self.token_micro_batch_size:(index+1)*self.token_micro_batch_size].repeat(self.num_completions, 1, 1),
+                    encoder_layer_past=self.cached_cross_attention[layer_index][index],
                     encoder_mask=mask,
                 )
         if self.pp_rank == self.pipeline_group_size - 1:
-            self._generate_new_token(step)
-
-    def _generate_new_token(self, step):
-        assert self.pp_rank == self.pipeline_group_size - 1
-        if step >= 0:
-            z = self.layers['dec_head'](self.output_token_emb[step])
-            if torch.isnan(z).any():
-                print('containing nan, setting them to zero!')
-                print(z)
-            z = z.float().nan_to_num() # test if fp32 whether cause inf
-            z = torch.nn.functional.log_softmax(z, -1)
-
-            if self.top_k_per_token > 0:
-                logprobs, indices = z.topk(k=self.top_k_per_token, dim=-1)
-                self.ret_topk_tokens[:, step] = indices.squeeze(1)
-                self.ret_topk_token_logprobs[:, step] = logprobs.squeeze(1)
-
-            # [:, -1] because multinomial only accept 1/2d tensors
-            z_to_sample = z[:, -1] # bs, vocab
-            z_to_sample = self.logits_warper(None, z_to_sample)
-            indices = torch.multinomial(z_to_sample.softmax(-1).clamp(0, 1).nan_to_num() , num_samples=1) # bs, 1
-            logprobs = torch.gather(z[:, -1], -1, indices) # bs, 1
-            self.send_new_tokens[step] = indices
-
-            self.ret_tokens[:, step] = indices.squeeze(-1)
-            self.ret_token_logprobs[:, step] = logprobs.squeeze(-1)
-        
-        else:
-            # first token is always pad
-            self.send_new_tokens[0][:] = self.config.pad_token_id
+            self._generate_new_token(index)
     
     def _process_mask_during_generation(self, attention_mask):
         # encoder mask do not need to update
         return attention_mask
         
     def _merge_cached_seqs_and_attentions(self):
+        
+        self.i_current_token = 0
+        
+        if self.stop is not None:
+            self.stop_flag[:] = 0
+                
+        if self.pp_rank == self.pipeline_group_size - 1:
+            for i in range(self.token_micro_batch_num):
+                self.send_new_tokens[i].data[:] = self.config.pad_token_id
+            
         # enc dec dont need to merge
         for i in range(self.num_layers):
-            self.cached_attention[i] = None
+            self.cached_attention[i] = [None for _ in range(self.token_micro_batch_num)]
+        for i in range(self.num_layers):
+            self.cached_cross_attention[i] = [None for _ in range(self.token_micro_batch_num)]
 
         if not self.merged:
             torch.cuda.synchronize()
@@ -182,7 +161,7 @@ class DistSampleEncDecInferenceMaskAsync(DistSampleInferenceMaskAsync):
 
             # sync broadcast
             self.comm.broadcast(self.encoder_seq_emb, src=self.pipeline_group_size - 1,)
-
+                
             torch.cuda.synchronize()
             
             self.merged = True

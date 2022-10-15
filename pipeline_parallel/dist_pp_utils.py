@@ -5,6 +5,7 @@ from .dist_pipeline_inference_greedy_sync import DistGreedyInferenceSync
 from .dist_pipeline_inference_mask_greedy import DistGreedyInferenceMaskAsync
 from .dist_pipeline_inference_mask_sample import DistSampleInferenceMaskAsync
 from .dist_pipeline_enc_dec_inference_mask_sample import DistSampleEncDecInferenceMaskAsync
+from .dist_pipeline_enc_dec_inference_mask_sample_token_pipe import DistSampleEncDecInferenceMaskSync
 from .dist_pipeline_inference_greedy_token_pipe_sync import DistGreedyInferenceTokePipeSync
 from .dist_pipeline_inference_mask_greedy_token_pipe_sync import DistGreedyInferenceMaskTokenPipeSync
 from .dist_pipeline_inference_mask_sample_token_pipe_sync import DistSampleInferenceMaskTokenPipeSync
@@ -64,6 +65,8 @@ def get_pp_inference_module(args, device, rank=None, be_coordinated=False):
         return DistSampleInferenceMaskAsync(args, device, rank=rank)
     elif args.pp_mode == 'pipe_async_sample_enc_dec_mask':
         return DistSampleEncDecInferenceMaskAsync(args, device, rank=rank)
+    elif args.pp_mode == 'pipe_sync_sample_enc_dec_mask':
+        return DistSampleEncDecInferenceMaskSync(args, device, rank=rank)
     elif args.pp_mode == 'pipe_hybrid_greedy_sync':
         return DistHybridGreedyInference(args, device, rank=rank)
     elif args.pp_mode == 'pipe_hybrid_greedy_async':
