@@ -88,6 +88,9 @@ def step_update(self, freeze=False):
 
             # Decay the first and second moment running average coefficient
             # In-place operations to update the averages at the same time
+            
+            # Note: this step has done in _sync_exp_avgs,
+            #       so just skip it here.
 #             exp_avg.mul_(beta1).add_(grad, alpha=1.0 - beta1)
             if not freeze:
                 exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1.0 - beta2)
