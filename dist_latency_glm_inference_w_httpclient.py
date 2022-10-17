@@ -29,6 +29,7 @@ from time import sleep
 from datetime import datetime
 import requests
 import math
+import random
 
 
 debug_print=False
@@ -584,9 +585,11 @@ def post_processing_text(output_text, query, prompt_str_length):
         print(f"<post_processing_text>2 end_pos: {end_pos}.")
 
     print(f"<post_processing_text> text: {text}, end_pos: {end_pos}")
-    post_processed_text = text[:end_pos + 1]
+    post_processed_text = text[:end_pos]
     print(f"<post_processing_text> input: {output_text}")
     print(f"<post_processing_text> output: {post_processed_text}")
+    
+    post_processed_text = post_processed_text.replace("[gMASK]][sop]", "")
     return post_processed_text
 
 
@@ -720,6 +723,7 @@ def main(args):
                                 print(query['prompt'])
 
                             config = {
+                                'seed': query.get('seed', None),
                                 'temperature': query.get('temperature', 0.9),
                                 'top_k': query.get('top_k', 50),
                                 'top_p': query.get('top_p', 0),
@@ -754,6 +758,12 @@ def main(args):
                     answers = []
                     last_layer_embedding = []
                     top_logprobs = []
+                    if config['seed'] is not None:
+                        torch.manual_seed(config['seed'])
+                        np.random.seed(config['seed'])
+                        random.seed(config['seed'])
+                        # if debug_print:
+                        print(f"<Main> Rank-<{dist.get_rank()}> setup random seed: {config['seed']}")
 
                     for iter_i in range(num_iter):
                         current_raw_text = raw_text[iter_i * batch_size: (iter_i + 1) * batch_size]
