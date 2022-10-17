@@ -39,6 +39,16 @@ def get_huggingface_tokenizer_model(args, device):
     return tokenizer, model
 
 
+def pre_processing_texts(input_text, model_name):
+    if model_name == 't5-11b':
+        output_text = []
+        for text in input_text:
+            output_text.append(text+" <extra_id_0>")
+        return output_text
+    else:
+        return input_text
+
+
 def post_processing_text(input_text, output_text, model_name, query):
     print(f"<post_processing_text> input_text: {input_text}")
     print(f"<post_processing_text> output_text: {output_text}")
@@ -51,7 +61,7 @@ def post_processing_text(input_text, output_text, model_name, query):
     if query.get('max_tokens') == 0:
         return ""
 
-    if model_name == 'gpt-j-6b' or model_name == 't5-11b':
+    if model_name == 'gpt-j-6b':
         if not query.get('echo', False):
             text = output_text[len(input_text):]
         else:
@@ -66,7 +76,9 @@ def post_processing_text(input_text, output_text, model_name, query):
                 if text.find(stop_token) != -1:
                     end_pos = min(text.find(stop_token) + len(stop_token), end_pos)
             print(f"<post_processing_text>2 end_pos: {end_pos}.")
-    elif model_name == 'ul2' or model_name == 't0pp':
+    elif model_name == 'ul2' or model_name == 't0pp' or model_name == 't5-11b':
+        if model_name == 't5-11b':
+            input_text = input_text.replace("","")
         if query.get('echo', False):
             text = input_text+' '+output_text
         else:
@@ -101,6 +113,8 @@ def to_result(input_text, output_text, model_name, query):
             "index": 0,
             "finish_reason": "length"
         }
+        item['choices'].append(choice)
+        items.append(item)
     result['inference_result'] = items
     return result
 
@@ -151,7 +165,7 @@ def main():
                     logger.info("# BREAK ")
                     break
                 elif last_instruction["message"] == "continue":
-                    logger.info("Received keep instruction.")
+                    logger.info(f"Received keep instruction. <{args.model_name}>")
                     sleep(1)
                 elif last_instruction["message"] == "run":
                     fetched_tasks = [x for x in instructions
@@ -175,6 +189,8 @@ def main():
                         print(f"Job <{job_id}> has been processed")
 
                         start_time = time.time()
+                        
+                        # raw_text = pre_processing_texts(raw_text, args.model_name)
 
                         batch_size = min(len(raw_text), args.batch_size)
                         num_iter = math.ceil(len(raw_text) / batch_size)
@@ -219,7 +235,7 @@ def main():
                         end_time = time.time()
                         print(f"Job-{job_id} {args.model_name} Inference takes {end_time-start_time}s")
                         # print(f"outputs by hf model: {outputs}")
-                        result = to_result(raw_text,answers, args.model_name, query)
+                        result = to_result(raw_text, answers, args.model_name, query)
                         return_payload = {
                             'request': query,
                             'result': result,
