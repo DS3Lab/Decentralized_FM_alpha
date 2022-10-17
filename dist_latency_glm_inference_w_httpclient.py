@@ -1,5 +1,4 @@
 import sys
-
 sys.path.append("../GLM-130B")
 from quantization import quantize
 
@@ -27,8 +26,13 @@ import traceback
 from loguru import logger
 import torch.distributed as dist
 from time import sleep
+from datetime import datetime
 import requests
 import math
+import random
+
+
+debug_print=False
 
 
 def top_k_logits(logits, top_k=0, top_p=0.0, filter_value=-65504):
@@ -36,26 +40,41 @@ def top_k_logits(logits, top_k=0, top_p=0.0, filter_value=-65504):
     # https://medium.com/huggingface/how-to-build-a-state-of-the-art-conversational-ai-with-transfer-learning-2d818ac26313
 
     if top_k > 0:
-        # Remove all tokens with a probability less than the last token of the top-k
+    #    # Remove all tokens with a probability less than the last token of the top-k
+        if debug_print and dist.get_rank() == 0:
+            print(f"<top_k_logits>: Nan? {torch.isnan(torch.topk(logits, top_k)[0][..., -1, None]).any()}")
         indices_to_remove = logits < torch.topk(logits, top_k)[0][..., -1, None]
+        if debug_print and dist.get_rank() == 0:
+            print(f"<top_k_logits> indices_to_remove: {indices_to_remove}")
         logits[indices_to_remove] = filter_value
+        if debug_print and  dist.get_rank() == 0:
+            print(f"<top_k_logits> top_k handled! ")
 
-    if top_p > 0.0:
-        # batch_size = logits.shape[0]
-        # convert to 1D
-        # logits = logits.view(-1).contiguous()
-        sorted_logits, sorted_indices = torch.sort(logits, descending=True)
-        cumulative_probs = torch.cumsum(F.softmax(sorted_logits, dim=-1), dim=-1)
+    elif top_p > 0.0:
+        batch_size = logits.shape[0]
+        for i in range(batch_size):
+            # convert to 1D
+            current_logits = logits[i].view(-1).contiguous()
+            sorted_logits, sorted_indices = torch.sort(current_logits, descending=True)
+            cumulative_probs = torch.cumsum(F.softmax(sorted_logits, dim=-1).clamp(0, 1).nan_to_num(), dim=-1)
+            if debug_print and dist.get_rank() == 0:
+                print(f"<top_k_logits> cumulative_probs: {torch.isnan(cumulative_probs).any()}")
 
-        # Remove tokens with cumulative probability above the threshold
-        sorted_indices_to_remove = cumulative_probs > top_p
-        # Shift the indices to the right to keep also the first token above the threshold
-        sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()
-        sorted_indices_to_remove[..., 0] = 0
-        indices_to_remove = sorted_indices[sorted_indices_to_remove]
-        logits[indices_to_remove] = filter_value
-        # going back to 2D
-        # logits = logits.view(1, -1).contiguous()
+            # Remove tokens with cumulative probability above the threshold
+            sorted_indices_to_remove = cumulative_probs > top_p
+            if debug_print and dist.get_rank() == 0:
+                print(f"<top_k_logits> sorted_indices_to_remove1: {torch.isnan(sorted_indices_to_remove).any()}, {sorted_indices_to_remove.shape}")
+            # Shift the indices to the right to keep also the first token above the threshold
+            sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()
+            if debug_print and dist.get_rank() == 0:
+                print(f"<top_k_logits> sorted_indices_to_remove2: {torch.isnan(sorted_indices_to_remove).any()}, {sorted_indices_to_remove.shape}")
+            sorted_indices_to_remove[..., 0] = 0
+            indices_to_remove = sorted_indices[sorted_indices_to_remove]
+            if debug_print and dist.get_rank() == 0:
+                print(f"<top_k_logits> indices_to_remove: {torch.isnan(indices_to_remove).any()}, {indices_to_remove.shape}, {torch.max(indices_to_remove)}")
+            logits[i, indices_to_remove] = filter_value
+        if debug_print and dist.get_rank() == 0:
+            print(f"<top_k_logits> top_k handled! ")
 
     return logits
 
@@ -78,22 +97,40 @@ class BaseStrategy:
         return self._is_done.all()
 
     def forward(self, logits, tokens, mems, temperature=None):
-        if dist.get_rank() == 0:
-            print(f"<BaseStrategy.forward>1 logits {logits.shape}, tokens {tokens.shape}, mems {mems.shape}")
+        # if dist.get_rank() == 0:
+        #    print(f"<BaseStrategy.forward>1 logits {logits.shape}, tokens {tokens.shape}, mems {mems.shape}")
         logits = logits.view(-1, logits.size(-1))
-        if dist.get_rank() == 0:
-            print(f"<BaseStrategy.forward>2 logits {logits.shape}")
+        # if dist.get_rank() == 0:
+        #    print(f"<BaseStrategy.forward>2 logits {logits.shape}")
         batch_size = tokens.shape[0]
         if temperature is None:
             temperature = self.temperature
+        
+        if debug_print and dist.get_rank() == 0:
+            print(f"<BaseStrategy.forward>2 temperature: {temperature}, topk: {self.topk}, top_p: {self.top_p}")
+        
         logits = logits / temperature
         for invalid_slice in self.invalid_slices:
             logits[..., invalid_slice] = -65504
-        if dist.get_rank() == 0:
+            
+        if debug_print and dist.get_rank() == 0:
             print(f"<BaseStrategy.forward>3 logits {logits.shape}")
+        
+        logits = logits.float().nan_to_num()
         logits = top_k_logits(logits, self.topk, self.top_p)
-        probs = F.softmax(logits.float(), dim=-1)  # float is essetial, due to a bug in Pytorch
+        
+        if debug_print and dist.get_rank() == 0:
+            print(f"<BaseStrategy.forward>4 logits {logits.shape},  is there Nan: {torch.isnan(logits).any()}")
+        
+        probs = F.softmax(logits, dim=-1)  # float is essetial, due to a bug in Pytorch
+        probs = probs.clamp(0, 1).nan_to_num()
+        
+        if debug_print and dist.get_rank() == 0:
+            print(f"<BaseStrategy.forward>5 logits {probs.shape}, is there Nan: {torch.isnan(probs).any()}")
+        
         pred = torch.multinomial(probs, num_samples=1)
+        if debug_print and dist.get_rank() == 0:
+            print(f"<BaseStrategy.forward>6 logits {pred.shape}")
         for i in range(self.batch_size):
             if i >= batch_size:
                 self._is_done[i] = True
@@ -176,13 +213,13 @@ def batch_filling_sequence(
         mems = mems.reshape(mems.shape[0], batch_size, num_beams, mems.shape[-2], mems.shape[-1])
         tokens, mems = strategy.forward(logits, tokens, mems)
 
-        if dist.get_rank() == 0:
+        if debug_print and dist.get_rank() == 0:
             print(f"<batch_filling_sequence> logits.shape: {logits.shape}")
 
         if get_logprobs != 0:  # TODO: currently this encoding assumes num_completion=1
             logits = F.log_softmax(logits.detach(), -1)
             current_topk_logprobs, current_topk_indices = logits.topk(1 + get_logprobs, dim=-1)
-            if dist.get_rank() == 0:
+            if debug_print and dist.get_rank() == 0:
                 print(f"<batch_filling_sequence> current_topk_logprobs.shape: {current_topk_logprobs.shape}")
                 print(f"<batch_filling_sequence> current_topk_indices.shape: {current_topk_indices.shape}")
 
@@ -259,11 +296,11 @@ def initialize_model_and_tokenizer(args):
     torch.distributed.barrier()
     start = time.time()
     load_checkpoint(model, args)
-
+    
     if args.quantization_bit_width is not None and not args.from_quantized_checkpoint:
         # Quantize model before moving to GPU
         model = quantize(model, args.quantization_bit_width)
-
+    
     torch.distributed.barrier()
     if torch.distributed.get_rank() == 0:
         print(f"> Checkpoint loaded in {time.time() - start:.1f}s")
@@ -526,24 +563,33 @@ def post_processing_text(output_text, query, prompt_str_length):
     end_pos = len(text)
     print(f"<post_processing_text>1 end_pos: {end_pos}.")
 
+    # stop_tokens = []
+    # if isinstance(query.get('stop_words', ""), str):
+    #    if query.get('stop_words', "") != "":
+    #        stop_tokens.extend(query.get('stop_words', "").split(";"))
+    # stop_tokens.extend(query.get('stop', []))
     stop_tokens = []
-    if isinstance(query.get('stop_words', ""), str):
-        if query.get('stop_words', "") != "":
-            stop_tokens.extend(query.get('stop_words', "").split(";"))
-    stop_tokens.extend(query.get('stop', []))
+    for token in query.get('stop', []):
+        if token != '':
+            stop_tokens.append(token)
 
     print(f"<post_processing_text> stop_tokens: {stop_tokens}.")
 
     for stop_token in stop_tokens:
-        end_pos = min(text.find(stop_token) + len(stop_token), end_pos)
+        if query.get('echo', False):
+            if text[prompt_str_length:].find(stop_token) != -1:
+                end_pos = min(text[prompt_str_length:].find(stop_token) + len(stop_token), end_pos)
+        else:
+            if text.find(stop_token) != -1:
+                end_pos = min(text.find(stop_token) + len(stop_token), end_pos)
         print(f"<post_processing_text>2 end_pos: {end_pos}.")
 
-    if query.get('echo', False):
-        end_pos = max(end_pos, prompt_str_length)
     print(f"<post_processing_text> text: {text}, end_pos: {end_pos}")
-    post_processed_text = text[:end_pos + 1]
+    post_processed_text = text[:end_pos]
     print(f"<post_processing_text> input: {output_text}")
     print(f"<post_processing_text> output: {post_processed_text}")
+    
+    post_processed_text = post_processed_text.replace("[gMASK]][sop]", "")
     return post_processed_text
 
 
@@ -626,9 +672,10 @@ def main(args):
     if args.quantization_bit_width is not None:
         glm_model_name = glm_model_name + '-int' + str(args.quantization_bit_width)
 
-    if dist.get_rank() == 0:
+    if dist.get_rank()==0:
         print("<Main> GLM name: ", glm_model_name)
-
+    
+    
     try:
         while True:
             try:
@@ -637,7 +684,7 @@ def main(args):
                 config = {}
                 if dist.get_rank() == 0:
                     instructions = local_cord_client.fetch_instructions(glm_model_name, 0)
-                    print(instructions)
+                    # print(instructions)
                     last_instruction = instructions[-1]
 
                     if last_instruction["message"] == "break":
@@ -658,6 +705,9 @@ def main(args):
                             logger.info(str(instruction))
                             job_id = instruction['payload']['id']
                             print(f"Job <{job_id}> has been batched")
+                            
+                            with open(args.working_directory + "/job_logs.txt", "a") as fp_log:
+                                fp_log.write(f"{datetime.now()}: {job_id} start.\n")
 
                             # TODO: we assume len(payload) is 1, right?
                             query = instruction['payload']['payload'][0]
@@ -673,8 +723,9 @@ def main(args):
                                 print(query['prompt'])
 
                             config = {
+                                'seed': query.get('seed', None),
                                 'temperature': query.get('temperature', 0.9),
-                                # 'top_k': query.get('top_k', 1),
+                                'top_k': query.get('top_k', 50),
                                 'top_p': query.get('top_p', 0),
                                 'max_tokens': query.get('max_tokens', 10) if query.get('max_tokens', 10) > 0 else 1,
                                 'prompt_embedding': query.get('prompt_embedding', False),
@@ -707,6 +758,12 @@ def main(args):
                     answers = []
                     last_layer_embedding = []
                     top_logprobs = []
+                    if config['seed'] is not None:
+                        torch.manual_seed(config['seed'])
+                        np.random.seed(config['seed'])
+                        random.seed(config['seed'])
+                        # if debug_print:
+                        print(f"<Main> Rank-<{dist.get_rank()}> setup random seed: {config['seed']}")
 
                     for iter_i in range(num_iter):
                         current_raw_text = raw_text[iter_i * batch_size: (iter_i + 1) * batch_size]
@@ -715,8 +772,7 @@ def main(args):
                                                     top_p=config['top_p'], end_tokens=end_tokens)
                         else:
                             strategy = BaseStrategy(batch_size=len(current_raw_text), temperature=config['temperature'],
-                                                    top_k=args.top_k,
-                                                    top_p=config['top_p'], end_tokens=end_tokens)
+                                                    top_k=config['top_k'], top_p=config['top_p'], end_tokens=end_tokens)
 
                         cur_answer, cur_last_layer_embedding, cur_top_logprobs = fill_blanks_efficient(current_raw_text,
                                                                                                        model, tokenizer,
@@ -756,6 +812,8 @@ def main(args):
                             returned_payload=return_payload
                         )
                         local_cord_client.update_status(job_id, "finished", returned_payload={})
+                        with open(args.working_directory + "/job_logs.txt", "a") as fp_log:
+                            fp_log.write(f"{datetime.now()}: {job_id} end.\n")
 
             except Exception as e:
                 error = traceback.format_exc()
