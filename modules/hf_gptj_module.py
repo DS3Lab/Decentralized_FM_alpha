@@ -34,13 +34,19 @@ def rotate_every_two(x):
 def apply_rotary_pos_emb(x, sincos, offset=0):
     def foo(t):
         if isinstance(offset, torch.Tensor):
-            t = t[None, :, None, :]
-            # avoid negative indexing
-            offset_correct = offset + t.size(1)
-            t = torch.cat([t,t], 1) 
-            t = torch.cat([
-                t[:, _offset: x.shape[1]+_offset] for _offset in offset_correct
-            ], 0)
+            
+            realidx = torch.arange(x.shape[1], device=x.device).view(1, x.shape[1]) + offset[:, None]
+            # print(x.shape, realidx.shape, t.shape)
+            t = t[realidx][:, :, None]
+            
+            # t = t[None, :, None, :]
+            # # avoid negative indexing
+            # offset_correct = offset + t.size(1)
+            # t = torch.cat([t,t], 1) 
+            # t = torch.cat([
+            #     t[:, _offset: x.shape[1]+_offset] for _offset in offset_correct
+            # ], 0)
+            
         else:
             t = t[None, offset : x.shape[1] + offset, None, :]
         t = t.repeat_interleave(2, 3)
