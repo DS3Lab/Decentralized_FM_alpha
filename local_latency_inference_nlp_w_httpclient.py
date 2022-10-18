@@ -14,8 +14,10 @@ import random
 def get_huggingface_tokenizer_model(args, device):
 
     if args.model_name == 't5-11b':
-        tokenizer = AutoTokenizer.from_pretrained('t5-11b')
+        tokenizer = AutoTokenizer.from_pretrained('t5-11b', model_max_length=512)
+        # tokenizer.model_max_length=512
         model = T5ForConditionalGeneration.from_pretrained('t5-11b')
+        model.config.eos_token_id = None
     elif args.model_name == 't0pp':
         tokenizer = AutoTokenizer.from_pretrained('bigscience/T0pp')
         model = AutoModelForSeq2SeqLM.from_pretrained("bigscience/T0pp")
@@ -43,7 +45,7 @@ def pre_processing_texts(input_text, model_name):
     if model_name == 't5-11b':
         output_text = []
         for text in input_text:
-            output_text.append(text+" <extra_id_0>")
+            output_text.append(text+"<extra_id_0>")
         return output_text
     else:
         return input_text
@@ -190,7 +192,7 @@ def main():
 
                         start_time = time.time()
                         
-                        # raw_text = pre_processing_texts(raw_text, args.model_name)
+                        raw_text = pre_processing_texts(raw_text, args.model_name)
 
                         batch_size = min(len(raw_text), args.batch_size)
                         num_iter = math.ceil(len(raw_text) / batch_size)
@@ -229,6 +231,8 @@ def main():
                                     output_hidden_states=True,  # return embeddings
                                 )
 
+                            current_output_texts = tokenizer.batch_decode(outputs.sequences, skip_special_tokens=False)
+                            print(f"<Include_special_tokens>:", current_output_texts)
                             current_output_texts = tokenizer.batch_decode(outputs.sequences, skip_special_tokens=True)
                             answers.extend(current_output_texts)
 
