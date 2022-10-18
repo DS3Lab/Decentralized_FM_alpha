@@ -295,6 +295,12 @@ def initialize_model_and_tokenizer(args):
     # Load checkpoint
     torch.distributed.barrier()
     start = time.time()
+    
+    if args.from_quantized_checkpoint:
+        assert args.quantization_bit_width is not None
+        # Quantize model before moving to GPU
+        model = quantize(model, args.quantization_bit_width)
+                
     load_checkpoint(model, args)
     
     if args.quantization_bit_width is not None and not args.from_quantized_checkpoint:
@@ -569,9 +575,10 @@ def post_processing_text(output_text, query, prompt_str_length):
     #        stop_tokens.extend(query.get('stop_words', "").split(";"))
     # stop_tokens.extend(query.get('stop', []))
     stop_tokens = []
-    for token in query.get('stop', []):
-        if token != '':
-            stop_tokens.append(token)
+    if query.get('stop', []) is not None:
+        for token in query.get('stop', []):
+            if token != '':
+                stop_tokens.append(token)
 
     print(f"<post_processing_text> stop_tokens: {stop_tokens}.")
 
