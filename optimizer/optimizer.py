@@ -218,6 +218,12 @@ class Fp16Optimizer:
     
     def unscale(self, z):
         return z * self.grad_scaler.inv_scale
+    
+    def state_dict(self):
+        return self.optimizer.state_dict()
+    
+    def load_state_dict(self, state_dict):
+        self.optimizer.load_state_dict(state_dict)
 
 
 def get_fp16_optimizer(args, optimizer, device):
