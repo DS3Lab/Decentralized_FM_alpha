@@ -66,7 +66,7 @@ def add_mixed_precision_arguments(parser):
                         help='Run model in fp16 mode.')
     parser.add_argument('--loss-scale', type=float, default=0,
                         help='Static loss scaling, positive power of 2 values can improve fp16 convergence. ')
-    parser.add_argument('--initial-loss-scale', type=float, default=2 ** 32,
+    parser.add_argument('--initial-loss-scale', type=float, default=8192,
                         help='Initial loss-scale for dynamic loss scaling.')
     parser.add_argument('--min-loss-scale', type=float, default=1.0,
                         help='Minimum loss scale for dynamic loss scale.')

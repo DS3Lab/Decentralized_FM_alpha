@@ -5,9 +5,12 @@ import numpy as np
 import torch
 import torch.autograd.profiler as profiler
 from tasks.data_loaders.openwebtext import get_openwebtext_train_data_loader
+from tasks.data_loaders.pile import get_pile_train_data_loader
 from modules.gpt_modules import GPTConfig, gpt_loss_func
 from modules.tokenizer import build_tokenizer
 from pipeline_parallel.dist_pp_utils import get_pp_module
+
+from coordinator.http_coordinate_client import get_coordinator_client, init_coordinator_client
 
 import wandb
 from utils.dist_args_utils import *
@@ -67,7 +70,10 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             pp_comm.broadcast(input_ids, 0)
             current_iter_time = pipe.sgd_iter(input_ids, None)
             
-            if i >= args.total_steps:
+            if pipe.global_step % args.checkpoint_steps == 0 and get_data_parallel_rank() == 0:
+                save_checkpoint(pipe, args)
+            
+            if pipe.global_step >= args.total_steps:
                 stop_flag.data[:] = 1
             
     elif get_pipeline_parallel_rank() == 0:
@@ -85,6 +91,9 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             pp_comm.broadcast(input_ids, 0)
             current_iter_time = pipe.sgd_iter(input_ids, None)
             
+            if pipe.global_step % args.checkpoint_steps == 0 and get_data_parallel_rank() == 0:
+                save_checkpoint(pipe, args)
+            
             
     elif get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
         
@@ -96,8 +105,12 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
                 
             pp_comm.broadcast(input_ids, 0)
             current_iter_time = pipe.sgd_iter(input_ids, input_ids, loss_func=gpt_loss_func) # lm loss func
+            
+            if pipe.global_step % args.checkpoint_steps == 0 and get_data_parallel_rank() == 0:
+                save_checkpoint(pipe, args)
         
     else:
+        
         while True:
             
             pp_comm.broadcast(stop_flag, 0)
@@ -106,6 +119,9 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
                 
             pp_comm.broadcast(input_ids, 0)
             current_iter_time = pipe.sgd_iter(None, None)
+            
+            if pipe.global_step % args.checkpoint_steps == 0 and get_data_parallel_rank() == 0:
+                save_checkpoint(pipe, args)
         
 
 def main():
@@ -131,6 +147,9 @@ def main():
     parser.add_argument('--load-pretrained-model', 
                         type=lambda x: x.lower()=='true', default=True, metavar='S',
                         help='load pretrained model or not.')
+    parser.add_argument('--load-checkpoint', 
+                        type=lambda x: x.lower()=='true', default=True, metavar='S',
+                        help='load pretrained model or not.')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
     parser.add_argument('--profiling', type=str, default='no-profiling', metavar='S',
@@ -140,6 +159,15 @@ def main():
     parser.add_argument('--evaluation-steps', 
                         type=int, default=0, metavar='S',
                         help='every x steps, do evaluation. (0 means do not do evaluation)')
+    parser.add_argument('--checkpoint-steps', 
+                        type=int, default=0, metavar='S',
+                        help='every x steps, save checkpoint. (0 means do not save checkpoint)')
+    parser.add_argument('--net-interface', 
+                        type=str, default='lo', metavar='S',
+                        help='net_interface')
+    parser.add_argument('--job-id', 
+                        type=str, default="0", metavar='S',
+                        help='an uuid')
     args = parser.parse_args()
     
     torch.manual_seed(args.seed)
@@ -151,6 +179,20 @@ def main():
         device = torch.device('cuda', args.cuda_id)
     else:
         device = torch.device('cpu')
+        
+    if args.job_id != "0":
+        init_coordinator_client(args, None)
+        coord_client = get_coordinator_client()
+        res = coord_client.notify_inference_join(args.net_interface)
+        prime_ip = res['prime_ip']
+        rank = res['rank']
+        port = res['nccl_port']
+
+        print(f"job id: {args.job_id}")
+        print("<====Coordinator assigned prime-IP:", prime_ip, " and my assigned rank", rank, "====>")
+
+        args.dist_url = f"tcp://{prime_ip}:{port}"
+        args.rank = rank
 
     init_communicators(args)
     
@@ -171,6 +213,9 @@ def main():
         if args.task_name == 'openwebtext':
             train_data_loader = get_openwebtext_train_data_loader(args, tokenizer)
             test_data_loader = None #get_wikitext_test_data_loader(args, tokenizer)
+        elif args.task_name == 'pile':
+            train_data_loader = get_pile_train_data_loader(args, tokenizer)
+            test_data_loader = None #get_wikitext_test_data_loader(args, tokenizer)
         else:
             raise Exception('unknown task.')
     else:
@@ -188,7 +233,8 @@ def main():
     
     pipe = get_pp_module(args, config, device, use_dp)
     
-    load_checkpoint(pipe, args)
+    if args.load_checkpoint:
+        load_checkpoint(pipe, args)
 
     if args.fp16:
         pipe.optimizer.reload_model_params()

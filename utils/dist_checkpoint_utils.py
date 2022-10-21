@@ -82,4 +82,4 @@ def save_checkpoint(pipe, args):
         }, f)
     
     with open(os.path.join(args.checkpoint_path, 'latest'), 'w') as f:
-        f.write(step)
+        f.write(f"{latest_step}")

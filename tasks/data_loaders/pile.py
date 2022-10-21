@@ -38,9 +38,9 @@ class StreamDataset(IterableDataset):
         return self.it
         
     
-def get_openwebtext_train_data_loader(args, tokenizer, num_workers=0):
+def get_pile_train_data_loader(args, tokenizer, num_workers=0):
     
-    data = load_dataset('openwebtext', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
+    data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
     stream_dataset = StreamDataset(data, tokenizer, args.seq_length)
     
     train_data_loader = torch.utils.data.DataLoader(stream_dataset,
