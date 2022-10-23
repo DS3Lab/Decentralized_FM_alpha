@@ -29,19 +29,43 @@ class StreamDataset(IterableDataset):
         self.buffer_tokens = state_dict['buffer_tokens']
         self.data = self.data.skip(self.iter_count)
         
+    def preprocess_tokens(self, tokens):
+        
+#         p = random.random()
+#         if p > 0.5:
+#             mode = "[S2S]"
+#         elif p > 0.25:
+#             mode = "[NLG]"
+#         else:
+#             mode = "[NLU]"
+        
+#         if mode == "[S2S]":
+        
+        split = int(random.random() * len(tokens))
+        
+        tokens = tokens[:split] + [self.tokenizer.bos_token_id] + tokens[split:]
+        tokens = tokens[:self.seq_length]
+        
+        prefix_masks = torch.zeros(len(tokens), dtype=torch.uint8)
+        prefix_masks[:split] = 1
+        
+        return tokens, prefix_masks
+        
     def get_sequence(self):
         buffer_tokens = self.buffer_tokens
         for x in self.data:
             self.iter_count += 1
             curr_tokens = self.tokenizer(x['text'])['input_ids']
             buffer_tokens += curr_tokens
-            while len(buffer_tokens) >= self.seq_length:
-                tokens = buffer_tokens[:self.seq_length]
-                buffer_tokens = [self.tokenizer.bos_token_id] + buffer_tokens[self.seq_length:]
+            while len(buffer_tokens) >= self.seq_length - 1:
+                tokens = buffer_tokens[:self.seq_length-1]
+                buffer_tokens = [self.tokenizer.bos_token_id] + buffer_tokens[self.seq_length-1:]
+                tokens, prefix_masks = self.preprocess_tokens(tokens)
                 input_ids = torch.tensor(tokens)
                 self.buffer_tokens = buffer_tokens # update for restore
                 yield {
                     'input_ids': input_ids,
+                    'prefix_masks': prefix_masks,
                 }
                 
     def get_stream(self):

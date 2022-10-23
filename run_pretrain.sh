@@ -6,10 +6,10 @@ ARGS="--model-name ./model_checkpoints/gpt2-config \
 --checkpoint-path ./model_checkpoints/gpt2-base \
 --load-pretrained-model false \
 --task-name pile \
---num-layers 1 --num-heads 12 --embedding-dim 768 \
---total-steps 10000000 --warmup-steps 1000 \
---checkpoint-steps 1000 \
---lr 1e-3 --seq-length 128 --batch-size 4 --micro-batch-size 1 \
+--num-layers 3 --num-heads 12 --embedding-dim 768 \
+--total-steps 10000000 --warmup-steps 5000 \
+--checkpoint-steps 5000 \
+--lr 1e-3 --seq-length 2048 --batch-size 16 --micro-batch-size 1 --gradient-accumulate-step 4 \
 --dist-url tcp://127.0.0.1:9033 \
 --world-size 8 --pipeline-group-size 4 --data-group-size 2 \
 --job-id ${job_id} --net-interface lo \

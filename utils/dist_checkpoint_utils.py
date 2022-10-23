@@ -83,3 +83,38 @@ def save_checkpoint(pipe, args):
     
     with open(os.path.join(args.checkpoint_path, 'latest'), 'w') as f:
         f.write(f"{latest_step}")
+        
+        
+def save_stream_dataloader_state_dict(dataloader, args):
+    
+    latest_step = pipe.global_step
+    checkpoint_step_path = os.path.join(args.checkpoint_path, f"checkpoint_{latest_step}")
+    
+    os.system(f"mkdir -p {checkpoint_step_path}")
+    
+    torch.save(
+        dataloader.dataset.state_dict(),
+        os.path.join(
+            checkpoint_step_path, f'dataset_state_dict.pt'
+        )
+    )
+    
+def load_stream_dataloader_state_dict(args):
+    
+    latest_step = pipe.global_step
+    checkpoint_step_path = os.path.join(args.checkpoint_path, f"checkpoint_{latest_step}")
+    
+    try:
+        state_dict = torch.load(
+            os.path.join(
+                checkpoint_step_path, f'dataset_state_dict.pt'
+            )
+        )
+
+        return state_dict
+    
+    except Exception as e:
+        
+        print('failed to load dataset state_dict.')
+        
+        

@@ -68,9 +68,12 @@ class GPTStageFirst(GPTStageBase):
             module_list.append(self._create_transformer_layer(layer_idx=layer_idx))
         self.model = nn.Sequential(*module_list).to(device)
 
-    def forward(self, x):
-        out = self.model(x.to(self.device))
-        return out.cpu() if self._to_cpu else out
+    def forward(self, x, **kargs):
+        for module in self.model:
+            x = module(x, **kargs)
+        return x
+        # out = self.model(x.to(self.device), **kargs)
+        # return out.cpu() if self._to_cpu else out
 
 
 class GPTStageMiddle(GPTStageBase):
@@ -82,9 +85,12 @@ class GPTStageMiddle(GPTStageBase):
             module_list.append(self._create_transformer_layer(layer_idx=layer_idx))
         self.model = nn.Sequential(*module_list).to(device)
 
-    def forward(self, x):
-        out = self.model(x.to(self.device)) if self._to_cpu else self.model(x)
-        return out.cpu() if self._to_cpu else out
+    def forward(self, x, **kargs):
+        for module in self.model:
+            x = module(x, **kargs)
+        return x
+        # out = self.model(x.to(self.device), **kargs) if self._to_cpu else self.model(x)
+        # return out.cpu() if self._to_cpu else out
 
 
 class GPTStageLast(GPTStageBase):
@@ -97,14 +103,11 @@ class GPTStageLast(GPTStageBase):
         module_list.append(self._create_last_layer())
         self.model = nn.Sequential(*module_list).to(device)
 
-    def forward(self, x, input_ids=None):
-        if input_ids is None:
-            out = self.model(x.to(self.device)) if self._to_cpu else self.model(x)
-        else:
-            x = x.to(self.device) if self._to_cpu else x
-            input_ids = input_ids.to(self.device) if self._to_cpu else input_ids
-            for layer in self.model[:-1]:
-                x = layer(x)
-            out = self.model[-1](x, input_ids=input_ids)
+    def forward(self, x, **kargs):
+        for module in self.model:
+            x = module(x, **kargs)
+        return x
+    
+#         out = self.model(x.to(self.device), **kargs) if self._to_cpu else self.model(x)
             
-        return out.cpu() if self._to_cpu else out
+#         return out.cpu() if self._to_cpu else out

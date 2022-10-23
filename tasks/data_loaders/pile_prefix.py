@@ -29,6 +29,28 @@ class StreamDataset(IterableDataset):
         self.buffer_tokens = state_dict['buffer_tokens']
         self.data = self.data.skip(self.iter_count)
         
+    def preprocess_tokens(self, tokens):
+        
+#         p = random.random()
+#         if p > 0.5:
+#             mode = "[S2S]"
+#         elif p > 0.25:
+#             mode = "[NLG]"
+#         else:
+#             mode = "[NLU]"
+        
+#         if mode == "[S2S]":
+        
+        split = int(random.random() * len(tokens))
+        
+        # tokens = tokens[:split] + [self.tokenizer.bos_token_id] + tokens[split:]
+        # tokens = tokens[:self.seq_length]
+        
+        prefix_masks = torch.zeros(len(tokens), dtype=torch.uint8)
+        prefix_masks[:split] = 1
+        
+        return tokens, prefix_masks
+        
     def get_sequence(self):
         buffer_tokens = self.buffer_tokens
         for x in self.data:
@@ -38,10 +60,12 @@ class StreamDataset(IterableDataset):
             while len(buffer_tokens) >= self.seq_length:
                 tokens = buffer_tokens[:self.seq_length]
                 buffer_tokens = [self.tokenizer.bos_token_id] + buffer_tokens[self.seq_length:]
+                tokens, prefix_masks = self.preprocess_tokens(tokens)
                 input_ids = torch.tensor(tokens)
                 self.buffer_tokens = buffer_tokens # update for restore
                 yield {
                     'input_ids': input_ids,
+                    'prefix_masks': prefix_masks,
                 }
                 
     def get_stream(self):
@@ -51,11 +75,11 @@ class StreamDataset(IterableDataset):
         if self.it is None:
             self.it = self.get_stream()
         return self.it
+        
     
+def get_pile_train_data_loader(args, tokenizer, num_workers=0, state_dict=None):
     
-def get_openwebtext_train_data_loader(args, tokenizer, num_workers=0, state_dict=None):
-    
-    data = load_dataset('openwebtext', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
+    data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
     stream_dataset = StreamDataset(data, tokenizer, args.seq_length)
     
     if state_dict is not None:
@@ -68,4 +92,3 @@ def get_openwebtext_train_data_loader(args, tokenizer, num_workers=0, state_dict
                                                     pin_memory=True,
                                                     collate_fn=None)
     return train_data_loader
-    
