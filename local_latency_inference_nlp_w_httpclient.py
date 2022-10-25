@@ -243,6 +243,7 @@ def main():
                         return_payload = {
                             'request': query,
                             'result': result,
+                            'raw_compute_time': end_time - start_time
                         }
                         # local_cord_client.update_status(
                         local_cord_client.update_status_global_coordinator(
