@@ -9,7 +9,7 @@ from compress.fixpoint import *
 from compress import flag
 
 
-sync_prob = 0.02
+sync_prob = 0.01
 
 @torch.no_grad()
 def step_update(self, freeze=False, dp_optimizer=None):
@@ -57,8 +57,6 @@ def step_update(self, freeze=False, dp_optimizer=None):
                 
             h = state["h"]
             h.data = h.data.nan_to_num()
-            
-            grad = grad - h
 
             exp_avg, exp_avg_sq = state["exp_avg"], state["exp_avg_sq"]
             beta1, beta2 = group["betas"]
@@ -78,7 +76,7 @@ def step_update(self, freeze=False, dp_optimizer=None):
             bias_correction2 = 1.0 - beta2 ** state["step"]
             step_size = step_size * math.sqrt(bias_correction2) / bias_correction1
 
-            p.data.addcdiv_(exp_avg, denom, value=-step_size)
+            p.data.addcdiv_(exp_avg - h, denom, value=-step_size)
 
             if dp_optimizer is not None and dp_optimizer.th.item() == 1:
                 local_p = p.data.clone()

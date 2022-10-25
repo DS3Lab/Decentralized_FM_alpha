@@ -16,7 +16,13 @@ class StreamDataset(IterableDataset):
         self.seq_length = seq_length
         self.it = None
         self.iter_count = 0
-        self.buffer_tokens = [self.tokenizer.bos_token_id]
+        self.buffer_tokens = []
+        
+        self.s2s_prefix = self.tokenizer("[S2S]")['input_ids']
+        self.nlg_prefix = self.tokenizer("[NLG]")['input_ids']
+        self.nlu_prefix = self.tokenizer("[NLU]")['input_ids']
+        
+        self.extra_ids = [self.tokenizer.eos_token_id - 100 + i for i in range(80)]
         
     def state_dict(self):
         return {
@@ -29,27 +35,76 @@ class StreamDataset(IterableDataset):
         self.buffer_tokens = state_dict['buffer_tokens']
         self.data = self.data.skip(self.iter_count)
         
-    def preprocess_tokens(self, tokens):
         
-#         p = random.random()
-#         if p > 0.5:
-#             mode = "[S2S]"
-#         elif p > 0.25:
-#             mode = "[NLG]"
-#         else:
-#             mode = "[NLU]"
+    def preprocess_tokens_s2s(self, tokens):
         
-#         if mode == "[S2S]":
+        tokens = self.s2s_prefix + tokens
         
         split = int(random.random() * len(tokens))
         
-        # tokens = tokens[:split] + [self.tokenizer.bos_token_id] + tokens[split:]
-        # tokens = tokens[:self.seq_length]
+        tokens = tokens[:split] + [self.extra_ids[0]] + tokens[split:]
+        tokens = tokens[:self.seq_length]
         
         prefix_masks = torch.zeros(len(tokens), dtype=torch.uint8)
         prefix_masks[:split] = 1
         
         return tokens, prefix_masks
+    
+    def preprocess_tokens_nlg(self, tokens):
+        
+        
+        start = int(random.random() * len(tokens))
+        end = start + int(random.random() * 32)
+        
+        left = self.nlg_prefix + tokens[:start] + [self.extra_ids[0]] + tokens[end:]
+        right = [self.extra_ids[0]] + tokens[start:end]
+        
+        tokens = left + right
+        tokens = tokens[:self.seq_length]
+        
+        prefix_masks = torch.zeros(len(tokens), dtype=torch.uint8)
+        prefix_masks[:len(left)] = 1
+        
+        return tokens, prefix_masks
+        
+    def preprocess_tokens_nlu(self, tokens):
+        
+        # print("TODO: currently [NLG]")
+        
+        start = int(random.random() * len(tokens))
+        end = start + int(random.random() * 32)
+        
+        left = self.nlg_prefix + tokens[:start] + [self.extra_ids[0]] + tokens[end:]
+        right = [self.extra_ids[0]] + tokens[start:end]
+        
+        tokens = left + right
+        tokens = tokens[:self.seq_length]
+        
+        prefix_masks = torch.zeros(len(tokens), dtype=torch.uint8)
+        prefix_masks[:len(left)] = 1
+        
+        return tokens, prefix_masks
+        
+    def preprocess_tokens(self, tokens):
+        
+        
+#         split = int(random.random() * len(tokens))
+        
+#         # tokens = tokens[:split] + self.extra_ids[0] + tokens[split:]
+#         tokens = tokens[:self.seq_length]
+        
+#         prefix_masks = torch.zeros(len(tokens), dtype=torch.uint8)
+#         prefix_masks[:split] = 1
+        
+#         return tokens, prefix_masks
+        
+        p = random.random()
+        if p > 0.5:
+            return self.preprocess_tokens_s2s(tokens)
+        elif p > 0.25:
+            return self.preprocess_tokens_nlg(tokens)
+        else:
+            return self.preprocess_tokens_nlu(tokens)
         
     def get_sequence(self):
         buffer_tokens = self.buffer_tokens
@@ -59,7 +114,7 @@ class StreamDataset(IterableDataset):
             buffer_tokens += curr_tokens
             while len(buffer_tokens) >= self.seq_length:
                 tokens = buffer_tokens[:self.seq_length]
-                buffer_tokens = [self.tokenizer.bos_token_id] + buffer_tokens[self.seq_length:]
+                buffer_tokens = [] + buffer_tokens[self.seq_length:]
                 tokens, prefix_masks = self.preprocess_tokens(tokens)
                 input_ids = torch.tensor(tokens)
                 self.buffer_tokens = buffer_tokens # update for restore

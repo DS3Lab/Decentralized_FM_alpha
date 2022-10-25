@@ -1,7 +1,7 @@
 import numpy as np
 from torch import nn
-from .gpt_modules import gpt_loss_func
-from .gpt_modules import GPTEmbeddings, GPTBlock, GPTClassificationHead, GPTLMHead
+from .gptj_modules import gpt_loss_func
+from .gptj_modules import GPTEmbeddings, GPTBlock, GPTLMHead
 from comm.comm_utils import *
 
 from copy import deepcopy

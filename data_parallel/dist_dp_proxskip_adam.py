@@ -9,7 +9,7 @@ from compress.fixpoint import *
 from compress import flag
 
 
-sync_prob = 0.005
+sync_prob = 0.02
 
 @torch.no_grad()
 def step_update(self, freeze=False, dp_optimizer=None):

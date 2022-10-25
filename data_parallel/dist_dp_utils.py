@@ -24,7 +24,7 @@ def get_dp_module(args, device, module, optimizer):
         return ADMMDP(args, device, module, optimizer)
     elif args.dp_mode == 'proxskip':
         return ProxSkipDP(args, device, module, optimizer)
-    elif args.dp_mode == 'proxskip_adam':
+    elif args.dp_mode == 'proxadam':
         return ProxSkipAdamDP(args, device, module, optimizer)
     else:
         print("Not recognize this data parallel mode.")

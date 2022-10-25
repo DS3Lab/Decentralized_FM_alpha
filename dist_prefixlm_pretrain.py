@@ -6,9 +6,11 @@ import torch
 import torch.autograd.profiler as profiler
 from tasks.data_loaders.openwebtext_prefix import get_openwebtext_train_data_loader
 from tasks.data_loaders.pile_prefix import get_pile_train_data_loader
-from modules.gpt_modules import GPTConfig, gpt_loss_func
+from modules.gpt_modules import gpt_loss_func
 from modules.tokenizer import build_tokenizer
 from pipeline_parallel.dist_pp_utils import get_pp_module
+
+from transformers import AutoConfig
 
 from coordinator.http_coordinate_client import get_coordinator_client, init_coordinator_client
 
@@ -81,6 +83,8 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             
             pp_comm.broadcast(input_ids, 0)
             pp_comm.broadcast(prefix_masks, 0)
+            
+            compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(input_ids, None, aux_input_data={'prefix_masks': prefix_masks})
             
             if pipe.global_step % args.checkpoint_steps == 0 and get_data_parallel_rank() == 0:
@@ -106,6 +110,8 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             )
             pp_comm.broadcast(input_ids, 0)
             pp_comm.broadcast(prefix_masks, 0)
+            
+            compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(input_ids, None, aux_input_data={'prefix_masks': prefix_masks})
             
             if pipe.global_step % args.checkpoint_steps == 0 and get_data_parallel_rank() == 0:
@@ -124,6 +130,7 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             pp_comm.broadcast(prefix_masks, 0)
             labels = input_ids.clone()
             labels[prefix_masks.bool()] = -100 # mask prefix part
+            compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(input_ids, labels, loss_func=gpt_loss_func, aux_input_data={'prefix_masks': prefix_masks}) # lm loss func
             
             if pipe.global_step % args.checkpoint_steps == 0 and get_data_parallel_rank() == 0:
@@ -139,6 +146,7 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
                 
             pp_comm.broadcast(input_ids, 0)
             pp_comm.broadcast(prefix_masks, 0)
+            compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(None, None, aux_input_data={'prefix_masks': prefix_masks})
             
             if pipe.global_step % args.checkpoint_steps == 0 and get_data_parallel_rank() == 0:
@@ -217,18 +225,18 @@ def main():
 
     init_communicators(args)
     
-    config = GPTConfig.from_pretrained(args.model_name)
+    config = AutoConfig.from_pretrained(args.model_name)
     
     # num layer globally
     args.max_layers = config.n_layer
     
     tokenizer = build_tokenizer(args)
     tokenizer.model_max_length = args.seq_length
-    config.vocab_size = tokenizer.vocab_size
+    # config.vocab_size = tokenizer.vocab_size
     config.bos_token_id = tokenizer.bos_token_id
     config.eos_token_id = tokenizer.eos_token_id
     config.pad_token_id = tokenizer.pad_token_id
-    print("token vocab size:", tokenizer.vocab_size)
+    print("token vocab size:", config.vocab_size)
     
     if get_pipeline_parallel_rank() == 0 and get_data_parallel_rank() == 0:
         if args.task_name == 'openwebtext':
