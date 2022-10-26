@@ -28,7 +28,7 @@ def load_checkpoint(pipe, args):
         torch.load(
             os.path.join(
                 checkpoint_step_path, f'prank_{get_pipeline_parallel_rank()}_checkpoint.pt'
-            )
+            ), map_location=torch.device('cpu')
         )
     )
     
@@ -36,7 +36,7 @@ def load_checkpoint(pipe, args):
         torch.load(
             os.path.join(
                 checkpoint_step_path, f'prank_{get_pipeline_parallel_rank()}_optimizer.pt'
-            )
+            ), map_location=torch.device('cpu')
         )
     )
     

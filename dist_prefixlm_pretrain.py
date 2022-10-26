@@ -56,9 +56,9 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
     
     if get_pipeline_parallel_rank() == 0 and get_data_parallel_rank() == 0:
         
-        for i, data in enumerate(train_data_loader):
-            if i < pipe.global_step:
-                continue
+        for data in train_data_loader:
+            # if i < pipe.global_step:
+            #     continue
                 
             dp_comm.broadcast(stop_flag, 0)
             pp_comm.broadcast(stop_flag, 0)

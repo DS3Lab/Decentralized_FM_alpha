@@ -2,10 +2,10 @@ from .dist_gpipe_pipeline_async import GpipeAsync
 from .dist_gpipe_pipeline_sync import GpipeSync
 from .dist_1f1b_pipeline_async import Pipe1F1BAsync
 from .dist_gpipe_pipeline_async_act_comp import GpipeAsyncActivationCompression
-from modules.dist_deberta_pp_module import *
 
 
 def get_pp_module(args, config, device, use_dp):
+    
     if args.pp_mode == 'gpipe':
         return GpipeAsync(args, config, device, use_dp)
     elif args.pp_mode == 'gpipe_sync':
@@ -20,6 +20,9 @@ def get_pp_module(args, config, device, use_dp):
         assert False
         
 def get_deberta_pp_module(args, config, device, use_dp):
+    
+    from modules.dist_deberta_pp_module import DebertaStageFirst, DebertaStageLast, DebertaStageMiddle
+    
     if args.pp_mode == 'gpipe':
         return GpipeAsync(
             args, config, device, use_dp,
