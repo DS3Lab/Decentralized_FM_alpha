@@ -111,7 +111,7 @@ class StreamDataset(IterableDataset):
         last_corrupt = False
         for i, chunk in enumerate(chunks):
             # make sure not consecutive corrupt chunks
-            if i in indices and not last_corrupt: 
+            if i in indices and not last_corrupt and extra_id_count < len(self.extra_ids):
                 left += [self.extra_ids[extra_id_count]]
                 right += [self.extra_ids[extra_id_count]] + chunk
                 extra_id_count += 1
