@@ -40,6 +40,11 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
     use_dp = (args.world_size != args.pipeline_group_size)
     if use_dp:
         dp_comm = get_data_parallel_comm()
+        dp_rank = get_data_parallel_rank()
+        dp_size = get_data_parallel_world_size()
+    else:
+        dp_rank = 0
+        dp_size = 1
     pp_comm = get_pipeline_parallel_comm()
     
     stop_flag = torch.zeros(1, dtype=torch.int64).to(device)
@@ -54,13 +59,14 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
         dtype=torch.uint8
     ).to(device)
     
-    if get_pipeline_parallel_rank() == 0 and get_data_parallel_rank() == 0:
+    if get_pipeline_parallel_rank() == 0 and dp_rank == 0:
         
         for data in train_data_loader:
             # if i < pipe.global_step:
             #     continue
                 
-            dp_comm.broadcast(stop_flag, 0)
+            if use_dp:
+                dp_comm.broadcast(stop_flag, 0)
             pp_comm.broadcast(stop_flag, 0)
             if stop_flag.item() == 1:
                 break
@@ -68,15 +74,17 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             input_ids_global = data['input_ids'].to(torch.int64).to(device)
             prefix_masks_global = data['prefix_masks'].to(torch.uint8).to(device)
             
-            input_ids_list = input_ids_global.chunk(get_data_parallel_world_size())
-            prefix_masks_list = prefix_masks_global.chunk(get_data_parallel_world_size())
-            for j in range(1, get_data_parallel_world_size()):
-                dp_comm.send(
-                    input_ids_list[j], j,
-                )
-                dp_comm.send(
-                    prefix_masks_list[j], j,
-                )
+            input_ids_list = input_ids_global.chunk(dp_size)
+            prefix_masks_list = prefix_masks_global.chunk(dp_size)
+            
+            if use_dp:
+                for j in range(1, dp_size):
+                    dp_comm.send(
+                        input_ids_list[j], j,
+                    )
+                    dp_comm.send(
+                        prefix_masks_list[j], j,
+                    )
                 
             input_ids = input_ids_list[0]
             prefix_masks = prefix_masks_list[0]
@@ -87,7 +95,7 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(input_ids, None, aux_input_data={'prefix_masks': prefix_masks})
             
-            if pipe.global_step % args.checkpoint_steps == 0 and get_data_parallel_rank() == 0:
+            if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
                 save_checkpoint(pipe, args)
             
             if pipe.global_step >= args.total_steps:
@@ -114,7 +122,7 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(input_ids, None, aux_input_data={'prefix_masks': prefix_masks})
             
-            if pipe.global_step % args.checkpoint_steps == 0 and get_data_parallel_rank() == 0:
+            if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
                 save_checkpoint(pipe, args)
             
             
@@ -133,7 +141,7 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(input_ids, labels, loss_func=gpt_loss_func, aux_input_data={'prefix_masks': prefix_masks}) # lm loss func
             
-            if pipe.global_step % args.checkpoint_steps == 0 and get_data_parallel_rank() == 0:
+            if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
                 save_checkpoint(pipe, args)
         
     else:
@@ -149,7 +157,7 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(None, None, aux_input_data={'prefix_masks': prefix_masks})
             
-            if pipe.global_step % args.checkpoint_steps == 0 and get_data_parallel_rank() == 0:
+            if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
                 save_checkpoint(pipe, args)
         
 
@@ -222,6 +230,15 @@ def main():
 
         args.dist_url = f"tcp://{prime_ip}:{port}"
         args.rank = rank
+        
+    use_dp = (args.world_size != args.pipeline_group_size)
+    if use_dp:
+        dp_comm = get_data_parallel_comm()
+        dp_rank = get_data_parallel_rank()
+        dp_size = get_data_parallel_world_size()
+    else:
+        dp_rank = 0
+        dp_size = 1
 
     init_communicators(args)
     
@@ -238,7 +255,7 @@ def main():
     config.pad_token_id = tokenizer.pad_token_id
     print("token vocab size:", config.vocab_size)
     
-    if get_pipeline_parallel_rank() == 0 and get_data_parallel_rank() == 0:
+    if get_pipeline_parallel_rank() == 0 and dp_rank == 0:
         if args.task_name == 'openwebtext':
             train_data_loader = get_openwebtext_train_data_loader(args, tokenizer)
             test_data_loader = None #get_wikitext_test_data_loader(args, tokenizer)
