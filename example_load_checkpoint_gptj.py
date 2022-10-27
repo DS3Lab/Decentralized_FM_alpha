@@ -86,7 +86,7 @@ if __name__ == '__main__':
     config = AutoConfig.from_pretrained('EleutherAI/gpt-j-6B')
     tokenizer = AutoTokenizer.from_pretrained('EleutherAI/gpt-j-6B')
     model = create_emtpy_gptj(config)
-    load_decentralized_checkpoint(model, 'model_checkpoints/gptj-baseline/checkpoint_2000')
+    load_decentralized_checkpoint(model, 'model_checkpoints/gptj-baseline/checkpoint_2000', n_stages=2, n_layer_per_stage=14)
 
     # test on cpu
     ret = model.generate(**tokenizer('you are not', return_tensors='pt'), max_new_tokens=4)
