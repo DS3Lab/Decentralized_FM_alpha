@@ -1,7 +1,5 @@
 import numpy as np
 from torch import nn
-from .gptj_modules import gpt_loss_func
-from .gptj_modules import GPTEmbeddings, GPTBlock, GPTLMHead
 from comm.comm_utils import *
 
 from copy import deepcopy
@@ -25,9 +23,26 @@ class GPTStageBase(nn.Module):
         self.load_pretrained_model = args.load_pretrained_model
         self.model_name = args.model_name
         self.config = config
+        
+        if hasattr(args, 'model_type'):
+            if args.model_type == "gpt2":
+                from .hf_gpt2_modules import GPTEmbeddings, GPTBlock, GPTLMHead
+            elif args.model_type == "gptj":
+                from .hf_gptj_modules import GPTEmbeddings, GPTBlock, GPTLMHead
+            elif args.model_type == "gptneo": 
+                from .hf_gptneo_modules import GPTEmbeddings, GPTBlock, GPTLMHead
+            else:
+                raise Exception("unknown")
+        else:
+            print("!!!! By default train GPT-J")
+            from .gptj_modules import GPTEmbeddings, GPTBlock, GPTLMHead
+            
+        self._GPTEmbeddings = GPTEmbeddings
+        self._GPTBlock = GPTBlock
+        self._GPTLMHead = GPTLMHead
 
     def _create_first_layer(self):
-        layer = GPTEmbeddings(deepcopy(self.config))
+        layer = self._GPTEmbeddings(deepcopy(self.config))
         if self.load_pretrained_model:
             print('loading embs')
             layer.load_state_dict(
@@ -36,21 +51,17 @@ class GPTStageBase(nn.Module):
         return layer
 
     def _create_last_layer(self):
-        if self._task_type == 'classification':
-            return GPTClassificationHead(deepcopy(self.config))
-        elif self._task_type == 'language_model':
-            layer = GPTLMHead(deepcopy(self.config))
-            if self.load_pretrained_model:
-                print('loading lm_head')
-                layer.load_state_dict(
-                    torch.load(f'{self.model_name}/pytorch_lm_head.pt')
-                )
-            return layer
-        raise Exception('unknown data type')
+        layer = self._GPTLMHead(deepcopy(self.config))
+        if self.load_pretrained_model:
+            print('loading lm_head')
+            layer.load_state_dict(
+                torch.load(f'{self.model_name}/pytorch_lm_head.pt')
+            )
+        return layer
 
     def _create_transformer_layer(self, layer_idx=0):
         config = deepcopy(self.config)
-        layer = GPTBlock(config) # TODO: checkpoint
+        layer = self._GPTBlock(config, layer_id=layer_idx) # TODO: checkpoint
         if self.load_pretrained_model:
             print(f'loading layer {layer_idx}')
             layer.load_state_dict(

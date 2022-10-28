@@ -6,7 +6,7 @@ import torch
 import torch.autograd.profiler as profiler
 # from tasks.data_loaders.openwebtext_prefix import get_openwebtext_train_data_loader as get_openwebtext_prefix_train_data_loader
 from tasks.data_loaders.pile import get_pile_train_data_loader
-from tasks.data_loaders.pile_prefix import get_pile_train_data_loader as get_pile_prefix_train_data_loader
+from tasks.data_loaders.c4 import get_c4_train_data_loader
 from modules.utils import gpt_loss_func
 from modules.tokenizer import build_tokenizer
 from pipeline_parallel.dist_pp_utils import get_pp_module
@@ -55,7 +55,7 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
         dtype=torch.int64
     ).to(device)
     
-    prefix_masks = torch.zeros(
+    masks = torch.zeros(
         [args.batch_size, args.seq_length], 
         dtype=torch.uint8
     ).to(device)
@@ -73,10 +73,14 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
                 break
             
             input_ids_global = data['input_ids'].to(torch.int64).to(device)
-            prefix_masks_global = data['prefix_masks'].to(torch.uint8).to(device)
+            masks_global = torch.ones_like(input_ids_global).to(torch.uint8).to(device)
+            
+            # FLM said dynamic sampling random ratio is better than static
+            th = (torch.rand(1) * 0.15).item()
+            masks_global[torch.rand(masks_global.shape) < th] = 0
             
             input_ids_list = input_ids_global.chunk(dp_size)
-            prefix_masks_list = prefix_masks_global.chunk(dp_size)
+            masks_list = masks_global.chunk(dp_size)
             
             if use_dp:
                 for j in range(1, dp_size):
@@ -84,17 +88,17 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
                         input_ids_list[j], j,
                     )
                     dp_comm.send(
-                        prefix_masks_list[j], j,
+                        masks_list[j], j,
                     )
                 
             input_ids = input_ids_list[0]
-            prefix_masks = prefix_masks_list[0]
+            masks = masks_list[0]
             
             pp_comm.broadcast(input_ids, 0)
-            pp_comm.broadcast(prefix_masks, 0)
+            pp_comm.broadcast(masks, 0)
             
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
-            current_iter_time = pipe.sgd_iter(input_ids, None, aux_input_data={'prefix_masks': prefix_masks})
+            current_iter_time = pipe.sgd_iter(input_ids, None, aux_input_data={'mask': masks})
             
             if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
                 save_checkpoint(pipe, args)
@@ -115,13 +119,13 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
                 input_ids, 0,
             )
             dp_comm.recv(
-                prefix_masks, 0,
+                masks, 0,
             )
             pp_comm.broadcast(input_ids, 0)
-            pp_comm.broadcast(prefix_masks, 0)
+            pp_comm.broadcast(masks, 0)
             
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
-            current_iter_time = pipe.sgd_iter(input_ids, None, aux_input_data={'prefix_masks': prefix_masks})
+            current_iter_time = pipe.sgd_iter(input_ids, None, aux_input_data={'mask': masks})
             
             if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
                 save_checkpoint(pipe, args)
@@ -136,11 +140,11 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
                 break
                 
             pp_comm.broadcast(input_ids, 0)
-            pp_comm.broadcast(prefix_masks, 0)
+            pp_comm.broadcast(masks, 0)
             labels = input_ids.clone()
-            labels[prefix_masks.bool()] = -100 # mask prefix part
+            labels[:, 1:][(1-masks).bool()[:, :-1]] = -100 # mask the next token of masked tokens
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
-            current_iter_time = pipe.sgd_iter(input_ids, labels, loss_func=gpt_loss_func, aux_input_data={'prefix_masks': prefix_masks}) # lm loss func
+            current_iter_time = pipe.sgd_iter(input_ids, labels, loss_func=gpt_loss_func, aux_input_data={'mask': masks}) # lm loss func
             
             if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
                 save_checkpoint(pipe, args)
@@ -154,9 +158,9 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
                 break
                 
             pp_comm.broadcast(input_ids, 0)
-            pp_comm.broadcast(prefix_masks, 0)
+            pp_comm.broadcast(masks, 0)
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
-            current_iter_time = pipe.sgd_iter(None, None, aux_input_data={'prefix_masks': prefix_masks})
+            current_iter_time = pipe.sgd_iter(None, None, aux_input_data={'mask': masks})
             
             if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
                 save_checkpoint(pipe, args)
@@ -260,8 +264,11 @@ def main():
     
     if get_pipeline_parallel_rank() == 0 and dp_rank == 0:
         if args.task_name == 'pile':
-            train_data_loader = get_pile_prefix_train_data_loader(args, tokenizer)
+            train_data_loader = get_pile_train_data_loader(args, tokenizer)
             test_data_loader = None #get_wikitext_test_data_loader(args, tokenizer)
+        elif args.task_name == 'c4':
+            train_data_loader = get_c4_train_data_loader(args, tokenizer)
+            test_data_loader = None #get_wikitext_test_data_loader(args, tokenizer)  
         else:
             raise Exception('unknown task.')
     else:

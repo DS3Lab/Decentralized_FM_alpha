@@ -8,7 +8,7 @@ from tasks.data_loaders.wikitext import get_wikitext_train_data_loader, get_wiki
 from tasks.data_loaders.wiki103 import get_wiki103_train_data_loader, get_wiki103_test_data_loader
 from tasks.data_loaders.arxiv21 import get_arxiv21_train_data_loader, get_arxiv21_test_data_loader
 from tasks.data_loaders.openwebtext import get_openwebtext_train_data_loader
-from modules.gpt_modules import GPTConfig
+from modules.utils import GPTConfig
 from modules.tokenizer import build_tokenizer
 from pipeline_parallel.dist_pp_utils import get_pp_module
 

@@ -240,10 +240,10 @@ class GPTBlock(_GPTJBlock):
         self.config = config
         self.use_checkpoint = use_checkpoint
 
-        def block_forward(x: torch.Tensor, prefix_masks: torch.Tensor) -> torch.Tensor:
+        def block_forward(x: torch.Tensor, attention_mask: torch.Tensor, prefix_masks: torch.Tensor) -> torch.Tensor:
             res = x
             x = self.ln_1(x)
-            x_a = self.attn(x, prefix_masks=prefix_masks)[0]
+            x_a = self.attn(x, prefix_masks=prefix_masks, attention_mask=attention_mask)[0]
             x_m = self.mlp(x)
             return res + x_a + x_m
         
@@ -268,7 +268,7 @@ class GPTBlock(_GPTJBlock):
         
         if mask is not None:
             # bool -> float
-            attention_mask = (1e4)*(mask[:, None, None, :]-1)
+            attention_mask = (1e4)*(mask[:, None, None, :]-1.0)
         else:
             attention_mask = None
             
@@ -287,7 +287,7 @@ class GPTBlock(_GPTJBlock):
             
             if self.use_checkpoint:
                 x.requires_grad_(True)
-                x = checkpoint(self.block_forward, x, prefix_masks)
+                x = checkpoint(self.block_forward, x, attention_mask, prefix_masks)
             else:
                 x = self.block_forward(x, prefix_masks=prefix_masks)
             
