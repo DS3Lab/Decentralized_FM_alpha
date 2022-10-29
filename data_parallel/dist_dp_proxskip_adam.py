@@ -53,6 +53,9 @@ def step_update(self, freeze=False, dp_optimizer=None):
                 state["exp_avg"] = torch.zeros_like(p.data)
                 # Exponential moving average of squared gradient values
                 state["exp_avg_sq"] = torch.zeros_like(p.data)
+                
+            # compatible to start from an existing checkpoint
+            if "h" not in state:
                 state["h"] = torch.zeros_like(p.data)
                 
             h = state["h"]
