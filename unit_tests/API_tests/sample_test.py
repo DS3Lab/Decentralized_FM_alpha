@@ -4,16 +4,13 @@ import requests
 plannet_post_dict = {
     "type": "general",
     "payload": {
-        "max_tokens": 32,
+        "max_tokens": 16,
         "n": 1,
         "temperature": 0.8,
         "top_p": 0.6,
         "top_k": 5,
-        "model": "gptj6b",
-        "prompt": ["Where is Zurich?",
-                   "Where is LA's airport?",
-		 		   "Where is Houston?",
-                   "Where is Austin's train station?"],
+        "model": "bloom",
+        "prompt": ["Do you like soccer?"],
         "request_type": "language-model-inference",
         "stop": [],
         "best_of": 1,
@@ -47,8 +44,8 @@ together_post_dict = {
     "seed": 0
 }
 
-# res = requests.post("https://planetd.shift.ml/jobs", json=my_post_dict).json()
+res = requests.post("https://planetd.shift.ml/jobs", json=plannet_post_dict).json()
 
-res = requests.put("https://zentrum.xzyao.dev/jobs/jobs", json=together_post_dict).json()
+#res = requests.put("https://zentrum.xzyao.dev/jobs/jobs", json=together_post_dict).json()
 
 print(res)
