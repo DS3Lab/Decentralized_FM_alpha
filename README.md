@@ -7,10 +7,13 @@
 
 - Install PyTorch env: 
 
-      pip3 install torch==1.9.0+cu111 torchtext -f https://download.pytorch.org/whl/torch_stable.html
-
-      # Magic, not sure why cupy-cuda111 would not work, it seems that cupy-cuda111 will use different PTX from torch.
-      pip3 install cupy-cuda110==8.6.0
+      conda install pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch -c nvidia
+      conda install -c conda-forge cupy nccl cudatoolkit=11.6
+      
+      pip install transformers==4.21.1
+      pip install datasets
+      pip install netifaces
+      pip install zstandard
 
 - Clone this repo:
         
