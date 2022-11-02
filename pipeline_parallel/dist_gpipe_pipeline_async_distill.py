@@ -28,17 +28,22 @@ def get_parameter_names(model, forbidden_layer_types):
     return result
 
 def create_optimizer(model, weight_decay=0.01, learning_rate=2e-5,
-                     adam_beta1=0.9, adam_beta2=0.999, adam_epsilon=1e-6):
+                     adam_beta1=0.9, adam_beta2=0.999, adam_epsilon=1e-8):
     from torch.optim import AdamW
     decay_parameters = get_parameter_names(model, [torch.nn.LayerNorm])
     decay_parameters = [name for name in decay_parameters if "bias" not in name]
+    
     optimizer_grouped_parameters = [
         {
-            "params": [p for n, p in model.named_parameters() if n in decay_parameters],
+            "params": [p for n, p in model.named_parameters() if n in decay_parameters and 'upscale_last' not in n],
             "weight_decay": weight_decay,
         },
         {
-            "params": [p for n, p in model.named_parameters() if n not in decay_parameters],
+            "params": [p for n, p in model.named_parameters() if 'upscale_last' in n],
+            "weight_decay": weight_decay, "lr": 1e-2, 
+        },
+        {
+            "params": [p for n, p in model.named_parameters() if n not in decay_parameters and 'upscale_last' not in n],
             "weight_decay": 0.0,
         }
     ]
@@ -51,7 +56,7 @@ def create_optimizer(model, weight_decay=0.01, learning_rate=2e-5,
     optimizer = optimizer_cls(optimizer_grouped_parameters, **optimizer_kwargs)
     return optimizer
 
-class GpipeAsync:
+class GpipeAsyncDistill:
     r"""
     Async implementation of Gpipe.
     The current implementation leave the computation on the PyTorch default stream and the communication on a different
@@ -289,6 +294,7 @@ class GpipeAsync:
                 with torch.cuda.stream(self.torch_comp_stream):
                     self.torch_comp_stream.wait_event(self.forward_recv_ready_events[i])
                     self.profile_mark_forward_comp_start(i)
+                    assert 'teacher_hidden_states' in aux_input_data
                     current_micro_output = self.model(
                         self.input_micro_batches[i], input_ids=input_ids_micro_batches[i], 
                         **{k: v[i] for k, v in aux_input_data.items()}
@@ -359,13 +365,17 @@ class GpipeAsync:
         
         if self.pp_rank == self.pipeline_group_size - 1:
             tr_loss = []
+            tr_distill_loss = []
         
         for i in range(self.micro_batch_num):
             if self.pp_rank == self.pipeline_group_size - 1:  # only send grad back to last node, do not receive
                 with torch.cuda.stream(self.torch_comp_stream) as st:
                     self.profile_mark_backward_comp_start(i)
-                    loss = loss_func(input=cached_output_micro_batches[i], target=target_as_micro_batches[i])
+                    loss = loss_func(input=cached_output_micro_batches[i][0], target=target_as_micro_batches[i])
+                    distill_loss = cached_output_micro_batches[i][1]
                     tr_loss.append(loss.item())
+                    tr_distill_loss.append(distill_loss.item())
+                    loss = loss + 0.1 * distill_loss
                     if self.use_fp16:
                         self.optimizer.scale(loss).backward()
                     else:
@@ -427,6 +437,7 @@ class GpipeAsync:
             wandb.log(
                 {
                     'loss': sum(tr_loss)/len(tr_loss),
+                    'distill_loss': sum(tr_distill_loss)/len(tr_distill_loss),
                     'lr': self.scheduler.get_last_lr()[0],
 #                     'scale': self.optimizer.get_loss_scale(), ##todo
                 }, step=self.global_step,

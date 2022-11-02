@@ -53,7 +53,10 @@ def step_update(self, freeze=False, dp_optimizer=None):
                 state["exp_avg"] = torch.zeros_like(p.data)
                 # Exponential moving average of squared gradient values
                 state["exp_avg_sq"] = torch.zeros_like(p.data)
-                state["h"] = torch.zeros_like(p.data)
+                state["h"] = torch.zeros_like(p.data).half()
+                
+            if state['h'].dtype != torch.float16:
+                state['h'] = state['h'].half()
                 
             h = state["h"]
             h.data = h.data.nan_to_num()
@@ -217,11 +220,15 @@ class ProxSkipDP:
             print('do sync !!!!!!!!')
             
     def optimizer_step(self):
+        freeze = (not flag.FLAG_DISABLE_COMPRESSION)
+        if not freeze:
+            print('do sync gradient!')
+            self._sync_gradients()
         with torch.cuda.stream(self.torch_optim_comp_stream):
             self.torch_optim_comp_stream.wait_event(self.sync_gradients_ready_event)
             self.profile_mark_optimizer_step_start()
             self.pre_optimization()
-            step_update(self.optimizer, freeze=False, dp_optimizer=self)
+            step_update(self.optimizer, freeze=freeze, dp_optimizer=self)
             # step_update(self.optimizer, freeze=False, dp_optimizer=self)
             self.torch_optim_comp_stream.record_event(self.optimizer_step_ready_event)
 
