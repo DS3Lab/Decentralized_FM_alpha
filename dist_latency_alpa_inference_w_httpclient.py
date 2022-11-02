@@ -15,7 +15,8 @@ from alpa.device_mesh import set_seed
 
 def get_tokenizer_model(args):
     if args.model_name == 'opt-175b':
-        tokenizer = AutoTokenizer.from_pretrained("facebook/opt-175b")
+        # The 30B version works for all OPT models.
+        tokenizer = AutoTokenizer.from_pretrained("facebook/opt-30b")
         tokenizer.add_bos_token = False
         model = get_model(model_name="alpa/opt-175b", path="/root/fm/models/alpa_models/")
 

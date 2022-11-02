@@ -26,6 +26,9 @@ def get_huggingface_tokenizer_model(args, device):
     elif args.model_name == 'gpt-j-6b':
         tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
         model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-j-6B")
+    elif args.model_name == 'gpt-neox-20b':
+        tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neox-20b")
+        model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-neox-20b", torch_dtype=torch.float16)
     else:
         assert False, "Model not supported yet."
 
@@ -63,7 +66,7 @@ def post_processing_text(input_text, output_text, model_name, query):
     if query.get('max_tokens') == 0:
         return ""
 
-    if model_name == 'gpt-j-6b':
+    if model_name == 'gpt-j-6b' or model_name == 'gpt-neox-20b':
         if not query.get('echo', False):
             text = output_text[len(input_text):]
         else:

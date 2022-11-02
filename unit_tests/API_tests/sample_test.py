@@ -9,7 +9,7 @@ plannet_post_dict = {
         "temperature": 0.8,
         "top_p": 0.6,
         "top_k": 5,
-        "model": "bloom",
+        "model": "gpt-neox-20b",
         "prompt": ["Do you like soccer?"],
         "request_type": "language-model-inference",
         "stop": [],
