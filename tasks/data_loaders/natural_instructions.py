@@ -21,10 +21,10 @@ class StreamDataset(IterableDataset):
             for line in f:
                 if line.strip() == '':
                     continue
-                self.train_splits.append(line + '.json')
+                self.train_splits.append(line.strip() + '.json')
         
         self.task_paths = [
-            os.path.join(data_path, p) for p in os.listdir(data_path) if p.endswith('.json') and p in self.train_splits
+            os.path.join(data_path, 'tasks', p) for p in os.listdir(os.path.join(data_path, 'tasks')) if p.endswith('.json') and p in self.train_splits
         ]
         self.tasks = []
         for task_path in self.task_paths:
@@ -91,7 +91,7 @@ class StreamDataset(IterableDataset):
     
 def get_natural_instructions_train_data_loader(args, tokenizer, num_workers=0, state_dict=None):
     
-    stream_dataset = StreamDataset('/root/natural-instructions/tasks/', tokenizer, args.seq_length)
+    stream_dataset = StreamDataset('/root/natural-instructions/', tokenizer, args.seq_length)
     
     if state_dict is not None:
         stream_dataset.load_state_dict(state_dict)

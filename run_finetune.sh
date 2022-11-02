@@ -5,13 +5,14 @@ job_id=0
 ARGS="--model-name /root/fm/models/opt-1.3b-new \
 --tokenizer-name /root/fm/models/opt-1.3b-new \
 --model-type opt \
---checkpoint-path ./model_checkpoints/opt_1.3b_ni \
+--seed 4242 \
+--checkpoint-path ./model_checkpoints/opt_1.3b_ni_default \
 --load-pretrained-model true \
 --task-name natural_instructions \
 --num-layers 12 --num-heads 32 --embedding-dim 2048 \
---total-steps 20000 --warmup-steps 100 \
+--total-steps 200000 --warmup-steps 100 \
 --checkpoint-steps 100 \
---lr 1e-5 --seq-length 2048 --batch-size 16 --micro-batch-size 1 --gradient-accumulate-step 1 \
+--lr 1e-5 --seq-length 2048 --batch-size 64 --micro-batch-size 8 --gradient-accumulate-step 1 \
 --dist-url tcp://127.0.0.1:9033 \
 --world-size 8 --pipeline-group-size 2 --data-group-size 4 \
 --job-id ${job_id} --net-interface lo \
