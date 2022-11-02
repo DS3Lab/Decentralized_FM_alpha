@@ -13,8 +13,19 @@ from comm.comm_utils import *
 
 class StreamDataset(IterableDataset):
     def __init__(self, data_path, tokenizer, seq_length=1024):
+        
         self.data_path = data_path
-        self.task_paths = [os.path.join(data_path, p) for p in os.listdir(data_path) if p.endswith('.json')]
+        
+        self.train_splits = []
+        with open(os.path.join(data_path, 'splits/default/train_tasks.txt')) as f:
+            for line in f:
+                if line.strip() == '':
+                    continue
+                self.train_splits.append(line + '.json')
+        
+        self.task_paths = [
+            os.path.join(data_path, p) for p in os.listdir(data_path) if p.endswith('.json') and p in self.train_splits
+        ]
         self.tasks = []
         for task_path in self.task_paths:
             with open(task_path) as f:
@@ -25,7 +36,7 @@ class StreamDataset(IterableDataset):
         
         self.it = None
         
-        self.input_prefixs = ['Input: ', 'Given: ', 'Context: ', 'Example: ', 'Question: ']
+        self.input_prefixs = ['Input: ', 'Given: ', 'Context: ', 'Example: ', 'Question: ', '']
         self.output_prefixs = ['Output: ', 'Ans: ', 'A: ', 'Answer: ', 'Return: ', 'R: ', '']
         self.splitters = ['\n', '\n\n', '\n\n\n', ' ', '\t', '\t\t', '##', '###']
         
