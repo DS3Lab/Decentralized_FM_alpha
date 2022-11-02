@@ -38,6 +38,7 @@ class StreamDataset(IterableDataset):
             while len(buffer_tokens) >= self.seq_length:
                 tokens = buffer_tokens[:self.seq_length]
                 buffer_tokens = [self.tokenizer.bos_token_id] + buffer_tokens[self.seq_length:]
+                # buffer_tokens = buffer_tokens[self.seq_length:]
                 input_ids = torch.tensor(tokens)
                 self.buffer_tokens = buffer_tokens # update for restore
                 yield {
