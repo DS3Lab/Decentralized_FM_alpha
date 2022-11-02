@@ -6,7 +6,7 @@ import torch
 import torch.autograd.profiler as profiler
 # from tasks.data_loaders.openwebtext_prefix import get_openwebtext_train_data_loader as get_openwebtext_prefix_train_data_loader
 from tasks.data_loaders.pile import get_pile_train_data_loader
-from tasks.data_loaders.c4 import get_c4_train_data_loader
+from tasks.data_loaders.pile_prefix import get_pile_train_data_loader as get_pile_prefix_train_data_loader
 from modules.utils import gpt_loss_func
 from modules.tokenizer import build_tokenizer
 from pipeline_parallel.dist_pp_utils import get_pp_module
@@ -23,18 +23,9 @@ from utils.dist_checkpoint_utils import *
 from comm.comm_utils import *
 import compress.flag
 
+
+
 def train_loop(args, pipe, device, train_data_loader, test_data_loader):
-    
-#     for e in range(args.n_epochs):
-#         if e < args.warmup_epochs:
-#             compress.flag.FLAG_DISABLE_COMPRESSION = True
-#         else:
-#             compress.flag.FLAG_DISABLE_COMPRESSION = False
-            
-#         distributed_train_lm_iter(args, pipe, device, train_data_loader)
-        
-#         if test_data_loader is not None and args.do_evaluation:
-#             distributed_test_lm_iter(args, pipe, device, test_data_loader)
 
     pipe.model.train() # Flag .training to True to enable Dropout
     
@@ -52,19 +43,32 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
     
     input_ids = torch.zeros(
         [args.batch_size, args.seq_length], 
-        dtype=torch.int64
-    ).to(device)
+        dtype=torch.int64 
+    ).to(device) 
     
-    prefix_masks = torch.zeros(
-        [args.batch_size, args.seq_length], 
-        dtype=torch.uint8
+    n_samples = 1000 * 32
+    n_seq_length = 2048
+    n_emb_size = 9216
+    assert n_seq_length == args.seq_length
+    
+    teacher_hidden_states = torch.zeros(
+        [args.batch_size, args.seq_length, n_emb_size], 
+        dtype=torch.float16
     ).to(device)
     
     if get_pipeline_parallel_rank() == 0 and dp_rank == 0:
         
-        for data in train_data_loader:
+        input_ids_mmap = np.memmap(
+            'pile_opt66_input_ids.mmap', dtype=np.int64, mode='r', shape=(n_samples, n_seq_length))
+        hidden_states_mmap = np.memmap(
+            'pile_opt66_hidden_states.mmap', dtype=np.float16, mode='r', shape=(n_samples, n_seq_length, n_emb_size))
+        
+        while True:
             # if i < pipe.global_step:
             #     continue
+            
+            input_ids = torch.from_numpy(input_ids_mmap[pipe.global_step * args.batch_size * dp_size: (pipe.global_step+1) * args.batch_size * dp_size])
+            teacher_hidden_states = torch.from_numpy(hidden_states_mmap[pipe.global_step * args.batch_size * dp_size: (pipe.global_step+1) * args.batch_size * dp_size])
                 
             if use_dp:
                 dp_comm.broadcast(stop_flag, 0)
@@ -72,26 +76,26 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             if stop_flag.item() == 1:
                 break
             
-            input_ids_global = data['input_ids'].to(torch.int64).to(device)
-            # prefix_masks_global = data['prefix_masks'].to(torch.uint8).to(device)
+            input_ids_global = input_ids.to(torch.int64).to(device)
+            teacher_hidden_states_global = teacher_hidden_states.to(torch.float16).to(device)
             
             input_ids_list = input_ids_global.chunk(dp_size)
-            # prefix_masks_list = prefix_masks_global.chunk(dp_size)
+            teacher_hidden_states_list = teacher_hidden_states_global.chunk(dp_size)
             
             if use_dp:
                 for j in range(1, dp_size):
                     dp_comm.send(
                         input_ids_list[j], j,
                     )
-                    # dp_comm.send(
-                    #     prefix_masks_list[j], j,
-                    # )
+                    dp_comm.send(
+                        teacher_hidden_states_list[j], j,
+                    )
                 
             input_ids = input_ids_list[0]
-            # prefix_masks = prefix_masks_list[0]
+            teacher_hidden_states = teacher_hidden_states_list[0]
             
             pp_comm.broadcast(input_ids, 0)
-            # pp_comm.broadcast(prefix_masks, 0)
+            pp_comm.broadcast(teacher_hidden_states, 0)
             
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(input_ids, None)
@@ -114,11 +118,11 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             dp_comm.recv(
                 input_ids, 0,
             )
-            # dp_comm.recv(
-            #     prefix_masks, 0,
-            # )
+            dp_comm.recv(
+                teacher_hidden_states, 0,
+            )
             pp_comm.broadcast(input_ids, 0)
-            # pp_comm.broadcast(prefix_masks, 0)
+            pp_comm.broadcast(teacher_hidden_states, 0)
             
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(input_ids, None)
@@ -136,11 +140,13 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
                 break
                 
             pp_comm.broadcast(input_ids, 0)
-            # pp_comm.broadcast(prefix_masks, 0)
+            pp_comm.broadcast(teacher_hidden_states, 0)
             labels = input_ids.clone()
             # labels[prefix_masks.bool()] = -100 # mask prefix part
+            
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
-            current_iter_time = pipe.sgd_iter(input_ids, labels, loss_func=gpt_loss_func) # lm loss func
+            current_iter_time = pipe.sgd_iter(input_ids, labels, aux_input_data={'teacher_hidden_states': teacher_hidden_states}, 
+                                              loss_func=gpt_loss_func) # lm loss func
             
             if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
                 save_checkpoint(pipe, args)
@@ -154,7 +160,7 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
                 break
                 
             pp_comm.broadcast(input_ids, 0)
-            # pp_comm.broadcast(prefix_masks, 0)
+            pp_comm.broadcast(teacher_hidden_states, 0)
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(None, None)
             
@@ -184,6 +190,9 @@ def main():
     parser.add_argument('--warmup-steps', type=int, default=0, help='-')
     parser.add_argument('--train-warmup-steps', type=int, default=0, help='-')
     parser.add_argument('--total-steps', type=int, default=None, help='-')
+    parser.add_argument('--return-hidden-states', 
+                        type=lambda x: x.lower()=='true', default=True, metavar='S',
+                        help='load pretrained model or not.')
     parser.add_argument('--load-pretrained-model', 
                         type=lambda x: x.lower()=='true', default=True, metavar='S',
                         help='load pretrained model or not.')
@@ -267,9 +276,6 @@ def main():
         if args.task_name == 'pile':
             train_data_loader = get_pile_train_data_loader(args, tokenizer)
             test_data_loader = None #get_wikitext_test_data_loader(args, tokenizer)
-        elif args.task_name == 'c4':
-            train_data_loader = get_c4_train_data_loader(args, tokenizer)
-            test_data_loader = None
         else:
             raise Exception('unknown task.')
     else:

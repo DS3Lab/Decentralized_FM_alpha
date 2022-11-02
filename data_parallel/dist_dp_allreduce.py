@@ -83,6 +83,8 @@ class AllReduceDP:
                 self.profile_mark_allreduce_end()
             else:
                 for name, para in self.module.named_parameters():
+                    if para.grad is None:
+                        continue
                     self.profile_mark_allreduce_start(name)
                     self.dp_comm.all_reduce(para.grad, stream=cupy_dp_stream)
                     self.profile_mark_allreduce_end(name)

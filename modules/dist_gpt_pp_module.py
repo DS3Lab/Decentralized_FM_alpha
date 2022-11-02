@@ -31,11 +31,12 @@ class GPTStageBase(nn.Module):
                 from .hf_gptj_modules import GPTEmbeddings, GPTBlock, GPTLMHead
             elif args.model_type == "gptneo": 
                 from .hf_gptneo_modules import GPTEmbeddings, GPTBlock, GPTLMHead
+            elif args.model_type == "opt":
+                from .hf_opt_modules import GPTEmbeddings, GPTBlock, GPTLMHead
             else:
                 raise Exception("unknown")
         else:
-            print("!!!! By default train GPT-J")
-            from .gptj_modules import GPTEmbeddings, GPTBlock, GPTLMHead
+            raise Exception("!!!! model type not defined")
             
         self._GPTEmbeddings = GPTEmbeddings
         self._GPTBlock = GPTBlock
@@ -111,14 +112,30 @@ class GPTStageLast(GPTStageBase):
         module_list = []
         for layer_idx in range(self._layer_begin, self._layer_end):
             module_list.append(self._create_transformer_layer(layer_idx=layer_idx))
-        module_list.append(self._create_last_layer())
+            
+        if hasattr(args, 'skip_lm_head') and args.skip_lm_head:
+            pass
+        else:
+            module_list.append(self._create_last_layer())
+        
         self.model = nn.Sequential(*module_list).to(device)
-
+        
+        # self.upscale_last = nn.Linear(args.embedding_dim, 9216).to(device)
+        
     def forward(self, x, **kargs):
         for module in self.model:
             x = module(x, **kargs)
+        
         return x
+
+#     def forward(self, x, **kargs):
+#         for module in self.model[:-1]:
+#             x = module(x, **kargs)
+#         hid = x
+#         x = self.model[-1](x, **kargs)
+        
+#         hid = self.upscale_last(hid)
+#         loss = torch.nn.functional.mse_loss(hid, kargs['teacher_hidden_states'])
+#         print(loss.item())
+#         return x, loss
     
-#         out = self.model(x.to(self.device), **kargs) if self._to_cpu else self.model(x)
-            
-#         return out.cpu() if self._to_cpu else out

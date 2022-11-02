@@ -23,20 +23,9 @@ from utils.dist_checkpoint_utils import *
 from comm.comm_utils import *
 import compress.flag
 
-def train_loop(args, pipe, device, train_data_loader, test_data_loader):
-    
-#     for e in range(args.n_epochs):
-#         if e < args.warmup_epochs:
-#             compress.flag.FLAG_DISABLE_COMPRESSION = True
-#         else:
-#             compress.flag.FLAG_DISABLE_COMPRESSION = False
-            
-#         distributed_train_lm_iter(args, pipe, device, train_data_loader)
-        
-#         if test_data_loader is not None and args.do_evaluation:
-#             distributed_test_lm_iter(args, pipe, device, test_data_loader)
+def infer_loop(args, pipe, device, train_data_loader, test_data_loader):
 
-    pipe.model.train() # Flag .training to True to enable Dropout
+    pipe.model.eval() # Flag .training to True to enable Dropout
     
     use_dp = (args.world_size != args.pipeline_group_size)
     if use_dp:
@@ -55,16 +44,15 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
         dtype=torch.int64
     ).to(device)
     
-    prefix_masks = torch.zeros(
-        [args.batch_size, args.seq_length], 
-        dtype=torch.uint8
-    ).to(device)
-    
     if get_pipeline_parallel_rank() == 0 and dp_rank == 0:
         
+        global_step = 0
+        
         for data in train_data_loader:
-            # if i < pipe.global_step:
-            #     continue
+            
+            print(f"global_step: {global_step} / {args.total_steps}")
+            
+            tic = time.time()
                 
             if use_dp:
                 dp_comm.broadcast(stop_flag, 0)
@@ -73,34 +61,29 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
                 break
             
             input_ids_global = data['input_ids'].to(torch.int64).to(device)
-            # prefix_masks_global = data['prefix_masks'].to(torch.uint8).to(device)
             
             input_ids_list = input_ids_global.chunk(dp_size)
-            # prefix_masks_list = prefix_masks_global.chunk(dp_size)
             
             if use_dp:
                 for j in range(1, dp_size):
                     dp_comm.send(
                         input_ids_list[j], j,
                     )
-                    # dp_comm.send(
-                    #     prefix_masks_list[j], j,
-                    # )
                 
             input_ids = input_ids_list[0]
-            # prefix_masks = prefix_masks_list[0]
             
             pp_comm.broadcast(input_ids, 0)
-            # pp_comm.broadcast(prefix_masks, 0)
             
-            compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
-            current_iter_time = pipe.sgd_iter(input_ids, None)
+            _ = pipe.infer_iter(input_ids, None)
             
-            if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
-                save_checkpoint(pipe, args)
+            global_step += 1
             
             if pipe.global_step >= args.total_steps:
                 stop_flag.data[:] = 1
+                
+            toc = time.time()
+            
+            print(f'batch time: {toc-tic:.4f}s')
             
     elif get_pipeline_parallel_rank() == 0:
         
@@ -114,20 +97,21 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             dp_comm.recv(
                 input_ids, 0,
             )
-            # dp_comm.recv(
-            #     prefix_masks, 0,
-            # )
             pp_comm.broadcast(input_ids, 0)
-            # pp_comm.broadcast(prefix_masks, 0)
             
-            compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
-            current_iter_time = pipe.sgd_iter(input_ids, None)
-            
-            if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
-                save_checkpoint(pipe, args)
-            
+            _ = pipe.infer_iter(input_ids, None)            
             
     elif get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
+        
+        global_id = 0
+        
+        n_samples = args.total_steps * args.batch_size
+        n_seq_length = args.seq_length
+        n_emb_size = args.embedding_dim
+        input_ids_mmap = np.memmap(
+            'c4_opt66_input_ids.mmap', dtype=np.int64, mode='w+', shape=(n_samples, n_seq_length))
+        hidden_states_mmap = np.memmap(
+            'c4_opt66_hidden_states.mmap', dtype=np.float16, mode='w+', shape=(n_samples, n_seq_length, n_emb_size))
         
         while True:
             
@@ -136,14 +120,12 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
                 break
                 
             pp_comm.broadcast(input_ids, 0)
-            # pp_comm.broadcast(prefix_masks, 0)
-            labels = input_ids.clone()
-            # labels[prefix_masks.bool()] = -100 # mask prefix part
-            compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
-            current_iter_time = pipe.sgd_iter(input_ids, labels, loss_func=gpt_loss_func) # lm loss func
-            
-            if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
-                save_checkpoint(pipe, args)
+            outputs = pipe.infer_iter(input_ids, pred_func=lambda x, y: x)
+        
+            for x, y in zip(input_ids, outputs):
+                input_ids_mmap[global_id] = x.detach().cpu().numpy()
+                hidden_states_mmap[global_id] = y.detach().cpu().numpy()
+                global_id += 1
         
     else:
         
@@ -154,12 +136,7 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
                 break
                 
             pp_comm.broadcast(input_ids, 0)
-            # pp_comm.broadcast(prefix_masks, 0)
-            compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
-            current_iter_time = pipe.sgd_iter(None, None)
-            
-            if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
-                save_checkpoint(pipe, args)
+            _ = pipe.infer_iter(None, None)
         
 
 def main():
@@ -174,13 +151,21 @@ def main():
     add_acitvation_compression_arguments(parser)
     parser.add_argument('--model-name', type=str, default='gpt2', metavar='S',
                         help='model name or path')
+    parser.add_argument('--model-type', type=str, default='gptj', metavar='S',
+                        help='model name or path')
     parser.add_argument('--tokenizer-name', type=str, default='gpt2', metavar='S',
                         help='tokenizer name or path')
-    parser.add_argument('--model-type', type=str, default='gpt2', metavar='S',
-                        help='model name or path')
     parser.add_argument('--checkpoint-path', type=str, default='model_checkpoints/gpt2')
     parser.add_argument('--task-name', type=str, default='wikitext', metavar='S',
                         help='task name')
+    
+    parser.add_argument('--infer-only', 
+                        type=lambda x: x.lower()=='true', default=True, metavar='S',
+                        help='load pretrained model or not.')
+    parser.add_argument('--skip-lm-head', 
+                        type=lambda x: x.lower()=='true', default=True, metavar='S',
+                        help='load pretrained model or not.')
+    
     parser.add_argument('--warmup-steps', type=int, default=0, help='-')
     parser.add_argument('--train-warmup-steps', type=int, default=0, help='-')
     parser.add_argument('--total-steps', type=int, default=None, help='-')
@@ -269,7 +254,7 @@ def main():
             test_data_loader = None #get_wikitext_test_data_loader(args, tokenizer)
         elif args.task_name == 'c4':
             train_data_loader = get_c4_train_data_loader(args, tokenizer)
-            test_data_loader = None
+            test_data_loader = None #get_wikitext_test_data_loader(args, tokenizer)  
         else:
             raise Exception('unknown task.')
     else:
@@ -286,15 +271,9 @@ def main():
         print("Running ", args.pp_mode, " without data parallel.")
     
     pipe = get_pp_module(args, config, device, use_dp)
-    
-    if args.load_checkpoint:
-        load_checkpoint(pipe, args)
-
-    if args.fp16:
-        pipe.optimizer.reload_model_params()
 
     if args.profiling == 'no-profiling':
-        train_loop(args, pipe, device, train_data_loader, test_data_loader)
+        infer_loop(args, pipe, device, train_data_loader, test_data_loader)
     else:
         prefix = './trace_json/gpt3_' + args.pp_mode
         if use_dp:
@@ -304,13 +283,13 @@ def main():
                      args.profiling + '_' + args.trace_postfix + '.json'
         if args.profiling == 'tidy_profiling':
             try:
-                train_loop(args, pipe, device, train_data_loader, test_data_loader)
+                infer_loop(args, pipe, device, train_data_loader, test_data_loader)
             except Exception as e:
                 print(get_pipeline_parallel_rank(), e)
             pipe.export_profiling_result(filename=trace_file)
         elif args.profiling == 'pytorch_profiling':
             with profiler.profile(profile_memory=True, use_cuda=args.use_cuda) as prof:
-                train_loop(args, pipe, device, train_data_loader, test_data_loader)
+                infer_loop(args, pipe, device, train_data_loader, test_data_loader)
             print(prof.key_averages().table())
             prof.export_chrome_trace(trace_file)
         else:
