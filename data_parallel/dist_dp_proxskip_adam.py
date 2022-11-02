@@ -58,6 +58,9 @@ def step_update(self, freeze=False, dp_optimizer=None):
             if "h" not in state:
                 state["h"] = torch.zeros_like(p.data)
                 
+            if state["h"].dtype != torch.float16:
+                state["h"] = state["h"].half()
+                
             h = state["h"]
             h.data = h.data.nan_to_num()
 
