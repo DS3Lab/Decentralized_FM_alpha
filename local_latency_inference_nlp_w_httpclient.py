@@ -82,8 +82,8 @@ def post_processing_text(input_text, output_text, model_name, query):
                     end_pos = min(text.find(stop_token) + len(stop_token), end_pos)
             print(f"<post_processing_text>2 end_pos: {end_pos}.")
     elif model_name == 'ul2' or model_name == 't0pp' or model_name == 't5-11b':
-        if model_name == 't5-11b':
-            input_text = input_text.replace("", "")
+        if model_name == 't5-11b' or model_name == 'ul2':
+            input_text = input_text.replace("<extra_id_0>", "")
         if query.get('echo', False):
             text = input_text + ' ' + output_text
         else:
