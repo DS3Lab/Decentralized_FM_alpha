@@ -60,7 +60,12 @@ class LocalCoordinatorClient:
         return True, object_name
     
     def fetch_instructions(self, model_name, rank):
-        return requests.get(self.coordinator_url+f"/instructions/{model_name}/{rank}").json()
+        while True:
+            try:
+                return requests.get(self.coordinator_url + f"/instructions/{model_name}/{rank}").json()
+            except Exception as e:
+                print('<fetch_instructions> Exception', e)
+                raise e
 
     def update_status_global_coordinator(self, job_id, new_status, returned_payload=None):
         return requests.patch(self.global_coordinator_url + f"/{job_id}", json={
