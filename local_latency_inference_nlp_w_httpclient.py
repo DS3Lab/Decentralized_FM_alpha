@@ -92,7 +92,7 @@ def load_decentralized_checkpoint(model, checkpoint_path, n_stages=2, n_layer_pe
 def get_huggingface_tokenizer_model(args, device):
     if args.model_name == 'flan-t5-xxl':
         tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-xxl")
-        model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-xxl", device_map="auto")
+        model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-xxl")
     elif args.model_name == 't5-11b':
         tokenizer = AutoTokenizer.from_pretrained('t5-11b', model_max_length=512)
         # tokenizer.model_max_length=512
@@ -170,7 +170,7 @@ def post_processing_text(input_text, output_text, model_name, query):
                 if text.find(stop_token) != -1:
                     end_pos = min(text.find(stop_token) + len(stop_token), end_pos)
             print(f"<post_processing_text>2 end_pos: {end_pos}.")
-    elif model_name == 'ul2' or model_name == 't0pp' or model_name == 't5-11b':
+    elif model_name == 'ul2' or model_name == 't0pp' or model_name == 't5-11b' or model_name == 'flan-t5-xxl':
         if model_name == 't5-11b' or model_name == 'ul2':
             input_text = input_text.replace("<extra_id_0>", "")
         if query.get('echo', False):

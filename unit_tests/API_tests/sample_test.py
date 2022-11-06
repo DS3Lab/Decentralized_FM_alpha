@@ -9,7 +9,7 @@ plannet_post_dict = {
         "temperature": 0.8,
         "top_p": 0.6,
         "top_k": 5,
-        "model": "Together-gpt-J-6B-ProxAdam-50x",
+        "model": "flan-t5-xxl",
         "prompt": ["Do you like soccer?"],
         "request_type": "language-model-inference",
         "stop": [],
