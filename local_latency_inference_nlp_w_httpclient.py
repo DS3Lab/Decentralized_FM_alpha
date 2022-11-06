@@ -4,15 +4,96 @@ from coordinator.coordinator_client import LocalCoordinatorClient
 import traceback
 from loguru import logger
 from time import sleep
-from transformers import AutoTokenizer, AutoModelForCausalLM, T5ForConditionalGeneration, AutoModelForSeq2SeqLM
-import torch
+from transformers import AutoModelForCausalLM, T5Tokenizer, T5ForConditionalGeneration, AutoModelForSeq2SeqLM
 import math
 import numpy as np
 import random
+import torch
+
+from transformers import GPTJForCausalLM
+from transformers import AutoConfig, AutoTokenizer
+from transformers.modeling_utils import no_init_weights
+import os
+
+
+def create_emtpy_gptj(config):
+    import torch.nn as nn
+    _reset_parameters_linear = nn.Linear.reset_parameters
+
+    def dummy(*args, **kargs):
+        pass
+
+    nn.Linear.reset_parameters = dummy
+
+    # 1. disable init for faster initialization
+    # 2. avoid tie token embeddings with lm_head, as we train them separately.
+    with no_init_weights(_enable=True):
+        model = GPTJForCausalLM(config).eval()
+
+    nn.Linear.reset_parameters = _reset_parameters_linear
+
+    return model
+
+
+def load_decentralized_checkpoint(model, checkpoint_path, n_stages=2, n_layer_per_stage=14):
+    input_path = checkpoint_path
+
+    assert n_stages * n_layer_per_stage >= len(model.transformer.h)
+    assert model.lm_head.weight.data is not model.transformer.wte.weight.data
+
+    for i in range(n_stages):
+
+        print(f'loading stage {i}')
+
+        checkpoint = torch.load(os.path.join(input_path, f'prank_{i}_checkpoint.pt'), map_location=torch.device("cpu"))
+
+        if i == 0:
+            _tmp = {k[len(f"{0}."):]:v for k,v in checkpoint.items() if k.startswith(f"0.")}
+            # torch.save(_tmp, os.path.join(output_path, f'pytorch_embs.pt'))
+            model.transformer.wte.weight.data[:] = _tmp['wte.weight']
+
+            for j in range(n_layer_per_stage):
+                _tmp = {k[len(f"{j+1}."):]:v for k,v in checkpoint.items() if k.startswith(f"{j+1}.")}
+                if len(_tmp) == 0:
+                    break
+                # torch.save(_tmp, os.path.join(output_path, f'pytorch_{j}.pt'))
+                model.transformer.h[j].load_state_dict(_tmp)
+
+        elif i == n_stages - 1:
+            for j in range(n_layer_per_stage):
+                _tmp = {k[len(f"{j}."):]: v for k, v in checkpoint.items() if k.startswith(f"{j}.")}
+                if len(_tmp) == 0:
+                    break
+                # torch.save(_tmp, os.path.join(output_path, f'pytorch_{i*n_layer_per_stage + j}.pt'))
+                model.transformer.h[i*n_layer_per_stage + j].load_state_dict(_tmp)
+
+            _tmp = {k[len(f"{n_layer_per_stage}."):]: v
+                    for k, v in checkpoint.items() if k.startswith(f"{n_layer_per_stage}.")}
+            if len(_tmp) == 0:
+                break
+            # torch.save(_tmp, os.path.join(output_path, f'pytorch_lm_head.pt'))
+            model.transformer.ln_f.weight.data[:] = _tmp['ln_f.weight']
+            model.transformer.ln_f.bias.data[:] = _tmp['ln_f.bias']
+            model.lm_head.weight.data[:] = _tmp['lm_head.weight']
+            if 'lm_head.bias' in _tmp:
+                model.lm_head.bias.data[:] = _tmp['lm_head.bias']
+
+        else:
+            for j in range(n_layer_per_stage):
+                _tmp = {k[len(f"{j}."):]:v for k,v in checkpoint.items() if k.startswith(f"{j}.")}
+                if len(_tmp) == 0:
+                    break
+                # torch.save(_tmp, os.path.join(output_path, f'pytorch_{i*n_layer_per_stage + j}.pt'))
+                model.transformer.h[i*n_layer_per_stage + j].load_state_dict(_tmp)
+
+    return model
 
 
 def get_huggingface_tokenizer_model(args, device):
-    if args.model_name == 't5-11b':
+    if args.model_name == 'flan-t5-xxl':
+        tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-xxl")
+        model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-xxl", device_map="auto")
+    elif args.model_name == 't5-11b':
         tokenizer = AutoTokenizer.from_pretrained('t5-11b', model_max_length=512)
         # tokenizer.model_max_length=512
         model = T5ForConditionalGeneration.from_pretrained('t5-11b')
@@ -29,6 +110,12 @@ def get_huggingface_tokenizer_model(args, device):
     elif args.model_name == 'gpt-neox-20b':
         tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neox-20b")
         model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-neox-20b", torch_dtype=torch.float16)
+    elif args.model_name == 'Together-gpt-J-6B-ProxAdam-50x':
+        config = AutoConfig.from_pretrained('EleutherAI/gpt-j-6B')
+        tokenizer = AutoTokenizer.from_pretrained('EleutherAI/gpt-j-6B')
+        model = create_emtpy_gptj(config).half().eval()
+        load_decentralized_checkpoint(model, '/root/fm/models/checkpoint_2000_ni_bs64_lr1e-6_proxadam',
+                                      n_stages=2, n_layer_per_stage=14)
     else:
         assert False, "Model not supported yet."
 
@@ -43,14 +130,16 @@ def get_huggingface_tokenizer_model(args, device):
     return tokenizer, model
 
 
-def pre_processing_texts(input_text, model_name):
-    if model_name == 't5-11b':
-        output_text = []
-        for text in input_text:
-            output_text.append(text + "<extra_id_0>")
-        return output_text
-    else:
-        return input_text
+def pre_processing_texts(input_text, model_name, tokenizer):
+    output_text = []
+    for i in range(len(input_text)):
+        current_tokens = tokenizer(input_text[i], padding=False, truncation=False, return_tensors="pt")
+        current_output = tokenizer.decode(current_tokens['input_ids'][0]).replace("</s>", "")
+        output_text.append(current_output)
+    if model_name == 't5-11b' or model_name == 'ul2':
+        for i in range(len(output_text)):
+            output_text[i] = output_text[i] + "<extra_id_0>"
+    return output_text
 
 
 def post_processing_text(input_text, output_text, model_name, query):
@@ -66,7 +155,7 @@ def post_processing_text(input_text, output_text, model_name, query):
     if query.get('max_tokens') == 0:
         return ""
 
-    if model_name == 'gpt-j-6b' or model_name == 'gpt-neox-20b':
+    if model_name == 'gpt-j-6b' or model_name == 'gpt-neox-20b' or model_name == 'Together-gpt-J-6B-ProxAdam-50x':
         if not query.get('echo', False):
             text = output_text[len(input_text):]
         else:
@@ -195,7 +284,7 @@ def main():
 
                         start_time = time.time()
 
-                        raw_text = pre_processing_texts(raw_text, args.model_name)
+                        raw_text = pre_processing_texts(raw_text, args.model_name, tokenizer)
 
                         batch_size = min(len(raw_text), args.batch_size)
                         num_iter = math.ceil(len(raw_text) / batch_size)
