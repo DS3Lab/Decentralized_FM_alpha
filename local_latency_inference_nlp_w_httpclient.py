@@ -48,12 +48,12 @@ def load_decentralized_checkpoint(model, checkpoint_path, n_stages=2, n_layer_pe
         checkpoint = torch.load(os.path.join(input_path, f'prank_{i}_checkpoint.pt'), map_location=torch.device("cpu"))
 
         if i == 0:
-            _tmp = {k[len(f"{0}."):]:v for k,v in checkpoint.items() if k.startswith(f"0.")}
+            _tmp = {k[len(f"{0}."):]: v for k, v in checkpoint.items() if k.startswith(f"0.")}
             # torch.save(_tmp, os.path.join(output_path, f'pytorch_embs.pt'))
             model.transformer.wte.weight.data[:] = _tmp['wte.weight']
 
             for j in range(n_layer_per_stage):
-                _tmp = {k[len(f"{j+1}."):]:v for k,v in checkpoint.items() if k.startswith(f"{j+1}.")}
+                _tmp = {k[len(f"{j + 1}."):]: v for k, v in checkpoint.items() if k.startswith(f"{j + 1}.")}
                 if len(_tmp) == 0:
                     break
                 # torch.save(_tmp, os.path.join(output_path, f'pytorch_{j}.pt'))
@@ -65,7 +65,7 @@ def load_decentralized_checkpoint(model, checkpoint_path, n_stages=2, n_layer_pe
                 if len(_tmp) == 0:
                     break
                 # torch.save(_tmp, os.path.join(output_path, f'pytorch_{i*n_layer_per_stage + j}.pt'))
-                model.transformer.h[i*n_layer_per_stage + j].load_state_dict(_tmp)
+                model.transformer.h[i * n_layer_per_stage + j].load_state_dict(_tmp)
 
             _tmp = {k[len(f"{n_layer_per_stage}."):]: v
                     for k, v in checkpoint.items() if k.startswith(f"{n_layer_per_stage}.")}
@@ -80,11 +80,11 @@ def load_decentralized_checkpoint(model, checkpoint_path, n_stages=2, n_layer_pe
 
         else:
             for j in range(n_layer_per_stage):
-                _tmp = {k[len(f"{j}."):]:v for k,v in checkpoint.items() if k.startswith(f"{j}.")}
+                _tmp = {k[len(f"{j}."):]: v for k, v in checkpoint.items() if k.startswith(f"{j}.")}
                 if len(_tmp) == 0:
                     break
                 # torch.save(_tmp, os.path.join(output_path, f'pytorch_{i*n_layer_per_stage + j}.pt'))
-                model.transformer.h[i*n_layer_per_stage + j].load_state_dict(_tmp)
+                model.transformer.h[i * n_layer_per_stage + j].load_state_dict(_tmp)
 
     return model
 
@@ -131,15 +131,26 @@ def get_huggingface_tokenizer_model(args, device):
 
 
 def pre_processing_texts(input_text, model_name, tokenizer):
-    output_text = []
+    ed_input_text = []
     for i in range(len(input_text)):
         current_tokens = tokenizer(input_text[i], padding=False, truncation=False, return_tensors="pt")
         current_output = tokenizer.decode(current_tokens['input_ids'][0]).replace("</s>", "")
-        output_text.append(current_output)
+        ed_input_text.append(current_output)
     if model_name == 't5-11b' or model_name == 'ul2':
-        for i in range(len(output_text)):
-            output_text[i] = output_text[i] + "<extra_id_0>"
-    return output_text
+        for i in range(len(ed_input_text)):
+            ed_input_text[i] = ed_input_text[i] + "<extra_id_0>"
+            input_text[i] = input_text[i] + "<extra_id_0>"
+    print(f"<pre_processing_texts> input_text: {input_text}, ed_input_text: {ed_input_text}")
+    return input_text, ed_input_text
+
+
+def model_to_max_token(model_name, query):
+    if model_name == 't5-11b' or model_name == 'ul2':
+        return 1 + query.get('max_tokens', 16)
+    # elif model_name == 't0pp':
+    #    return 1 + query.get('max_tokens', 16)
+    else:
+        return query.get('max_tokens', 16)
 
 
 def post_processing_text(input_text, output_text, model_name, query):
@@ -165,10 +176,10 @@ def post_processing_text(input_text, output_text, model_name, query):
         for stop_token in stop_tokens:
             if query.get('echo', False):
                 if text[len(input_text):].find(stop_token) != -1:
-                    end_pos = min(text[len(input_text):].find(stop_token) + len(stop_token), end_pos)
+                    end_pos = min(text[len(input_text):].find(stop_token), end_pos)
             else:
                 if text.find(stop_token) != -1:
-                    end_pos = min(text.find(stop_token) + len(stop_token), end_pos)
+                    end_pos = min(text.find(stop_token), end_pos)
             print(f"<post_processing_text>2 end_pos: {end_pos}.")
     elif model_name == 'ul2' or model_name == 't0pp' or model_name == 't5-11b' or model_name == 'flan-t5-xxl':
         if model_name == 't5-11b' or model_name == 'ul2':
@@ -185,12 +196,12 @@ def post_processing_text(input_text, output_text, model_name, query):
                     end_pos = min(text[len(input_text) + 1:].find(stop_token) + len(stop_token), end_pos)
             else:
                 if text.find(stop_token) != -1:
-                    end_pos = min(text.find(stop_token) + len(stop_token), end_pos)
+                    end_pos = min(text.find(stop_token), end_pos)
             print(f"<post_processing_text>2 end_pos: {end_pos}.")
     else:
         assert False, "Model not supported yet."
     print(f"<post_processing_text> text: {text}, end_pos: {end_pos}")
-    post_processed_text = text[:end_pos + 1]
+    post_processed_text = text[:end_pos]
     print(f"<post_processing_text> input: {output_text}")
     print(f"<post_processing_text> output: {post_processed_text}")
     return post_processed_text
@@ -284,7 +295,9 @@ def main():
 
                         start_time = time.time()
 
-                        raw_text = pre_processing_texts(raw_text, args.model_name, tokenizer)
+                        raw_text, ed_raw_text = pre_processing_texts(raw_text, args.model_name, tokenizer)
+
+                        print(f"<main> input_text: {raw_text}, ed_input_text: {ed_raw_text}")
 
                         batch_size = min(len(raw_text), args.batch_size)
                         num_iter = math.ceil(len(raw_text) / batch_size)
@@ -308,7 +321,7 @@ def main():
                                 outputs = model.generate(
                                     **inputs, do_sample=True, top_p=query.get('top_p', 0),
                                     temperature=1.0, top_k=1,
-                                    max_new_tokens=query.get('max_tokens', 16),
+                                    max_new_tokens=model_to_max_token(args.model_name, query),
                                     return_dict_in_generate=True,
                                     output_scores=True,  # return logit score
                                     output_hidden_states=True,  # return embeddings
@@ -317,7 +330,7 @@ def main():
                                 outputs = model.generate(
                                     **inputs, do_sample=True, top_p=query.get('top_p', 0),
                                     temperature=query.get('temperature', 0.9),
-                                    max_new_tokens=query.get('max_tokens', 16),
+                                    max_new_tokens=model_to_max_token(args.model_name, query),
                                     return_dict_in_generate=True,
                                     output_scores=True,  # return logit score
                                     output_hidden_states=True,  # return embeddings
@@ -331,7 +344,7 @@ def main():
                         end_time = time.time()
                         print(f"Job-{job_id} {args.model_name} Inference takes {end_time - start_time}s")
                         # print(f"outputs by hf model: {outputs}")
-                        result = to_result(raw_text, answers, args.model_name, query)
+                        result = to_result(ed_raw_text, answers, args.model_name, query)
                         return_payload = {
                             'request': query,
                             'result': result,
