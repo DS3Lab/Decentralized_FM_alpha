@@ -92,21 +92,21 @@ def load_decentralized_checkpoint(model, checkpoint_path, n_stages=2, n_layer_pe
 def get_huggingface_tokenizer_model(args, device):
     if args.model_name == 'flan-t5-xxl':
         tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-xxl")
-        model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-xxl")
+        model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-xxl", torch_dtype=torch.bfloat16)
     elif args.model_name == 't5-11b':
         tokenizer = AutoTokenizer.from_pretrained('t5-11b', model_max_length=512)
         # tokenizer.model_max_length=512
-        model = T5ForConditionalGeneration.from_pretrained('t5-11b')
+        model = T5ForConditionalGeneration.from_pretrained('t5-11b', torch_dtype=torch.bfloat16)
         model.config.eos_token_id = None
     elif args.model_name == 't0pp':
         tokenizer = AutoTokenizer.from_pretrained('bigscience/T0pp')
-        model = AutoModelForSeq2SeqLM.from_pretrained("bigscience/T0pp")
+        model = AutoModelForSeq2SeqLM.from_pretrained("bigscience/T0pp", torch_dtype=torch.bfloat16)
     elif args.model_name == 'ul2':
         tokenizer = AutoTokenizer.from_pretrained('google/ul2')
-        model = T5ForConditionalGeneration.from_pretrained("google/ul2")
+        model = T5ForConditionalGeneration.from_pretrained("google/ul2", torch_dtype=torch.bfloat16)
     elif args.model_name == 'gpt-j-6b':
         tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
-        model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-j-6B")
+        model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-j-6B", torch_dtype=torch.float16)
     elif args.model_name == 'gpt-neox-20b':
         tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neox-20b")
         model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-neox-20b", torch_dtype=torch.float16)
@@ -124,8 +124,6 @@ def get_huggingface_tokenizer_model(args, device):
     tokenizer.padding_side = 'left'
     tokenizer.truncation_side = 'left'
 
-    if args.fp16:
-        model = model.half()
     model = model.to(device)
     return tokenizer, model
 
