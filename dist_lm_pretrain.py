@@ -9,6 +9,8 @@ from tasks.data_loaders.pile import get_pile_train_data_loader
 from tasks.data_loaders.c4 import get_c4_train_data_loader
 from tasks.data_loaders.natural_instructions import get_natural_instructions_train_data_loader
 from tasks.data_loaders.natural_instructions_pile import get_natural_instructions_pile_train_data_loader
+from tasks.data_loaders.natural_instructions_cot import get_natural_instructions_cot_train_data_loader
+from tasks.data_loaders.natural_instructions_distill import get_natural_instructions_distill_train_data_loader
 from modules.utils import gpt_loss_func
 from modules.tokenizer import build_tokenizer
 from pipeline_parallel.dist_pp_utils import get_pp_module
@@ -272,6 +274,12 @@ def main():
             test_data_loader = None
         elif args.task_name == 'natural_instructions_pile':
             train_data_loader = get_natural_instructions_pile_train_data_loader(args, tokenizer)
+            test_data_loader = None
+        elif args.task_name == 'natural_instructions_cot':
+            train_data_loader = get_natural_instructions_cot_train_data_loader(args, tokenizer)
+            test_data_loader = None
+        elif args.task_name == 'natural_instructions_distill':
+            train_data_loader = get_natural_instructions_distill_train_data_loader(args, tokenizer)
             test_data_loader = None
         else:
             raise Exception('unknown task.')
