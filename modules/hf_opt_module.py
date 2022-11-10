@@ -196,7 +196,7 @@ class OPTAttention(_OPTAttention):
 
         bsz, tgt_len, _ = hidden_states.size()
 
-        use_flash_attn = not is_cross_attention and not self.is_decoder and flash_attn_installed
+        use_flash_attn = not is_cross_attention and flash_attn_installed
 
         # get query proj
         query_states = self.q_proj(hidden_states) * self.scaling # B S H
@@ -247,8 +247,6 @@ class OPTAttention(_OPTAttention):
             out, _ = self.flash_attn(qkv, causal=True) # assuming that these are autoregressive!!
 
             out = torch.reshape(out, (bsz, tgt_len, self.embed_dim))
-
-            attn_output = self.out_proj(attn_output)
 
             return attn_output, None, None
         else:
