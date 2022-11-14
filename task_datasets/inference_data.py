@@ -193,6 +193,7 @@ class RequestProcessor:
         self.max_tokens = first_request.get('max_tokens', 1)
         self.best_of = first_request.get('best_of', 1)
         self.stop = first_request.get('stop', None)
+        self.is_glm = False
         
     def set_arguments(self, args):
         if hasattr(args, 'overwrite_request_args') and args.overwrite_request_args:
@@ -215,6 +216,10 @@ class RequestProcessor:
             args.generate_seq_length = self.max_tokens
             args.best_of = self.best_of
             args.stop = self.stop
+            
+            if args.echo_prompt and args.model_type in ['glm']:
+                self.tokenizer.echo_prompt = args.echo_prompt
+                self.is_glm = True
         
             max_input_seq_length = 1
             for i, x in enumerate(self.data):
@@ -276,6 +281,7 @@ class RequestProcessor:
         self.tokenizer.model_max_length = args.input_seq_length
 
         print('input seq length:', args.input_seq_length)
+            
         
     def get_dataloader(self, batch_size, num_workers=0):
         
@@ -306,6 +312,8 @@ class RequestProcessor:
                 
             if self.echo_prompt:
                 n_pads = (1-inputs['attention_mask'][i]).sum()
+                if self.is_glm:
+                    n_pads += 2 # [gMASK] and sop
             else:
                 n_pads = 0
                 

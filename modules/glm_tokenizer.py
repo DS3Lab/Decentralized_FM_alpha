@@ -25,6 +25,8 @@ class GLMTokenizer:
         self.model_max_length = 2048
         self.truncation_side = 'left'
         self.padding_side = 'left'
+        
+        self.echo_prompt = False
 
     def add_special_tokens(self, special_tokens):
         """Add a list of additional tokens to the encoder.
@@ -125,13 +127,18 @@ class GLMTokenizer:
         for t in text:
             t_ids = self.tokenize(t)
             if add_gmask:
-                t_ids = t_ids + [self.get_command('[gMASK]'), self.get_command('sop')] # append <s>
+                if not self.echo_prompt:
+                    t_ids = t_ids + [self.get_command('[gMASK]'), self.get_command('sop')] # append <s>
+                else:
+                    t_ids = [self.get_command('[gMASK]'), self.get_command('sop')] + t_ids
             
             if truncation:
                 if self.truncation_side == 'left':
                     t_ids = t_ids[-self.model_max_length:]
                 else:
                     t_ids = t_ids[:self.model_max_length]
+                    
+            assert self.get_command('[gMASK]') in t_ids
             
             ids.append(t_ids)
         

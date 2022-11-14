@@ -360,6 +360,10 @@ class GPTEmbeddings(nn.Module):
     
 
 class GPTBlock(nn.Module):
+    
+    # TODO: should be object's attribute
+    echo_prompt = False
+    
     def __init__(self, config, layer_number, *args, use_checkpoint=True, device='cpu', **kargs):
         super().__init__()
         self.config = config
@@ -380,6 +384,15 @@ class GPTBlock(nn.Module):
         
         self.mlp = MLP(self.hidden_size, inner_hidden_size=self.inner_hidden_size, layer_id=layer_number)
         
+        if self.echo_prompt:
+            max_positions = 2048
+            self.register_buffer(
+                "bias",
+                (1 - torch.tril(torch.ones((max_positions, max_positions), dtype=torch.uint8)).view(
+                    1, 1, max_positions, max_positions
+                )).bool(),
+                persistent=False,
+            )
         
     @classmethod
     def from_pretrained(cls, model_path, config=None, layer_index=None):
@@ -414,15 +427,28 @@ class GPTBlock(nn.Module):
             mask = mask.bool()
         position_ids = (mask.cumsum(-1) - 1).relu() # avoid negative id
         
-        if layer_past is None:
+        if not self.echo_prompt:
+            if layer_past is None:
+                extend_mask = ~mask
+                extend_mask = extend_mask.unsqueeze(1) | extend_mask.unsqueeze(2)
+                extend_mask[:, :-1, -1] = 1 # [sop] is always the first token
+            else:
+                extend_mask = ~mask
+                extend_mask = extend_mask.unsqueeze(1) | extend_mask[:, -1:].unsqueeze(2)
+                position_ids = position_ids[:, layer_past[0].size(2):]
+            extend_mask = extend_mask.unsqueeze(1) # head dim
+        else:
+            assert layer_past is None
             extend_mask = ~mask
             extend_mask = extend_mask.unsqueeze(1) | extend_mask.unsqueeze(2)
-            extend_mask[:, :-1, -1] = 1 # [sop] is always the first token
-        else:
-            extend_mask = ~mask
-            extend_mask = extend_mask.unsqueeze(1) | extend_mask[:, -1:].unsqueeze(2)
-            position_ids = position_ids[:, layer_past[0].size(2):]
-        extend_mask = extend_mask.unsqueeze(1) # head dim
+            extend_mask = extend_mask.unsqueeze(1) # head dim
+            
+            causal_mask = self.bias[:, :, :hidden_states.size(1), :hidden_states.size(1)]
+            # print(mask[0].sum())
+            # print(extend_mask[0, 0, :8, :8])
+            # print(causal_mask[0, 0, :8, :8])
+            extend_mask = extend_mask | causal_mask
+            # print(extend_mask[0, 0, :8, :8])
         
         hidden_states = hidden_states.transpose(0, 1) # transpose
                 

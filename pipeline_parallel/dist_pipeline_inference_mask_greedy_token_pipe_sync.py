@@ -192,6 +192,7 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             from modules.yalm_module import GPTEmbeddings, GPTBlock, GPTLMHead
         elif self.model_type == 'glm':
             from modules.glm_module import GPTEmbeddings, GPTBlock, GPTLMHead
+            GPTBlock.echo_prompt = self.echo_prompt
         else:
             raise Exception(f'unknown model type {self.model_type}')
         
