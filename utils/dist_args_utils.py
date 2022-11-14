@@ -74,6 +74,9 @@ def add_mixed_precision_arguments(parser):
                         help='Window over which to raise/lower dynamic scale.')
     parser.add_argument('--hysteresis', type=int, default=2,
                         help='hysteresis for dynamic loss scaling')
+    parser.add_argument('--use-offload', action='store_true',
+                        help='Offload optim states to CPU')
+    
 
 
 def add_parallel_schema_arguments(parser):
