@@ -367,6 +367,16 @@ class GpipeAsync:
             tr_loss = []
             
         if self.use_fp16 and self.use_dynamic_scale:
+            
+            if self.pp_rank != 0:
+                before = self.optimizer.grad_scaler._scale.item()
+                self.comm.recv(self.optimizer.grad_scaler._scale, src=self.pre_node_rank)
+                after = self.optimizer.grad_scaler._scale.item()
+                self.optimizer.grad_scaler._scale.data[:] = min(before, after)
+            if self.pp_rank != self.pipeline_group_size - 1:
+                self.comm.send(self.optimizer.grad_scaler._scale, dst=self.post_node_rank)
+            torch.cuda.synchronize()
+            
             if self.pp_rank != 0:
                 self.comm.send(self.optimizer.grad_scaler._scale, dst=self.pre_node_rank)
             if self.pp_rank != self.pipeline_group_size - 1:
