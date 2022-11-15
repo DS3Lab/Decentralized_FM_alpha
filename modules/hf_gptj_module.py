@@ -21,8 +21,8 @@ def fixed_pos_embedding(x, seq_dim=1, seq_len=None):
     dim = x.shape[-1]
     if seq_len is None:
         seq_len = x.shape[seq_dim]
-    inv_freq = 1.0 / (10000 ** (torch.arange(0, dim, 2) / dim))
-    sinusoid_inp = torch.einsum("i , j -> i j", torch.arange(seq_len), inv_freq).to(x.device).float()
+    inv_freq = 1.0 / (10000 ** (torch.arange(0, dim, 2, device=x.device) / dim))
+    sinusoid_inp = torch.einsum("i , j -> i j", torch.arange(seq_len, device=x.device), inv_freq).float()
     return torch.sin(sinusoid_inp), torch.cos(sinusoid_inp)
 
 def rotate_every_two(x):
