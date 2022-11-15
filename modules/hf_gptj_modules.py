@@ -26,6 +26,15 @@ def gpt_loss_func(input, target):
     shift_labels = labels[..., 1:].contiguous()
     loss = functional.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
     return loss
+
+# put things on GPU to avoid high CPU usage
+def fixed_pos_embedding(x, seq_dim=1, seq_len=None):
+    dim = x.shape[-1]
+    if seq_len is None:
+        seq_len = x.shape[seq_dim]
+    inv_freq = 1.0 / (10000 ** (torch.arange(0, dim, 2, device=x.device) / dim))
+    sinusoid_inp = torch.einsum("i , j -> i j", torch.arange(seq_len, device=x.device), inv_freq).float()
+    return torch.sin(sinusoid_inp), torch.cos(sinusoid_inp)
     
             
 class GPTJMLP(_GPTJMLP):
