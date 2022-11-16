@@ -9,6 +9,7 @@ from tasks.data_loaders.pile import get_pile_train_data_loader
 from tasks.data_loaders.c4 import get_c4_train_data_loader
 from tasks.data_loaders.natural_instructions import get_natural_instructions_train_data_loader
 from tasks.data_loaders.natural_instructions_pile import get_natural_instructions_pile_train_data_loader
+from tasks.data_loaders.natural_instructions_pile_cot import get_natural_instructions_pile_cot_train_data_loader
 from tasks.data_loaders.natural_instructions_cot import get_natural_instructions_cot_train_data_loader
 from tasks.data_loaders.natural_instructions_distill import get_natural_instructions_distill_train_data_loader
 from modules.utils import gpt_loss_func
@@ -275,6 +276,9 @@ def main():
         elif args.task_name == 'natural_instructions_pile':
             train_data_loader = get_natural_instructions_pile_train_data_loader(args, tokenizer)
             test_data_loader = None
+        elif args.task_name == 'natural_instructions_pile_cot':
+            train_data_loader = get_natural_instructions_pile_cot_train_data_loader(args, tokenizer)
+            test_data_loader = None 
         elif args.task_name == 'natural_instructions_cot':
             train_data_loader = get_natural_instructions_cot_train_data_loader(args, tokenizer)
             test_data_loader = None
