@@ -115,7 +115,7 @@ class UL2RProcessor:
 
         
     def __call__(self, inputs):
-        tokens = self.tokenizer.convert_ids_to_tokens(inputs['input_ids'])
+        tokens = inputs['input_ids'].tolist()
         p = random.random()
         if p > 0.5:
             return self.preprocess_tokens_s2s(tokens)
