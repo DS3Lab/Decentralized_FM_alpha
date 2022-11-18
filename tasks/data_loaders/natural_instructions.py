@@ -36,9 +36,10 @@ class StreamDataset(IterableDataset):
         
         self.it = None
         
-        self.input_prefixs = ['Input: ', 'Given: ', 'Context: ', 'Example: ', 'Question: ', '']
-        self.output_prefixs = ['Output: ', 'Ans: ', 'A: ', 'Answer: ', 'Return: ', 'R: ', '']
-        self.splitters = ['\n', '\n\n', '\n\n\n', ' ', '\t', '\t\t', '##', '###']
+        self.input_prefixs = ['Input: ', 'Given: ', 'Context: ', 'Example: ', 'Question: ', '', '', '', '', '',]
+        self.output_prefixs = ['Output: ', 'Ans: ', 'A: ', 'Answer: ', '', '', '', '']
+        self.sample_splitters = ['\n', '\n\n', ' ', '   ', '\n\n\n', '\n##\n', '\n###\n', '\n--\n', '\n---\n']
+        self.answer_splitters = ['\n', ' ', '\t']
         
     def state_dict(self):
         return {}
@@ -48,7 +49,8 @@ class StreamDataset(IterableDataset):
     
     def sample_text_from_task(self, task):
         
-        text_splitter = random.choice(self.splitters)
+        sample_splitter = random.choice(self.sample_splitters)
+        answer_splitter = random.choice(self.answer_splitters)
         text_def = random.choice(task['Definition'] + [""]).strip()
         text_input = random.choice(self.input_prefixs)
         text_output = random.choice(self.output_prefixs)
@@ -57,7 +59,7 @@ class StreamDataset(IterableDataset):
         
         while True:
             instance = random.choice(task['Instances'])
-            text_context += text_splitter + text_input + instance['input'] + text_splitter + text_output + random.choice(instance['output'])
+            text_context += sample_splitter + text_input + instance['input'] + answer_splitter + text_output + random.choice(instance['output'])
             input_ids = self.tokenizer(text_context)['input_ids']
             if len(input_ids) > self.seq_length:
                 break

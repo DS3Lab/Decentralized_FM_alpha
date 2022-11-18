@@ -19,34 +19,47 @@ def load_checkpoint(pipe, args):
     
     checkpoint_step_path = os.path.join(args.checkpoint_path, f"checkpoint_{latest_step}")
     
-    with open(os.path.join(checkpoint_step_path, 'meta.json')) as f:
-        meta = json.load(f)
+    try:
+        with open(os.path.join(checkpoint_step_path, 'meta.json')) as f:
+            meta = json.load(f)
+    except:
+        print('failed to load meta.')
         
     pipe.global_step = latest_step
     
-    pipe.model.model.load_state_dict(
-        torch.load(
-            os.path.join(
-                checkpoint_step_path, f'prank_{get_pipeline_parallel_rank()}_checkpoint.pt'
-            ), map_location=torch.device('cpu')
-        )
-    )
-    
-    pipe.optimizer.load_state_dict(
-        torch.load(
-            os.path.join(
-                checkpoint_step_path, f'prank_{get_pipeline_parallel_rank()}_optimizer.pt'
-            ), map_location=torch.device('cpu')
-        )
-    )
-    
-    pipe.scheduler.load_state_dict(
-        torch.load(
-            os.path.join(
-                checkpoint_step_path, f'prank_{get_pipeline_parallel_rank()}_scheduler.pt'
+    try:
+        pipe.model.model.load_state_dict(
+            torch.load(
+                os.path.join(
+                    checkpoint_step_path, f'prank_{get_pipeline_parallel_rank()}_checkpoint.pt'
+                ), map_location=torch.device('cpu')
             )
         )
-    )
+    except:
+        print('failed to load model params.')
+    
+    try:
+        pipe.optimizer.load_state_dict(
+            torch.load(
+                os.path.join(
+                    checkpoint_step_path, f'prank_{get_pipeline_parallel_rank()}_optimizer.pt'
+                ), map_location=torch.device('cpu')
+            )
+        )
+    except:
+        print('failed to load optim states.')
+    
+    try:
+        pipe.scheduler.load_state_dict(
+            torch.load(
+                os.path.join(
+                    checkpoint_step_path, f'prank_{get_pipeline_parallel_rank()}_scheduler.pt'
+                )
+            )
+        )
+    except:
+        print('failed to load scheduler states.')
+        
             
 def save_checkpoint(pipe, args):
     

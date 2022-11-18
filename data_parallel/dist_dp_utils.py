@@ -6,6 +6,8 @@ from .dist_dp_local import LocalDP
 from .dist_dp_admm import ADMMDP
 from .dist_dp_proxskip import ProxSkipDP
 from .dist_dp_proxskip_adam import ProxSkipAdamDP
+from .dist_dp_proxskip_adam_all import ProxSkipAdamAllDP
+from .dist_dp_proxskip_adam_all_double_lr import ProxSkipAdamAllDLRDP
 
 
 def get_dp_module(args, device, module, optimizer):
@@ -26,6 +28,10 @@ def get_dp_module(args, device, module, optimizer):
         return ProxSkipDP(args, device, module, optimizer)
     elif args.dp_mode == 'proxadam':
         return ProxSkipAdamDP(args, device, module, optimizer)
+    elif args.dp_mode == 'proxadam_all':
+        return ProxSkipAdamAllDP(args, device, module, optimizer)
+    elif args.dp_mode == 'proxadam_all_dlr':
+        return ProxSkipAdamAllDLRDP(args, device, module, optimizer)
     else:
         print("Not recognize this data parallel mode.")
         assert False

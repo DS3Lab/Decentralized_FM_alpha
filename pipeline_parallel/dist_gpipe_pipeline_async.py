@@ -153,8 +153,13 @@ class GpipeAsync:
                 
         if do_train:
             if self.pp_rank == self.pipeline_group_size - 1:
+                
+                if not hasattr(args, 'project_name'):
+                    import re
+                    args.project_name = "test-" + re.sub('[^a-zA-Z0-9 \n\.]', '_', args.task_name)
+                
                 wandb.init(
-                    project=f'test-{args.task_name}', 
+                    project=args.project_name, 
                     entity='pipeline-activation-compression',
                     config=args,
                 )
