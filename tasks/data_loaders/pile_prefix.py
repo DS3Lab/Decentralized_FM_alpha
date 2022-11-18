@@ -70,17 +70,6 @@ class StreamDataset(IterableDataset):
         start = int(random.random() * len(tokens))
         end = start + 1 + int(random.random() * 31)
         
-#         n_remain_tokens = len(tokens) - (end - start) + 1
-#         n_to_truncate = 1024 - (n_remain_tokens) - len(self.nlg_prefix)
-#         n_left_to_truncate = random.randint(0, n_to_truncate)
-#         n_right_to_truncate = n_to_truncate - n_left_to_truncate
-#         n_right_to_truncate = n_right_to_truncate if n_right_to_truncate > 0 else None
-        
-#         left = self.nlg_prefix + tokens[n_left_to_truncate:start] + [self.extra_ids[0]] + tokens[end:n_right_to_truncate]
-#         assert len(left) == 1024
-#         right = [self.extra_ids[0]] + tokens[start:end]
-#         right = right + (1024 - len(right)) * self.tokenizer.eos_token_id
-        
         left = self.nlg_prefix + tokens[:start] + [self.extra_ids[0]] + tokens[end:]
         right = [self.extra_ids[0]] + tokens[start:end]
     
@@ -128,26 +117,26 @@ class StreamDataset(IterableDataset):
         
         return tokens, prefix_masks
         
+#     def preprocess_tokens(self, tokens):
+#         split = int(random.random() * len(tokens))
+#         # split = 1024
+        
+#         # tokens = tokens[:split] + self.extra_ids[0] + tokens[split:]
+#         tokens = tokens[:self.seq_length]
+        
+#         prefix_masks = torch.zeros(len(tokens), dtype=torch.uint8)
+#         prefix_masks[:split] = 1
+        
+#         return tokens, prefix_masks
+        
     def preprocess_tokens(self, tokens):
-        split = int(random.random() * len(tokens))
-        # split = 1024
-        
-        # tokens = tokens[:split] + self.extra_ids[0] + tokens[split:]
-        tokens = tokens[:self.seq_length]
-        
-        prefix_masks = torch.zeros(len(tokens), dtype=torch.uint8)
-        prefix_masks[:split] = 1
-        
-        return tokens, prefix_masks
-        
-    # def preprocess_tokens(self, tokens):
-    #     p = random.random()
-    #     if p > 0.5:
-    #         return self.preprocess_tokens_s2s(tokens)
-    #     elif p > 0.25:
-    #         return self.preprocess_tokens_nlg(tokens)
-    #     else:
-    #         return self.preprocess_tokens_nlu(tokens)
+        p = random.random()
+        if p > 0.5:
+            return self.preprocess_tokens_s2s(tokens)
+        elif p > 0.25:
+            return self.preprocess_tokens_nlg(tokens)
+        else:
+            return self.preprocess_tokens_nlu(tokens)
         
     def get_sequence(self):
         buffer_tokens = self.buffer_tokens

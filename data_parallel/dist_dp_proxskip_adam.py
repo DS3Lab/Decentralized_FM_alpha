@@ -55,14 +55,15 @@ def step_update(self, freeze=False, dp_optimizer=None):
                 state["exp_avg_sq"] = torch.zeros_like(p.data)
                 
             # compatible to start from an existing checkpoint
-            if "h" not in state:
-                state["h"] = torch.zeros_like(p.data)
+#             if "h" not in state:
+#                 state["h"] = torch.zeros_like(p.data)
                 
-            if state["h"].dtype != torch.float16:
-                state["h"] = state["h"].half()
+#             if state["h"].dtype != torch.float16:
+#                 state["h"] = state["h"].half()
+#                 state["h"].data[:] = 0.
                 
-            h = state["h"]
-            h.data = h.data.nan_to_num()
+#             h = state["h"]
+#             h.data = h.data.nan_to_num()
 
             exp_avg, exp_avg_sq = state["exp_avg"], state["exp_avg_sq"]
             beta1, beta2 = group["betas"]
@@ -72,8 +73,8 @@ def step_update(self, freeze=False, dp_optimizer=None):
             # Decay the first and second moment running average coefficient
             # In-place operations to update the averages at the same time
             exp_avg.mul_(beta1).add_(grad, alpha=1.0 - beta1)
-            if not freeze:
-                exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1.0 - beta2)
+            # if not freeze:
+            exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1.0 - beta2)
             denom = exp_avg_sq.sqrt().add_(group["eps"])
 
             step_size = group["lr"]
@@ -82,15 +83,16 @@ def step_update(self, freeze=False, dp_optimizer=None):
             bias_correction2 = 1.0 - beta2 ** state["step"]
             step_size = step_size * math.sqrt(bias_correction2) / bias_correction1
 
-            p.data.addcdiv_(exp_avg - h, denom, value=-step_size)
+            # p.data.addcdiv_(exp_avg - h, denom, value=-step_size)
+            p.data.addcdiv_(exp_avg, denom, value=-step_size)
 
             if dp_optimizer is not None and dp_optimizer.th.item() == 1 and freeze:
-                local_p = p.data.clone()
-                p.data -= step_size * h / denom / sync_prob 
+                # local_p = p.data.clone()
+                # p.data -= step_size * h / denom / sync_prob 
                 p.data /= dp_optimizer.dp_group_size
                 dp_optimizer.dp_comm.all_reduce(p.data)
                 print('sync...')
-                h.data += denom * sync_prob * (p - local_p) / step_size
+                # h.data += denom * sync_prob * (p - local_p) / step_size
             
             if group["weight_decay"] > 0.0:
                 p.data.add_(p.data, alpha=-group["lr"] * group["weight_decay"])
