@@ -49,7 +49,7 @@ class UL2RProcessor:
         prefix_masks[:split] = 1
         
         return {
-            'input_ids': tokens,
+            'input_ids': torch.tensor(tokens),
             'prefix_masks': prefix_masks,
         }
     
@@ -71,7 +71,7 @@ class UL2RProcessor:
         prefix_masks[:len(left)] = 1
         
         return {
-            'input_ids': tokens,
+            'input_ids': torch.tensor(tokens),
             'prefix_masks': prefix_masks,
         }
         
@@ -109,7 +109,7 @@ class UL2RProcessor:
         prefix_masks[:len(left)] = 1
         
         return {
-            'input_ids': tokens,
+            'input_ids': torch.tensor(tokens),
             'prefix_masks': prefix_masks,
         }
 
