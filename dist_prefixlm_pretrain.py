@@ -5,8 +5,9 @@ import numpy as np
 import torch
 import torch.autograd.profiler as profiler
 # from tasks.data_loaders.openwebtext_prefix import get_openwebtext_train_data_loader as get_openwebtext_prefix_train_data_loader
-from tasks.data_loaders.pile import get_pile_train_data_loader
-from tasks.data_loaders.pile_prefix import get_pile_train_data_loader as get_pile_prefix_train_data_loader
+# from tasks.data_loaders.pile import get_pile_train_data_loader
+# from tasks.data_loaders.pile_prefix import get_pile_train_data_loader as get_pile_prefix_train_data_loader
+from tasks.data_loaders.data_utils import get_ul2r_train_data_loader
 from modules.utils import gpt_loss_func
 from modules.tokenizer import build_tokenizer
 from pipeline_parallel.dist_pp_utils import get_pp_module
@@ -259,11 +260,13 @@ def main():
     print("token vocab size:", config.vocab_size)
     
     if get_pipeline_parallel_rank() == 0 and dp_rank == 0:
-        if args.task_name == 'pile':
-            train_data_loader = get_pile_prefix_train_data_loader(args, tokenizer)
-            test_data_loader = None #get_wikitext_test_data_loader(args, tokenizer)
-        else:
-            raise Exception('unknown task.')
+        # if args.task_name == 'pile':
+        #     train_data_loader = get_pile_prefix_train_data_loader(args, tokenizer)
+        #     test_data_loader = None #get_wikitext_test_data_loader(args, tokenizer)
+        # else:
+        #     raise Exception('unknown task.')
+        train_data_loader = get_ul2r_train_data_loader(args, tokenizer)
+        test_data_loader = None
     else:
         train_data_loader = None
         test_data_loader = None
