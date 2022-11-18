@@ -161,8 +161,7 @@ class StreamDatasetList(IterableDataset):
             
             p = random.random()
             
-            
-            for it, th in zip(iterators, prob_ths):
+            for task_name, it, th in zip(self.task_names, iterators, prob_ths):
                 if p < th:
                     inputs = next(it)
                     
@@ -170,7 +169,8 @@ class StreamDatasetList(IterableDataset):
                         inputs = self.post_processor(inputs)
                     
                     if global_i % self.print_sample_every_n == 0:
-                        print(self.tokenizer.decode(inputs['input_ids']))
+                        print(p, th)
+                        print(f"**{task_name}**:", self.tokenizer.decode(inputs['input_ids']))
 
                     yield inputs
                     global_i += 1
@@ -208,11 +208,11 @@ def get_train_data_loader(args, tokenizer, num_workers=0, state_dict=None):
         elif task == 'pile':
             from .pile import StreamDataset
             data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
-            stream_dataset = StreamDataset(data, tokenizer, args.seq_length)
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'c4':
             from .c4 import StreamDataset
             data = load_dataset('c4', 'en', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
-            stream_dataset = StreamDataset(data, tokenizer, args.seq_length)
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'cot':
             from .cot import StreamDataset
             dataset = StreamDataset('./data/mmlu-cot.json', tokenizer, args.seq_length)
@@ -260,11 +260,11 @@ def get_ul2r_train_data_loader(args, tokenizer, num_workers=0, state_dict=None):
         elif task == 'pile':
             from .pile import StreamDataset
             data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
-            stream_dataset = StreamDataset(data, tokenizer, args.seq_length)
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'c4':
             from .c4 import StreamDataset
             data = load_dataset('c4', 'en', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
-            stream_dataset = StreamDataset(data, tokenizer, args.seq_length)
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'cot':
             from .cot import StreamDataset
             dataset = StreamDataset('./data/mmlu-cot.json', tokenizer, args.seq_length)
