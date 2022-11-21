@@ -27,9 +27,23 @@ class StreamDataset(IterableDataset):
             os.path.join(data_path, 'tasks', p) for p in os.listdir(os.path.join(data_path, 'tasks')) if p.endswith('.json') and p in self.train_splits
         ]
         self.tasks = []
+        self.classification_tasks = []
         for task_path in self.task_paths:
             with open(task_path) as f:
-                self.tasks.append(json.load(f))
+                task = json.load(f)
+                
+            output_space = set()
+            is_classification = True
+            for instance in task['Instances']:
+                output_space.add(instance['output'][0])
+                if len(output_space) > 10:
+                    is_classification = False
+                    break
+            task['IsClassification'] = is_classification
+            task['OutputSpace'] = sorted(list(output_space)) if is_classification else None
+            if is_classification:
+                self.classification_tasks.append(task)
+            self.tasks.append(task)
         
         self.tokenizer = tokenizer
         self.seq_length = seq_length
@@ -37,9 +51,9 @@ class StreamDataset(IterableDataset):
         self.it = None
         
         self.input_prefixs = ['Input: ', 'Given: ', 'Context: ', 'Example: ', 'Question: ', '', '', '', '', '',]
-        self.output_prefixs = ['Output: ', 'Ans: ', 'A: ', 'Answer: ', '', '', '', '']
-        self.sample_splitters = ['\n', '\n\n', ' ', '   ', '\n\n\n', '\n##\n', '\n###\n', '\n--\n', '\n---\n']
-        self.answer_splitters = ['\n', ' ', '\t']
+        self.output_prefixs = ['Output: ', 'Output: ', 'Ans: ', 'A: ', 'Answer: ', 'Label: ', 'Label: ']
+        self.sample_splitters = ['\n', '\n\n', '\n\n', '\n\n\n', '\n###\n', '\n---\n']
+        self.answer_splitters = ['\n', '\n', '\n\n']
         
     def state_dict(self):
         return {}
@@ -49,9 +63,31 @@ class StreamDataset(IterableDataset):
     
     def sample_text_from_task(self, task):
         
+        '''
+        Task Definition(*33%)
+        + Output Space(*50%)
+        [
+            + sample splitter
+            + input prefix
+            + input
+            + answer splitter
+            + output prefix
+            + output
+        ]
+        '''
+        
+        is_classification = task['IsClassification']
+        output_space = task['OutputSpace']
+        
         sample_splitter = random.choice(self.sample_splitters)
         answer_splitter = random.choice(self.answer_splitters)
-        text_def = random.choice(task['Definition'] + [""]).strip()
+        text_def = random.choice(task['Definition'] + task['Definition'] + [""]).strip()
+        if is_classification and random.random() < 0.5:
+            text_def += '\nPossible labels:'
+            for i, possible_output in enumerate(output_space):
+                text_def += f'\n{i+1}. {possible_output}'
+            text_def += '\n'
+        
         text_input = random.choice(self.input_prefixs)
         text_output = random.choice(self.output_prefixs)
 
@@ -72,7 +108,12 @@ class StreamDataset(IterableDataset):
     def get_sequence(self):
         
         while True:
-            task = random.choice(self.tasks)
+            
+            # ensure at least 30% classification
+            if random.random() < 0.3:
+                task = random.choice(self.classification_tasks)
+            else:
+                task = random.choice(self.tasks)
 
             input_ids = self.sample_text_from_task(task)
 
