@@ -205,7 +205,7 @@ class StreamDatasetList(IterableDataset):
     
     
     
-def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
+def get_train_data_loader(args, tokenizer, num_workers=0, state_dict=None):
     
     task_list = args.task_name.split(',')
     task_names = []
@@ -287,8 +287,8 @@ def get_ul2r_train_data_loader(args, tokenizer, num_workers=0, state_dict=None):
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'pile':
             from .pile import StreamDataset
-            # data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
-            data = load_dataset('the_pile', split="train").shuffle(seed=args.seed)
+            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
+            # data = load_dataset('the_pile', split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'c4':
             from .c4 import StreamDataset
