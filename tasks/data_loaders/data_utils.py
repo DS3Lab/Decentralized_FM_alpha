@@ -188,7 +188,7 @@ class StreamDatasetList(IterableDataset):
     
     
     
-def get_train_data_loader(args, tokenizer, num_workers=0, state_dict=None):
+def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
     
     task_list = args.task_name.split(',')
     task_names = []
