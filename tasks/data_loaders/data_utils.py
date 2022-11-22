@@ -114,16 +114,32 @@ class UL2RProcessor:
         }
 
         
+    # def __call__(self, inputs):
+    #     tokens = inputs['input_ids'].tolist()
+    #     p = random.random()
+    #     if p > 0.5:
+    #         return self.preprocess_tokens_s2s(tokens)
+    #     elif p > 0.25:
+    #         return self.preprocess_tokens_nlg(tokens)
+    #     else:
+    #         return self.preprocess_tokens_nlu(tokens)
+    
     def __call__(self, inputs):
+        
         tokens = inputs['input_ids'].tolist()
-        p = random.random()
-        if p > 0.5:
-            return self.preprocess_tokens_s2s(tokens)
-        elif p > 0.25:
-            return self.preprocess_tokens_nlg(tokens)
-        else:
-            return self.preprocess_tokens_nlu(tokens)
-
+        
+        split = int(random.random() * len(tokens))
+        
+        tokens = tokens[:split] + tokens[split:]
+        tokens = tokens[:self.seq_length]
+        
+        prefix_masks = torch.zeros(len(tokens), dtype=torch.uint8)
+        prefix_masks[:split] = 1
+        
+        return {
+            'input_ids': torch.tensor(tokens),
+            'prefix_masks': prefix_masks,
+        }
 
 
 class StreamDatasetList(IterableDataset):
@@ -163,6 +179,7 @@ class StreamDatasetList(IterableDataset):
             
             for task_name, it, th in zip(self.task_names, iterators, prob_ths):
                 if p < th:
+                    
                     inputs = next(it)
                     
                     if self.post_processor is not None:
@@ -171,7 +188,7 @@ class StreamDatasetList(IterableDataset):
                     if global_i % self.print_sample_every_n == 0:
                         print(p, th)
                         print(f"**{task_name}**:", self.tokenizer.decode(inputs['input_ids']))
-
+                        
                     yield inputs
                     global_i += 1
                     break
@@ -202,7 +219,7 @@ def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
             task = task.strip()
             prob = 1.0
             
-        if task == 'natural_instructions':
+        if task == 'natural_instructions' or task == 'ni':
             from .natural_instructions import StreamDataset
             dataset = StreamDataset('/root/natural-instructions/', tokenizer, args.seq_length)
         elif task == 'p3':
@@ -212,10 +229,12 @@ def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
         elif task == 'pile':
             from .pile import StreamDataset
             data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
+            # data = load_dataset('the_pile', split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'c4':
             from .c4 import StreamDataset
-            data = load_dataset('c4', 'en', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
+            # data = load_dataset('c4', 'en', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
+            data = load_dataset('c4', 'en', split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'cot':
             from .cot import StreamDataset
@@ -245,7 +264,7 @@ def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
 
 
 
-def get_ul2r_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
+def get_ul2r_train_data_loader(args, tokenizer, num_workers=0, state_dict=None):
     
     task_list = args.task_name.split(',')
     task_names = []
@@ -259,7 +278,7 @@ def get_ul2r_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
             task = task.strip()
             prob = 1.0
             
-        if task == 'natural_instructions':
+        if task == 'natural_instructions' or task == 'ni':
             from .natural_instructions import StreamDataset
             dataset = StreamDataset('/root/natural-instructions/', tokenizer, args.seq_length)
         elif task == 'p3':
@@ -268,11 +287,13 @@ def get_ul2r_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'pile':
             from .pile import StreamDataset
-            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
+            # data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
+            data = load_dataset('the_pile', split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'c4':
             from .c4 import StreamDataset
-            data = load_dataset('c4', 'en', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
+            # data = load_dataset('c4', 'en', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
+            data = load_dataset('c4', 'en', split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'cot':
             from .cot import StreamDataset
@@ -300,4 +321,7 @@ def get_ul2r_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
                                                     num_workers=num_workers,
                                                     pin_memory=True,
                                                     collate_fn=None)
+    
+    print('ul2r dataloader init done.')
+    
     return train_data_loader
