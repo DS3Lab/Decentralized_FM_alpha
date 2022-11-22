@@ -24,6 +24,13 @@ def get_tokenizer_model(args):
         tokenizer = AutoTokenizer.from_pretrained('bigscience/bloom')
         tokenizer.add_bos_token = False
         model = get_model(model_name="alpa/bloom", path="/root/fm/models/alpa_models/")
+
+    elif args.model_name == 'bloomz':
+        tokenizer = AutoTokenizer.from_pretrained('bigscience/bloomz')
+        tokenizer.add_bos_token = False
+        # llm_serving does not recoginze bloomz, since the model parameter is from bloomz,
+        # this should be fine
+        model = get_model(model_name="alpa/bloom", path="/root/fm/models/alpa_models/")
     else:
         assert False, f"Not legal name {args.model_name}"
 
