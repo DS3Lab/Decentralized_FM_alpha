@@ -30,7 +30,7 @@ def get_tokenizer_model(args):
         tokenizer.add_bos_token = False
         # llm_serving does not recoginze bloomz, since the model parameter is from bloomz,
         # this should be fine
-        model = get_model(model_name="alpa/bloom", path="/root/fm/models/alpa_models/")
+        model = get_model(model_name="alpa/bloom", path="/root/fm/models/alpa_models/bloomz-np")
     else:
         assert False, f"Not legal name {args.model_name}"
 
