@@ -205,6 +205,10 @@ def get_train_data_loader(args, tokenizer, num_workers=0, state_dict=None):
         if task == 'natural_instructions':
             from .natural_instructions import StreamDataset
             dataset = StreamDataset('/root/natural-instructions/', tokenizer, args.seq_length)
+        elif task == 'p3':
+            from .p3 import StreamDataset
+            data = load_dataset("Muennighoff/P3", split="train").shuffle(seed=args.seed)
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'pile':
             from .pile import StreamDataset
             data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
@@ -240,7 +244,7 @@ def get_train_data_loader(args, tokenizer, num_workers=0, state_dict=None):
 
 
 
-def get_ul2r_train_data_loader(args, tokenizer, num_workers=0, state_dict=None):
+def get_ul2r_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
     
     task_list = args.task_name.split(',')
     task_names = []
