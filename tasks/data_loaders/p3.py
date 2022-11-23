@@ -63,7 +63,7 @@ class StreamDataset(IterableDataset):
                 else:
                     text_context += sample_splitter + text_input + prompt + answer_splitter + text_output + target
                     
-                input_ids = self.tokenizer(text_context)['input_ids']
+                input_ids = self.tokenizer(text_context.strip())['input_ids']
                 if len(input_ids) > self.seq_length:
                     break
                 
