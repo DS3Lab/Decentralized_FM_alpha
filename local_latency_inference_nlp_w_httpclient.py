@@ -181,6 +181,9 @@ def get_huggingface_tokenizer_model(args, device):
     elif args.model_name == 'gpt-j-6b':
         tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
         model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-j-6B", torch_dtype=torch.float16)
+    elif args.model_name == 'Together-gpt-JT-6B-v1':
+        tokenizer = AutoTokenizer.from_pretrained("togethercomputer/GPT-JT-6B-v1")
+        model = AutoModelForCausalLM.from_pretrained("togethercomputer/GPT-JT-6B-v1", torch_dtype=torch.float16)
     elif args.model_name == 'gpt-neox-20b':
         tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neox-20b")
         model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-neox-20b", torch_dtype=torch.float16)
@@ -188,13 +191,13 @@ def get_huggingface_tokenizer_model(args, device):
         config = AutoConfig.from_pretrained('EleutherAI/gpt-j-6B')
         tokenizer = AutoTokenizer.from_pretrained('EleutherAI/gpt-j-6B')
         model = create_emtpy_gptj(config).half().eval()
-        load_decentralized_checkpoint_gpt_j_6b(model, '/root/fm/models/checkpoint_2000_ni_bs64_lr1e-6_proxadam',
+        load_decentralized_checkpoint_gpt_j_6b(model, '/root/fm/models/Together-gpt-J-6B-ProxAdam-50x',
                                                n_stages=2, n_layer_per_stage=14)
     elif args.model_name == 'Together-gpt-neox-20B':
         config = AutoConfig.from_pretrained('EleutherAI/gpt-neox-20b')
         tokenizer = AutoTokenizer.from_pretrained('EleutherAI/gpt-neox-20b')
         model = create_emtpy_gptneox(config).half().eval()
-        load_decentralized_checkpoint_gpt_neox(model, '/root/fm/models/checkpoint_3600', n_stages=8,
+        load_decentralized_checkpoint_gpt_neox(model, '/root/fm/models/Together-gpt-neox-20B', n_stages=8,
                                                n_layer_per_stage=6)
     else:
         assert False, "Model not supported yet."
@@ -244,7 +247,7 @@ def post_processing_text(input_text, output_text, model_name, query):
     if query.get('max_tokens') == 0:
         return ""
 
-    if model_name == 'gpt-j-6b' or model_name == 'gpt-neox-20b' \
+    if model_name == 'gpt-j-6b' or model_name == 'gpt-neox-20b' or model_name == 'Together-gpt-JT-6B-v1' \
             or model_name == 'Together-gpt-J-6B-ProxAdam-50x' or model_name == 'Together-gpt-neox-20B':
         if not query.get('echo', False):
             text = output_text[len(input_text):]
@@ -445,7 +448,6 @@ def main():
                     returned_payload={"message": error}
                 )
                 print(error)
-                raise e
 
     except Exception as e:
         print('Exception in latency inference:', e)

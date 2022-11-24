@@ -214,7 +214,6 @@ def main():
                     returned_payload={"message": error}
                 )
                 print(error)
-                raise e
 
     except Exception as e:
         print('Exception in latency inference:', e)

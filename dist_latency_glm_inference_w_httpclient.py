@@ -831,7 +831,6 @@ def main(args):
                         returned_payload={"message": error}
                     )
                 print(error)
-                raise e
 
     except Exception as e:
         error = traceback.format_exc()

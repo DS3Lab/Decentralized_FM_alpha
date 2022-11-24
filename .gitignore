@@ -6,3 +6,7 @@ __pycache__
 trace_json
 /us_coordinator.pem
 /vs_code.config
+tmp_executable_1/*
+tmp_executable_64/*
+unit_tests/tmp_executable_1/*
+unit_tests/tmp_executable_64/*

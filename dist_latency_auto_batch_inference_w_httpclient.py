@@ -187,7 +187,6 @@ def main():
                         returned_payload={"message": error}
                     )
                 print(error)
-                raise e
             sleep(1)
 
     except Exception as e:
