@@ -7,7 +7,7 @@ if __name__ == '__main__':
     with open('slurms_scrips/train_template.lsf.sh') as f:
         template = f.read()
 
-    job_id = uuid.uuid4()
+    job_id = str(uuid.uuid4())
     pp_degree=4
     dp_degree=1
     n_layer_per_device=1
