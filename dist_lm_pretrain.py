@@ -42,6 +42,8 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
 #         if test_data_loader is not None and args.do_evaluation:
 #             distributed_test_lm_iter(args, pipe, device, test_data_loader)
 
+    print('training starts......')
+
     pipe.model.train() # Flag .training to True to enable Dropout
     
     use_dp = (args.world_size != args.pipeline_group_size)
