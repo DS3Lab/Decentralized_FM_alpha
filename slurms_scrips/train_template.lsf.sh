@@ -7,7 +7,7 @@
 #BSUB -o /cluster/home/juewang/fm/juewang/exe_log/out.%J
 #BSUB -e /cluster/home/juewang/fm/juewang/exe_log/err.%J
 
-module load gcc/6.3.0 cuda/11.0.3             # Load modules from Euler setup
+module load gcc/6.3.0 cuda/11.0.3 eth_proxy       # Load modules from Euler setup
 source activate pipeline                          # Activate my conda python environment
 cd /cluster/home/juewang/fm/juewang/Decentralized_FM_alpha_train     # Change directory
 
