@@ -14,9 +14,9 @@ if __name__ == '__main__':
     world_size = pp_degree * dp_degree
 
     template = template.replace('{{JOB_ID}}', job_id)
-    template = template.replace('{{PP_DEGREE}}', pp_degree)
-    template = template.replace('{{DP_DEGREE}}', dp_degree)
-    template = template.replace('{{N_LAYER_PER_DEVICE}}', n_layer_per_device)
+    template = template.replace('{{PP_DEGREE}}', str(pp_degree))
+    template = template.replace('{{DP_DEGREE}}', str(dp_degree))
+    template = template.replace('{{N_LAYER_PER_DEVICE}}', str(n_layer_per_device))
 
     with open('slurms_scrips/train_to_submmit.lsf.sh') as f:
         f.write(template)
