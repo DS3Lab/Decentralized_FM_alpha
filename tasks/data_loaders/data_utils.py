@@ -128,7 +128,10 @@ class UL2RProcessor:
         
         tokens = inputs['input_ids'].tolist()
         
-        split = int(random.random() * len(tokens))
+        if random.random() < 0.2:
+            split = int(random.random() * 20)
+        else:
+            split = int(random.random() * len(tokens))
         
         tokens = tokens[:split] + tokens[split:]
         tokens = tokens[:self.seq_length]
@@ -211,6 +214,9 @@ def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
     task_names = []
     datasets = []
     probs = []
+    
+    print('data_utils: parse task_list')
+    
     for task in task_list:
         if ':' in task:
             task, prob = task.strip().split(':')
@@ -228,7 +234,7 @@ def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'pile':
             from .pile import StreamDataset
-            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed).with_format("torch")
+            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=1000_000, seed=args.seed).with_format("torch")
             # data = load_dataset('the_pile', split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'c4':
@@ -242,6 +248,8 @@ def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
         else:
             print('unknow task {task}, skip.')
             assert False
+            
+        print('data_utils:', task, prob)
     
         task_names.append(task)
         datasets.append(dataset)
@@ -260,6 +268,9 @@ def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
                                                     num_workers=num_workers,
                                                     pin_memory=True,
                                                     collate_fn=None)
+    
+    print('data_utils: get train_data_loader')
+    
     return train_data_loader
 
 
@@ -287,7 +298,7 @@ def get_ul2r_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'pile':
             from .pile import StreamDataset
-            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed).with_format("torch")
+            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=1000_000, seed=args.seed).with_format("torch")
             # data = load_dataset('the_pile', split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'c4':
