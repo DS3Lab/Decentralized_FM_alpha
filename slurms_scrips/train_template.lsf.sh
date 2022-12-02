@@ -34,6 +34,7 @@ main_program=dist_lm_pretrain.py
 
 ARGS="--model-name ${root_path}/pretrained_models/gpt-j-6B \
 --tokenizer-name ${root_path}/pretrained_models/gpt-j-6B \
+--project-name test-gptj \
 --model-type gptj \
 --seed 42 \
 --checkpoint-path ${root_path}/pretrained_models/checkpoints/gptj-test \
@@ -50,4 +51,4 @@ ARGS="--model-name ${root_path}/pretrained_models/gpt-j-6B \
 --dp-mode allreduce \
 --pp-mode gpipe --profiling no-profiling"
 
-python ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0 # rank will be rewriten
+python -u ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0 # rank will be rewriten
