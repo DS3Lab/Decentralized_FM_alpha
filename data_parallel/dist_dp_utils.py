@@ -3,35 +3,26 @@ from .dist_dp_central_ps import CentralPSDP
 from .dist_dp_sharded_ps import ShardedPSDP
 from .dist_dp_sharded_ps_compressed import ShardedPSDPCompressed
 from .dist_dp_local import LocalDP
-from .dist_dp_admm import ADMMDP
 from .dist_dp_proxskip import ProxSkipDP
 from .dist_dp_proxskip_adam import ProxSkipAdamDP
-from .dist_dp_proxskip_adam_all import ProxSkipAdamAllDP
-from .dist_dp_proxskip_adam_all_double_lr import ProxSkipAdamAllDLRDP
 
 
 def get_dp_module(args, device, module, optimizer):
     print("Data parallel implementation: ", args.dp_mode)
     if args.dp_mode == 'allreduce':
-        return AllReduceDP(args, device, module, optimizer, flatten=False)
+        return AllReduceDP(args, device, module, optimizer, flatten=False) # flatten seems to be not compatible with fp16
     elif args.dp_mode == 'central_ps':
-        return CentralPSDP(args, device, module, optimizer)
+        return CentralPSDP(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'sharded_ps':
-        return ShardedPSDP(args, device, module, optimizer)
+        return ShardedPSDP(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'sharded_ps_compressed':
-        return ShardedPSDPCompressed(args, device, module, optimizer)
+        return ShardedPSDPCompressed(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'local':
-        return LocalDP(args, device, module, optimizer)
-    elif args.dp_mode == 'admm':
-        return ADMMDP(args, device, module, optimizer)
+        return LocalDP(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'proxskip':
-        return ProxSkipDP(args, device, module, optimizer)
+        return ProxSkipDP(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'proxadam':
-        return ProxSkipAdamDP(args, device, module, optimizer)
-    elif args.dp_mode == 'proxadam_all':
-        return ProxSkipAdamAllDP(args, device, module, optimizer)
-    elif args.dp_mode == 'proxadam_all_dlr':
-        return ProxSkipAdamAllDLRDP(args, device, module, optimizer)
+        return ProxSkipAdamDP(args, device, module, optimizer, flatten=False)
     else:
         print("Not recognize this data parallel mode.")
         assert False
