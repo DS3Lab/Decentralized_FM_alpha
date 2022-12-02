@@ -227,7 +227,7 @@ def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
             
         if task == 'natural_instructions' or task == 'ni':
             from .natural_instructions import StreamDataset
-            dataset = StreamDataset('/root/natural-instructions/', tokenizer, args.seq_length)
+            dataset = StreamDataset('./natural-instructions/', tokenizer, args.seq_length)
         elif task == 'p3':
             from .p3 import StreamDataset
             data = load_dataset("Muennighoff/P3", split="train").shuffle(seed=args.seed)
@@ -235,7 +235,7 @@ def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
         elif task == 'pile':
             from .pile import StreamDataset
             print('data_utils: before getting pile')
-            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=1_000, seed=args.seed).with_format("torch")
+            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed).with_format("torch")
             print('data_utils: after getting pile')
             # data = load_dataset('the_pile', split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
