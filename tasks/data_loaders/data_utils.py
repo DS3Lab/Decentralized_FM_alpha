@@ -234,7 +234,9 @@ def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'pile':
             from .pile import StreamDataset
-            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=1000_000, seed=args.seed).with_format("torch")
+            print('data_utils: before getting pile')
+            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=1_000, seed=args.seed).with_format("torch")
+            print('data_utils: after getting pile')
             # data = load_dataset('the_pile', split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'c4':
