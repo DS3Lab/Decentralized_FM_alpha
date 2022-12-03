@@ -63,6 +63,8 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
         dtype=torch.int64
     ).to(device)
     
+    do_sync_before_save = (args.dp_mode in ['local'] and use_dp)
+    
     if get_pipeline_parallel_rank() == 0 and dp_rank == 0:
         
         for data in train_data_loader:
@@ -99,8 +101,13 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(input_ids, None)
             
-            if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
-                save_checkpoint(pipe, args)
+            if pipe.global_step % args.checkpoint_steps == 0:
+                if do_sync_before_save:
+                    pipe.dp_optim.allreduce_parameters()
+                if dp_rank == 0:
+                    save_checkpoint(pipe, args)
+                if do_sync_before_save:
+                    pipe.dp_optim.rollback_parameters()
             
             if pipe.global_step >= args.total_steps:
                 stop_flag.data[:] = 1
@@ -126,8 +133,13 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(input_ids, None)
             
-            if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
-                save_checkpoint(pipe, args)
+            if pipe.global_step % args.checkpoint_steps == 0:
+                if do_sync_before_save:
+                    pipe.dp_optim.allreduce_parameters()
+                if dp_rank == 0:
+                    save_checkpoint(pipe, args)
+                if do_sync_before_save:
+                    pipe.dp_optim.rollback_parameters()
             
             
     elif get_pipeline_parallel_rank()  == args.pipeline_group_size - 1:
@@ -145,8 +157,13 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(input_ids, labels, loss_func=gpt_loss_func) # lm loss func
             
-            if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
-                save_checkpoint(pipe, args)
+            if pipe.global_step % args.checkpoint_steps == 0:
+                if do_sync_before_save:
+                    pipe.dp_optim.allreduce_parameters()
+                if dp_rank == 0:
+                    save_checkpoint(pipe, args)
+                if do_sync_before_save:
+                    pipe.dp_optim.rollback_parameters()
         
     else:
         
@@ -161,8 +178,13 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(None, None)
             
-            if pipe.global_step % args.checkpoint_steps == 0 and dp_rank == 0:
-                save_checkpoint(pipe, args)
+            if pipe.global_step % args.checkpoint_steps == 0:
+                if do_sync_before_save:
+                    pipe.dp_optim.allreduce_parameters()
+                if dp_rank == 0:
+                    save_checkpoint(pipe, args)
+                if do_sync_before_save:
+                    pipe.dp_optim.rollback_parameters()
         
 
 def main():

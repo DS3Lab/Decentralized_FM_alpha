@@ -67,11 +67,6 @@ def save_checkpoint(pipe, args):
     checkpoint_step_path = os.path.join(args.checkpoint_path, f"checkpoint_{latest_step}")
     
     os.system(f"mkdir -p {checkpoint_step_path}")
-    
-    do_sync_before_save = (args.dp_mode in ['local'])
-    
-    if do_sync_before_save:
-        pipe.dp_optim.allreduce_parameters()
         
     torch.save(
         pipe.model.model.state_dict(),
@@ -79,9 +74,6 @@ def save_checkpoint(pipe, args):
             checkpoint_step_path, f'prank_{get_pipeline_parallel_rank()}_checkpoint.pt'
         )
     )
-    
-    if do_sync_before_save:
-        pipe.dp_optim.rollback_parameters()
     
     torch.save(
         pipe.optimizer.state_dict(),
