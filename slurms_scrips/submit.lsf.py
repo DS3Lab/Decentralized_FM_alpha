@@ -9,7 +9,7 @@ if __name__ == '__main__':
 
     job_id = str(uuid.uuid4())
     pp_degree=8
-    dp_degree=4
+    dp_degree=2
     n_layer_per_device=4
     world_size = pp_degree * dp_degree
 
