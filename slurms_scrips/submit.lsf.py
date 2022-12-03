@@ -75,9 +75,9 @@ if __name__ == '__main__':
     template = template.replace('{{DP_DEGREE}}', str(dp_degree))
     template = template.replace('{{N_LAYER_PER_DEVICE}}', str(n_layer_per_device))
 
-    with open('slurms_scrips/train_to_submmit.lsf.sh', 'w') as f:
+    with open('slurms_scrips/train_to_submit.lsf.sh', 'w') as f:
         f.write(template)
         
     for i in range(world_size):
-        os.system('bsub < slurms_scrips/train_to_submmit.lsf.sh')
+        os.system('bsub < slurms_scrips/train_to_submit.lsf.sh')
     

@@ -4,7 +4,7 @@ import uuid
 
 template = '''#!/bin/bash
 #BSUB -n 4                     # 1 cores
-#BSUB -W 3:59                   # 3-minutes run-time
+#BSUB -W 11:59                   # 3-minutes run-time
 #BSUB -R "rusage[mem=8000]"     # 32 GB per core
 #BSUB -R "rusage[ngpus_excl_p=1]"
 #BSUB -R "select[gpu_mtotal0>=20000]"
@@ -42,9 +42,9 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --project-name loooofi \
 --model-type opt \
 --seed 42 \
---checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-looofi \
+--checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-single \
 --load-pretrained-model true \
---task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.9,ni:0.1 \
+--task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.5,ni:0.5 \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
 --total-steps 100000 --warmup-steps 100 --train-warmup-steps 0 \
 --checkpoint-steps 100 \
@@ -53,7 +53,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --world-size ${world_size} --pipeline-group-size ${pp_degree} --data-group-size ${dp_degree} \
 --job-id ${job_id} --net-interface ${netif} \
 --fp16 \
---dp-mode local \
+--dp-mode allreduce \
 --pp-mode gpipe --profiling no-profiling"
 
 python -u ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0 # rank will be rewriten
@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
     job_id = str(uuid.uuid4())
     pp_degree=3
-    dp_degree=4
+    dp_degree=1
     n_layer_per_device=12
     world_size = pp_degree * dp_degree
 
