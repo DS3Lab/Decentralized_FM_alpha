@@ -42,9 +42,9 @@ ARGS="--model-name ${root_path}/pretrained_models/gpt-j-6B \
 --project-name test-gptj \
 --model-type gptj \
 --seed 42 \
---checkpoint-path ${root_path}/pretrained_models/checkpoints/gptj-allreduce \
+--checkpoint-path ${root_path}/pretrained_models/checkpoints/gptj-local \
 --load-pretrained-model true \
---task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.5,ni:0.5 \
+--task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.9,ni:0.1 \
 --num-layers ${n_layer_per_device} --num-heads 16 --embedding-dim 4096 \
 --total-steps 100000 --warmup-steps 100 --train-warmup-steps 0 \
 --checkpoint-steps 100 \
@@ -53,7 +53,7 @@ ARGS="--model-name ${root_path}/pretrained_models/gpt-j-6B \
 --world-size ${world_size} --pipeline-group-size ${pp_degree} --data-group-size ${dp_degree} \
 --job-id ${job_id} --net-interface ${netif} \
 --fp16 \
---dp-mode allreduce \
+--dp-mode local \
 --pp-mode gpipe --profiling no-profiling"
 
 python -u ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0 # rank will be rewriten
