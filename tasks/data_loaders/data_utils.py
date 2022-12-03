@@ -207,7 +207,7 @@ class StreamDatasetList(IterableDataset):
         return self.it
     
     
-def name_to_dataset(task, args):
+def name_to_dataset(task, tokenizer, args):
     
     if task != '':
         if task == 'natural_instructions' or task == 'ni':
@@ -261,7 +261,7 @@ def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
             task = task.strip()
             prob = 1.0
             
-        dataset = name_to_dataset(task, args)
+        dataset = name_to_dataset(task, tokenizer, args)
             
         print('data_utils:', task, prob)
     
@@ -303,7 +303,7 @@ def get_ul2r_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
             task = task.strip()
             prob = 1.0
             
-        dataset = name_to_dataset(task, args)
+        dataset = name_to_dataset(task, tokenizer, args)
     
         task_names.append(task)
         datasets.append(dataset)
