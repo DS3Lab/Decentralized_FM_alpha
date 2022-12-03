@@ -71,7 +71,7 @@ def save_checkpoint(pipe, args):
     do_sync_before_save = (args.dp_mode in ['local'])
     
     if do_sync_before_save:
-        pipe.optimizer.allreduce_parameters()
+        pipe.dp_optim.allreduce_parameters()
         
     torch.save(
         pipe.model.model.state_dict(),
@@ -81,7 +81,7 @@ def save_checkpoint(pipe, args):
     )
     
     if do_sync_before_save:
-        pipe.optimizer.rollback_parameters()
+        pipe.dp_optim.rollback_parameters()
     
     torch.save(
         pipe.optimizer.state_dict(),
