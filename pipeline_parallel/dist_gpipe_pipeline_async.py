@@ -156,7 +156,7 @@ class GpipeAsync:
                 
                 
         if do_train:
-            if self.pp_rank == self.pipeline_group_size - 1 and self.dp_rank == 0:
+            if self.pp_rank == self.pipeline_group_size - 1:
                 
                 if not hasattr(args, 'project_name'):
                     import re
@@ -457,7 +457,7 @@ class GpipeAsync:
         if self.enable_tidy_profiling:
             self.profiling_backward_stage()
             
-        if self.pp_rank == self.pipeline_group_size - 1 and self.dp_rank == 0:
+        if self.pp_rank == self.pipeline_group_size - 1:
             wandb.log(
                 {
                     'loss': sum(tr_loss)/len(tr_loss),
