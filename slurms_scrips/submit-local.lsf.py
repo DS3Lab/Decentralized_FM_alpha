@@ -48,7 +48,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
 --total-steps 100000 --warmup-steps 100 --train-warmup-steps 0 \
 --checkpoint-steps 100 \
---lr 2e-5 --seq-length 2048 --batch-size 16 --micro-batch-size 1 --gradient-accumulate-step 1 \
+--lr 1e-4 --seq-length 2048 --batch-size 16 --micro-batch-size 1 --gradient-accumulate-step 1 \
 --dist-url tcp://127.0.0.1:9011 \
 --world-size ${world_size} --pipeline-group-size ${pp_degree} --data-group-size ${dp_degree} \
 --job-id ${job_id} --net-interface ${netif} \
