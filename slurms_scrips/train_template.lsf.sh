@@ -3,7 +3,7 @@
 #BSUB -W 3:59                   # 3-minutes run-time
 #BSUB -R "rusage[mem=8000]"     # 32 GB per core
 #BSUB -R "rusage[ngpus_excl_p=1]"
-#BSUB -R "select[gpu_mtotal0>=15000]"
+#BSUB -R "select[gpu_mtotal0>=20000]"
 #BSUB -o /cluster/home/juewang/fm/juewang/exe_log/out.%J
 #BSUB -e /cluster/home/juewang/fm/juewang/exe_log/err.%J
 
