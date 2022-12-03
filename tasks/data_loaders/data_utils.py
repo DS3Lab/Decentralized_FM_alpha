@@ -248,8 +248,13 @@ def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
             from .cot import StreamDataset
             dataset = StreamDataset('./data/mmlu-cot.json', tokenizer, args.seq_length)
         else:
-            print('unknow task {task}, skip.')
-            assert False
+            from .pile import StreamDataset
+            print('data_utils: before getting custom pile')
+            data = load_dataset("json", data_files=task, split="train", streaming=True).shuffle(seed=args.seed)
+            print('data_utils: after getting custom pile')
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
+            # print('unknow task {task}, skip.')
+            # assert False
             
         print('data_utils:', task, prob)
     

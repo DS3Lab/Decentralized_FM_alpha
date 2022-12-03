@@ -39,7 +39,7 @@ ARGS="--model-name ${root_path}/pretrained_models/gpt-j-6B \
 --seed 42 \
 --checkpoint-path ${root_path}/pretrained_models/checkpoints/gptj-test \
 --load-pretrained-model false \
---task-name pile \
+--task-name /cluster/home/juewang/scratch/pile_1280k.jsonl \
 --num-layers ${n_layer_per_device} --num-heads 16 --embedding-dim 4096 \
 --total-steps 100000 --warmup-steps 100 --train-warmup-steps 0 \
 --checkpoint-steps 10 \
