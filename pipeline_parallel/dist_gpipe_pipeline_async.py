@@ -78,6 +78,10 @@ class GpipeAsync:
         self.global_rank = args.rank
         self.pipeline_group_size = args.pipeline_group_size
         self.pp_rank = get_pipeline_parallel_rank()  # Rank is the pipeline rank by default.
+        if use_dp:
+            self.dp_rank = get_data_parallel_rank()
+        else:
+            self.dp_rank = 0
         self.pre_node_rank = self.pp_rank - 1
         self.post_node_rank = self.pp_rank + 1 if self.pp_rank != self.pipeline_group_size - 1 else -1
         self.comm = get_pipeline_parallel_comm()
@@ -152,7 +156,7 @@ class GpipeAsync:
                 
                 
         if do_train:
-            if self.pp_rank == self.pipeline_group_size - 1:
+            if self.pp_rank == self.pipeline_group_size - 1 and self.dp_rank == 0:
                 
                 if not hasattr(args, 'project_name'):
                     import re
@@ -453,7 +457,7 @@ class GpipeAsync:
         if self.enable_tidy_profiling:
             self.profiling_backward_stage()
             
-        if self.pp_rank == self.pipeline_group_size - 1:
+        if self.pp_rank == self.pipeline_group_size - 1 and self.dp_rank == 0:
             wandb.log(
                 {
                     'loss': sum(tr_loss)/len(tr_loss),
