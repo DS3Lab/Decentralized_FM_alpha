@@ -207,24 +207,9 @@ class StreamDatasetList(IterableDataset):
         return self.it
     
     
+def name_to_dataset(task):
     
-def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
-    
-    task_list = args.task_name.split(',')
-    task_names = []
-    datasets = []
-    probs = []
-    
-    print('data_utils: parse task_list')
-    
-    for task in task_list:
-        if ':' in task:
-            task, prob = task.strip().split(':')
-            prob = float(prob)
-        else:
-            task = task.strip()
-            prob = 1.0
-            
+    if task != '':
         if task == 'natural_instructions' or task == 'ni':
             from .natural_instructions import StreamDataset
             dataset = StreamDataset('./natural-instructions/', tokenizer, args.seq_length)
@@ -255,6 +240,28 @@ def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
             dataset = StreamDataset(data, tokenizer, args.seq_length)
             # print('unknow task {task}, skip.')
             # assert False
+        
+    return dataset
+
+    
+def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
+    
+    task_list = args.task_name.split(',')
+    task_names = []
+    datasets = []
+    probs = []
+    
+    print('data_utils: parse task_list')
+    
+    for task in task_list:
+        if ':' in task:
+            task, prob = task.strip().split(':')
+            prob = float(prob)
+        else:
+            task = task.strip()
+            prob = 1.0
+            
+        dataset = name_to_dataset(task)
             
         print('data_utils:', task, prob)
     
@@ -296,29 +303,7 @@ def get_ul2r_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
             task = task.strip()
             prob = 1.0
             
-        if task == 'natural_instructions' or task == 'ni':
-            from .natural_instructions import StreamDataset
-            dataset = StreamDataset('/root/natural-instructions/', tokenizer, args.seq_length)
-        elif task == 'p3':
-            from .p3 import StreamDataset
-            data = load_dataset("Muennighoff/P3", split="train").shuffle(seed=args.seed)
-            dataset = StreamDataset(data, tokenizer, args.seq_length)
-        elif task == 'pile':
-            from .pile import StreamDataset
-            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=1000_000, seed=args.seed).with_format("torch")
-            # data = load_dataset('the_pile', split="train").shuffle(seed=args.seed)
-            dataset = StreamDataset(data, tokenizer, args.seq_length)
-        elif task == 'c4':
-            from .c4 import StreamDataset
-            # data = load_dataset('c4', 'en', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
-            data = load_dataset('c4', 'en', split="train").shuffle(seed=args.seed)
-            dataset = StreamDataset(data, tokenizer, args.seq_length)
-        elif task == 'cot':
-            from .cot import StreamDataset
-            dataset = StreamDataset('./data/mmlu-cot.json', tokenizer, args.seq_length)
-        else:
-            print('unknow task {task}, skip.')
-            assert False
+        dataset = name_to_dataset(task)
     
         task_names.append(task)
         datasets.append(dataset)
