@@ -29,26 +29,26 @@ netif=access
 export GLOO_SOCKET_IFNAME=${netif}
 export NCCL_SOCKET_IFNAME=${netif}
 export NCCL_DEBUG=INFO
-export NCCL_IB_DISABLE=1
-export NCCL_P2P_DISABLE=1
+#export NCCL_IB_DISABLE=1
+#export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
 
 root_path=/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm
 
 main_program=dist_lm_pretrain.py
 
-ARGS="--model-name ${root_path}/pretrained_models/gpt-j-6B \
---tokenizer-name ${root_path}/pretrained_models/gpt-j-6B \
---project-name test-gptj \
---model-type gptj \
+ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
+--tokenizer-name ${root_path}/pretrained_models/opt-1.3b-new \
+--project-name loooofi \
+--model-type opt \
 --seed 42 \
---checkpoint-path ${root_path}/pretrained_models/checkpoints/gptj-local \
+--checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-looofi \
 --load-pretrained-model true \
 --task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.9,ni:0.1 \
---num-layers ${n_layer_per_device} --num-heads 16 --embedding-dim 4096 \
+--num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
 --total-steps 100000 --warmup-steps 100 --train-warmup-steps 0 \
 --checkpoint-steps 100 \
---lr 1e-5 --seq-length 2048 --batch-size 8 --micro-batch-size 1 --gradient-accumulate-step 2 \
+--lr 2e-5 --seq-length 2048 --batch-size 16 --micro-batch-size 1 --gradient-accumulate-step 1 \
 --dist-url tcp://127.0.0.1:9011 \
 --world-size ${world_size} --pipeline-group-size ${pp_degree} --data-group-size ${dp_degree} \
 --job-id ${job_id} --net-interface ${netif} \
@@ -65,9 +65,9 @@ if __name__ == '__main__':
     #     template = f.read()
 
     job_id = str(uuid.uuid4())
-    pp_degree=8
+    pp_degree=3
     dp_degree=4
-    n_layer_per_device=4
+    n_layer_per_device=12
     world_size = pp_degree * dp_degree
 
     template = template.replace('{{JOB_ID}}', job_id)
