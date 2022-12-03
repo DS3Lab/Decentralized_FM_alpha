@@ -27,6 +27,7 @@ export NCCL_SOCKET_IFNAME=${netif}
 export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
+export WANDB_ DISABLE_SERVICE=True
 
 root_path=/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm
 
