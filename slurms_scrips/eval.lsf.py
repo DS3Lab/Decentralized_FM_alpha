@@ -27,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument("--ckpt-root", default='opt-allreduce', help="ckpts")
     args = parser.parse_args()
     
-    template = template.replace("{{ckpt_folder}}}", f"/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/pretrained_models/checkpoints/{args.ckpt_root}")
+    template = template.replace("{{ckpt_folder}}", f"/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/pretrained_models/checkpoints/{args.ckpt_root}")
     
     with open('slurms_scrips/eval_to_submit.lsf.sh', 'w') as f:
         f.write(template)
