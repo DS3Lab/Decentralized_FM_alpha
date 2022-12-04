@@ -17,12 +17,17 @@ cd /cluster/home/juewang/fm/juewang/Decentralized_FM_alpha_train     # Change di
 
 nvidia-smi
 
-ckpt_folder=/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/pretrained_models/checkpoints/opt-allreduce
-
-python -u slurms_scrips/eval_opt.py --ckpt-root ${ckpt_folder}
+python -u slurms_scrips/eval_opt.py --ckpt-root {{ckpt_folder}}
 '''
 
 if __name__ == '__main__':
+    
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ckpt-root", default='opt-allreduce', help="ckpts")
+    args = parser.parse_args()
+    
+    template = template.replace("{{ckpt_folder}}}", f"/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/pretrained_models/checkpoints/{args.ckpt_root}")
     
     with open('slurms_scrips/eval_to_submit.lsf.sh', 'w') as f:
         f.write(template)

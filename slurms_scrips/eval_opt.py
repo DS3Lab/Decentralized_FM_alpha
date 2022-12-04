@@ -77,7 +77,7 @@ def load_decentralized_checkpoint(model, checkpoint_path, n_stages=3, n_layer_pe
 
             print('loading final layer...')
             
-            _tmp = {k[len(f"{j}."):]:v for k,v in checkpoint.items() if k.startswith(f"{n_layer_per_stage}.")}
+            _tmp = {k[len(f"{j}."):]:v for k,v in checkpoint.items() if k.startswith(f"{j}.")}
             assert len(_tmp) > 0
             # torch.save(_tmp, os.path.join(output_path, f'pytorch_lm_head.pt'))
             model.model.decoder.final_layer_norm.weight.data[:] = _tmp['final_layer_norm.weight']
