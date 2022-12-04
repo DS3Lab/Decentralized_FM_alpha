@@ -177,13 +177,13 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--ckpt-root", help="ckpts")
-    parser.add_argument("--step-set", default=None, help="split by ;")
+    parser.add_argument("--step-set", default=None, help="split by ,")
     parser.add_argument("--output-path", default="result.jsonl", help="")
     args = parser.parse_args()
     
     ckpts = os.listdir(args.ckpt_root)
     if args.step_set is not None:
-        args.step_set = args.step_set.split(';')
+        args.step_set = args.step_set.split(',')
         ckpts = [ckpt for ckpt in ckpts if ckpt in args.step_set]
     ckpt_paths = [os.path.join(args.ckpt_root, ckpt) for ckpt in sorted(ckpts)]
     

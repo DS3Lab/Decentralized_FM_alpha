@@ -17,7 +17,7 @@ cd /cluster/home/juewang/fm/juewang/Decentralized_FM_alpha_train     # Change di
 
 nvidia-smi
 
-python -u slurms_scrips/eval_opt.py --ckpt-root {{ckpt_folder}} --output-path {{output_path}} --step-set {{step_set}}
+python -u slurms_scrips/eval_opt.py --ckpt-root {{ckpt_folder}} --output-path {{output_path}} --step-set "{{step_set}}"
 '''
 
 if __name__ == '__main__':
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     
     template = template.replace("{{ckpt_folder}}", f"/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/pretrained_models/checkpoints/{args.ckpt_root}")
     template = template.replace("{{output_path}}", f"result-{args.ckpt_root}.jsonl")
-    template = template.replace("{{step_set}}", ';'.join(step_set))
+    template = template.replace("{{step_set}}", ','.join(step_set))
     
     with open('slurms_scrips/eval_to_submit.lsf.sh', 'w') as f:
         f.write(template)
