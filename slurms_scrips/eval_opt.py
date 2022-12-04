@@ -1,6 +1,7 @@
 
 import torch
 import torch.nn as nn
+from torch.nn import functional as F
 
 from transformers import OPTForCausalLM
 
@@ -76,7 +77,7 @@ def load_decentralized_checkpoint(model, checkpoint_path, n_stages=3, n_layer_pe
 
             print('loading final layer...')
             
-            _tmp = {k[len(f"{n_layer_per_stage}."):]:v for k,v in checkpoint.items() if k.startswith(f"{n_layer_per_stage}.")}
+            _tmp = {k[len(f"{j}."):]:v for k,v in checkpoint.items() if k.startswith(f"{n_layer_per_stage}.")}
             assert len(_tmp) > 0
             # torch.save(_tmp, os.path.join(output_path, f'pytorch_lm_head.pt'))
             model.model.decoder.final_layer_norm.weight.data[:] = _tmp['final_layer_norm.weight']
@@ -99,6 +100,13 @@ def load_decentralized_checkpoint(model, checkpoint_path, n_stages=3, n_layer_pe
     return model
 
 
+def gpt_loss_func(input, target):
+    lm_logits, labels = input, target
+    shift_logits = lm_logits[..., :-1, :].contiguous()
+    shift_labels = labels[..., 1:].contiguous()
+    loss = F.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+    return loss
+
 def infer(prompt, max_new_tokens=1):
     with torch.no_grad():
         inputs = tokenizer(prompt, return_tensors='pt')
@@ -108,9 +116,6 @@ def infer(prompt, max_new_tokens=1):
         ret = model.generate(**inputs, max_new_tokens=max_new_tokens, pad_token_id=tokenizer.eos_token_id)
 
         return tokenizer.decode(ret[0, inputs['input_ids'].size(1):])
-    
-    
-from sklearn.metrics import classification_report
 
 def evaluate_acc(task_path, max_new_tokens=20, k_shot=-1, first_100=True):
     
@@ -135,6 +140,36 @@ def evaluate_acc(task_path, max_new_tokens=20, k_shot=-1, first_100=True):
     return n_c / n_t
 
 
+def evaluate_lm(task_path):
+    
+    with torch.no_grad():
+        loss_list = []
+        
+        with open(task_path) as f:
+            for line in f:
+                
+                if line.strip() == '':
+                    continue
+                
+                item = json.loads(line)
+                prompt = item['text']
+                
+                inputs = tokenizer(prompt, return_tensors='pt', truncation=True, max_length=2048)
+                inputs = {
+                    k: v.to(model.device) for k,v in inputs.items()
+                }
+                ret = model(**inputs)
+
+                lm_logits = ret.logits
+                labels = inputs['input_ids']
+
+                loss = gpt_loss_func(lm_logits, labels)
+        
+                loss_list.append(loss.item())
+        
+        return sum(loss_list) / len(loss_list)
+    
+
 if __name__ == '__main__':
     
     os.environ['CUDA_VISIBLE_DEVICES'] = "0"
@@ -155,10 +190,10 @@ if __name__ == '__main__':
     tokenizer.add_bos_token = False
     
     model = create_emtpy_opt(config).half().eval()
-    model = model.to('cuda:0')
+    model = model.cuda()
     
     for ckpt_path in ckpt_paths:
-        load_decentralized_checkpoint(model, ckpt_path, n_stages=3, n_layer_per_stage=12, max_num_layers=24)
+        load_decentralized_checkpoint(model, ckpt_path, n_stages=2, n_layer_per_stage=12, max_num_layers=24)
         
         # for i in range(24):
         #     model.transformer.h[i].attn.bias.data[:] = 1
@@ -166,8 +201,14 @@ if __name__ == '__main__':
         item = {
             'ckpt_path': ckpt_path,
         }
-        acc_list = []
         
+        ####
+        lm_loss = evaluate_lm('./data/ni_train_sub.jsonl')
+        item['ni_train_lm_loss'] = lm_loss
+        print(lm_loss)
+        
+        #### raft
+        acc_list = []
         tasks_list = [
             'ade_corpus_v2',
             'banking_77',
@@ -190,6 +231,7 @@ if __name__ == '__main__':
             
         acc = sum(acc_list) / len(acc_list)
         item['raft'] = acc
+        #####
         
         with open('result.jsonl', 'a') as fout:
             fout.write(json.dumps(item) + '\n')
