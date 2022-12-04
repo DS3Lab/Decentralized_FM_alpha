@@ -1,0 +1,2103 @@
+{
+  "name": "raft",
+  "description": "Real-world Annotated Few-shot Tasks (RAFT)",
+  "tags": [
+    "text_classification",
+    "robustness"
+  ],
+  "output_path": "benchmark_output/scenarios/raft",
+  "scenario_spec": {
+    "class_name": "benchmark.scenarios.raft_scenario.RAFTScenario",
+    "args": {
+      "subset": "ade_corpus_v2"
+    }
+  },
+  "definition_path": "https://github.com/stanford-crfm/helm/blob/main/src/benchmark/scenarios/raft_scenario.py",
+  "instances": [
+    {
+      "input": "Sentence: Pulses have been given for periods up to three years without evident toxicity.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10"
+    },
+    {
+      "input": "sentence:  pulses  have been   given   for periods  up   to   three   years  without  evident toxicity.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Pulses have been given fir periods up to three yrs without evident toxicity.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: No abnormalities were identified on review of collection and processing records.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11"
+    },
+    {
+      "input": "sentence:   no   abnormalities  were identified on   review of  collection adn   processing   records.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: A closer look at septic shock.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12"
+    },
+    {
+      "input": "sentence:  a   closer  look at   septic shock.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: METHODS: This study is a case report description.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13"
+    },
+    {
+      "input": "sentence:   methods:   tihs   study is  a   case  report description.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: METHODS: Dis study is a case report description.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Several hypersensitivity reactions to cloxacillin have been reported, although IgE-mediated allergic reactions to the drug are rare and there is little information about possible tolerance to other semisynthetic penicillins or cephalosporins in patients with cloxacillin allergy.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14"
+    },
+    {
+      "input": "sentence:  several  hypersensitivity reactions  to   cloxacillin  have  been reported,   although  ige-mediated  allergic  reactions   to   the drug   are  rare   and   there's  little   information   about  possible tolerance  to  other   semisynthetic  penicillins  or cephalosporins   in   patients with  cloxacillin  allergy.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Several hypersensitivity reactions to cloxacillin have been reported, although IgE-mediated allergic reactions to da drug r rare and dere is lil information abt possible tolerance to other semisynthetic penicillins or cephalosporins in patients wid cloxacillin allergy.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: An encephalopathy and cardiomyopathy developed in a seventeen-year-old girl with chemotherapy-induced renal failure while receiving an intravesical aluminum infusion for hemorrhagic cystitis.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15"
+    },
+    {
+      "input": "sentence:  an encephalopathy   and cardiomyopathy   developed   in a seventeen-year-old girl  witn chemotherapy-induced renal  failure  while  recieving  an   intravesical aluminum  infusion for  hemorrhagic cystitis.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: An encephalopathy and cardiomyopathy developed in a seventeen-year-old gurl with chemotherapy-induced renal failure while receiving an intravesical aluminum infusion fa hemorrhagic cystitis.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Early detection of these cases has practical importance since the identification and elimination of the causative drug is essential for therapy success.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16"
+    },
+    {
+      "input": "sentence:  early detection  of  these  cases has practical  importance   since   the identification and   elimination of the causative drug is essential for   therapy success.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Early detection of dese cases has practical importance since da identification and elimination of da causative drug is essential fa therapy success.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Acute promyelocytic leukemia after living donor partial orthotopic liver transplantation in two Japanese girls.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17"
+    },
+    {
+      "input": "sentence:  acute   promyelocytic   leukemia   after   living   donor partial  orthotopic   liver  transplantation  in   two  japanese girls.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Acute promyelocytic leukemia after livin donor partial orthotopic liver transplantation in 2 Japanese gurls.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: The mechanism by which sunitinib induces gynaecomastia is thought to be associated with an unknown direct action on breast hormonal receptors.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18"
+    },
+    {
+      "input": "sentence:   the   mechanism  by  which   sunitinib induces   gynaecomastia   is thought  to be  associated iwth   an   unknown  direct  action  on   breast  hormonal   receptors.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Da mechanism by which sunitinib induces gynaecomastia is thought to b associated w/ an unknown direct action on breast hormonal receptors.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: NEH must be considered in lupus patients receiving cytotoxic agents to avoid inappropriate use of corticosteroids or antibiotics in this self-limited condition.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19"
+    },
+    {
+      "input": "sentence: neh  must   be  considered  in  lupus patients  receiving  cytotoxic   agents   to  avoid inappropriate  use of   corticosteroids  or  antibiotics  in this   self-limited  condition.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: NEH must b considered in lupus patients receiving cytotoxic agents to avoid inappropriate use of corticosteroids or antibiotics in dis self-limited condition.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: This report demonstrates the increased risk of complicated varicella associated with the use of corticosteroids, even for a short period of time.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20"
+    },
+    {
+      "input": "sentence: this  report  demonstrates  the increased  risk  of complicated  varicella  associated   with   the  use of corticosteroids, even  for   a short   preriod   of  time.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Dis report demonstrates da increased risk of complicated varicella associated wit the use of corticosteroids, even fa a short period of time.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: The authors caution that treatment with alprazolam may be complicated by the induction of mania.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21"
+    },
+    {
+      "input": "sentence: the   authors caution that  treatment   witht   alprazolam   may  be  complicated  by   the   induction of mania.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Da authors caution dat treatment witt alprazolam may b complicated by da induction of mania.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: A 69-year-old male was diagnosed in February 2004 with stage IV extranodal marginal zone B cell lymphoma involving the mediastinal nodes, lung parenchyma and bone marrow with high LDH.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22"
+    },
+    {
+      "input": "sentence:   a 69-year-old male  was diagnosed   in   february 2004  with stage iv extranodal   marginal zone b   cell  lymphoma involving the   mediastinal  nodes, lung parenchyma  and bone  marrow with   high   ldh.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: A 69-year-old male was diagnosed in February 2004 w stage IV extranodal marginal zone B cell lymphoma involving da mediastinal nodes, lung parenchyma and bone marrow witt high LDH.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Sotalol-induced bradycardia reversed by glucagon.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23"
+    },
+    {
+      "input": "sentence:  sotalol-induced  bradycardia  reversed  by glucagon.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: The patient had no skin reactions for the next 12 mo, with the exception of injection-site papules.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24"
+    },
+    {
+      "input": "sentence:   the patient  had no   skin   reactions   for  the next 12  mo, with   the exception   of  injection-site   papules.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Da patient had no skin reactions fir the nxt 12 mo, wid the exception of injection-site papules.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: The treatment of Toxoplasma encephalitis in patients with acquired immunodeficiency syndrome.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25"
+    },
+    {
+      "input": "sentence:  the  treatment  of  toxoplasma   encephalitis  in  patients  with   acquired   immunodeficiency   syndrome.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Da treatment of Toxoplasma encephalitis in patients witt acquired immunodeficiency syndrome.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: As termination was not an option for the family, the patient was extensively counseled and treated with oral ganciclovir.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26"
+    },
+    {
+      "input": "sentence:  as  termination   wasn't   an option for   the family,   the patient  wass  extensively   counseled   and treated   wiht oral  ganciclovir.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: As termination was not an option fir the fam, da patient was extensively counseled and treated w oral ganciclovir.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: This case report describes a 13-year-old male with diagnosis of autistic disorder and fetishistic behavior.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27"
+    },
+    {
+      "input": "sentence:   this  case  report describes   a   13-year-old male with  diagnosis of autistic  disorder   and fetishistic behavior.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Dis case report describes a 13-year-old male witt diagnosis of autistic disorder and fetishistic behavior.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: METHODS: We identified three patients who developed skin necrosis and determined any factors, which put them at an increased risk of doing so.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28"
+    },
+    {
+      "input": "sentence:   methods:  we  identified  three patients   who developed skin  necrosis   anbd  determined  any   factors,  which   put them   at  an increased   risk of  doing  so.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: METHODS: We identified three patients who developed skin necrosis and determined any factors, which put em at an increased risk of doin so.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: The cases are important in documenting that drug-induced dystonias do occur in patients with dementia, that risperidone appears to have contributed to dystonia among elderly patients, and that the categorization of dystonic reactions needs further clarification.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29"
+    },
+    {
+      "input": "sentence:  the cases  are   important   in documenting   that   drug-induced   dystonias   do  occur  in   patients  with  dementia,  that   risperidone  appears  to  have  contributed  to   dystonia among   elderly   patients,  and   that   the categorization of dystonic  reactions  needs further clarification.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Da cases r important in documenting dat drug-induced dystonias do occur in patients witt dementia, dat risperidone appears to have contributed to dystonia among elderly patients, and dat the categorization of dystonic reactions needs further clarification.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Considerable improvement of myasthenic symptoms was seen in all patients within 3-6 months after the initiation of this therapy.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30"
+    },
+    {
+      "input": "sentence: considerable  improvement  of myasthenic  symptoms   was seen   in  all  patients   within  3-6  months after  tghe   initiation of  this therapy.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Considerable improvement of myasthenic symptoms was seen in alll patients within 3-6 months after da initiation of dis therapy.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: OBJECTIVE: To describe onset of syndrome of inappropriate antidiuretic hormone (SIADH) associated with vinorelbine therapy for advanced breast cancer.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31"
+    },
+    {
+      "input": "sentence: objective: to describe  onset  of syndrome   of inappropriate   antidiuretic hormone  (siadh)   associated iwth  vinorelbine  therapy for  advanced breast  cancer.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: OBJECTIVE: To describe onset of syndrome of inappropriate antidiuretic hormone (SIADH) associated w/ vinorelbine therapy fa advanced breast cancer.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: The gold standard for diagnosis is renal biopsy, but it is only rarely performed during the acute phase of the reaction and is not without risk.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32"
+    },
+    {
+      "input": "sentence:  the   gold  standard for diagnosis  is  renal biopsy, but  it's   only  rarely  performed  during the   acute  phase  of   the reaction and  isn't  without  risk.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Da gold standard fir diagnosis is renal biopsy, but it is only rarely performed durin the acute phase of da reaction and is not w/o risk.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: A 24- to 48-h course of large-dose glucocorticoid therapy is often used in the acute management of spinal cord injury.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33"
+    },
+    {
+      "input": "sentence:   a   24-   to 48-h   course of  large-dose glucocorticoid   therapy  is often used   in  the acute  management   of   spinal  cord  injury.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: A 24- to 48-h course of large-dose glucocorticoid therapy is often used in da acute management of spinal cord injury.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: A case study is presented of a licensed practical nurse who developed persistent contact dermatitis.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34"
+    },
+    {
+      "input": "sentence:  a   case study is  presented   of  a   licensed practical   nurse who developed   persistent contact   dermatitis.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: A case study is presented of a licensed practical nurse who developed persistent txt dermatitis.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: With serious cases, however, conventional treatment may not allow sufficient time at depth for the complete resolution of manifestations because of the need to avoid pulmonary oxygen toxicity which is associated with a prolonged period of breathing compressed air.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35"
+    },
+    {
+      "input": "sentence:  with   serious  cases, however,   conventional treatment   may  not allow  sufficient time   at depth  for the   complete resolution   of  manisfestations  because   of  the need  to   avoid pulmonary   oxygen   toxicity whlch is  associated   with  a prolonged period  of   breathing  compressed air.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Wid serious cases, however, conventional treatment may not allow sufficient time at depth fa the complete resolution of manifestations becuz of da need to avoid pulmonary oxygen toxicity which is associated w/ a prolonged period of breathing compressed air.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: These organisms have occasionally been reported as a cause of serious infections in man but have not been reported as a cause of shunt infection.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36"
+    },
+    {
+      "input": "sentence:   theese  organisms   have occasionally   been   reported as   a   cause of  serious infections in   man  but haven't   been   reported   as  a cause  of  shunt   infection.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Dese organisms have occasionally been reported as a cus of serious infections in man but have not been reported as a cuz of shunt infection.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Thrombolytic treatment is advocated for critical patients unless emergency institution of cardio pulmonary bypass is required and/or indicated.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37"
+    },
+    {
+      "input": "sentence:  thrombolytic treatment is   advocated for   critical patients   unless emergency institution  of cardio   pulmonary  bypass   is  recquired and/or   indicated.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Thrombolytic treatment is advocated fa critical patients unless emergency institution of cardio pulmonary bypass is required and/or indicated.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: We report a case of long lasting respiratory depression after intravenous administration of morphine to a 7 year old girl with haemolytic uraemic syndrome.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38"
+    },
+    {
+      "input": "sentence:   we  report  a  case of  long  lasting  respiratory   depression  after intravenous administration  of   morphine   to  a  7   year   old girl   with   haemolytic uraemic  syndrome.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: We report a case of long lasting respiratory depression after intravenous administration of morphine to a 7 year old gurl with haemolytic uraemic syndrome.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Treatment of silastic catheter-induced central vein septic thrombophlebitis.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39"
+    },
+    {
+      "input": "sentence:   treatment   of   silastic catheter-induced   central   vein septic  thrombophlebitis.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: After the first oral dose of propranolol, syncope developed together with atrioventricular block.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40"
+    },
+    {
+      "input": "sentence:   after the   first   oral   dose  of  propranolol,  syncope  developed   together  with atrioventricular   block.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: After da first oral dose of propranolol, syncope developed together wit atrioventricular block.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Remarkable findings on initial examination were facial grimacing, flexure posturing of both upper extremities, and 7-mm, reactive pupils.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41"
+    },
+    {
+      "input": "sentence:  remarkable  findings  on   initial  examination   were   facial   grimacing,   flexure  posturing of   both   upper extremities, anbd 7-mm,  reactive   pupils.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: We describe a patient who developed HUS after treatment with mitomycin C (total dose 144 mg/m2) due to a carcinoma of the ascending colon.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42"
+    },
+    {
+      "input": "sentence:   we  describe   a patient  who  developed  hus after  treatment   with   mitomycin   c (total  dose  144  mg/m2) due  to   a carcinoma  of  the   ascending   colon.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: We describe a patient who developed HUS after treatment wid mitomycin C (total dose 144 mg/m2) due to a carcinoma of da ascending colon.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: These results indicate that the hyponatremia in this case was due to SIADH and that SIADH was caused by an increased release of vasopressin probably because of the antiviral drug (acyclovir) or infection of varicella zoster virus (VZV) in a single dermatome.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43"
+    },
+    {
+      "input": "sentence:  these  results   indicate   that the  hyponatremia   in this case was   due   to   siadh   and that   siadh was  caused   by an   increased   release   of vasopressin  probably  because of  the  antiviral drug (acyclovir) or  infection  of  varicella  zoster  virus   (vzv)  in a  single dermatome.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Dem results indicate dat the hyponatremia in dis case was due to SIADH and dat SIADH was caused by an increased release of vasopressin probly because of da antiviral drug (acyclovir) or infection of varicella zoster virus (VZV) in a single dermatome.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: IMPLICATIONS: Dexmedetomidine, an alpha(2)-adrenoceptor agonist, is indicated for sedating patients on mechanical ventilation.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44"
+    },
+    {
+      "input": "sentence:  implications:  dexmedetomidine,  an alpha(2)-adrenoceptor  agonist, is  indicated  for   sedating   patients  on   mechanical ventilation.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: IMPLICATIONS: Dexmedetomidine, an alpha(2)-adrenoceptor agonist, is indicated fir sedating patients on mechanical ventilation.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: CONCLUSION: Pancreatic enzyme intolerance, although rare, would be a major problem in the management of patients with CF.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45"
+    },
+    {
+      "input": "sentence: conclusion:   pancreatic  enzyme intolerance,   although rare,  would   be a   major  problem in the  management  of   patients with   cf.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: CONCLUSION: Pancreatic enzyme intolerance, although rare, would b a major problem in da management of patients wid CF.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Macular infarction after endophthalmitis treated with vitrectomy and intravitreal gentamicin.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46"
+    },
+    {
+      "input": "sentence:   macular   infarction   after endophthalmitis  treated  with  vitrectomy and intravitreal   gentamicin.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Macular infarction after endophthalmitis treated wid vitrectomy and intravitreal gentamicin.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: CT-scan disclosed right ethmoid sinusitis that spread to the orbit after surgery.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47"
+    },
+    {
+      "input": "sentence: ct-scan disclosed   right   ethmoid sinusitis   tath spread  to   the  orbit  after  surgery.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: CT-scan disclosed ryte ethmoid sinusitis dat spread to da orbit after surgery.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Of the 16 patients, including the 1 reported here, only 3 displayed significant shortening of the agranulocytic period after treatment.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48"
+    },
+    {
+      "input": "sentence:   of   the  16  patients, including  the  1   reported   here,   only   3  displayed  significant   shortening  of the  agranulocytic period after treatment.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Of da 16 patients, including da 1 reported heaa, only 3 displayed significant shortening of da agranulocytic period after treatment.",
+      "references": [
+        {
+          "output": "not ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: We present three patients with paradoxical seizures; their serum phenytoin levels were 43.5 mcg/mL, 46.5 mcg/mL and 38.3 mcg/mL.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49"
+    },
+    {
+      "input": "sentence: we  present  three   patients  with   paradoxical  seizures;  their   serum  phenytoin  levels were 43.5  mcg/ml,  46.5 mcg/ml and   38.3  mcg/ml.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: We present three patients w/ paradoxical seizures; their serum phenytoin levels were 43.5 mcg/mL, 46.5 mcg/mL and 38.3 mcg/mL.",
+      "references": [
+        {
+          "output": "ADE-related",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    }
+  ]
+}

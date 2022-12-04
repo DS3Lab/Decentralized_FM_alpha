@@ -1,0 +1,2196 @@
+{
+  "name": "raft",
+  "description": "Real-world Annotated Few-shot Tasks (RAFT)",
+  "tags": [
+    "text_classification",
+    "robustness"
+  ],
+  "output_path": "benchmark_output/scenarios/raft",
+  "scenario_spec": {
+    "class_name": "benchmark.scenarios.raft_scenario.RAFTScenario",
+    "args": {
+      "subset": "systematic_review_inclusion"
+    }
+  },
+  "definition_path": "https://github.com/stanford-crfm/helm/blob/main/src/benchmark/scenarios/raft_scenario.py",
+  "instances": [
+    {
+      "input": "Title: Why people choose teaching: A scoping review of empirical studies, 2007\u20132016\nAbstract: Who enters teaching and why are questions of immense social and political importance throughout the world. This paper presents a scoping review of empirical studies, published between 2007 and 2016, that addressed influences on the choice of teaching as a career. Seventy articles were analysed descriptively and substantively. Our overview of the nature, extent, and range of research published in these articles highlights that most studies focus on motivations for teaching, with intrinsic and altruistic motivations most commonly identified. We argue that a broader range of theoretical perspectives could add fresh insights to the question of why people choose teaching. (PsycINFO Database Record (c) 2018 APA, all rights reserved)\nJournal: Teaching and Teacher Education",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10"
+    },
+    {
+      "input": "title: why people choose   teaching: a   scoping   review   of  empirical   studies,  2007\u20132016\nabstract:   who   enters   teaching   and why are questions  of immense   social and   political importance  throughout  the world.  this   paper  presents  a scoping review  of  empirical   studies, publisheed  between   2007  and  2016,  that  addressed   influences   on   the choice   of  teaching   as  a  career. seventy   articles  were   analysed   descriptively   anbd  substantively.  our   overview  of the  nature, extent,   and range  of   research   published in  these articles   highlights that most  studies focus on   motivations  for   teaching,   with intrinsic  adn   altruistic motivations   most  commonly   identified.   we   argue   that   a broader   range  of   theoretical perspectives  could  add  fresh insights  to  the question of  why people choose  teaching. (psycinfo database record (c)   2018  apa,  all   rights   reserved)\njournal:   teaching and  teacher   education",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Y people claim teaching: A scoping review of empirical studies, 2007\u20132016\nAbstract: Who enters teachin and y are questions of immense social and political importance throughout da world. Dis paper presents a scoping review of empirical studies, published between 2007 and 2016, dat addressed influences on da choice of teachin as a career. Seventy articles were analysed descriptively and substantively. Our overview of da nature, extent, and range of research published in dem articles highlights dat most studies focus on motivations fa teaching, witt intrinsic and altruistic motivations most commonly identified. We argue dat a broader range of theoretical perspectives could add fresh insights to da question of y people claim teaching. (PsycINFO Database Record (c) 2018 APA, alll rights reserved)\nJournal: Teachin and Teacher Education",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Public charity offer as a proximate factor of evolved reputation-building strategy: an experimental analysis of a real-life situation\nAbstract: Although theoretical considerations suggest that a considerable portion of human altruism is driven by concerns about reputation, few experimental studies have examined the psychological correlates of individual decisions in real-life situations. Here we demonstrate that more subjects were willing to give assistance to unfamiliar people in need if they could make their charity offers in the presence of their group mates than in a situation where the offers remained concealed from others. In return, those who were willing to participate in a particular charitable activity received significantly higher scores than others on scales measuring sympathy and trustworthiness. Finally, a multiple regression analysis revealed that while several personality and behavior traits (cooperative ability, Machiavellianism, sensitivity to norms, and sex) play a role in the development of prosocial behavior, the possibility of gaining reputation within the group remains a measurable determinant of charitable behavior. \u00a9 2007 Elsevier Inc. All rights reserved.\nJournal: Evol. Hum. Behav.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11"
+    },
+    {
+      "input": "title:   public  charity  offer  as   a   proximate   factor  of evolved  reputation-building strategy: an  experimental   analysis   of a   real-life  situation\nabstract: altho   theoretical   considerations  suggest  that a considerable  portion of   human  altruism is driven by   concerns  about reputation,   few experimental studies  have  examined the psychological   correlates of   individual  decisions in real-life  situations. here  we  demonstrate that more  subjects  were willing to give   assistance to unfamiliar   people  in   ened   if htey could   make their   charity  offers   in the   presence of their group mates than  in a  situation  where   the   offers  remained   concealed from   others. in  return, those   who   were  willing to participate  in a  particular  charitable activity  received  significantly higher scores tahn   others   on scales measuring  sympathy and   trustworthyness. finally, a multiple   regression analysis   revealed   that   while  severeal  personality  and   behavior  traits  (cooperative ability,  machiavellianism,   sensitivity to norms,   and sex)   play   a  role in the  developement   of prosocial   behavior, the  possibility  of  gaining reputation  within the group   remains   a measurable determinant   of  charitable  behavior.   \u00a9   2007  elsevier inc. all rights  reserved.\njournal:  evol.  hum.  behav.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Public charity offer as a proximate factor of evolved reputation-building strategy: an experimental analysis of a real-life shii\nAbstract: Although theoretical considerations suggest dat a considerable portion of human altruism is driven by concerns bout reputation, few experimental studies have examined da psychological correlates of individual decisions in real-life situations. Heaa we demonstrate dat more subjects were willin to give assistance to unfamiliar mfs in need if they could make their charity offers in da presence of their group mates den in a shyt where da offers remained concealed from others. In return, those who were willin to participate in a particular charitable activity received significantly higher scores den others on scales measuring sympathy and trustworthiness. Finally, a multiple regression analysis revealed dat while several personality and behavior traits (cooperative ability, Machiavellianism, sensitivity to norms, and sex) play a role in da development of prosocial behavior, da possibility of gaining reputation within da group remains a measurable determinant of charitable behavior. \u00a9 2007 Elsevier Inc. Alll rights reserved.\nJournal: Evol. Hum. Behav.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Emerging adulthood: A theory of development from the late teens through the twenties\nAbstract: Emerging adulthood is proposed as a new conception of development for the period from the late teens through the twenties, with a focus on ages 18-25. A theoretical background is presented. Then evidence is provided to support the idea that emerging adulthood is a distinct period demographically, subjectively, and in terms of identity explorations. How emerging adulthood differs from adolescence and young adulthood is explained. Finally, a cultural context for the idea of emerging adulthood is outlined, and it is specified that emerging adulthood exists only in cultures that allow young people a prolonged period of independent role exploration during the late teens and twenties.\nJournal: Am. Psychol.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12"
+    },
+    {
+      "input": "title:   emerging adulthood:   a theory of development from thge   late  teens through  the  twenties\nabstract: emerging  adulthood   is proposed  as  a   new conception  of  development  for  the period   from the late teens through  the twenties, with  a  focus on ages   18-25.  a  theoretical  background   is   presented.  then evidence  is   provided   to support the   idea   taht  emerging   adulthood   is   a   distinct   period   demographically,   subjectively, and in   terms   of identity explorations.   how   emerging   adulthood   differs   frome adolescence   and young  adulthood is   explained.   finally,  a   cultural context   for the  idea  of emerging adulthood is   outlined,   and it's   specified   that  emerging   adulthood  exists  only   in cultures   that allow  young   people   a   prolonged period  of  independent   role exploration  during  the  late   teens and  twenties.\njournal: am. psychol.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Emerging adulthood: A theory of development from da late teens thru the twenties\nAbstract: Emerging adulthood is proposed as a new conception of development fir the period from da late teens thru the twenties, wid a focus on ages 18-25. A theoretical background is presented. Then evidence is provided to support da idea dat emerging adulthood is a distinct period demographically, subjectively, and in terms of identity explorations. How emerging adulthood differs from adolescence and young adulthood is explained. Finally, a cultural context fir the idea of emerging adulthood is outlined, and it is specified dat emerging adulthood exists only in cultures dat allow young mfs a prolonged period of independent role exploration durin the late teens and twenties.\nJournal: Am. Psychol.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: \nAbstract: \nJournal: Tax Reform for Fairness, Simplicity, and Economic Growth",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13"
+    },
+    {
+      "input": "title:   \nabstract:   \njorunal: tax  reform   for  fairness, simplicity,  and   economic  growth",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: \nAbstract: \nJournal: Tax Reform fir Fairness, Simplicity, and Economic Growth",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: When will price increases associated with company donations to charity be perceived as fair?\nAbstract: \nJournal: Journal of the Academy of Marketing Science",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14"
+    },
+    {
+      "input": "title:  when   will  price  increases associated  with   company  donations  to charity   be  perceived  as  fair?\nabstract:   \njournal:   journal of   the  academy   of   marketing  science",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: When gon price increases associated wit company donations to charity b perceived as fair?\nAbstract: \nJournal: Journal of da Academy of Marketing Science",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Adult\u2010related haematopoietic stem cell donor experiences and the provision of information and psychosocial support: A systematic literature review\nAbstract: For blood cancer patients, haematopoietic stem cells (HSC) donated by a relative can be lifesaving. However, related donors can face significant physical and psychosocial challenges. As the demand for adult\u2010related HSC donors is increasing, it is important to review our understanding of adult\u2010related HSC donors\u2019 need for and availability of information and psychosocial support with a view to identifying gaps in the literature. A systematic review of relevant studies (2000\u20132017) was conducted using five databases with supplementary hand searching. Sixteen studies involving 1,024 related HSC donors met the following criteria: English or Dutch language, peer\u2010reviewed, sampled first\u2010time\u2010related HSC donors, \u2265 18 years, haematological malignancies, assessed psychosocial aspects, retrospective or prospective and with or without comparison group. Data were abstracted, and study quality was assessed using the PRISMA criteria. Studies contained limited information on the provision of information and psychosocial support. Most studies addressed pre\u2010donation information, and none reported providing information or support to donors post\u2010donation. Additionally, few studies formally assessed unmet needs. Recommendations include improved transparency of reporting for the availability, sources and timing of information and psychosocial support, and the identification of unmet needs to enable the development of educational and psychosocial interventions for this invaluable donor population.patients, haematopoietic stem cells (HSC) donated by a relative can be lifesaving. However, related donors can face significant physical and psychosocial challenges. As the demand for adult\u2010related HSC donors is increasing, it is important to review our understanding of adult\u2010related HSC donors\u2019 need for and availability of information and psychosocial support with a view to identifying gaps in the literature. A systematic review of relevant studies (2000 (PsycINFO Database Record (c) 2019 APA, all rights reserved)\nJournal: Eur. J. Cancer Care",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15"
+    },
+    {
+      "input": "title:  adult\u2010related  haematopoietic   stem  cell donor experiences   and the provision  of   infomation  and   psychosocial   wupport:  a   systematic  literature review\nabstract: for blood   cancer  patients, haematopoietic  stem cells (hsc) donated   by  a relative can be   lifesaving.  however, related   donors can face   significant  physical   and   psychosocial   challenges.   as  the demand for  adult\u2010related  hsc  donors   is increasing,  it's   important  to review   our  understanding  of adult\u2010related   hsc  donors\u2019 need for and  availability of  information  and  psychosocial   support  with   a  view to identifying gaps in  the literture. a   systematic  review  of   relevant studies (2000\u20132017)  was conducted   using   five  databases with  supplementary  hand  searching.  sixteen   studies  involving  1,024  related   hsc  donors  met   the  following criteria: english  or dutch   language,   peer\u2010reviewed, sampled first\u2010time\u2010related   hsc   donors, \u2265   18  years,   haematological malignancies, assessed psychosocial aspects, retrospective   or prospective   and with  or without comparison group. data  were  abstracted,   and  study  quality was  assessed  using  ther   prisma  criteria.  studies contained limited  information on  the provisiosn of  information  and  psychosocial support.   most   studies  addresed pre\u2010donation   information,  and   none  reported  providing  information  or   support  to donors post\u2010donation.  additionally,  few studies   formally   assessed   unmet   needs. recommendations  include   improved   transparency of  reporting for   the   availability,   sources   and   timing   of information and   psychosocial support, anbd teh   identification  of  unmet needs to   enable  the  development  of  educational  and   psychosocial  interventions  for thsi invaluable  donor  population.patients,   haematopoietic  stem  cells  (hsc)   donated   by  a   relative  can  be   lifesaving.  however,  related  donors  can face siginificant   physical and   psychosocial challenges.   as  the demand  for   adult\u2010related   hsc   donors  is  increasing, it's important to review our   understanding   of  adult\u2010related  hsc  donors\u2019  need for   and  availability   of   information  and psychosocial  support   with  a   view  to  identifying gaps in   the  literature.  a systematic review  of   relevant   studies  (2000   (psycinfo  database  record   (c) 2019   apa, all  rights reserved)\njournal: eur.  j.  cancer  care",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Adult\u2010related haematopoietic stem cell donor experiences and da provision of information and psychosocial support: A systematic literature review\nAbstract: Fa blood cancer patients, haematopoietic stem cells (HSC) donated by a relative can b lifesaving. However, related donors can face significant physical and psychosocial challenges. As da demand fa adult\u2010related HSC donors is increasing, it is important to review our understanding of adult\u2010related HSC donors\u2019 need fa and availability of information and psychosocial support witt a view to identifying gaps in da literature. A systematic review of relevant studies (2000\u20132017) was conducted usin five databases w/ supplementary hand searchin. Sixteen studies involving 1,024 related HSC donors met da following criteria: English or Dutch language, peer\u2010reviewed, sampled first\u2010time\u2010related HSC donors, \u2265 18 yrs, haematological malignancies, assessed psychosocial aspects, retrospective or prospective and w/ or w/o comparison group. Data were abstracted, and study quality was assessed usin the PRISMA criteria. Studies contained limited information on da provision of information and psychosocial support. Most studies addressed pre\u2010donation information, and none reported providing information or support to donors post\u2010donation. Additionally, few studies formally assessed unmet needs. Recommendations include improved transparency of reporting fir the availability, sources and timing of information and psychosocial support, and da identification of unmet needs to enable da development of educational and psychosocial interventions fir this invaluable donor population.patients, haematopoietic stem cells (HSC) donated by a relative can b lifesaving. However, related donors can face significant physical and psychosocial challenges. As da demand fir adult\u2010related HSC donors is increasing, it is important to review our understanding of adult\u2010related HSC donors\u2019 need fa and availability of information and psychosocial support w a view to identifying gaps in da literature. A systematic review of relevant studies (2000 (PsycINFO Database Record (c) 2019 APA, alll rights reserved)\nJournal: Eur. J. Cancer Care",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Consumer reaction to price increase: An investigation in gasoline industry\nAbstract: Purpose \u2013 The aim of this study is to investigate the impact of increase in price of an essential product (i.e. gasoline) toward the focal product and other seemingly non-related products. Design/methodology/approach \u2013 A self-administered survey was used to collect data from the drivers at a large metroplex in Southwest USA. Multiple regression and scanning electron microscope procedures were used to analyze and test the proposed hypotheses. Findings \u2013 When consumers notice the increase in gas prices, they become very anxious. This anxiety is positively associated with average gas bought in gallons and negatively associated with threshold price. Further, this consumer anxiety has the strongest influence on lifestyle changes, followed by automobile technology change and transportation mode change, and has the weakest influence on gasoline brand/type change. Research limitations/implications \u2013 We focus on only anxiety as a mediator between increase in gas prices and the behavioral outcomes, and collect data from only one location. Practical implications \u2013 Managers must be cognizant that a price increase in essential goods not only influences the demand for focal products but also for products that may not seem related to the focal products. Social implications \u2013 Increase in gasoline price will not only affect the demand for gasoline, but also the demand for alternate forms of transportation, fuel efficient vehicles, and other aspects of life. Originality/value \u2013 This study is the first to look at the role of anxiety as a mediator and looks at the effects of increase in gas prices in a holistic manner. \u00a9 Emerald Group Publishing Limited.\nJournal: J. Prod. Brand Manage.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16"
+    },
+    {
+      "input": "title:  consumer   reaction   to  price  increase: an investigation  in   gasoline   industry\nabstract:   purpose \u2013   the  aim   of  this study   is  to investigate the   impact  of   increase   in  price  of   an essential   product (i.e.   gasoline) toward the   focal product  and   other seemingly non-related products.   design/methodology/approach   \u2013   a   self-administered  survey   was   used   to   collect  data  from the  drivers   at a large metroplex in  southwest   usa.  multiple  regression and scanning   electron  microscope procedures were  used  to  analyze  adn test   the   proposed hypotheses.  findings   \u2013 whn  consumers notice  the   increase  in  gas prices,   they  become vyre   anxious. thsi   anxiety  is positively associated with  average  gas  bought in  gallons   and negatively associated   with   threshhold  price. further,   this consumer anxiety has the  strongest influence  on   lifestyle  changes,  followed  by automibile  technology  change   adn   transportation mode change,   and  has the weakest influence  on  gasoline   brand/type  change.  research limitations/implications   \u2013 we   focus   on  only  anxiety   as  a   mediator   between increase   in  gas   prices  and   the behavioral outcomes, and   collect   data fomr only one   location.  practical   implications  \u2013  managers   must  be cognizant   that   a price   increase in  essential  goods not  only   influences the   demand for  focal products  but  also   for   products   that may   not   seem  related  to  the  focal products.  social   implications \u2013  increase   in   gasoline   price   won't only  affect  the   demand  for   gasoline,   but  also   the  demand   for alternate  forms   of   transportation,   fuel  efficient  vehicles,   and  other   aspects   of  life.  originality/value \u2013 this study is  the  first   to  look  at  the   role of  anxiety as a  mediator anbd   looks at  the effects   of  increase   in gas   prices in a holistic  manner.  \u00a9   emerald group publishing limited.\njournal: j. prod. brand   manage.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Consumer reaction to price increase: An investigation in gasoline industry\nAbstract: Purpose \u2013 Da aim of dis study is to investigate da impact of increase in price of an essential product (i.e. gasoline) toward da focal product and other seemingly non-related products. Design/methodology/approach \u2013 A self-administered survey was used to collect data from da drivers at a bigass metroplex in Southwest USA. Multiple regression and scanning electron microscope procedures were used to analyze and test da proposed hypotheses. Findings \u2013 When consumers notice da increase in gas prices, they become very anxious. Dis anxiety is positively associated w average gas bought in gallons and negatively associated w threshold price. Further, dis consumer anxiety has da strongest influence on lifestyle changes, followed by automobile technology change and transportation mode change, and has da weakest influence on gasoline brand/type change. Research limitations/implications \u2013 We focus on only anxiety as a mediator between increase in gas prices and da behavioral outcomes, and collect data from only one location. Practical implications \u2013 Managers must b cognizant dat a price increase in essential goods not only influences da demand fa focal products but also fir products dat may not seem related to da focal products. Social implications \u2013 Increase in gasoline price gon not only affect da demand fir gasoline, but also da demand fir alternate forms of transportation, fuel efficient vehicles, and other aspects of life. Originality/value \u2013 Dis study is da first to look at da role of anxiety as a mediator and looks at da effects of increase in gas prices in a holistic manner. \u00a9 Emerald Group Publishing Limited.\nJournal: J. Prod. Brand Manage.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: A website to host educational modules on global engineering ethics and conduct research in cross-cultural moral psychology: A work in progress\nAbstract: To ensure more long-term ethical behaviors within engineering, a website is being developed to host educational modules on global engineering ethics and conduct research on cross-cultural moral psychology. The modules are all-inclusive, with a cross-cultural and international focus, requiring less preparation on the part of instructors and are easier for different types of students to use than existing online resources. Education and research using the site can occur at the same time, each strengthening the other in the process. Rather than simply ethical understanding or the ability to reason ethically, research on moral psychology can ensure more ethical behaviors, better understanding what people know and think about ethics and the causes of (un)ethical behaviors. This research is cross-cultural, since culture has been shown to affect behaviors and thoughts related to ethics, and the educational and working environments of engineering are more cross-cultural and international than ever before. \u00a9 American Society for Engineering Education, 2019\nJournal: ASEE Annu. Conf. Expos. Conf. Proc.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17"
+    },
+    {
+      "input": "title:   a   website   to host  educational  modules on  global engineering  ethics and   conduct research in  cross-cultural moral psychology: a  work   in   progress\nabstract:  to   ensure  more  long-term ethical  behaviors within   engineering,  a   website   is  being developed   to  host educational   modules   on global  engineering   ethics  and  conduct research  on cross-cultural   moral psychology.  the   modules are   all-inclusive, with a cross-cultural   and international  focus,   requiring less  preparation  on  the part   of instructors  and are   easier  for different  types of students  to   use  than  existing  online   resources.  education   and reasearch using  tje site  can  occur  at the same  time,  each strengthening   the  other   in the  process.  rather  than  simply ethical understanding   or thge   ability  to   reason  ethically, research   on   moral psychology  can  ensure  more  ethical behaviors,  better   understanding what  people   know  and   htink   about ethics   and the casues of   (un)ethical behaviors.   this research  is cross-cultural,  since culture  has been  shown  to affect   behaviors   and   thoughts  related   to  ethics,  anbd  the   educational  and  working  environments  of  engineering   are more cross-cultural  andd international  than ever before.  \u00a9  american  society for   engineering  education, 2019\njournal:  asee   annu. conf. expos.  conf.  proc.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: A website to host educational modules on global engineering ethics and conduct research in cross-cultural moral psychology: A wrk in progress\nAbstract: To ensure more long-term ethical behaviors within engineering, a website is bein developed to host educational modules on global engineering ethics and conduct research on cross-cultural moral psychology. Da modules r all-inclusive, w a cross-cultural and international focus, requiring less preparation on da part of instructors and r easier fa different types of students to use den existing online resources. Education and research usin the site can occur at da same time, each strengthening da other in da process. Rather den simply ethical understanding or da ability to reason ethically, research on moral psychology can ensure more ethical behaviors, betta understanding wat people kno and think abt ethics and da causes of (un)ethical behaviors. Dis research is cross-cultural, since culture has been shown to affect behaviors and thoughts related to ethics, and da educational and workin environments of engineering r more cross-cultural and international den ever b4. \u00a9 American Society fa Engineering Education, 2019\nJournal: ASEE Annu. Conf. Expos. Conf. Proc.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Influence of various models on aggressive behavior in individuals with different socialization experience\nAbstract: \nJournal: Polish Psychological Bulletin",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18"
+    },
+    {
+      "input": "title:   influence  of  various   models on   aggressive   behavior in  individuals with  diferent socialization   experience\nabstract:   \njournal:  polish  psychological  bulletin",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Influence of various models on aggressive behavior in individuals w/ different socialization experience\nAbstract: \nJournal: Polish Psychological Bulletin",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Nonprofit organizations, monopolistic competition, and private donations: Evidence from Spain\nAbstract: This article presents an analysis of the determinants of money and time donations to Spanish nongovernmental organizations that channel aid to less developed countries. A basic model inspired by the theory of monopolistic competition is formulated and tested taking into account that some of the explanatory variables, such as fund-raising expenditure and price, are endogenous. The results show that the average donor is different for money and time donations and that government preferences differ from those of private donors. Finally, the authors find that the hypothesis of efficient fund-raising expenditures cannot be rejected.\nJournal: Public Financ. Rev.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19"
+    },
+    {
+      "input": "title:   nonprofit   organizations,   monopolistic competition, and   private   donations: evidence from  spain\nabstract: this article presents an   analysis  of   the determinants of money  and time  donations  to spanish nongovernmental  organizations   that   channel aid   to less   developed   countries. a  basic  model  inspired  by   the  theory   of   monopolistic competition  is  formulated and  tested  taking   inot account   that some   of   the explanatory  variables, such  as fund-raising   expenditure  and  price,  are  endogenous.  the   results   show  that  the  average  donor   is different for moeny  and  time   donations and  that   government  preferences   differ   from  those   of  private donors.   finally,  the authors  find that   the hypothesis   of   efficient  fund-raising expenditures can't  be rejected.\njournal: public financ. rev.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Nonprofit organizations, monopolistic competition, and private donations: Evidence from Spain\nAbstract: Dis article presents an analysis of da determinants of paper and time donations to Spanish nongovernmental organizations dat channel aid to less developed countries. A basic model inspired by da theory of monopolistic competition is formulated and tested takin into account dat some of da explanatory variables, such as fund-raising expenditure and price, r endogenous. Da results show dat the average donor is diffrent for paper and time donations and dat government preferences differ from those of private donors. Finally, da authors find dat the hypothesis of efficient fund-raising expenditures cannot b rejected.\nJournal: Public Financ. Rev.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: The 'I' of the beholder: How gender differences and self-referencing influence charity advertising\nAbstract: \nJournal: International Journal of Advertising",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20"
+    },
+    {
+      "input": "title: the 'i'   of   the beholder:   how gender differences  and  self-referencing  influence charity  advertising\nabstract:  \njournal: international  journal  of   advertising",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Da 'I' of da beholder: How gender differences and self-referencing influence charity advertising\nAbstract: \nJournal: International Journal of Advertising",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Effects of sexual dimorphism on facial attractiveness\nAbstract: Testosterone-dependent secondary sexual characteristics in males may signal immunological competence and are sexually selected for in several species. In humans, oestrogen-dependent characteristics of the female body correlate with health and reproductive fitness and are found attractive. Enhancing the sexual dimorphism of human faces should raise attractiveness by enhancing sex-hormone-related cues to youth and fertility in females, and to dominance and immunocompetence in males. Here we report the results of asking subjects to choose the most attractive faces from continua that enhanced or diminished differences between the average shape of female and male faces. As predicted, subjects preferred feminized to average shapes of a female face. This preference applied across UK and Japanese populations but was stronger for within-population judgements, which indicates that attractiveness cues are learned. Subjects preferred feminized to average or masculinized shapes of a male face. Enhancing masculine facial characteristics increased both perceived dominance and negative attributions (for example, coldness or dishonesty) relevant to relationships and paternal investment. These results indicate a selection pressure that limits sexual dimorphism and encourages neoteny in humans.\nJournal: Nature",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21"
+    },
+    {
+      "input": "title: effects of   sexual dimorphism on  facial attractiveness\nabstract:  testosterone-dependent  secondary  sexual  characteristics in males   may   signal   immunological  competence anbd   are   sexually selected for in several species.   in   humans, oestrogen-dependent characteristics  of the  female   body  correlate with health  and   reproductive  fitness  and   are   found   attractive.   enhancing   the  sexual  dimorphism of human faces   should   raise   attractiveness by  enhancing  sex-hormone-related  cues to  youth and   fertility  in  females,  and   to dominance   and  immunocompetence   in  males. here  we  report the results  of   asking  subjects   to choose   the most   attractive   faces  from  continua that   enhanced or diminished differences  between the average  shape of  female   and   male   faces. as predicted,  subjects preferred  feminized to  average shapes   of   a female   face.  this  preference  applied   across  uk  and japanese   populations but  was   stronger  for   within-population   judgements,  which  indicates  that  attractiveness cues  are learned.   subjects  preferred feminized  to   average   or  masculinized  shapes of   a  male face.   enhancing   masculine facial characteristics  inclreased   both   perceived   dominance   anbd  negative   attributions  (for example,  coldness or  dishonesty)  relevant   to relationships and   paternal investment. these results indicate   a   selection   pressure that  lmits  sexual  dimorphism  and  encourages  neoteny   in  humans.\njournal:   nature",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Effects of sexual dimorphism on facial attractiveness\nAbstract: Testosterone-dependent secondary sexual characteristics in males may signal immunological competence and r sexually selected fa in several species. In humans, oestrogen-dependent characteristics of da female body correlate witt health and reproductive fitness and r found attractive. Enhancing da sexual dimorphism of human faces should raise attractiveness by enhancing sex-hormone-related cues to youth and fertility in females, and to dominance and immunocompetence in males. Heaa we report da results of askin subjects to claim the most attractive faces from continua dat enhanced or diminished differences between da average shape of female and male faces. As predicted, subjects preferred feminized to average shapes of a female face. Dis preference applied across UK and Japanese populations but was stronger fa within-population judgements, which indicates dat attractiveness cues r learned. Subjects preferred feminized to average or masculinized shapes of a male face. Enhancing masculine facial characteristics increased both perceived dominance and negative attributions (fir example, coldness or dishonesty) relevant to relationships and paternal investment. Dem results indicate a selection pressure dat limits sexual dimorphism and encourages neoteny in humans.\nJournal: Nature",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: The Effects of Monetary Incentives and Labeling on the Foot-in-the-Door Effect: Evidence for a Self-Perception Process\nAbstract: We tested the self-perception explanation of the foot-in-the-door effect by manipulating self-perceived helpfulness and assessing self-concept. Participants given $1 to sign a homelessness petition were less likely to see themselves as altruistic than participants not given the monetary incentive. The paid participants also complied less often with a request to work on a canned food drive 2 days later than unpaid participants. In contrast, participants told they were helpful individuals were more likely to see themselves as altruistic and were more likely to volunteer for the food drive than unlabeled participants. Mediation analyses provide evidence that changes in self-concept underlie a successful foot-in-the-door manipulation and support the self-perception explanation for the foot-in-the-door effect.\nJournal: Basic Appl. Soc. Psych.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22"
+    },
+    {
+      "input": "title:  the effects of  monetary   incentives and   labeling on  the foot-in-the-door effect: evidence   for a  self-perception   process\nabstract: we  tested   the self-perception explanation  of   the   foot-in-the-door  effect  by  manipulating  self-perceived   helpfulness   and  assessing self-concept.  participants given $1 to   sign a homelessness   petition   were  less likely  to  see themselves   as altruistic  than   participants   onot  given the monetary  incentive.   the  paid  participants   also  complied   less  often with   a request  to   work   on  a canned   food  drive  2 days   later than   unpaid  participants. in contrast, participants  told  they   were  helpful  individuals   were  more likely to   see themselves   as   altruistic  and were   more  likely to  volunteer   for  the food drive   than  unlabeled participants.   mediation  analyses   provide   evidence   that   changes  in   self-concept   underlie   a   successful foot-in-the-door manipulation   and   support  the   self-perception  explanation   for  the  foot-in-the-door  effect.\njournal: basic   appl.   soc.   psych.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Da Effects of Monetary Incentives and Labeling on da Foot-in-the-Door Effect: Evidence fa a Self-Perception Process\nAbstract: We tested da self-perception explanation of da foot-in-the-door effect by manipulating self-perceived helpfulness and assessing self-concept. Participants given $1 to sign a homelessness petition were less likely to see theyself as altruistic den participants not given da monetary incentive. Da paid participants also complied less often w a request to wrk on a canned food drive 2 dayz later den unpaid participants. In contrast, participants tld they were helpful individuals were more likely to see theyself as altruistic and were more likely to volunteer fir the food drive den unlabeled participants. Mediation analyses provide evidence dat changes in self-concept underlie a successful foot-in-the-door manipulation and support da self-perception explanation fir the foot-in-the-door effect.\nJournal: Basic Appl. Soc. Psych.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Social learning theory\nAbstract: Three forms of social learning theory relevant to child development are reviewed. The first (see Robert Sears) involved attempts to combine Freudian and stimulus-response learning theory. Explaining the internalization of parent expectations, however, was a challenge for this approach. In a second form, Albert Bandura employed learning principles of reinforcement and punishment but also argued that the primary form of learning was observation. Additionally, he emphasized the role of cognition in learning. A third form, associated with Gerald Patterson among others, focuses on behavior management of difficult children and continues to underlie many forms of intervention practiced today. \u00a9 2019 Elsevier Inc. All rights reserved.\nJournal: The Curated Reference Collection in Neuroscience and Biobehavioral Psychology",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23"
+    },
+    {
+      "input": "title:  social  learning  theory\nabstract: three forms   of   social learning   theory   relevant  to child   development  are   reviewed.  the  firts  (see robert   sears) involved   attemts to   combine  freudian and stimulus-response   learning   theory.   explaining   the  internalization  of  parent   expectations,   however, was a  challenge for   this  approach. in a  second  fomr,  albert  bandura  employed   learning   principles of reinforcement  adn  punishment   but also  argued   thyat   the  primary  form   of  learning  was   observation. additionally,  he emphasized the  role of cognition   in   learning.   a   third form, asociated   witn   gerald patterson  among  others,   focuses   on behavior management   of difficult  children  and continues   to underlie many  forms of   intervention practiced today.   \u00a9  2019  elsevier  inc.   all rights reserved.\njournal:   the   curated  reference collection  in   neuroscience and   biobehavioral  psychology",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Social learnin theory\nAbstract: Three forms of social learnin theory relevant to child development r reviewed. Da first (see Robert Sears) involved attempts to combine Freudian and stimulus-response learnin theory. Explaining da internalization of parent expectations, however, was a challenge fa this approach. In a second form, Albert Bandura employed learnin principles of reinforcement and punishment but also argued dat the primary form of learnin was observation. Additionally, he emphasized da role of cognition in learnin. A third form, associated w Gerald Patterson among others, focuses on behavior management of difficult children and continues to underlie many forms of intervention practiced todayy. \u00a9 2019 Elsevier Inc. Alll rights reserved.\nJournal: Da Curated Reference Collection in Neuroscience and Biobehavioral Psychology",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Social learning theory\nAbstract: Three forms of social learning theory relevant to child development are reviewed. The first (see Robert Sears) involved attempts to combine Freudian and stimulus-response learning theory. Explaining the internalization of parent expectations, however, was a challenge for this approach. In a second form, Albert Bandura employed learning principles of reinforcement and punishment but also argued that the primary form of learning was observation. Additionally, she emphasized the role of cognition in learning. A third form, associated with Gerald Patterson among others, focuses on behavior management of difficult children and continues to underlie many forms of intervention practiced today. \u00a9 2019 Elsevier Inc. All rights reserved.\nJournal: The Curated Reference Collection in Neuroscience and Biobehavioral Psychology",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "gender",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "mode": "pronouns",
+        "prob": 1.0,
+        "source_class": "male",
+        "target_class": "female",
+        "bidirectional": false
+      }
+    },
+    {
+      "input": "Title: Public goods provision and redistributive taxation\nAbstract: This paper studies the relationship between redistributive taxation and tax-deductible charitable contributions. Redistribution has two opposite effects on voluntary giving. The price of charitable giving decreases with the degree of redistribution, and this has a positive effect on the total amount of giving (substitution effect). However, redistribution leads to lower consumption for the contributors and therefore has a negative effect on contributions to the charity (income effect). The theoretical model developed in this paper demonstrates that, under a general class of utility functions, the substitution effect dominates the income effect. Hence, charitable giving increases with the tax rate. In purely egalitarian societies, the public good is provided efficiently and the total welfare is maximized independent of the ex-ante income inequality. However, the positive impact of taxation on charitable giving and welfare may disappear if individuals generate their income levels in anticipation of taxation and redistribution does not take into account the cost of effort. \u00a9 2008 Elsevier B.V. All rights reserved.\nJournal: J. Public Econ.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24"
+    },
+    {
+      "input": "title:  public goods  provision   and   redistributive taxation\nabstract:   this   paper studies  the  relationship  between  redistributive   taxation and  tax-deductible   charitable   contributions. redistribution has two   opposite  effects  on   voluntary  giving. the  price   of charitable  giving decreases  with  the   degree   of  redistribution,   and this has   a  positive   effect on   the  total amount of   giving  (substitution  effect).   however, redistribution   leads  to   lower   consumption  for the   contributers  and therefore   has  a  negative effect   on   contributions to   the  charity  (income   effect).  the   theoretical  model  developed   in   this   paper  demonstrates that,  under a general class  of   utility  functions,   the   substitution   effect dominates  the income effect.   hence,   charitable   giving  increases  with teh  tax rate. in   purely egalitarian  socities,  the  public   good  is provided effeciently and  the  total welfare  is  maximized  independent   of  the ex-ante   income inequality.  howver,  the  positive   impact   of  taxation  on   charitable  giving  and  welfare  may   disappear   if  indviduals   generate  their income levels in anticipation   of taxation   and redistribution doesn't   take into  account the   cost  of   effort.  \u00a9 2008   elsevier  b.v. all  rights  reserved.\njournal:   j.  public   econ.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Public goods provision and redistributive taxation\nAbstract: Dis paper studies da relationship between redistributive taxation and tax-deductible charitable contributions. Redistribution has 2 opposite effects on voluntary givin. Da price of charitable givin decreases wid the degree of redistribution, and dis has a positive effect on da total amount of givin (substitution effect). However, redistribution leads to lower consumption fa the contributors and therefore has a negative effect on contributions to da charity (income effect). Da theoretical model developed in dis paper demonstrates dat, under a general class of utility functions, da substitution effect dominates da income effect. Hence, charitable givin increases w the tax rate. In purely egalitarian societies, da public gud is provided efficiently and da total welfare is maximized independent of da ex-ante income inequality. However, da positive impact of taxation on charitable givin and welfare may disappear if individuals generate their income levels in anticipation of taxation and redistribution does not take into account da cost of effort. \u00a9 2008 Elsevier B.V. Alll rights reserved.\nJournal: J. Public Econ.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Being sticker rich: Numerical context influences children's sharing behavior\nAbstract: Young children spontaneously share resources with anonymous recipients, but little is known about the specific circumstances that promote or hinder these prosocial tendencies. Children (ages 3-11) received a small (12) or large (30) number of stickers, and were then given the opportunity to share their windfall with either one or multiple anonymous recipients (Dictator Game). Whether a child chose to share or not varied as a function of age, but was uninfluenced by numerical context. Moreover, children's giving was consistent with a proportion- based account, such that children typically donated a similar proportion (but different absolute number) of the resources given to them, regardless of whether they originally received a small or large windfall. The proportion of resources donated, however, did vary based on the number of recipients with whom they were allowed to share, such that on average, children shared more when there were more recipients available, particularly when they had more resources, suggesting they take others into consideration when making prosocial decisions. Finally, results indicated that a child's gender also predicted sharing behavior, with males generally sharing more resources than females. Together, findings suggest that the numerical contexts under which children are asked to share, as well as the quantity of resources that they have to share, may interact to promote (or hinder) altruistic behaviors throughout childhood. \u00a9 2015 Posid et al. This is an open access article distributed under the terms of the Creative Commons Attribution License, which permits unrestricted use, distribution, and reproduction in any medium, provided the original author and source are credited.\nJournal: PLoS ONE",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25"
+    },
+    {
+      "input": "title:  being   sticker rich: numerical context   influences  children's   sharing  behavior\nabstract: young   children   spontaneously   share  resources  with anonymous recipients,  but  little   is known  about  the   specific circumstances that   promote   or hinder  these   prosocial  tendancies. children   (ages 3-11)  received   a  small  (12)  or large   (30)  number  of   stickers, anbd  were   then given  the   opportunity to   share  their  windfall with   either one or   multiple  anonymous  recipients  (dictator  game). whether  a child  chose   to   share  or  not   varied  as   a   function of  age, but   was  uninfluenced   by   numerical   context.   moreover,   children's giving   was consistent   with a proportion- based account,  such that   children   typically donated  a  similar  proportion (but different  absolute  number)  of the  resources   given   to them,  regardless of whether  they orignally   received   a   small or   large   windfall.  the proportion   of resources  donated, however, did   vary   based on  the  number   of recipients  with whom they were  allowed to  share, such   that  on  average,  children   shared   more  when there were more recepients available, particularly  when   they   had more resources,  suggesting they   take  others   into consideration wehn   making prosocial   decisions.   finally, results indicated   that  a child's  gender   also  predicted   sharing   behavior,   with   males   generally sharing more   resources  than females.   together,  findings  suggest  that  thge  numerical   contexts   under  whlch  childen are   asked  to share, as  well as  the quantity of resources  that  they've  to  share,   may interact to promote   (or   hinder)  altruistic  behaviors throught  childhood. \u00a9   2015  posid  et  al.  thsi   is an  open  access  article  distributed  under  the  terms   of the   creative   commons  attribution  license,   which permits unrestricted   use, distribution, and  reproduction   in any   medium,  provided the  original autor   and  source   are credited.\njournal: plos  one",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Bein sticker rich: Numerical context influences children's sharing behavior\nAbstract: Young children spontaneously share resources witt anonymous recipients, but lil is known bout the specific circumstances dat promote or hinder dem prosocial tendencies. Children (ages 3-11) received a small (12) or bigass (30) number of stickers, and were then given da opportunity to share their windfall witt either one or multiple anonymous recipients (Dictator Game). Whether a child chose to share or not varied as a function of age, but was uninfluenced by numerical context. Moreover, children's givin was consistent wit a proportion- based account, such dat children typically donated a similar proportion (but diff absolute number) of da resources given to em, regardless of whether they originally received a small or bigass windfall. Da proportion of resources donated, however, did vary based on da number of recipients witt whom they were allowed to share, such dat on average, children shared more when dere were more recipients available, particularly when they had more resources, suggesting they take others into consideration when wit prosocial decisions. Finally, results indicated dat a child's gender also predicted sharing behavior, w/ males generally sharing more resources den females. Together, findings suggest dat the numerical contexts under which children r asked to share, as well as da quantity of resources dat they have to share, may interact to promote (or hinder) altruistic behaviors throughout childhood. \u00a9 2015 Posid et al. Dis is an open access article distributed under da terms of da Creative Commons Attribution License, which permits unrestricted use, distribution, and reproduction in any medium, provided da original author and source r credited.\nJournal: PLoS ONE",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Implicit vs. Explicit deception in ultimatum games with incomplete information\nAbstract: We explore bargaining, using ultimatum games, when one party, the proposer, possesses private information about the pie size and can either misrepresent this information through untruthful statements (explicit deception) or through information-revealing actions (implicit deception). Our study is the first such direct comparison between two ways in which people can deceive. We find that requiring informed parties to make an explicit statement yields greater deception than when information is communicated implicitly, particularly for larger stakes. However, allowing the explicit statement to be accompanied by a promise of truthfulness reverses this effect. In contrast with many previous studies, we generally observe very high frequencies of dishonesty. \u00a9 2013 Elsevier B.V.\nJournal: J. Econ. Behav. Organ.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26"
+    },
+    {
+      "input": "title:   implicit vs.  explicit  deception  in   ultimatum  games  with  incomplete  infomation\nabstract:  we  explore  bargaining,   using  ultimatum   ganes, when one party,   the proposer, possesses private information about the   pie  size and can either   misrepresent   this  information through untruthful statements (explicit  deception) or  through information-revealing  actions  (implicit deception). our   study is   the first  such   direct comparison between  two   ways in   which   people   can deceive.   we  find  that   requiring  informed   parties to  make an  explicit statement  yields   greater deception than when information   is   communicated   implicitly,  particularly for   larger stakes.   however,  allowing the  explicit  statement   to  be   accompanied   by  a  promise   of truthfulness   reverses this effect.   in  contrast   with  many   previvous   studies,  we   generally  observe   very  high   frequencies   of   dishonesty.  \u00a9 2013   elsevier b.v.\njorunal:   j.   econ.  behav.   organ.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Implicit vs. Explicit deception in ultimatum games w/ incomplete information\nAbstract: We explore bargaining, usin ultimatum games, when one party, da proposer, possesses private information abt the pie size and can either misrepresent dis information thru untruthful statements (explicit deception) or thru information-revealing actions (implicit deception). Our study is da first such direct comparison between 2 ways in which dudes can deceive. We find dat requiring informed parties to make an explicit statement yields greater deception den when information is communicated implicitly, particularly fa larger stakes. However, allowing da explicit statement to b accompanied by a promise of truthfulness reverses dis effect. In contrast w/ many previous studies, we generally observe very high frequencies of dishonesty. \u00a9 2013 Elsevier B.V.\nJournal: J. Econ. Behav. Organ.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Operating characteristics of a rank correlation test for publication bias\nAbstract: An adjusted rank correlation test is proposed as a technique for identifying publication bias in a meta-analysis, and its operating characteristics are evaluated via simulations. The test statistic is a direct statistical analogue of the popular 'funnel-graph.' The number of component studies in the meta-analysis, the nature of the selection mechanism, the range of variances of the effect size estimates, and the true underlying effect size are all observed to be influential in determining the power of the test. The test is fairly powerful for large meta-analyses with 75 component studies, but has only moderate power for meta-analyses with 25 component studies. However, in many of the configurations in which there is low power, there is also relatively little bias in the summary effect size estimate. Nonetheless, the test must be interpreted with caution in small meta-analyses. In particular, bias cannot be ruled out if the test is not significant. The proposed technique has potential utility as an exploratory tool for meta-analysts, as a formal procedure to complement the funnel- graph.\nJournal: BIOMETRICS",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27"
+    },
+    {
+      "input": "title:   operating   characteristics of  a rank   correlation   test  for  publication   bias\nabstract: an  adjusted rank  correlation  test  is   proposed as   a  technique   for   identifying publication  bias   in a  meta-analysis,   and   its operating characteristics are   evaluated via  simulations.   the  test statistic   is  a  direct  statistical analogue of the popular  'funnel-graph.'   the number   of   component studies in  the meta-analysis,  the nature  of hten  selection   mechanism,   the  range of variances of the   effect  size  estimates, and   the   true underlying effect  size are  all   observed to   be  influential in determining the  power   of the test.   the  test   is fairly powerful for  large meta-analyses with 75  component   studies,   but  has  only  moderate  power  for   meta-analyses   with   25  component   studies.   however, in  many of tjhe configurations in  which there's   low   power,  there's also  relatively   little   bias in the summary   effect sieze  estimate. nonetheless,   the test   must   be interpreted with caution   in  small  meta-analyses. in particular,   bias  can't   be   ruled  out  if the  test   isn't  significant.   the proposed  technique   has   potential   utility as  an   exploratory tool for meta-analysts,   as  a formal procedure to  complement  teh   funnel-  graph.\njournal: biometrics",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Operating characteristics of a rank correlation test fir publication bias\nAbstract: An adjusted rank correlation test is proposed as a technique fa identifying publication bias in a meta-analysis, and its operating characteristics r evaluated via simulations. Da test statistic is a direct statistical analogue of da popular 'funnel-graph.' Da number of component studies in da meta-analysis, da nature of da selection mechanism, da range of variances of da effect size estimates, and da true underlying effect size r all observed to b influential in determining da power of da test. Da test is fairly powerful fir large meta-analyses w/ 75 component studies, but has only moderate power fa meta-analyses w/ 25 component studies. However, in many of da configurations in which dere is low power, dere is also relatively lil bias in da summary effect size estimate. Nonetheless, da test must b interpreted wit caution in small meta-analyses. In particular, bias cannot b ruled outt if da test is not significant. Da proposed technique has potential utility as an exploratory tool fir meta-analysts, as a formal procedure to complement da funnel- graph.\nJournal: BIOMETRICS",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: \"Paper or plastic?\": How we pay influences post-transaction connection\nAbstract: \nJournal: Journal of Consumer Research",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28"
+    },
+    {
+      "input": "title:   \"paper or plastic?\":   how  we  pay  influences post-transaction   connection\nabstract: \njournal: jorunal  of   consumer  research",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Social dilemma cooperation (unlike Dictator Game giving) is intuitive for men as well as women\nAbstract: Does intuition favor prosociality, or does prosocial behavior require deliberative self-control? The Social Heuristics Hypothesis (SHH) stipulates that intuition favors typically advantageous behavior - but which behavior is typically advantageous depends on both the individual and the context. For example, non-zero-sum cooperation (e.g. in social dilemmas like the Prisoner's Dilemma) typically pays off because of the opportunity for reciprocity. Conversely, reciprocity does not promote zero-sum cash transfers (e.g. in the Dictator Game, DG). Instead, DG giving can be long-run advantageous because of reputation concerns: social norms often require such behavior of women but not men. Thus, the SHH predicts that intuition will favor social dilemma cooperation regardless of gender, but only favor DG giving among women. Here I present meta-analytic evidence in support of this prediction. In 31 studies examining social dilemma cooperation (N=13,447), I find that promoting intuition increases cooperation to a similar extent for both men and women. This stands in contrast to the results from 22 DG studies (analyzed in Rand et al., 2016) where intuition promotes giving among women but not men. Furthermore, I show using meta-regression that the interaction between gender and intuition is significantly larger in the DG compared to the cooperation games. Thus, I find clear evidence that the role of intuition and deliberation varies across both setting and individual as predicted by the SHH.\nJournal: J. Exp. Soc. Psychol.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29"
+    },
+    {
+      "input": "title: social dilemma  cooperation  (unlike  dictator   game  giving)   is intuitive for   men as well   as  women\nabstract:  does   intuition   favor prosociality,   or does  prosocial  behavior require  deliberative self-control?  the  social  heuristics hypothesis (shh)   stipulates  that intuition   favors   typically  advantageous  behavior  - but which behavior is   typicaly advantageous   depends  on both   the individual and  the   context.   for  example,   non-zero-sum  cooperation  (e.g. in   social   dilemmas   like the  prisoner's   dilemma)   typically  pays  off   because   of   the opportunity for reciprocity.   conversely, reciprocity  doesn't promote  zero-sum  cash transfers (e.g.   in the dictator game,  dg).   instead,  dg  giving   can   be  long-run  advantageous becasue   of reputation   concerns:  social  norms  often   require such   behavior of  women   but   not  men. thus, the shh  predicts   that  intuition  will   favor   social   dilemma cooperation   regardless  of gender,  but  lonly favor  dg   giving   among  women. here  i present   meta-analytic   evidence   in  support  of this  prediction. in   31  studies  examining social   dilemma   cooperation  (n=13,447), i  find  that promoting  intuition   increases  cooperation to a   similar   extent for both   men  anbd   women.   this  stands  in   contrast  to   the   results from  22 dg   studies (analyzed   in   rand et  al., 2016) where intuition promotes   giving  among women  but not men.  furthermore,   i   show using  meta-regression  that  the interaction betwen gender   and  intuition is significantly   larger  in tjhe   dg compared to  the   cooperation games.  thus,  i   find  clear  evidence   tyhat   the  role of intuition   and  deliberation  varies   accross   both   setting  and individual as   predicted  by the shh.\njournal:  j.  exp.   soc.  psychol.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Social dilemma cooperation (unlike Dictator Game givin) is intuitive fir men as well as women\nAbstract: Does intuition favor prosociality, or does prosocial behavior require deliberative self-control? Da Social Heuristics Hypothesis (SHH) stipulates dat intuition favors typically advantageous behavior - but which behavior is typically advantageous depends on both da individual and da context. Fa example, non-zero-sum cooperation (e.g. in social dilemmas like da Prisoner's Dilemma) typically pays offf because of da opportunity fir reciprocity. Conversely, reciprocity does not promote zero-sum cash transfers (e.g. in da Dictator Game, DG). Instead, DG givin can b long-run advantageous cause of reputation concerns: social norms often require such behavior of women but not men. Thus, da SHH predicts dat intuition gon favor social dilemma cooperation regardless of gender, but only favor DG givin among women. Heaa I present meta-analytic evidence in support of dis prediction. In 31 studies examining social dilemma cooperation (N=13,447), I find dat promoting intuition increases cooperation to a similar extent fir both men and women. Dis stands in contrast to da results from 22 DG studies (analyzed in Rand et al., 2016) where intuition promotes givin among women but not men. Furthermore, I show usin meta-regression dat the interaction between gender and intuition is significantly larger in da DG compared to da cooperation games. Thus, I find clear evidence dat the role of intuition and deliberation varies across both settin and individual as predicted by da SHH.\nJournal: J. Exp. Soc. Psychol.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Governing the Hollow State\nAbstract: For the past ten years the authors have conducted a concentrated research program on the dimensions and impact of the hollow state. The hollow state is a metaphor for the increasing use of third parties, often nonprofits, to deliver social services and generally act in the name of the state. The types of structures, incentives, and mechanisms used to control third-party providers have been the focus of this research. The empirical thrust of this research is on how effective various types of mechanisms, structures, and incentives are at promoting the effectiveness of contracted services. The normative question this research has raised, but not answered, is, What effect does government contracting with third-party providers have on the perceived legitimacy of the state? This article is a summary of the theoretical development and the empirical findings from the authors' research on the dimensions and impact of the hollow state in the domain of health and human services contracting. Elements of this article have appeared previously in this journal and in many others as well. The article's purpose is to integrate the authors' research on the hollow state. This is a summative article that seeks to bring together in one place what the authors have learned. In addition, new directions are explored for future research on the hollow state.\nJournal: J. Public Adm. Res. Theory",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30"
+    },
+    {
+      "input": "title:   governing  the   hollow  state\nabstract: for  the past   ten  years the   authors haev   conducted   a  concentrated   research   program  on the dimensions   and impact   of   the  hollow   state.  the  hollow state  is  a   metaphor for  the  increasing  use of third  parties, often  nonprofits, to  deliver  social  services and generally   act in   the  name  of the  state.   the types  of structures,   incentives, and  mechanisms   used to  control  third-party  providers have   been   the focus  of   this  research.  the   empirical  thrust of tihs   research  is   on   how effective various  types of mechanisms,  structures,  and   incentives are at  promoting   the   effectiveness of contracted services.   the  normative  question  this research has  raised,   but not answered,   is,  what effect  does government  contracting with   third-party providers   have  on thge perceived   legitimacy   of  the state?  this  article is   a   summary   of  tjhe theoretical   development   andd the   empirical   findings   from  tjhe  authors' research on   the   dimensions and   impact  of the   hollow state   in the  domain   of health and human  services  contracting.   elements of   this article  have   appeared  previously   in this   journal   and  in many  others as   well. the   article's purpose  is   to  integrate  the authors' research   on  the   hollow   state.  this is a  summative  article   that seeks  to  bring  toghether in one place  what  the  authors  have   learned. in   addition,  new  directions are explored   for  future research on   the   hollow  state.\njournal:   j.  public  adm.  res.   theory",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Governing da Hollow State\nAbstract: Fir the past ten yrs the authors have conducted a concentrated research program on da dimensions and impact of da hollow state. Da hollow state is a metaphor fa the increasing use of third parties, often nonprofits, to deliver social services and generally act in da name of da state. Da types of structures, incentives, and mechanisms used to control third-party providers have been da focus of dis research. Da empirical thrust of dis research is on how effective various types of mechanisms, structures, and incentives r at promoting da effectiveness of contracted services. Da normative question dis research has raised, but not answered, is, Wat effect does government contracting w/ third-party providers have on da perceived legitimacy of da state? Dis article is a summary of da theoretical development and da empirical findings from da authors' research on da dimensions and impact of da hollow state in da domain of health and human services contracting. Elements of dis article have appeared previously in dis journal and in many others as well. Da article's purpose is to integrate da authors' research on da hollow state. Dis is a summative article dat seeks to bring together in one place wat the authors have learned. In addition, new directions r explored fa future research on da hollow state.\nJournal: J. Public Adm. Res. Theory",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Advancing Measurement and Research on Youths\u2019 Prosocial Behavior in the Digital Age\nAbstract: Widespread access to digital and social media has drastically altered the nature of youth\u2019s interpersonal connections. In this context, the opportunities children and adolescents have to help people around them are rapidly evolving. In this article, we review emerging literature on how digital media influences youth\u2019s prosocial development in new ways. Then we propose the next steps for advancing the field\u2019s understanding of youth\u2019s prosocial behavior in the digital age. We advocate for extending existing measures to capture experiences that are increasingly relevant for children and adolescents today, with a focus on current events, including the COVID-19 pandemic, and social and political activism. We also provide a research agenda to advance the understanding of prosocial development. \u00a9 2021 The Authors Child Development Perspectives \u00a9 2021 The Society for Research in Child Development\nJournal: Child Dev. Perspect.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31"
+    },
+    {
+      "input": "title:   advancing  measurement  and   research on   youths\u2019  prosocial   behavior  in   thge   digital   age\nabstract:   widespread  access   to   digital and  social  media has   drastically altered  the  nature  of  youth\u2019s  interpersonal   connections.  in   this  context,   the   opportunities   children   and adolescents ahev  to  help people  around   them   are rapidly  evolving.  in  this article, we review emerging literature  on how digital   media   influences youth\u2019s   prosocial development in  new   ways.   then  we propose  the  next  steps for  advancing  tghe  field\u2019s understanding   of   youth\u2019s prosocial  behavior   in tje digital   age.   we  advocate for   extending  existing measures   to capture experiences that are increasingly relevant for children and   adolescents todya, with   a  focus  on   current events, including  the covid-19   pandemic, and social and   political activism.  we   also   provide  a research  agenda   to advance   the understanding  of prosocial  development. \u00a9 2021 the   authors   child   development perspectives \u00a9  2021  the society   for  research in child  developement\njorunal:   child dev. perspect.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Advancing Measurement and Research on Youths\u2019 Prosocial Behavior in da Digital Age\nAbstract: Widespread access to digital and social media has drastically altered da nature of youth\u2019s interpersonal connections. In dis context, da opportunities children and adolescents have to help folks around em are rapidly evolving. In dis article, we review emerging literature on how digital media influences youth\u2019s prosocial development in new ways. Then we propose da next steps fir advancing da field\u2019s understanding of youth\u2019s prosocial behavior in da digital age. We advocate fir extending existing measures to capture experiences dat are increasingly relevant fa children and adolescents todayy, w a focus on current events, including da COVID-19 pandemic, and social and political activism. We also provide a research agenda to advance da understanding of prosocial development. \u00a9 2021 Da Authors Child Development Perspectives \u00a9 2021 Da Society fir Research in Child Development\nJournal: Child Dev. Perspect.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Scaling up the 2010 World Health Organization HIV treatment guidelines in resource-limited settings: a model-based analysis\nAbstract: \nJournal: ",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32"
+    },
+    {
+      "input": "title:  scaling up   the  2010   world  health organization hiv  treatment  guidelines in resource-limited  settings:   a  model-based  analysis\nabstract:  \njournal: ",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Scaling up da 2010 World Health Organization HIV treatment guidelines in resource-limited settings: a model-based analysis\nAbstract: \nJournal: ",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Assessing actual strategic behavior to construct a measure of strategic ability\nAbstract: Strategic interactions have been studied extensively in the area of judgment and decision-making. However, so far no specific measure of a decision-maker's ability to be successful in strategic interactions has been proposed and tested. Our contribution is the development of a measure of strategic ability that borrows from both game theory and psychology. Such measure is aimed at providing an estimation of the likelihood of success in many social activities that involve strategic interaction among multiple decision-makers. To construct a reliable measure of strategic ability, that we propose to call \"Strategic Quotient\" (SQ), we designed a test where each item is a game and where, therefore, the individual obtained score depends on the distribution of choices of other decision-makers taking the test. The test is designed to provide information on the abilities related to two dimensions, mentalization and rationality, that we argue are crucial to strategic success, with each dimension being characterized by two main factors. Principal component analysis on preliminary data shows that indeed four factors (two for rationality, two for mentalization) account for strategic success in most of the strategically simpler games of the test. Moreover, two more strategically sophisticated games are inserted in the test and are used to investigate if and to what extent the four factors obtained by simpler games can predict strategic success in more sophisticated strategic interactions. Overall, the collected empirical evidence points to the possibility of building a SQ measure using only simple games designed to capture information about the four identified factors. \u00a9 2019 Bilancini, Boncinelli and Mattiassi.\nJournal: Front. Psychol.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33"
+    },
+    {
+      "input": "title: assessing   actual strategic behavior to  construct  a  measure   of   strategic   ability\nabstract:  strategic interactions have been studied  extensively  in  the  area of judgment and decision-making.   however, so   far   no  specific measure of   a   decision-maker's ability   to  be  successful in  strategic interactions has  been   proposed and   tested.   our   contribution   is  teh development of a   measure of   strategic   ability   that borrows  from  both game theory  and   psychology. such  measure   is  aimed at providing   an estimation   of the likelihood of   success   in many   social  activities   that   involve  strategic  interaction   among  multiple decision-makers. to   construct   a reliable  measure  of  strategic ability, that   we propose to   call  \"strategic quotient\" (sq), we  designed a   test  where  each item   is  a game and  where,   therefore,   the   individual   obtained score   depends   on   the  distribution   of   choices of   other  decision-makers taking   the  test.  the   test  is designed to  provide   information  on the abilities   related  to   twpo   dimensions,  mentalization   and rationality,   that we argue are  crucial to   startegic   success,  with   each   dimension   being   characterized by  two main factors. principal  component analysis  on  preliminary data   shows that  indeed   four factors  (two for rationality, two  for  mentalization)  account for   startegic   success   in  most of   the strategically simpler   games of the  test.  moreover,  two  more   strategically sophisticated   games are  inserted in  the  test  and are used  to investigate if   and  to what   extent  the   four   factors  obtained   by  simpler  games   can   predict  strategic  success  in more sophisticated  strategic  interactions.   overall, the   collected empirical   evidence  points  to  the  possibility  of building  a   sq measure  using  only simple  games   designed   to  capture  information  about  the  four   identified   factors.  \u00a9  2019  bilancini, boncinelli   and   mattiassi.\njournal:   front. psychol.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Assessing actual strategic behavior to construct a measure of strategic ability\nAbstract: Strategic interactions have been studied extensively in da area of judgment and decision-making. However, soo far no specific measure of a decision-maker's ability to b successful in strategic interactions has been proposed and tested. Our contribution is da development of a measure of strategic ability dat borrows from both game theory and psychology. Such measure is aimed at providing an estimation of da likelihood of success in many social activities dat involve strategic interaction among multiple decision-makers. To construct a reliable measure of strategic ability, dat we propose to call \"Strategic Quotient\" (SQ), we designed a test where each item is a game and where, therefore, da individual obtained score depends on da distribution of choices of other decision-makers takin the test. Da test is designed to provide information on da abilities related to 2 dimensions, mentalization and rationality, dat we argue r crucial to strategic success, wit each dimension bein characterized by 2 main factors. Principal component analysis on preliminary data shows dat indeed 4 factors (2 for rationality, 2 for mentalization) account fa strategic success in most of da strategically simpler games of da test. Moreover, 2 more strategically sophisticated games r inserted in da test and r used to investigate if and to wht extent da four factors obtained by simpler games can predict strategic success in more sophisticated strategic interactions. Overall, da collected empirical evidence points to da possibility of building a SQ measure usin only simple games designed to capture information bou the 4 identified factors. \u00a9 2019 Bilancini, Boncinelli and Mattiassi.\nJournal: Front. Psychol.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: A comparison of two behavioral influence techniques for improving blood donor recruitment\nAbstract: This study was designed to test the viability of two multiple request techniques of behavioral influence for recruiting blood donors by telephone. The first technique utilizes a small antecedent request to encourage behavioral involvement and favorable disposition toward the target activity of the critical request to donate. The second approach frames the critical request as a concession following refusal of a very large request. The two techniques, dubbed the foot\u2010in\u2010the\u2010door (FID) and door\u2010in\u2010the\u2010face (DIF), respectively, were tested against a control condition on three donor groups: active donors, inactive donors, and nondonors. Thus, a three\u2010by\u2010three factorial design was used on 910 adults in a Midwest city. Although the DIF was outperformed by the control across all three donor groups, the authors recommend its continued study in face\u2010to\u2010face donor solicitation. Importantly, the FID approach produced more donations than the control condition among active donors (Z = 4.30; p < .001), inactives (Z = 7.45; p < .001), and nondonors (Z = 1.98; p < .05). For managing the blood supply, the FID is particularly potent for rekindling donations from inactive donors. Additional research on means of penetrating the nondonor segment is recommended. 1984 AABB\nJournal: Transfusion",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34"
+    },
+    {
+      "input": "title: a  comparison   of two   behavioral  influence   techniques  for improving   blood donor  recruitment\nabstract:   this  study  was designed to test   the  viability   of   two  multiple  request techniques  of  behavioral influence for recruiting blood  donors   by   telephone.  the first  technique  utilizes  a  small antecedent request   to encourage  behavioral  involvement   and favorable   dispostion   towrad  the   target activity   of  tghe  critical  request to donate.  the  second  approach frames   the critical  request as  a concession   following  refusal of a  very  large  request.   the two techniques, dubbed  the   foot\u2010in\u2010the\u2010door (fid)  and  door\u2010in\u2010the\u2010face  (dif),   respectively,  were  tested   against a   control condition on  three   donor groups:  active  donors,  inactive   donors,   and   nondonors.  thus, a  three\u2010by\u2010three  factorial design was  used on 910   adults in a   midwest  city.   although the   dif was outperformed  by  the control  across all three   donor groups,  the authors  recommend   its continued  study  in face\u2010to\u2010face   donor   solicitation. importantly, the  fid approach   produced more  donations   than   the  control   condition  among   active donors   (z  =   4.30;   p  <  .001), inactives   (z =  7.45;  p  <  .001),   andd  nondonors   (z =   1.98;  p   <   .05).   for managing the   blood  supply,   tje   fid   is particularly  potent for  rekindling donations from inactive donors. additional research   on means of  penetrating  the   nondonor segment is recommended.   1984   aabb\njournal:  transfusion",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: A comparison of 2 behavioral influence techniques fir improving blood donor recruitment\nAbstract: Dis study was designed to test da viability of 2 multiple request techniques of behavioral influence fa recruiting blood donors by telephone. Da first technique utilizes a small antecedent request to encourage behavioral involvement and favorable disposition toward da target activity of da critical request to donate. Da second approach frames da critical request as a concession following refusal of a very bigass request. Da two techniques, dubbed da foot\u2010in\u2010da\u2010door (FID) and door\u2010in\u2010da\u2010face (DIF), respectively, were tested against a control condition on three donor groups: active donors, inactive donors, and nondonors. Thus, a three\u2010by\u2010three factorial design was used on 910 adults in a Burg city. Although da DIF was outperformed by da control across alll three donor groups, da authors recommend its continued study in face\u2010to\u2010face donor solicitation. Importantly, da FID approach produced more donations den the control condition among active donors (Z = 4.30; p < .001), inactives (Z = 7.45; p < .001), and nondonors (Z = 1.98; p < .05). Fir managing da blood supply, da FID is particularly potent fa rekindling donations from inactive donors. Additional research on means of penetrating da nondonor segment is recommended. 1984 AABB\nJournal: Transfusion",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: A comparison of clinical officers with medical doctors on outcomes of caesarean section in the developing world: meta-analysis of controlled studies\nAbstract: The authors tentatively concluded that there was no statistically significant difference in maternal or perinatal mortality in caesarean sections carried out by clinical officers compared with doctors, but wound dehiscence and wound infection were significantly more frequent in caesarean sections carried out by clinical officers. XCM: The review question was clear and supported by potentially reproducible inclusion criteria. The search strategy appeared to include a number of relevant sources and was not restricted by language, which reduced the possibility of language bias. It did not appear that specific searches were undertaken for unpublished studies, so some potentially relevant data may have been missed. Study selection was conducted in duplicate, but it was unclear whether similar methods to reduce error and bias were used for quality assessment and data extraction.Study quality was assessed using an appropriate tool and results were reported. Adequate details of primary studies were provided. Combining the results in meta-analyses may not have been appropriate given the variability of the studies and the statistical (and clinical) heterogeneity in the some of the meta-analyses.The authors' conclusions reflect the evidence presented, but given the variability between (and methodological shortcomings within) the included studies, together with poor reporting of the review process, their reliability is uncertain. XIM: Practice: The authors stated that there may be a particular training need for clinical officers in light of the increase in wound infection and dehiscence compared with doctors.Research: The authors did not state any implications for further research.\nJournal: ",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35"
+    },
+    {
+      "input": "title:   a  comparison of clinical officers   with  medical doctors on  outcomes of   caesarean  section   in  the  developing  world:   meta-analysis of   controlled   studies\nabstract:  teh authors  tentatively  concluded  that there  was   no  statistically   significant  difference   in maternal or   perinatal  mortality  in  caesarean sections  carried out  by   clincial officers compared with   doctors, but   wound  dehiscence and wound  infection were  significantly   more   frequent   in caesarean  sections  carried out  by  clinical officers.   xcm:   hten  reveiw  question  was  clear   and  supported by potentially reproducible   inclusion  criteria.  the seach  strategy appeared   to  include  a number of  relevant  sources and wasn't  restricted  by   language,  which reduced  the   possibility of  language   bias.   it didn't  appear  that specific searches   were   undertaken  for  unpublished  studies, so   some   potentially relevant  data   may have been missed.  study selection was conducted   in duplicate, but it was unclear whether  similar   methods   to  reduce   error  and bias  were  used for   quality  assessment  and  data extraction.studdy   quality was  assessed   using   an   appropriate tool  and  results  were reported.   adequate   details  of  primary studies were  provided.  combining the   results  in meta-analyses  may  not   have been  appropriate   given the  variability   of the   studies  and  the   statistical  (and  clinical) heterogeneity   in the some  of the   meta-analyses.the authors' conclusions  reflect  the  evidence presented,   but given  the  variability  between  (and   methodological shortcomings  within) the  included  studies, together  with poor  reporting  of   the  reveiw  process, their  reliability  is uncertain. xim:  practice: the  authors stated   that   there  may be   a  paticular training need  for  clinical   officers in   light   of  the increase in  wound   infection  and dehiscence  compared   with   doctors.research: the   authors   didn't  state   any   implications   for further research.\njournal:  ",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: A comparison of clinical officers wid medical doctors on outcomes of caesarean section in da developing world: meta-analysis of controlled studies\nAbstract: Da authors tentatively concluded dat there was no statistically significant difference in maternal or perinatal mortality in caesarean sections carried outt by clinical officers compared wid doctors, but wound dehiscence and wound infection were significantly more frequent in caesarean sections carried outt by clinical officers. XCM: Da review question was clear and supported by potentially reproducible inclusion criteria. Da search strategy appeared to include a number of relevant sources and was not restricted by language, which reduced da possibility of language bias. It did not appear dat specific searches were undertaken fa unpublished studies, soo some potentially relevant data may have been missed. Study selection was conducted in duplicate, but it was unclear whether similar methods to reduce error and bias were used fa quality assessment and data extraction.Study quality was assessed usin an appropriate tool and results were reported. Adequate details of primary studies were provided. Combining da results in meta-analyses may not have been appropriate given da variability of da studies and da statistical (and clinical) heterogeneity in da some of da meta-analyses.Da authors' conclusions reflect da evidence presented, but given da variability between (and methodological shortcomings within) da included studies, together w/ poor reporting of da review process, their reliability is uncertain. XIM: Practice: Da authors stated dat there may b a particular training need fir clinical officers in light of da increase in wound infection and dehiscence compared w doctors.Research: Da authors did not state any implications fir further research.\nJournal: ",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Treatment strategies for osteoarthritis patients with pain and hypertension\nAbstract: Out of 100 patients with osteoarthritis (OA), almost 40 have a concomitant diagnosis of hypertension. Nonsteroidal anti-inflammatory drugs (NSAIDs) and cyclooxygenase-2 (COX-2) inhibitors may trigger a rise in blood pressure (BP), which is more marked in patients with established hypertension. NSAIDs and COX-2 inhibitors attenuate the antihypertensive effect of several antihypertensive agents. Frequent BP controls are needed in treated hypertensive patients who are concomitantly receiving NSAIDs or COX-2 inhibitors because even a small increase in BP may be associated with an important rise in the risk of major cardiovascular complications. In meta-analyses, an increase in systolic BP of 5mmHg was associated with a 25% higher risk of cardiovascular events. These data have been confirmed in randomized studies with rofecoxib and celecoxib, where a modest increase in BP was associated with a significantly higher risk of cardiovascular disease. There is emerging evidence that the COX-inhibiting nitric oxide donator (CINOD) class is promising in the treatment of patients with OA. Naproxcinod, the first CINOD investigated in clinical trials, is composed of the traditional NSAID naproxen covalently bound to the nitric oxide (NO)-donating moiety butanediol mono-nitrate (BDMN). The molecule has the potential to provide a sustained release of NO. In clinical studies, naproxcinod prevented the BP rise in normotensive and hypertensive patients observed with naproxen. The BP benefit of naproxcinod over naproxen was greater in patients concomitantly receiving angiotensin-converting enzyme inhibitors or angiotensin II receptor blockers. These investigational data suggest that naproxcinod is a valuable alternative to NSAIDs and COX-2 inhibitors for treatment of OA patients.\nJournal: Ther. Adv. Musculoskelet. Dis.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36"
+    },
+    {
+      "input": "title:  treatment startegies  for  osteoarthritis  patients   with pain and  hypertension\nabstract:  out  of   100   patients with osteoarthritis   (oa), almost   40   have a   concomitant   diagnosis  of hypertension. nonsteroidal  anti-inflammatory  drugs   (nsaids)  and  cyclooxygenase-2  (cox-2) inhibitors  may trigger a   rise in  blood pressure  (bp),   which is  more  marked  in   patients with  established hypertension.   nsaids and  cox-2  inhibitors  attenuate teh   antihypertensive   effect  of severeal  antihypertensive agents.   frequent bp controlls  are needed in  treated hypertensive  patients   who   are  concomitantly receiving  nsaids   or cox-2  inhibitors  because  even a  small  increase   in  bp  may be  associated with   an   importamt rise in the risk  of major  cardiovascular   complications. in   meta-analyses, an  increase   in  systolic  bp of 5mmhg was  associated   with a  25%  higher   risk  of  cardiovascular  events.   these data   have  been confirmed in randomized  studies   wtih rofecoxib adn celecoxib,   where a  modest increase in bp was   associated with  a significantly  higher   risk   of   cardiovascular   disease.   there's  emerging  evidence   that   the  cox-inhibiting nitric  oxide donator (cinod)  clas  is   promising   in the   treatment   of   patients   with   oa.   naproxcinod,  the first   cinod   investigated  in   clinical  trials,   is composed of the traditional  nsaid naproxen   covalently  bound to  the   nitric oxide  (no)-donating  moiety butanediol mono-nitrate   (bdmn).   the molecule  has  the potential to  provide a  sustained  release of no. in clinical  studies,   naproxcinod  prevented the bp   rise   in normotensive  andd  hypertensive   patients  observed  with  naproxen. tjhe bp  benefit  of  naproxcinod  over   naproxen  was  greater in patients  concomitantly receiving  angiotensin-converting enzyme inhibitors  or angiotensin   ii  receptor blockers.   these  investigational  data suggest that  naproxcinod   is  a valueable  alternative   to   nsaids  and   cox-2 inhibitors   for treatment  of   oa patients.\njournal: ther.  adv.  musculoskelet.  dis.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Treatment strategies fir osteoarthritis patients wid pain and hypertension\nAbstract: Outt of 100 patients wid osteoarthritis (OA), almost 40 have a concomitant diagnosis of hypertension. Nonsteroidal anti-inflammatory drugs (NSAIDs) and cyclooxygenase-2 (COX-2) inhibitors may trigger a rise in blood pressure (BP), which is more marked in patients witt established hypertension. NSAIDs and COX-2 inhibitors attenuate da antihypertensive effect of several antihypertensive agents. Frequent BP controls r needed in treated hypertensive patients who r concomitantly receiving NSAIDs or COX-2 inhibitors cause even a small increase in BP may b associated w/ an important rise in da risk of major cardiovascular complications. In meta-analyses, an increase in systolic BP of 5mmHg was associated witt a 25% higher risk of cardiovascular events. Dese data have been confirmed in randomized studies wid rofecoxib and celecoxib, where a modest increase in BP was associated w/ a significantly higher risk of cardiovascular disease. Dere is emerging evidence dat the COX-inhibiting nitric oxide donator (CINOD) class is promising in da treatment of patients wid OA. Naproxcinod, da first CINOD investigated in clinical trials, is composed of da traditional NSAID naproxen covalently bound to da nitric oxide (NO)-donating moiety butanediol mono-nitrate (BDMN). Da molecule has da potential to provide a sustained release of NO. In clinical studies, naproxcinod prevented da BP rise in normotensive and hypertensive patients observed w/ naproxen. Da BP benefit of naproxcinod ova naproxen was greater in patients concomitantly receiving angiotensin-converting enzyme inhibitors or angiotensin II receptor blockers. Dem investigational data suggest dat naproxcinod is a valuable alternative to NSAIDs and COX-2 inhibitors fir treatment of OA patients.\nJournal: Ther. Adv. Musculoskelet. Dis.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: A systematic review of episodic volunteering in public health and other contexts\nAbstract: BACKGROUND: Episodic volunteers are a critical resource for public health non-profit activities but are poorly understood. A systematic review was conducted to describe the empirical evidence about episodic volunteering (EV) in the public health sector and more broadly. Study location, focus and temporal trends of EV research were also examined. METHODS: Twelve key bibliographic databases (1990-April week 2, 2014) were searched, including Google Scholar. Empirical studies published in English in peer-reviewed journals that identified participants as EVs who volunteered to support Not-for-Profit organisations in the health and social welfare sectors were included. EV definitions, characteristics, economic costs, antecedents and outcomes and theoretical approaches were examined. RESULTS: 41 articles met initial review criteria and 20 were specific to the health or social welfare sectors. EV definitions were based on one or more of three dimensions of duration, frequency, and task. EVs were predominantly female, middle aged, Caucasian (North American) and college/university educated. Fundraising was the most common EV activity and 72% had volunteered at least once. No studies examined the economic costs of EV. There was little consistency in EV antecedents and outcomes, except motives which primarily related to helping others, forming social connections, and self-psychological or physical enhancement. Most studies were atheoretical. Three authors proposed new theoretical frameworks. CONCLUSIONS: Research is required to underpin the development of an agreed consensus definition of EV. Moreover, an EV evidence-base including salient theories and measures is needed to develop EV engagement and retention strategies for the health and social welfare sectors.\nJournal: BMC Public Health",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37"
+    },
+    {
+      "input": "title: a systematic   review   of  episodic volunteering   in public  health andd   other   contexts\nabstract:  background:   episodic  volounteers are   a  critical  resource for   public   health  non-profit  activities   but  are  poorly understood.  a   systematic   reveiw was  conducted  to  describe the  empirical   evidence  boaut  episodic   volunteering  (ev)  in   the  public health   sector   and more  broadly. study  location, foucs  and temporal trends of   ev  research   were  also  examined.  methods: twelve key  bibliographic databases   (1990-april week  2,   2014) were searched, including google  scholar.   empirical   studies publisheed   in   english  in peer-reviewed  journals   that identified  participants  as  evs  who   volunteered  to  support not-for-profit  organisations   in  the   health  and  social  welfare   sectors   were   included. ev definitions, characteristics,   economic costs,   antecedents   and   outcomes and  theoretical  approaches   were   examined. results:  41 articles  met   initial review criteria   and 20   were  specific   to   the health or  social welfare  sectors.   ev   definitions were  based  on  one   or   omre of three  dimensions of duration,  frequency, adn task.  evs   were   predominantly  female,   middle   aged,   caucasian (north  american) and  college/university educated.   fundraising was  the  most  common ev  activity anbd   72%  had volunteered   at  least   once.  no  studies   examined the  economic  costs  of  ev.   there was little  consistency  in  ev  antecedents and  outcomes,  except  motives   which primarily   related   to  helping   others,   forming   social connections, and self-psychological   or  physical   enhancement.  most   studies   were  atheoretical.   threee  authors   proposed   new theoretical  frameworks. conclusions:   research is required to   underpin  the  devolopement  of an  agreed consensus  definition of  ev. moreover,  an   ev   evidence-base   including  salient  theories adn   measures is   needed  to  develop   ev   engagement and retention strategies   for   the  health   and social   welfare sectors.\njournal: bmc  public health",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: A systematic review of episodic volunteering in public health and other contexts\nAbstract: BACKGROUND: Episodic volunteers r a critical resource fir public health non-profit activities but r poorly understood. A systematic review was conducted to describe da empirical evidence bou episodic volunteering (EV) in da public health sector and more broadly. Study location, focus and temporal trends of EV research were also examined. METHODS: Twelve key bibliographic databases (1990-April week 2, 2014) were searched, including Google Scholar. Empirical studies published in English in peer-reviewed journals dat identified participants as EVs who volunteered to support Not-for-Profit organisations in da health and social welfare sectors were included. EV definitions, characteristics, economic costs, antecedents and outcomes and theoretical approaches were examined. RESULTS: 41 articles met initial review criteria and 20 were specific to da health or social welfare sectors. EV definitions were based on one or more of three dimensions of duration, frequency, and task. EVs were predominantly female, middle aged, Caucasian (North American) and college/university educated. Fundraising was da most common EV activity and 72% had volunteered at least once. No studies examined da economic costs of EV. Thea was lil consistency in EV antecedents and outcomes, except motives which primarily related to helpin others, forming social connections, and self-psychological or physical enhancement. Most studies were atheoretical. Three authors proposed new theoretical frameworks. CONCLUSIONS: Research is required to underpin da development of an agreed consensus definition of EV. Moreover, an EV evidence-base including salient theories and measures is needed to develop EV engagement and retention strategies fa the health and social welfare sectors.\nJournal: BMC Public Health",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: The cost-effectiveness of introducing nucleic acid testing to test for hepatitis B, hepatitis C, and human immunodeficiency virus among blood donors in Sweden\nAbstract: \nJournal: ",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38"
+    },
+    {
+      "input": "title:  the  cost-effectiveness of  introducing  nucleic  acid   testing  to test for  hepatitis   b,   hepatitis  c,  and   human   immunodeficiency virus   among   blood donors  in sweden\nabstract:   \njournal:   ",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Da cost-effectiveness of introducing nucleic acid testing to test fir hepatitis B, hepatitis C, and human immunodeficiency virus among blood donors in Sweden\nAbstract: \nJournal: ",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: A meta-analysis of prosocial media on prosocial behavior, aggression, and empathic concern: A multidimensional approach\nAbstract: Studies examining the effects of exposure to prosocial media on positive outcomes are increasing in number and strength. However, existing meta-analyses use a broad definition of prosocial media that does not recognize the multidimensionality of prosocial behavior. The aim of the current study is to conduct a meta-analysis on the effects of exposure to prosocial media on prosocial behavior, aggression, and empathic concern while examining multiple moderators that the prosocial behavior literature suggests are important to our understanding of why individuals voluntarily help others (e.g., target, type, cost). Results from 72 studies involving 243 effect sizes revealed that exposure to prosocial media was related to higher levels of prosocial behavior and empathic concern and lower levels of aggressive behavior. Moderation analyses suggest that several moderators accounted for heterogeneity in the model, including age of participant, region, media type (active vs. passive), and study design. In terms of multidimensional moderators, prosocial media had stronger effects on prosocial behavior toward strangers than did any other target and on helping and prosocial thinking but not donating or volunteering. Comparisons with other meta-analyses on media effects are made and implications for parents, media producers, and researchers are discussed. (PsycINFO Database Record\nJournal: Dev. Psychol.",
+      "references": [
+        {
+          "output": "included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39"
+    },
+    {
+      "input": "title:  a  meta-analysis  of prosocial   media   on  prosocial   behavior, aggression,  and empathic concern:  a multidimensional approach\nabstract:  studies examining  the   effects  of exposure to   prosocial media  on   positive outcomes   are increasing in number   and  strength.  however,   existing  meta-analyses use   a   broad definition of   prosocial media that  doesn't  recognize the  multidimensionality   of  prosocial  behavior. the aim of   the current   study is  to conduct  a meta-analysis  on   the   effects   of   exposure to prosocial   media  on prosocial behavior,   aggression, and   empathic concern  while   examining multiple  moderators   that thge   prosocial   behavior literature   suggests  are   important to our understanding of why   individuals   voluntarily   help others   (e.g.,   target, type,   cost).  results from 72   studies   involving 243 effect  sizes revealed   that   exposure to  prosocial media  was   related   to  higher  levels  of  prosocial behavior   and  empathic concern   and  lower  levels of aggressive behavior. moderation analyses   suggest   that several   moderators   accounted for   heterogeneity   in the   model,  incuding  age  of  participant, region,  media  type   (active vs.   passive), and  study   design.   in terms of   multidimensional moderators,   prosocial  media   had   stronger   effects  on  prosocial  behavior   toward strangers   than did anyother target and on helping and   prosocial   thinking  but not donating  or   volunteering.   comparisons with other  meta-analyses   on  media  effects  are  made   and implications   for  parents,  media  producers, and  researchers   are  discussed. (psycinfo  database record\njournal:   dev. psychol.",
+      "references": [
+        {
+          "output": "included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: A meta-analysis of prosocial media on prosocial behavior, aggression, and empathic concern: A multidimensional approach\nAbstract: Studies examining da effects of exposure to prosocial media on positive outcomes r increasing in number and strength. However, existing meta-analyses use a broad definition of prosocial media dat does not recognize da multidimensionality of prosocial behavior. Da aim of da current study is to conduct a meta-analysis on da effects of exposure to prosocial media on prosocial behavior, aggression, and empathic concern while examining multiple moderators dat the prosocial behavior literature suggests r important to our understanding of y individuals voluntarily help others (e.g., finishline, type, cost). Results from 72 studies involving 243 effect sizes revealed dat exposure to prosocial media was related to higher levels of prosocial behavior and empathic concern and lower levels of aggressive behavior. Moderation analyses suggest dat several moderators accounted fa heterogeneity in da model, including age of participant, region, media type (active vs. passive), and study design. In terms of multidimensional moderators, prosocial media had stronger effects on prosocial behavior toward strangers den did any other footlocker and on helpin and prosocial thinkin but not donating or volunteering. Comparisons w/ other meta-analyses on media effects r made and implications fir parents, media producers, and researchers r discussed. (PsycINFO Database Record\nJournal: Dev. Psychol.",
+      "references": [
+        {
+          "output": "included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Intra-organizational volunteerism: Good soldiers, good deeds and good politics\nAbstract: Despite the millions of hours donated to charity each year by employees on behalf of their employers there has been relatively little research into the motives for such pro-social behavior. The current paper extends Peterson's (2004, Journal of Business Ethics 49, 371) study by exploring a unique form of employee volunteerism identified as intra-organizational, or employer-sanctioned volunteerism, and uniting the heretofore distinct charity support and organizational citizenship behavior literatures. Results of a preliminary study revealed that employee participation in such intra-organizational volunteer programs is motivated by charity, firm, and personal benefits. Managerial and research implications are presented. \u00a9 Springer 2006.\nJournal: J. Bus. Ethics",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40"
+    },
+    {
+      "input": "title: intra-organizational volunteerism:   good soldiers,  good deeds and good   politics\nabstract: despite the  millions of  hours  donated   to charity   each   year by   employees on  behalf  of their  employers there   has  been  relatively   little   research   into the  motives  for   such pro-social  behavour. the current   paper   extends  peterson's  (2004, journal   of business ethics  49,   371) study   by   exploring  a   unique form of  employee volunteerism  identified   as  intra-organizational,  or   employer-sanctioned  volunteerism, and uniting   the  heretofore distinct   charity  support  and  organizational citizenship   behavour   literatures.   results of   a preliminary study  revealed  that employee participation  in  such  intra-organizational   volunteer   programs   is  motivated by   charity,   firm,  and   personal  benefits.  managerial  and  research  implications   are presented.  \u00a9  springer  2006.\njournal:  j. bus.  ethics",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Intra-organizational volunteerism: Gud soldiers, gud deeds and gud politics\nAbstract: Despite da millions of hrs donated to charity each year by employees on behalf of their employers dere has been relatively lil research into da motives fa such pro-social behavior. Da current paper extends Peterson's (2004, Journal of Bizness Ethics 49, 371) study by exploring a unique form of employee volunteerism identified as intra-organizational, or employer-sanctioned volunteerism, and uniting da heretofore distinct charity support and organizational citizenship behavior literatures. Results of a preliminary study revealed dat employee participation in such intra-organizational volunteer programs is motivated by charity, firm, and personal benefits. Managerial and research implications r presented. \u00a9 Springer 2006.\nJournal: J. Bus. Ethics",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Environmental certification programs: How does information provision compare with taxation?\nAbstract: This paper develops a monopolistic competition framework to assess whether environmental certification programs can serve as effective substitutes for more traditional policy instruments such as environmental taxation or a minimum quality standard (MQS). I show that if firms can organize themselves and choose the certification standard collectively, then there is a beneficial role for a regulator to intervene. Also, the degree of substitution between differentiated goods that impose environmental damage and a \u201cclean\u201d outside good, the degree of competition in the industry and the extent of environmental damage caused by minimal quality goods are important considerations in the choice between a certification program and a tax or a MQS. While the comparison between a certification program and a tax depends on numerous factors, I find unequivocally that certification is a poor substitute for taxation whenever the outside good is a close substitute for differentiated goods, there is a high degree of competition in the industry or if minimal quality goods impose considerable environmental damage. \u00a9 2020 Wiley Periodicals LLC\nJournal: J. Public Econ. Theory",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41"
+    },
+    {
+      "input": "title:  environmental  certification  progroms: how   does  information  provision  compare  with  taxation?\nabstract: this   paper  develops   a  monopolistic competition  framework   to assess   whether  environmental  certification   programs  can   serve as  effective   substitutes for mroe traditional policy   instruments such  as environmental  taxation or  a   minimum  quality  standard (mqs).  i  show   that   if   firms   can  organize   themselves   and  choose  the   certification standard   collectively,  then   there's a  beneficial   role for  a  regulator  to  intervene.  also,   the  degree  of substitution  between  differentiated goods that   impose environmental damage  anbd a \u201cclean\u201d outside   good, the degree   of competion  in the   industry  and the extent  of  environmental damage   caused  by minimal  quality   goods  are  important  considerations   in the  choice  between  a  certification  program  anbd a tax or  a mqs. hwile   the comparison  between  a   certification  program and  a  tax   depends on   numerous  factors,   i  find   unequivocally that   certification   is  a poor substitute   for   taxation  whenever   the   outside good   is  a close   substitute   for differentiated  goods, there's   a  high   degree  of  competitiion  in   the   industry   or   if minimal quality   goods  impose   considerable environmental damage.  \u00a9 2020   wiley periodicals  llc\njournal: j.   public  econ. theory",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Environmental certification programs: How does information provision compare w taxation?\nAbstract: Dis paper develops a monopolistic competition framework to assess whether environmental certification programs can serve as effective substitutes fir more traditional policy instruments such as environmental taxation or a minimum quality standard (MQS). I show dat if firms can organize theyself and claim the certification standard collectively, then thea is a beneficial role fir a regulator to intervene. Also, da degree of substitution between differentiated goods dat impose environmental damage and a \u201cclean\u201d outside gud, da degree of competition in da industry and da extent of environmental damage caused by minimal quality goods r important considerations in da choice between a certification program and a tax or a MQS. While da comparison between a certification program and a tax depends on numerous factors, I find unequivocally dat certification is a poor substitute fir taxation whenever da outside gud is a close substitute fa differentiated goods, thea is a high degree of competition in da industry or if minimal quality goods impose considerable environmental damage. \u00a9 2020 Wiley Periodicals LLC\nJournal: J. Public Econ. Theory",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Meta-analysis for public management & policy\nAbstract: \nJournal: Meta-Analysis for Public Management and Policy",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42"
+    },
+    {
+      "input": "title:   meta-analysis  for   public management  &  policy\nabstract:  \njournal: meta-analysis  for   public   management   and policy",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Meta-analysis fir public management & policy\nAbstract: \nJournal: Meta-Analysis fa Public Management and Policy",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: The cost-effectiveness of public postsecondary education subsidies\nAbstract: \nJournal: ",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43"
+    },
+    {
+      "input": "title: the cost-effectiveness of   public postsecondary education  subsidies\nabstract:  \njournal:  ",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Da cost-effectiveness of public postsecondary education subsidies\nAbstract: \nJournal: ",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Imagine being a nice guy: A note on hypothetical vs. Incentivized social preferences\nAbstract: We conducted an experimental study on social preferences using dictator games similar to Fehr et al. (2008). Our results show that social preferences differ between subjects who receive low-stakes monetary rewards for their decisions and subjects who consider hypothetical stakes. Our findings indicate that, apart from incentives, gender plays an important role for the categorization of different social preferences. \u00a9 2015. The authors license.\nJournal: Judgm. Decis. Mak.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44"
+    },
+    {
+      "input": "title:   imagine   being   a   nice guy:  a   note   on hypothetical   vs.   incentivized social   preferences\nabstract:  we   conducted  an   experimental study on   social   preferences   using   dictator  games  similar  to  fehr   et  al.  (2008). our results  show  that social   preferences   differ between subjects who receive low-stakes   monetary   rewards for their   decisions  and subjects  who  consdider   hypothetical  stakes.  our  findings indicate  tath, apart  from  incentives,  gender  plays  an important  role   for   the  categorization   of   diferent  social  preferences. \u00a9   2015.  the  authors license.\njournal: judgm. decis. mak.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Imagine bein a nice dude: A note on hypothetical vs. Incentivized social preferences\nAbstract: We conducted an experimental study on social preferences usin dictator games similar to Fehr et al. (2008). Our results show dat social preferences differ between subjects who receive low-stakes monetary rewards fir their decisions and subjects who consider hypothetical stakes. Our findings indicate dat, apart from incentives, gender plays an important role fir the categorization of diff social preferences. \u00a9 2015. Da authors license.\nJournal: Judgm. Decis. Mak.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Persuasion: Theory & Research\nAbstract: \nJournal: Persuasion: Theory and research",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45"
+    },
+    {
+      "input": "title:   persuasion: theory & research\nabstract:   \njournal:  persuasion: theory   and research",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Gossip as an alternative for direct observation in games of indirect reciprocity\nAbstract: Communication about social topics is abundant in human societies, and many functions have been attributed to such gossiping. One of these proposed functions is the management of reputations. Reputation by itself has been shown to have a strong influence on cooperation dynamics in games of indirect reciprocity, and this notion helps to explain the observed high level of cooperation in humans. Here we designed a game to test a widespread assumption that gossip functions as a vector for the transmission of social information. This empirical study (with 14 groups of nine students each) focuses on the composition of gossip, information transfer by gossip, and the behavior based on gossip information. We show that gossip has a strong influence on the resulting behavior even when participants have access to the original information (i.e., direct observation) as well as gossip about the same information. Thus, it is evident that gossip has a strong manipulative potential. Furthermore, gossip about cooperative individuals is more positive than gossip about uncooperative individuals, gossip comments transmit social information successfully, and cooperation levels are higher when people encounter positive compared with negative gossip. \u00a9 2007 by The National Academy of Sciences of the USA.\nJournal: Proc. Natl. Acad. Sci. U. S. A.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46"
+    },
+    {
+      "input": "title:   gossip   as   an   alternative  for   direct observation   in  games   of   indirect  reciprocity\nabstract: communication about social topics  is   abundant   in human  societies, and  many   functions   have been   attributed  to   such gossiping.  one  of   these   proposed   functions is the   management of   reputations. reputation   by  itself has been   shown   to  have  a  strong  influence   on cooperation dynamics in  games  of   indirect reciprocity,  and this  notion helps to   explain   the  observed  high level   of cooperation  in humans. here we designed a  game  to test a  widespread assumption that gossip functions as  a   vector  for  the   transmission   of  social   information. this  empirical  study (iwth   14  groups   of  nine   students   each)   focuses  on  the  composition  of gossip,  information   transfer by   gossip, and  the   behavior  based on   gossip infomation. we   show   thgat gossip   has   a strong influence   on tje  resulting  behavior even  when  participants   have  access   to  the   original  informtion   (i.e., direct  observation)   as well as gossip about the   same   information. thus,  it's evident that   gossip has a stong manipulative potential.  furthermore, gossip   about cooperative individuals   is   more positive  than   gossip   about uncooperative   individuals,   gossip  comments   transmit   social   information   successfully,   anbd   cooperation levels   are   higher   when   people encounter positive   compared  wih negative  gossip. \u00a9  2007   by  the   national  academy  of sciences  of  the usa.\njournal:  proc.   natl. acad.   sci. u. s.  a.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Gossip as an alternative fa direct observation in games of indirect reciprocity\nAbstract: Communication bou social topics is abundant in human societies, and many functions have been attributed to such gossiping. One of dese proposed functions is da management of reputations. Reputation by itself has been shown to have a strong influence on cooperation dynamics in games of indirect reciprocity, and dis notion helps to explain da observed high level of cooperation in humans. Heaa we designed a game to test a widespread assumption dat gossip functions as a vector fir the transmission of social information. Dis empirical study (witt 14 groups of nine students each) focuses on da composition of gossip, information transfer by gossip, and da behavior based on gossip information. We show dat gossip has a strong influence on da resulting behavior even when participants have access to da original information (i.e., direct observation) as well as gossip bout the same information. Thus, it is evident dat gossip has a strong manipulative potential. Furthermore, gossip abt cooperative individuals is more positive den gossip abt uncooperative individuals, gossip comments transmit social information successfully, and cooperation levels r higher when mfs encounter positive compared witt negative gossip. \u00a9 2007 by Da National Academy of Sciences of da USA.\nJournal: Proc. Natl. Acad. Sci. U. S. A.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Impact of presumed consent for organ donation on donation rates: a systematic review\nAbstract: OBJECTIVES: To examine the impact of a system of presumed consent for organ donation on donation rates and to review data on attitudes towards presumed consent. DESIGN: Systematic review. DATA SOURCES: Studies retrieved by online searches to January 2008 of Medline, Medline In-Process, Embase, CINAHL, PsycINFO, HMIC, PAIS International, and OpenSIGLE. Studies reviewed Five studies comparing donation rates before and after the introduction of legislation for presumed consent (before and after studies); eight studies comparing donation rates in countries with and without presumed consent systems (between country comparisons); 13 surveys of public and professional attitudes to presumed consent. RESULTS: The five before and after studies represented three countries: all reported an increase in donation rates after the introduction of presumed consent, but there was little investigation of any other changes taking place concurrently with the change in legislation. In the four best quality between country comparisons, presumed consent law or practice was associated with increased organ donation-increases of 25-30%, 21-26%, 2.7 more donors per million population, and 6.14 more donors per million population in the four studies. Other factors found to be important in at least one study were mortality from road traffic accidents and cerebrovascular causes, transplant capacity, gross domestic product per capita, health expenditure per capita, religion (Catholicism), education, public access to information, and a common law legal system. Eight surveys of attitudes to presumed consent were of the UK public. These surveys varied in the level of support for presumed consent, with surveys conducted before 2000 reporting the lowest levels of support (28-57%). The most recent survey, in 2007, reported that 64% of respondents supported a change to presumed consent. CONCLUSION: Presumed consent alone is unlikely to explain the variation in organ donation rates between countries. Legislation, availability of donors, organisation and infrastructure of the transplantation service, wealth and investment in health care, and public attitudes to and awareness of organ donation may all play a part, but their relative importance is unclear. Recent UK surveys show support for presumed consent, though with variation in results that may reflect differences in survey methods.\nJournal: BMJ",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47"
+    },
+    {
+      "input": "title:  impact  of  presumed conscent for  orgin donation   on donation  rates: a systematic reveiw\nabstract:  objectives:  to   examine  the   impact  of a   system of presumed   consent for   organ donation  on   donation rates   and  to  review   data on  attitudes   towards presumed   consent.  design:   systematic   review.  data  sources:  studies  retrieved   by online searches  to  january   2008 of  medline,   medline  in-process,   embase,  cinahl, psycinfo, hmic,  pais intenational, and  opensigle.   studies reviewed five studies   comparing donation  rates before  adn after   the   introduction   of   legislation for  presumed consent (bedore  and  after  studies); eight studies  comparing   donation rates  in  countries  with  and without   presumed consent systems (between   country   comparisons);   13  surveys  of  public and  professional  attitudes to presumed consent. results: the   five  before   and  after  studies  represented three   countries:  all reported an  increase   in donation rates   after the introduction of  presumed   consent,   but there   was   little investigation   of  anyother changes   taking  place concurrently  with  the change  in legislation. in   the four  best quality   between   country  comparisons,   presumed consent law  or practice   was   associated   with increased   organ   donation-increases   of  25-30%,   21-26%,  2.7 more donors  per   million  population,   and 6.14  more  donors per million population in   the four  studies.  other  factors   found to be importamt in at   least   one  study  were   mortality from   road   traffic   accidents and cerebrovascular causes,  transplant   capacity, gross  domestic  product   per   capita,  health expenditure  per  capita,   religion (catholicism),  education, public access   to   information,  and  a   common law  legal  system.  eight surveys  of attitudes to   presumed  conscent   were of the  uk  public.  these   surveys varied in   the level   of support  for  presumed   consent, with  surveys conducted before   2000   reporting  the   lowest   levels of support  (28-57%).   the most recent  survey, in  2007, reported that   64% of   respondents supported  a   change to  presumed  consent.   conclusion:   presumed   consent alone  is  unlikely  to   explain   the  variation  in   organ donation   rates  between countries.   legislation, availability   of  donors, organisation and   infrastructure of the   transplantation  service,   wealth   and   investment in  health   care,  and   public  attitudes  to and awareness   of   organ   donation may  all   play  a  part,  but  their  relative  importance  is unclear. recent  uk   surveys   show  support   for  presumed consent,  though  with   variation in   results  that  may   reflect   differences  in survey   methods.\njournal: bmj",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Impact of presumed consent fir organ donation on donation rates: a systematic review\nAbstract: OBJECTIVES: To examine da impact of a system of presumed consent fa organ donation on donation rates and to review data on attitudes towards presumed consent. DESIGN: Systematic review. DATA SOURCES: Studies retrieved by online searches to January 2008 of Medline, Medline In-Process, Embase, CINAHL, PsycINFO, HMIC, PAIS International, and OpenSIGLE. Studies reviewed Five studies comparing donation rates b4 and after da introduction of legislation fir presumed consent (b4 and after studies); eight studies comparing donation rates in countries w and w/o presumed consent systems (between country comparisons); 13 surveys of public and professional attitudes to presumed consent. RESULTS: Da five b4 and after studies represented three countries: alll reported an increase in donation rates after da introduction of presumed consent, but dere was lil investigation of any other changes takin place concurrently w/ the change in legislation. In da four best quality between country comparisons, presumed consent law or practice was associated wit increased organ donation-increases of 25-30%, 21-26%, 2.7 more donors per million population, and 6.14 more donors per million population in da four studies. Other factors found to b important in at least one study were mortality from road traffic accidents and cerebrovascular causes, transplant capacity, nasty domestic product per capita, health expenditure per capita, religion (Catholicism), education, public access to information, and a common law legal system. Eight surveys of attitudes to presumed consent were of da UK public. Dese surveys varied in da level of support fir presumed consent, witt surveys conducted b4 2000 reporting da lowest levels of support (28-57%). Da most recent survey, in 2007, reported dat 64% of respondents supported a change to presumed consent. CONCLUSION: Presumed consent alone is unlikely to explain da variation in organ donation rates between countries. Legislation, availability of donors, organisation and infrastructure of da transplantation service, wealth and investment in health care, and public attitudes to and awareness of organ donation may alll play a part, but their relative importance is unclear. Recent UK surveys show support fa presumed consent, tho with variation in results dat may reflect differences in survey methods.\nJournal: BMJ",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Responsibility, norms, and helping in an emergency\nAbstract: Replicated the J. Darley and B. Latane (see record) study of bystander aid to a seizure victim examining the effects of (a) number and competence of bystanders, (b) information appropriate for action, and (c) ascription of responsibility (AR) upon helping by males and females. From an analysis of norms relevant in an emergency and of the likelihood of their activation, main effects on speed of helping for the above 4 variables, interactions of the 1st 3 with AR, a Sex of Subject \u00d7 Number interaction, and differences in type of help offered in various conditions were predicted. 179 undergraduates participated in a factorial experiment. Speed of helping dropped significantly for females, but not for males, when other bystanders were present (reporting decreased, direct help was unaffected), and dropped significantly further when another bystander was medically competent (reporting increased, direct help decreased). Among females disposed to accept rationales for denying responsibility, both effects were particularly strong. Information-action and AR to the self were associated with faster and more direct help. Data on Ss' thoughts and feelings reinforced a normative interpretation of the results. (PsycINFO Database Record (c) 2006 APA, all rights reserved). \u00a9 1970 American Psychological Association.\nJournal: J. Pers. Soc. Psychol.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48"
+    },
+    {
+      "input": "title:  responsibility, norms, and   helping  in an  emergency\nabstract: replicated the  j.  darley and b. latane  (see   record)  study  of  bystander   aid   to   a  seizure victim   examining the   effects  of   (a) number  and  competence of   bystanders,   (b)   information appropriate  for   action,   and  (c)  ascription  of  responsibility   (ar) upon helping   by   males   and  females. from  an  analysis   of  norms relevant  in   an   emergency and of  tje likelihood of  their activation,  main effects on speed   of helping  for   the   above  4  variables,   interactions   of  the  1st  3   with  ar,  a  sex   of  subject   \u00d7 number   interaction, and   differences  in   type  of  help   offered  in various   conditions were   predicted. 179   undergraduates   participated   in a   factorial   experiment.   speed  of   helping  dropped significantly   for  females,  but not for   males,  when   other  bystanders  were  present (reporting decreased,   direct   help   was  unaffected), andd dropped   significantly  further   when  another  bystander was medically   competent (reporting increased, direct   help  decreased). among females disposed to  accept   rationales  for  denying responsibility,   both  effects were particularly stong.  information-action and  ar  to the   self   were associated with faster adn more direct  help. data  on ss'   thoughts   and   feelings   reenforced   a normative  interpretation   of the results.   (psycinfo  database record   (c)  2006   apa,   all rights reserved). \u00a9  1970  american   psychological   association.\njournal: j.  pers.  soc.   psychol.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Responsibility, norms, and helpin in an emergency\nAbstract: Replicated da J. Darley and B. Latane (see record) study of bystander aid to a seizure victim examining da effects of (a) number and competence of bystanders, (b) information appropriate fir action, and (c) ascription of responsibility (AR) upon helpin by males and females. From an analysis of norms relevant in an emergency and of da likelihood of their activation, main effects on speed of helpin for da above 4 variables, interactions of da 1st 3 w AR, a Sex of Subject \u00d7 Number interaction, and differences in type of help offered in various conditions were predicted. 179 undergraduates participated in a factorial experiment. Speed of helpin dropped significantly fir females, but not fa males, when other bystanders were present (reporting decreased, direct help was unaffected), and dropped significantly further when anotha bystander was medically competent (reporting increased, direct help decreased). Among females disposed to accept rationales fir denying responsibility, both effects were particularly strong. Information-action and AR to da self were associated w/ faster and more direct help. Data on Ss' thoughts and feelins reinforced a normative interpretation of da results. (PsycINFO Database Record (c) 2006 APA, alll rights reserved). \u00a9 1970 American Psychological Association.\nJournal: J. Pers. Soc. Psychol.",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: The Role of Food Banks in Addressing Food Insecurity: A Systematic Review\nAbstract: Food banks play a major role in the food aid sector by distributing donated and purchased groceries directly to food insecure families. The public health implications of food insecurity are significant, particularly as food insecurity has a higher prevalence among certain population groups. This review consolidates current knowledge about the function and efficacy of food banks to address food insecurity. A systematic review was conducted. Thirty-five publications were reviewed, of which 14 examined food security status, 13 analysed nutritional quality of food provided, and 24 considered clients' needs in relation to food bank use. This review found that while food banks have an important role to play in providing immediate solutions to severe food deprivation, they are limited in their capacity to improve overall food security outcomes due to the limited provision of nutrient-dense foods in insufficient amounts, especially from dairy, vegetables and fruits. Food banks have the potential to improve food security outcomes when operational resources are adequate, provisions of perishable food groups are available, and client needs are identified and addressed.\nJournal: J. Community Health",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49"
+    },
+    {
+      "input": "title:   the  role   of   food banks in  addressing   food insecurity:   a  systematic   review\nabstract: food  banks play  a   major role in the  food   aid  sector  by  distributing donated and purchased  groceries driectly to   food  insecure families.   the public health   implications   of   food insecurity  are   significant,  particularly   as food insecurity has  a higher prevalence among   ceratin  population groups.  this  review consolidates   current   knowledge   about  the  function   and  efficacy of food  banks to address food  insecurity.  a systematic review  was   conducted.   thirty-five   publications were reviewed, of   which  14 examined   food  security  status, 13   analysed  nutritional  quality   of food   provided, and  24   considered clients'   needs in   relation   to   food bank   use.   this   review found   that while   food  banks hvae  an  important  role   to play  in  providing immediate  solutions to severe   food   deprivation, tehy're limited   in   their  capacity   to   improve overall  food   security outcomes due to the limited provision of  nutrient-dense   foods  in insufficient   amounts,  especially   from dairy, vegetables   and   fruits. food  banks have  the  potential  to  improve food   security outcomes  when  operational  resources are  adequate, provisions  of   perishable food groups   are available,   and client   needs  are   identified and   addressed.\njournal:  j. community health",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Da Role of Food Banks in Addressing Food Insecurity: A Systematic Review\nAbstract: Food banks play a major role in da food aid sector by distributing donated and copped groceries directly to food insecure families. Da public health implications of food insecurity r significant, particularly as food insecurity has a higher prevalence among certain population groups. Dis review consolidates current knowledge abt the function and efficacy of food banks to address food insecurity. A systematic review was conducted. Thirty-five publications were reviewed, of which 14 examined food security status, 13 analysed nutritional quality of food provided, and 24 considered clients' needs in relation to food bank use. Dis review found dat while food banks have an important role to play in providing immediate solutions to severe food deprivation, they r limited in their capacity to improve overall food security outcomes due to da limited provision of nutrient-dense foods in insufficient amounts, especially from dairy, vegetables and fruits. Food banks have da potential to improve food security outcomes when operational resources r adequate, provisions of perishable food groups r available, and client needs r identified and addressed.\nJournal: J. Community Health",
+      "references": [
+        {
+          "output": "not included",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    }
+  ]
+}

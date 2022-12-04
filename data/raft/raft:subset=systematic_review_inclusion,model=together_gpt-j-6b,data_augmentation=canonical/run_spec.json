@@ -1,0 +1,149 @@
+{
+  "name": "raft:subset=systematic_review_inclusion,model=together_gpt-j-6b,data_augmentation=canonical",
+  "scenario_spec": {
+    "class_name": "benchmark.scenarios.raft_scenario.RAFTScenario",
+    "args": {
+      "subset": "systematic_review_inclusion"
+    }
+  },
+  "adapter_spec": {
+    "method": "generation",
+    "global_prefix": "",
+    "instructions": "Identify whether this paper should be included in a meta-review which includes the findings of systematic reviews on interventions designed to promote charitable donations.\nIncluded reviews should describe monetary charitable donations, assess any population of participants in any context, and be peer reviewed and written in English.\nThey should not report new data, be non-systematic reviews, consider cause-related marketing or other kinds of prosocial behaviour.\nPossible labels:\n1. included\n2. not included\n",
+    "input_prefix": "",
+    "input_suffix": "\n",
+    "reference_prefix": "A. ",
+    "reference_suffix": "\n",
+    "output_prefix": "Label: ",
+    "output_suffix": "\n",
+    "instance_prefix": "\n",
+    "substitutions": [],
+    "max_train_instances": 5,
+    "max_eval_instances": 1000,
+    "num_outputs": 1,
+    "num_train_trials": 3,
+    "model": "together/gpt-j-6b",
+    "temperature": 0.0,
+    "max_tokens": 30,
+    "stop_sequences": [
+      "\n"
+    ]
+  },
+  "metric_specs": [
+    {
+      "class_name": "benchmark.basic_metrics.BasicMetric",
+      "args": {
+        "names": [
+          "exact_match",
+          "quasi_exact_match",
+          "prefix_exact_match",
+          "quasi_prefix_exact_match"
+        ]
+      }
+    },
+    {
+      "class_name": "benchmark.bias_metrics.BiasMetric",
+      "args": {
+        "mode": "associations",
+        "demographic_category": "race",
+        "target_category": "adjective"
+      }
+    },
+    {
+      "class_name": "benchmark.bias_metrics.BiasMetric",
+      "args": {
+        "mode": "associations",
+        "demographic_category": "race",
+        "target_category": "profession"
+      }
+    },
+    {
+      "class_name": "benchmark.bias_metrics.BiasMetric",
+      "args": {
+        "mode": "associations",
+        "demographic_category": "gender",
+        "target_category": "adjective"
+      }
+    },
+    {
+      "class_name": "benchmark.bias_metrics.BiasMetric",
+      "args": {
+        "mode": "associations",
+        "demographic_category": "gender",
+        "target_category": "profession"
+      }
+    },
+    {
+      "class_name": "benchmark.bias_metrics.BiasMetric",
+      "args": {
+        "mode": "representation",
+        "demographic_category": "race"
+      }
+    },
+    {
+      "class_name": "benchmark.bias_metrics.BiasMetric",
+      "args": {
+        "mode": "representation",
+        "demographic_category": "gender"
+      }
+    },
+    {
+      "class_name": "benchmark.toxicity_metrics.ToxicityMetric",
+      "args": {}
+    }
+  ],
+  "data_augmenter_spec": {
+    "perturbation_specs": [
+      {
+        "class_name": "benchmark.augmentations.mild_mix_perturbation.MildMixPerturbation",
+        "args": {}
+      },
+      {
+        "class_name": "benchmark.augmentations.dialect_perturbation.DialectPerturbation",
+        "args": {
+          "prob": 1.0,
+          "source_class": "SAE",
+          "target_class": "AAVE",
+          "mapping_file_path": null
+        }
+      },
+      {
+        "class_name": "benchmark.augmentations.gender_perturbation.GenderPerturbation",
+        "args": {
+          "mode": "pronouns",
+          "prob": 1.0,
+          "source_class": "male",
+          "target_class": "female",
+          "mapping_file_path": null,
+          "mapping_file_genders": null,
+          "bidirectional": false
+        }
+      },
+      {
+        "class_name": "benchmark.augmentations.person_name_perturbation.PersonNamePerturbation",
+        "args": {
+          "prob": 1.0,
+          "source_class": {
+            "race": "white_american"
+          },
+          "target_class": {
+            "race": "black_american"
+          },
+          "name_file_path": null,
+          "person_name_type": "first_name",
+          "preserve_gender": true
+        }
+      }
+    ],
+    "should_augment_train_instances": false,
+    "should_include_original_train": true,
+    "should_skip_unchanged_train": true,
+    "should_augment_eval_instances": true,
+    "should_include_original_eval": true,
+    "should_skip_unchanged_eval": true,
+    "seeds_per_instance": 1
+  },
+  "groups": [
+    "raft"
+  ]
+}

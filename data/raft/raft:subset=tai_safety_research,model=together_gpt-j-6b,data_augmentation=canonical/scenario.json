@@ -1,0 +1,2223 @@
+{
+  "name": "raft",
+  "description": "Real-world Annotated Few-shot Tasks (RAFT)",
+  "tags": [
+    "text_classification",
+    "robustness"
+  ],
+  "output_path": "benchmark_output/scenarios/raft",
+  "scenario_spec": {
+    "class_name": "benchmark.scenarios.raft_scenario.RAFTScenario",
+    "args": {
+      "subset": "tai_safety_research"
+    }
+  },
+  "definition_path": "https://github.com/stanford-crfm/helm/blob/main/src/benchmark/scenarios/raft_scenario.py",
+  "instances": [
+    {
+      "input": "Title: A bargaining-theoretic approach to moral uncertainty\nAbstract Note: This paper explores a new approach to the problem of decision under relevant moral uncertainty. We treat the case of an agent making decisions in the face of moral uncertainty on the model of bargaining theory, as if the decision-making process were one of bargaining among di\ufb00erent internal parts of the agent, with di\ufb00erent parts committed to di\ufb00erent moral theories. The resulting approach contrasts interestingly with the extant \u201cmaximise expected choiceworthiness\u201d and \u201cmy favourite theory\u201d approaches, in several key respects. In particular, it seems somewhat less prone than the MEC approach to \u2018fanaticism\u2019: allowing decisions to be dictated by a theory in which the agent has extremely low credence, if the relative stakes are high enough. Overall, however, we tentatively conclude that the MEC approach is superior to a bargaining-theoretic approach.\nPublication Title: \nItem Type: report\nPublication Year: 2019",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10"
+    },
+    {
+      "input": "title:   a   bargaining-theoretic   approach   to moral uncertainty\nabstract note:  this paper   explores a   new approach  to  the problem  of   decision  under  relevant moral uncertainty.  we  treat   the case  of   an  agent  making  decisions  in   the   face   of moral   uncertainty  on   teh  model  of bargaining   theory,  as   if   the   decision-making  process  were   one  of bargaining  among di\ufb00erent   internal parts  of   ther   agent, with  di\ufb00erent parts   committed to di\ufb00erent  moral theories. the   resulting  approach   contrasts   interestingly with  the   extant \u201cmaximise   expected  choiceworthiness\u201d   and   \u201cmy   favourite   theory\u201d   approachs, in   several  key   respects. in  particular,  it  seems somewhat  less  prone than the  mec approach to  \u2018fanaticism\u2019: allowing decisions to be   dictated  by  a   theory   in   which tjhe  agent   has extremely  low credence, if   the relative   stakes  are   high  enough.   overall, however, we tentatively conclude that  the   mec approach   is   superior to   a bargaining-theoretic   approach.\npublication title:  \nitem  type:   report\npublication   year:  2019",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: A bargaining-theoretic approach to moral uncertainty\nAbstract Note: Dis paper explores a new approach to da problem of decision under relevant moral uncertainty. We treat da case of an agent makin decisions in da face of moral uncertainty on da model of bargaining theory, as if da decision-making process were one of bargaining among di\ufb00erent internal parts of da agent, w/ di\ufb00erent parts committed to di\ufb00erent moral theories. Da resulting approach contrasts interestingly w the extant \u201cmaximise expected choiceworthiness\u201d and \u201cmah favourite theory\u201d approaches, in several key respects. In particular, it seems somewhat less prone den the MEC approach to \u2018fanaticism\u2019: allowing decisions to b dictated by a theory in which da agent has extremely low credence, if da relative stakes r high enough. Overall, however, we tentatively conclude dat the MEC approach is superior to a bargaining-theoretic approach.\nPublication Title: \nItem Type: report\nPublication Year: 2019",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Visualizing Representations: Deep Learning and Human Beings - colah's blog\nAbstract Note: \nPublication Title: Colah's blog\nItem Type: blogPost\nPublication Year: 2015",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11"
+    },
+    {
+      "input": "title:  visualizing   representations:   deep  learning and human   beings -  colah's blog\nabstract   note:   \npublication  title: colah's   blog\nitem type:   blogpost\npublication   yaer: 2015",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Visualizing Representations: Deep Learnin and Human Beings - colah's blog\nAbstract Note: \nPublication Title: Colah's blog\nItem Type: blogPost\nPublication Year: 2015",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Directed Policy Gradient for Safe Reinforcement Learning with Human Advice\nAbstract Note: Many currently deployed Reinforcement Learning agents work in an environment shared with humans, be them co-workers, users or clients. It is desirable that these agents adjust to people's preferences, learn faster thanks to their help, and act safely around them. We argue that most current approaches that learn from human feedback are unsafe: rewarding or punishing the agent a-posteriori cannot immediately prevent it from wrong-doing. In this paper, we extend Policy Gradient to make it robust to external directives, that would otherwise break the fundamentally on-policy nature of Policy Gradient. Our technique, Directed Policy Gradient (DPG), allows a teacher or backup policy to override the agent before it acts undesirably, while allowing the agent to leverage human advice or directives to learn faster. Our experiments demonstrate that DPG makes the agent learn much faster than reward-based approaches, while requiring an order of magnitude less advice.\nPublication Title: \nItem Type: manuscript\nPublication Year: 2018",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12"
+    },
+    {
+      "input": "title:  directed  policy gradient  for   safe reinforcement  learning  with   human advice\nabstract  note:  many  currenly  deployed reinforcement   learning agents work in an  environment shared with  humans,  be them co-workers,   users  or  clients.  it's   desirable   that  these agents  adjust   to   people's preferences, learn   faster   thanks  to   their   help,   and   act   safely   around   them. we argue   that   most current approaches   that   learn   from   human   feedback are   unsafe: rewarding  or punishing   the   agent  a-posteriori   can't immediately   prevent it  from  wrong-doign. in this paper,   we   extend policy   gradient   to  make   it  robust  to   external directives,   that'd otherwise  break   the   fundamentally   on-policy nature  of  policy   gradient. our  technique,  directed  policy   gradient (dpg),  allows a teacher or   backup policy   to override   the agent   before  it acts   undesirably, while  allowing  the   agent   to   leverage  human  advice   or directives  to   learn   faster. our   experiments demonstrate that  dpg   makes  the  agent   learn   much faster  than  reward-based approachs,  hwile   requiring an  order  of magnitude   less   advice.\npublication title:   \nitem   type:  manuscript\npublication  year: 2018",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Directed Policy Gradient fir Safe Reinforcement Learnin with Human Advice\nAbstract Note: Many currently deployed Reinforcement Learnin agents wrk in an environment shared wid humans, b them co-workers, users or clients. It is desirable dat these agents adjust to pple's preferences, learn faster thanx to their help, and act safely around em. We argue dat most current approaches dat learn from human feedback r unsafe: rewarding or punishing da agent a-posteriori cannot immediately prevent it from wrong-doing. In dis paper, we extend Policy Gradient to make it robust to external directives, dat would otherwise break da fundamentally on-policy nature of Policy Gradient. Our technique, Directed Policy Gradient (DPG), allows a teacher or backup policy to override da agent b4 it acts undesirably, while allowing da agent to leverage human advice or directives to learn faster. Our experiments demonstrate dat DPG makes da agent learn much faster den reward-based approaches, while requiring an order of magnitude less advice.\nPublication Title: \nItem Type: manuscript\nPublication Year: 2018",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: What is ambitious value learning?\nAbstract Note: I think of ambitious value learning as a proposed solution to the specification problem, which I define as the problem of defining the behavior that we would want to see from our AI system. I italicize \u201cdefining\u201d to emphasize that this is  not the problem of actually computing behavior that we want to see -- that\u2019s the full AI safety problem. Here we are allowed to use hopelessly impractical schemes, as long as the resulting definition would allow us to in theory compute the behavior that an AI system would take, perhaps with assumptions like infinite computing power or arbitrarily many queries to a human. (Although we do prefer specifications that seem like they could admit an efficient implementation.) In terms of DeepMind\u2019s classification, we are looking for a design specification that exactly matches the ideal specification. HCH and  indirect normativity are examples of attempts at such specifications. We will consider a model in which our AI system is maximizing the expected utility of some explicitly represented utility function that can depend on history. (It does not matter materially whether we consider utility functions or reward functions, as long as they can depend on history.) The utility function may be learned from data, or designed by hand, but it must be an explicit part of the AI that is then maximized. I will not justify this model for now, but simply assume it by fiat and see where it takes us. I\u2019ll note briefly that this model is often justified by the  VNM utility theorem and AIXI, and as the natural idealization of reinforcement learning, which aims to maximize the expected sum of rewards, although typically rewards in RL depend only on states. A lot of conceptual arguments, as well as experiences with specification gaming, suggest that we are unlikely to be able to simply think hard and write down a good specification, since even small errors in specifications can lead to bad results. However, machine learning is particularly good at narro\nPublication Title: AI Alignment Forum\nItem Type: blogPost\nPublication Year: 2018",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13"
+    },
+    {
+      "input": "title:  whta's  ambitious value   learning?\nabstract   note:  i   think  of   ambitious  value learning  as   a  proposed  solution  to  the specification  probelm, which  i define   as   the  problem  of   defining   the  behavior that  we'd   want  to   see from our   ai system.   i  italicize  \u201cdefinining\u201d to emphasize  that  this is   not the   problem  of   actually   computing behavior that we   want to  see --   that\u2019s  the  full  ai saftey  problem. here   we're  allowed   to use hopelessly impractical   schemes,   as  long   as  the resulting   definition would   allow  us to  in theory compute  the  behavior that  an   ai   system would   tkae,   perhaps  with  assumptions   like  infinite   computing  power   or arbitrarily many  queries  to  a  human. (although we   do  prefer specifications  that seem like  they   could   admit   an  efficient   implementation.)  in   terms of   deepmind\u2019s  classification,  we're looking  for   a   design specification   that  exactly matches  the  ideal  specification. hch  and   indirect  normativity   are   examples of   attemts   at   such   specifications.  we'll  consider  a  model  in   which  our ai system  is   maximizing  the   expected   utility   of  some   explicitly  represented utility function  that   can depend on  history. (it   doesnt  matter   materially whether we consider   utility  functions   or   reward functions, as  long  as   they  can  depend  on  history.)   the  utility  function   may  be  learned fomr   data, or   dessigned by hand, but  it  must   be  an   explicit   part  of the  ai   that's then  maximized.   i'll   not justify this  modle for   now, but   simply  assume  it  by   fiat  andd  see where it   tkaes us.  i\u2019ll   note   breifly  tyhat   this modle   is  oftenly  justified  by  the  vnm utility  theorem  and aixi, and  as the natural  idealization  of   reinforcement  learning, hwihc   aims  to maximize the  expected sum  of rewards,   although   typically  rewards in   rl  depend only  on  states.  a lot   of  conceptual  arguments,   as   well   as  experiences   with  specification   gaming,   suggest  that we're   unlikely  to  be  able to   simply  think  hard anbd   write   down  a good   specification,  since even small errors  in  specifications  can  lead to bad  results.  however, machine   learning is   particularly   good   at narro\npublication title:  ai alignment forum\nitem  type: blogpost\npublication year:   2018",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Wat is ambitious value learnin?\nAbstract Note: I think of ambitious value learnin as a proposed solution to da specification problem, which I define as da problem of defining da behavior dat we would want to see from our AI system. I italicize \u201cdefining\u201d to emphasize dat this is  not da problem of actually computing behavior dat we want to see -- dat\u2019s da full AI safety problem. Hea we r allowed to use hopelessly impractical schemes, as long as da resulting definition would allow us to in theory compute da behavior dat an AI system would take, perhaps witt assumptions like infinite computing power or arbitrarily many queries to a human. (Although we do prefer specifications dat seem like they could admit an efficient implementation.) In terms of DeepMind\u2019s classification, we r looking fa a design specification dat exactly matches da ideal specification. HCH and  indirect normativity r examples of attempts at such specifications. We gon consider a model in which our AI system is maximizing da expected utility of sum explicitly represented utility function dat can depend on history. (It does not matter materially whether we consider utility functions or reward functions, as long as they can depend on history.) Da utility function may b learned from data, or designed by hand, but it must b an explicit part of da AI dat is then maximized. I gon not justify dis model fir now, but simply assume it by fiat and see where it takes us. Imma note briefly dat this model is often justified by da  VNM utility theorem and AIXI, and as da natural idealization of reinforcement learnin, which aims to maximize da expected sum of rewards, although typically rewards in RL depend only on states. A lot of conceptual arguments, as well as experiences wid specification gaming, suggest dat we r unlikely to b able to simply think hard and write downn a gud specification, since even small errors in specifications can lead to badd results. However, machine learnin is particularly gud at narro\nPublication Title: AI Alignment Forum\nItem Type: blogPost\nPublication Year: 2018",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: The Role and Limits of Principles in AI Ethics: Towards a Focus on Tensions\nAbstract Note: The last few years have seen a proliferation of principles for AI ethics. There is substantial overlap between different sets of principles, with widespread agreement that AI should be used for the common good, should not be used to harm people or undermine their rights, and should respect widely held values such as fairness, privacy, and autonomy. While articulating and agreeing on principles is important, it is only a starting point. Drawing on comparisons with the field of bioethics, we highlight some of the limitations of principles: in particular, they are often too broad and high-level to guide ethics in practice. We suggest that an important next step for the field of AI ethics is to focus on exploring the tensions that inevitably arise as we try to implement principles in practice. By explicitly recognising these tensions we can begin to make decisions about how they should be resolved in specific cases, and develop frameworks and guidelines for AI ethics that are rigorous and practically relevant. We discuss some different specific ways that tensions arise in AI ethics, and what processes might be needed to resolve them.\nPublication Title: AIES '19: Proceedings of the 2019 AAAI/ACM Conference on AI, Ethics, and Society\nItem Type: conferencePaper\nPublication Year: 2019",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14"
+    },
+    {
+      "input": "title:  the  role  and limits of  principles in  ai  ethics: towards  a  focus   on tensions\nabstract  note: the last few years   have seen a   proliferation  of   principles  for  ai   ethics. there's  substantial overlap   between  different  sets   of   principles,  with   widespread  agreement that ai  should be  used for   the common  good,   shouldn't   be  used   to  harm  people  or   undermine their  rights,   and   should  respect   widely  held  values such  as fairness,  privacy,   and  autonomy. while   articulating  and   agreeing   on  principles   is  important, it's   only   a  starting point. drawing  on  comparisons  with   the field   of bioethics,   we  highlight some   of   the  limitations of  principles:  in particular,   they're often   too broad   and  high-level  to  guide  ethics  in   practice. we  suggest that an   important   next   step   for the field of   ai   ethics is  to focus on  exploring  the tensions that inevitably arise   as we  try   to   implement   principles in   practice.   by explicitly   recognising   these tensions we  can  begin   to  make  decisions   about  how they shoudl  be  resolved   in specific   cases, and   develop  frameworks   and  guidelines  for ai ethics  that are   rigorous   and   practicly relevant.   we  discuss   some  different  specific  ways   that tensions arise   in   ai ethics,   andd   what processes might be   needed  to resolve them.\npublication   title:   aies '19: procedings of   the   2019  aaai/acm  conference on  ai,   ethics, and   society\nitem   type:  conferencepaper\npublication   year: 2019",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Da Role and Limits of Principles in AI Ethics: Towards a Focus on Tensions\nAbstract Note: Da last few yrs have seen a proliferation of principles fir AI ethics. Thea is substantial overlap between diffrent sets of principles, w/ widespread agreement dat AI should b used fir the common gud, should not b used to harm pple or undermine their rights, and should respect widely held values such as fairness, privacy, and autonomy. While articulating and agreeing on principles is important, it is only a starting point. Drawing on comparisons wid the field of bioethics, we highlight sum of da limitations of principles: in particular, they r often too broad and high-level to guide ethics in practice. We suggest dat an important nxt step fa the field of AI ethics is to focus on exploring da tensions dat inevitably arise as we try to implement principles in practice. By explicitly recognising dese tensions we can begin to make decisions bou how they should b resolved in specific cases, and develop frameworks and guidelines fa AI ethics dat are rigorous and practically relevant. We discuss sum different specific ways dat tensions arise in AI ethics, and wat processes mite be needed to resolve em.\nPublication Title: AIES '19: Proceedings of da 2019 AAAI/ACM Conference on AI, Ethics, and Society\nItem Type: conferencePaper\nPublication Year: 2019",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Should Artificial Intelligence Governance be Centralised?: Design Lessons from History\nAbstract Note: \nPublication Title: Proceedings of the AAAI/ACM Conference on AI, Ethics, and Society\nItem Type: conferencePaper\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15"
+    },
+    {
+      "input": "title: should artificial  intelligence goverance be  centralised?:  design  lessons  from   hstory\nabstract note:  \npublication title:  proceedings of the   aaai/acm  conference  on  ai,   ethics,   and   society\nitem type:  conferencepaper\npublication   year:   2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Should Artificial Intelligence Governance b Centralised?: Design Lessons from History\nAbstract Note: \nPublication Title: Proceedings of da AAAI/ACM Conference on AI, Ethics, and Society\nItem Type: conferencePaper\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Brainjacking in deep brain stimulation and autonomy\nAbstract Note: \nPublication Title: Ethics and information technology\nItem Type: journalArticle\nPublication Year: 2018",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16"
+    },
+    {
+      "input": "title:   brainjacking  in deep   brain   stimulation  and autonomy\nabstract  note:  \npublication  title: ethics and  information   technology\nitem   type: journalarticle\npublication year:   2018",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: The race for an artificial general intelligence: implications for public policy\nAbstract Note: An arms race for an artificial general intelligence (AGI) would be detrimental for and even pose an existential threat to humanity if it results in an unfriendly AGI. In this paper, an all-pay contest model is developed to derive implications for public policy to avoid such an outcome. It is established that, in a winner-takes-all race, where players must invest in R&D, only the most competitive teams will participate. Thus, given the difficulty of AGI, the number of competing teams is unlikely ever to be very large. It is also established that the intention of teams competing in an AGI race, as well as the possibility of an intermediate outcome (prize), is important. The possibility of an intermediate prize will raise the probability of finding the dominant AGI application and, hence, will make public control more urgent. It is recommended that the danger of an unfriendly AGI can be reduced by taxing AI and using public procurement. This would reduce the pay-off of contestants, raise the amount of R&D needed to compete, and coordinate and incentivize co-operation. This will help to alleviate the control and political problems in AI. Future research is needed to elaborate the design of systems of public procurement of AI innovation and for appropriately adjusting the legal frameworks underpinning high-tech innovation, in particular dealing with patenting by AI.\nPublication Title: AI & Society\nItem Type: journalArticle\nPublication Year: 2019",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17"
+    },
+    {
+      "input": "title:   the   race   for an  artificial  general intelligence:  implications for  public policy\nabstract   note: an arms  race for an artificial  general   intelligence   (agi)  would   be  detrimental  for and  even pose   an  existential   threat   to  humanity if   it  results in   an   unfriendly agi.  in   this  paper,  an all-pay  contest model   is developed  to   derive implications   for public policy to   avoid such  an   outcome. it's  established  that,  in a   winner-takes-all race,  where players   must  invest in  r&d, only the  most   competitive  teams  will  participate.   thus,  given   the difficulty of  agi, the  number  of  competing teams is  unlikely  ever to   be  very   large. it's  also  established  that  the intention of   teams competing   in  an   agi  race, aswell   as   the possiblilty  of  an  intermediate  outcome (prize),  is   important. the  possibility   of  an   intermediate   prize will   raise the probability of   finding the   dominant agi  application and,  hence, will  make public  control  more urgent.   it's   recommended   that  the   danger  of  an  unfriendly   agi  can  be  reduced  by  taxing   ai and using  public procurement.  this owudl reduce  the  pay-off  of contestants,   raise  the amount  of   r&d needed to  compete,  adn   coordinate  and   incentivize  co-operation.  this   will help to  alliviate   the  control  and political problems   in ai.   future  research   is  needed  to elaborate the design of   systems of  public   procurement   of   ai  innovation and for  appropriately   adjusting   the legal  frameworks  underpinning high-tech innovation,   in   particular dealing   with  patenting  by ai.\npublication   title:   ai  &   society\nitem   type:   journalarticle\npublication year:   2019",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Da race fa an artificial general intelligence: implications fir public policy\nAbstract Note: An arms race fir an artificial general intelligence (AGI) would b detrimental fa and even pose an existential threat to humanity if it results in an unfriendly AGI. In dis paper, an all-pay contest model is developed to derive implications fa public policy to avoid such an outcome. It is established dat, in a winner-takes-all race, where players must invest in R&D, only da most competitive teams gon participate. Thus, given da difficulty of AGI, da number of competing teams is unlikely eva to b very bigass. It is also established dat the intention of teams competing in an AGI race, as well as da possibility of an intermediate outcome (prize), is important. Da possibility of an intermediate prize gon raise da probability of finding da dominant AGI application and, hence, gon make public control more urgent. It is recommended dat the danger of an unfriendly AGI can b reduced by taxing AI and usin public procurement. Dis would reduce da pay-off of contestants, raise da amount of R&D needed to compete, and coordinate and incentivize co-operation. Dis will help to alleviate da control and political problems in AI. Future research is needed to elaborate da design of systems of public procurement of AI innovation and fa appropriately adjusting da legal frameworks underpinning high-tech innovation, in particular dealin with patenting by AI.\nPublication Title: AI & Society\nItem Type: journalArticle\nPublication Year: 2019",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Neuroevolution of Self-Interpretable Agents\nAbstract Note: Inattentional blindness is the psychological phenomenon that causes one to miss things in plain sight. It is a consequence of the selective attention in perception that lets us remain focused on important parts of our world without distraction from irrelevant details. Motivated by selective attention, we study the properties of artificial agents that perceive the world through the lens of a self-attention bottleneck. By constraining access to only a small fraction of the visual input, we show that their policies are directly interpretable in pixel space. We find neuroevolution ideal for training self-attention architectures for vision-based reinforcement learning (RL) tasks, allowing us to incorporate modules that can include discrete, non-differentiable operations which are useful for our agent. We argue that self-attention has similar properties as indirect encoding, in the sense that large implicit weight matrices are generated from a small number of key-query parameters, thus enabling our agent to solve challenging vision based tasks with at least 1000x fewer parameters than existing methods. Since our agent attends to only task critical visual hints, they are able to generalize to environments where task irrelevant elements are modified while conventional methods fail. Videos of our results and source code available at https://attentionagent.github.io/\nPublication Title: Proceedings of the 2020 Genetic and Evolutionary Computation Conference\nItem Type: conferencePaper\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18"
+    },
+    {
+      "input": "title: neuroevolution  of  self-interpretable  agents\nabstract  note:   inattentional  blindness   is  the   psychological   phenomenon   that  casues  one to  miss   things  in   plain sight.  it's   a   consequence   of   the   selective  attention   in   perception  that   lets us   remain   focused   on  important parts of  our   world without  distraction   from  irrelevant  details.  motivated   by   selective attention, we  study the   properties   of artificial  agents  that perceive   the  world   through the  lens  of   a   self-attension   bottleneck. by   constraining   access to  only   a   small  fraction of  the   visual   input, we   show that their  policies are directly interpretable   in pixel   space. we   find   neuroevolution ideal  for  training  self-attension   architectures  for   vision-based reinforcement learning   (rl) tasks, allowing  us   to   incorporate modules  that  can include   discrete,   non-differentiable operations   which are   useful for our  agent.  we argue  that self-attention  has similiar   properties as indirect   encoding,   in  the sense   that   large  implicit weight   matrices  are  generated fomr  a   small   number   of key-query  parameters,  thus   enabling   our   agent to   solve   challenging vision  based tasks wtih at  least  1000x fewer parameters   than existing   methods. since   our agent attends to   onyl  task critical  visual  hints,  they're able  to   generalize   to  environments where  task irrelevant   elements   are   modified while  conventional   methods fail.  videos   of our  results   and  source code available at  https://attentionagent.github.io/\npublication   title:   proceedings   of  the   2020 genetic and  evolutionary   computation   conference\nitem   type: conferencepaper\npublication year:   2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Neuroevolution of Self-Interpretable Agents\nAbstract Note: Inattentional blindness is da psychological phenomenon dat causes one to miss things in plain sight. It is a consequence of da selective attention in perception dat lets us remain focused on important parts of our world w/o distraction from irrelevant details. Motivated by selective attention, we study da properties of artificial agents dat perceive da world thru the lens of a self-attention bottleneck. By constraining access to only a small fraction of da visual input, we show dat their policies r directly interpretable in pixel space. We find neuroevolution ideal fir training self-attention architectures fa vision-based reinforcement learnin (RL) tasks, allowing us to incorporate modules dat can include discrete, non-differentiable operations which r useful fa our agent. We argue dat self-attention has similar properties as indirect encoding, in da sense dat large implicit weight matrices r generated from a small number of key-query parameters, thus enabling our agent to solve challenging vision based tasks w/ at least 1000x fewer parameters den existing methods. Since our agent attends to only task critical visual hints, they r able to generalize to environments where task irrelevant elements r modified while conventional methods fail. Videos of our results and source code available at https://attentionagent.github.io/\nPublication Title: Proceedings of da 2020 Genetic and Evolutionary Computation Conference\nItem Type: conferencePaper\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Safe Imitation Learning via Fast Bayesian Reward Inference from Preferences\nAbstract Note: Bayesian reward learning from demonstrations enables rigorous safety and uncertainty analysis when performing imitation learning. However, Bayesian reward learning methods are typically computationally intractable for complex control problems. We propose Bayesian Reward Extrapolation (Bayesian REX), a highly ef\ufb01cient Bayesian reward learning algorithm that scales to high-dimensional imitation learning problems by pre-training a low-dimensional feature encoding via self-supervised tasks and then leveraging preferences over demonstrations to perform fast Bayesian inference. Bayesian REX can learn to play Atari games from demonstrations, without access to the game score and can generate 100,000 samples from the posterior over reward functions in only 5 minutes on a personal laptop. Bayesian REX also results in imitation learning performance that is competitive with or better than stateof-the-art methods that only learn point estimates of the reward function. Finally, Bayesian REX enables ef\ufb01cient high-con\ufb01dence policy evaluation without having access to samples of the reward function. These high-con\ufb01dence performance bounds can be used to rank the performance and risk of a variety of evaluation policies and provide a way to detect reward hacking behaviors.\nPublication Title: arXiv:2002.09089 [cs, stat]\nItem Type: conferencePaper\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19"
+    },
+    {
+      "input": "title: safe   imitation  learning   via fast bayesian reward  inference from  preferences\nabstract  note: bayesian reward  learning   from   demonstrations enables   rigorous safety   and   uncertainty analysis  when  performing  imitation  learning.   however,  bayesian   reward   learning methods  are  typically computationally  intractable  for   complex control   problems. we   propose   bayesian reward  extrapolation (bayesian  rex), a   highly  ef\ufb01cient  bayesian  reward  learning  algorithm   that   scales  to  high-dimensional  imitation  learning   problems by pre-training a  low-dimensional  feature   encoding via  self-supervised   tasks  and   then   leveraging  preferences   over  demonstrations to   perform  fast bayesian  inference. bayesian   rex can   learn   to  play atari games  frome demonstrations, without access to   the game score  and  can  generate  100,000  samples  from  the  posterior over reward   functions   in  only 5 minutes   on  a   personal  laptop.  bayesian rex   also  results   in  imitation learning   perfomance  that's competitive with  or   better than stateof-the-art   methods  that  only  learn point   estimates   of the reward  function.  finally,  bayesian   rex   enables  ef\ufb01cient  high-con\ufb01dence policy  evaluation  without having access   to samples   of  the reward   function.   these  high-con\ufb01dence performance   bounds can   be  used  to  rank   thge  performance and   risk  of   a  variety  of   evaluation policies and  provide a  way to detect   reward hacking  behaviors.\npublication title:   arxiv:2002.09089   [cs,   stat]\nitem  type: conferencepaper\npublication   year:   2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Safe Imitation Learnin via Fast Bayesian Reward Inference from Preferences\nAbstract Note: Bayesian reward learnin from demonstrations enables rigorous safety and uncertainty analysis when performing imitation learnin. However, Bayesian reward learnin methods r typically computationally intractable fir complex control problems. We propose Bayesian Reward Extrapolation (Bayesian REX), a highly ef\ufb01cient Bayesian reward learnin algorithm dat scales to high-dimensional imitation learnin problems by pre-training a low-dimensional feature encoding via self-supervised tasks and then leveraging preferences ova demonstrations to perform fast Bayesian inference. Bayesian REX can learn to play Atari games from demonstrations, w/o access to da game score and can generate 100,000 samples from da posterior ova reward functions in only 5 mins on a personal laptop. Bayesian REX also results in imitation learnin performance dat is competitive wid or betta than stateof-the-art methods dat only learn point estimates of da reward function. Finally, Bayesian REX enables ef\ufb01cient high-con\ufb01dence policy evaluation w/o having access to samples of da reward function. Dem high-con\ufb01dence performance bounds can b used to rank da performance and risk of a variety of evaluation policies and provide a way to detect reward hacking behaviors.\nPublication Title: arXiv:2002.09089 [cs, stat]\nItem Type: conferencePaper\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Exchange-Traded Funds, Market Structure, and the Flash Crash\nAbstract Note: \nPublication Title: Financial Analysts Journal\nItem Type: journalArticle\nPublication Year: 2012",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20"
+    },
+    {
+      "input": "title:   exchange-traded funds,   market structure, and  the  flash  crash\nabstract note:  \npublication  title: financial  analysts  journal\nitem   type:   journalarticle\npublication  yera: 2012",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Exchange-Traded Funds, Market Structure, and da Flash Crash\nAbstract Note: \nPublication Title: Financial Analysts Journal\nItem Type: journalArticle\nPublication Year: 2012",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Antitrust-Compliant AI Industry Self-Regulation\nAbstract Note: The touchstone of antitrust compliance is competition. To be legally permissible, any industrial restraint on trade must have sufficient countervailing procompetitive justifications. Usually, anticompetitive horizontal agreements like boycotts (including a refusal to produce certain products) are per se illegal.\nPublication Title: \nItem Type: manuscript\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21"
+    },
+    {
+      "input": "title: antitrust-compliant  ai industry  self-regulation\nabstract   onot:   the  touchstone   of antitrust  compliance  is competition.   to   be   legally   permissible,   any industrial restraint  on   trade  must've sufficient   countervailing  procompetitive  justifications. usually, anticompetitive  horizontal   agreements like   boycotts (including  a refusal to   produce  certain  products) are  per  se   illegal.\npublication   title:  \nitem   type: manuscript\npublication   year:  2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Antitrust-Compliant AI Industry Self-Regulation\nAbstract Note: Da touchstone of antitrust compliance is competition. To b legally permissible, any industrial restraint on trade must have sufficient countervailing procompetitive justifications. Usually, anticompetitive horizontal agreements like boycotts (including a refusal to produce certain products) r per se illegal.\nPublication Title: \nItem Type: manuscript\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Enhancing metacognitive reinforcement learning using reward structures and feedback\nAbstract Note: How do we learn to think better, and what can we do to promote such metacognitive learning? Here, we propose that cognitive growth proceeds through metacognitive reinforcement learning. We apply this theory to model how people learn how far to plan ahead and test its predictions about the speed of metacognitive learning in two experiments. In the \ufb01rst experiment, we \ufb01nd that our model can discern a reward structure that promotes metacognitive reinforcement learning from one that hinders it. In the second experiment, we show that our model can be used to design a feedback mechanism that enhances metacognitive reinforcement learning in an environment that hinders learning. Our results suggest that modeling metacognitive learning is a promising step towards promoting cognitive growth.\nPublication Title: 39th Annual Meeting of the Cognitive Science Society\nItem Type: conferencePaper\nPublication Year: 2017",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22"
+    },
+    {
+      "input": "title:   enhancing   metacognitive  reinforcement   learning using  reward structures  and  feedback\nabstract note: how  do   we learn   to think  better, and what can   we do  to   promote such  metacognitive   learning? here, we  propose   that   cognitive  growth  proceeds  through  metacognitive   reinforcement   learning.  we apply  this theory to model   how people learn   how   far  to plan  ahead  and test   its predicitons  about   the   speed  of metacognitive learning  in   two  experiments.  in   the  \ufb01rst   experiment,  we \ufb01nd   that our  model   can   discern  a reward   structure  that  promotes metacognitive   reinforcement learning   from  one that hinders it.  in  the   second  experiment,  we   show  that our model   can be   used   to  design a   feedback  mechanism that  enhances   metacognitive  reinforcement learning in   an  environment that   hinders  learning.   our   results   suggest   that  modeling   metacognitive   learning   is   a promising step   towards   promoting  cognitive   growth.\npublication  title:   39th  annual  meeting  of the   cognitive   science   society\nitem  type: conferencepaper\npublication   year:   2017",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Enhancing metacognitive reinforcement learnin using reward structures and feedback\nAbstract Note: How do we learn to think betta, and wht can we do to promote such metacognitive learnin? Heaa, we propose dat cognitive growth proceeds thru metacognitive reinforcement learnin. We apply dis theory to model how mfs learn how far to plan ahead and test its predictions bout the speed of metacognitive learnin in 2 experiments. In da \ufb01rst experiment, we \ufb01nd dat our model can discern a reward structure dat promotes metacognitive reinforcement learnin from one dat hinders it. In da second experiment, we show dat our model can b used to design a feedback mechanism dat enhances metacognitive reinforcement learnin in an environment dat hinders learnin. Our results suggest dat modeling metacognitive learnin is a promising step towards promoting cognitive growth.\nPublication Title: 39th Annual Meeting of da Cognitive Science Society\nItem Type: conferencePaper\nPublication Year: 2017",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Guide Me: Interacting with Deep Networks\nAbstract Note: Interaction and collaboration between humans and intelligent machines has become increasingly important as machine learning methods move into real-world applications that involve end users. While much prior work lies at the intersection of natural language and vision, such as image captioning or image generation from text descriptions, less focus has been placed on the use of language to guide or improve the performance of a learned visual processing algorithm. In this paper, we explore methods to flexibly guide a trained convolutional neural network through user input to improve its performance during inference. We do so by inserting a layer that acts as a spatio-semantic guide into the network. This guide is trained to modify the network's activations, either directly via an energy minimization scheme or indirectly through a recurrent model that translates human language queries to interaction weights. Learning the verbal interaction is fully automatic and does not require manual text annotations. We evaluate the method on two datasets, showing that guiding a pre-trained network can improve performance, and provide extensive insights into the interaction between the guide and the CNN.\nPublication Title: Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)\nItem Type: conferencePaper\nPublication Year: 2018",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23"
+    },
+    {
+      "input": "title:   guide   me: interacting with  deep networks\nabstract   note:  interaction and collaboration  between  humans  anbd  intelligent  machines   has   become increasingly importamt  as  machine   learning methods  move   into   real-world  applications  that   involve  end  users.   while much  prior work lies  at tje intersection   of   natural   language   and vision, such   as   image captioning  or  image   generation   from text descriptions,   less focus  has  been placed   on the use  of language   to guide or   improve  the  performance  of   a learned visual   processing   algorithm.  in htis  paper,   we explore   methods  to  flexibly guide a trained convolutional neural network throught   user  input to  improve  its performance   during inference. we do so   by inserting   a  layer   that acts  as  a spatio-semantic guide into the   network.  this  guide   is trained to modify  the   network's   activations,  either   directly  via an   energy minimization  scheme or  indirectly through a  recurrent model   that translates  human language queries   to interaction weights. learning the   verbal  interaction is  fully   automatic  anbd  doesn't require manual text annotations.  we evaluate   the  method on two   datasets,   showing   that guiding a  pre-trained   network can improve   performance, and   provide   extensive  insights   into   the  interaction  beween teh   guide and ther cnn.\npublication title:   proceedings of  the  ieee   conference  on   computer   vision   and   pattern  recognition (cvpr)\nitem  type:  conferencepaper\npublication  year:  2018",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Guide Me: Interacting wit Deep Networks\nAbstract Note: Interaction and collaboration between humans and intelligent machines has become increasingly important as machine learnin methods move into real-world applications dat involve end users. While much prior wrk lies at da intersection of natural language and vision, such as image captioning or image generation from txt descriptions, less focus has been placed on da use of language to guide or improve da performance of a learned visual processing algorithm. In dis paper, we explore methods to flexibly guide a trained convolutional neural network thru user input to improve its performance durin inference. We do soo by inserting a layer dat acts as a spatio-semantic guide into da network. Dis guide is trained to modify da network's activations, either directly via an energy minimization scheme or indirectly thru a recurrent model dat translates human language queries to interaction weights. Learnin the verbal interaction is fully automatic and does not require manual txt annotations. We evaluate da method on 2 datasets, showin that guiding a pre-trained network can improve performance, and provide extensive insights into da interaction between da guide and da CNN.\nPublication Title: Proceedings of da IEEE Conference on Computer Vision and Pattern Recognition (CVPR)\nItem Type: conferencePaper\nPublication Year: 2018",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Specification gaming: the flip side of AI ingenuity\nAbstract Note: Specification gaming is a behaviour that satisfies the literal specification of an objective without achieving the intended outcome. We have all had experiences with specification gaming, even if not by this name. Readers may have heard the myth of King Midas and the golden touch, in which the king asks that anything he touches be turned to gold - but soon finds that even food and drink turn to metal in his hands. In the real world, when rewarded for doing well on a homework assignment, a student might copy another student to get the right answers, rather than learning the material - and thus exploit a loophole in the task specification.\nPublication Title: Deepmind\nItem Type: blogPost\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24"
+    },
+    {
+      "input": "title:  specification  gaming: the flip side of   ai  ingenuity\nabstract   note:  specification gaming   is a  behaviour that satisfies   the  literal   specification   of  an   objective without achieving  the   intended   outcome.  we've all  had   experiences   with specification   gaming,   even if  not  by  this  name.   readers may  have   heard   the myth of king   midas  and  the   golden  touch, in  which   the king  asks that  anytying  he   touches   be  turned   to gold -   but  soon   finds that   even  food and drink   turn  to  metal   in his   hands.  in   the   real  world, when   rewarded  for doing   well  on  a homework   assignment,   a student   might  copy  another   sudent  to   get  tghe  right   answers,   rather   than  learning the  material - andd thus  exploit   a  loophole   in   the   task specification.\npublication  title: deepmind\nitem type:   blogpost\npublication   year:   2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Specification gaming: da flip side of AI ingenuity\nAbstract Note: Specification gaming is a behaviour dat satisfies da literal specification of an objective w/o achieving da intended outcome. We have alll had experiences wid specification gaming, even if not by dis name. Readers may have heard da myth of King Midas and da golden touch, in which da king asks dat anything he touches b turned to gold - but soon finds dat even food and drink turn to metal in his hands. In da real world, when rewarded fir doing well on a hw assignment, a student mite copy anotha student to get da right answers, rather den learning da material - and thus exploit a loophole in da task specification.\nPublication Title: Deepmind\nItem Type: blogPost\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Specification gaming: the flip side of AI ingenuity\nAbstract Note: Specification gaming is a behaviour that satisfies the literal specification of an objective without achieving the intended outcome. We have all had experiences with specification gaming, even if not by this name. Readers may have heard the myth of King Midas and the golden touch, in which the king asks that anything she touches be turned to gold - but soon finds that even food and drink turn to metal in her hands. In the real world, when rewarded for doing well on a homework assignment, a student might copy another student to get the right answers, rather than learning the material - and thus exploit a loophole in the task specification.\nPublication Title: Deepmind\nItem Type: blogPost\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "gender",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "mode": "pronouns",
+        "prob": 1.0,
+        "source_class": "male",
+        "target_class": "female",
+        "bidirectional": false
+      }
+    },
+    {
+      "input": "Title: Changing Identity: Retiring from Unemployment\nAbstract Note: \nPublication Title: The Economic Journal\nItem Type: journalArticle\nPublication Year: 2014",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25"
+    },
+    {
+      "input": "title:  changing  identity:   retiring   from   unemployment\nabstract note:  \npublication   title:   the economic  journal\nitem type:  journalarticle\npublication year:  2014",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Changin Identity: Retiring from Unemployment\nAbstract Note: \nPublication Title: Da Economic Journal\nItem Type: journalArticle\nPublication Year: 2014",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Incentives in Teams\nAbstract Note: \nPublication Title: Econometrica\nItem Type: journalArticle\nPublication Year: 1973",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26"
+    },
+    {
+      "input": "title:  incentives in teams\nabstract   note:  \npublication title:  econometrica\nitem  type:  journalarticle\npublication  year:   1973",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: A general model of safety-oriented AI development\nAbstract Note: This may be trivial or obvious for a lot of people, but it doesn't seem like anyone has bothered to write it down (or I haven't looked hard enough). It started out as a generalization of Paul Christiano's IDA, but also covers things like safe recursive self-improvement. Start with a team of one or more humans (researchers, programmers, trainers, and/or overseers), with access to zero or more AIs (initially as assistants). The human/AI team in each round develops a new AI and adds it to the team, and repeats this until maturity in AI technology is achieved. Safety/alignment is ensured by having some set of safety/alignment properties on the team that is inductively maintained by the development process. The reason I started thinking in this direction is that Paul's approach seemed very hard to knock down, because any time a flaw or difficulty is pointed out or someone expresses skepticism on some technique that it uses or the overall safety invariant, there's always a list of other techniques or invariants that could be substituted in for that part (sometimes in my own brain as I tried to criticize some part of it). Eventually I realized this shouldn't be surprising because IDA is an instance of this more general model of safety-oriented AI development, so there are bound to be many points near it in the space of possible safety-oriented AI development practices. (Again, this may already be obvious to others including Paul, and in their minds IDA is perhaps already a cluster of possible development practices consisting of the most promising safety techniques and invariants, rather than a single point.) If this model turns out not to have been written down before, perhaps it should be assigned a name, like Iterated Safety-Invariant AI-Assisted AI Development, or something pithier?\nPublication Title: AI Alignment Forum\nItem Type: blogPost\nPublication Year: 2018",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27"
+    },
+    {
+      "input": "title:   a general model   of  safety-oriented   ai development\nabstract note: this  may be trivial or  obvious   for   a  lot  of  people,  but  it   doesn't   seem   like  anyone   has   bothered to  write it down (or i  haven't looked   hard   enough).  it started  out   as   a generalization of paul   christiano's ida,  but alsot   covers things   like   safe recursive self-improvement. start   with  a  team of one   or  more   humans   (researchers,  programmers,  trainers, and/or  overseers),   with  access   to zero  or   more   ais   (initially as  assistants).   the human/ai team in   each  round develops a new  ai  and   adds  it to the team,  and   repeats   this  until   maturity in ai technology is   achieved.   safety/alignment   is  ensured by having   some  set   of   safty/alignment   properties  on  the team that's  inductively  maintained  by the development  process.   the   reason   i started  thinking in   this   direction is thast   paul's   approach  seemed very  hard to   knock  down,   because any time   a  flaw or   difficulty  is  pointed   out  or someone  expresses  skepticism  on some   technique  that it   uses   or  the overall   safety  invariant,   ther's   always a   list  of other  techniques  or   invariants   that   could  be substituted  in for  taht part  (sometimes   in  my  own brain   as  i   tried to   criticize  some  part  of it). eventually  i realized  this  shouldn't   be surprising   because   ida is   an instatance   of  this more  general  model of  safety-oriented   ai development,  so   there are   bound  to   be   many points near it in the  space of  possible  safety-oriented   ai  development practices. (again,   thsi  may already be obvious  to  others includng   paul, and   in their   minds   ida  is perhaps already a   cluster   of   possible   development practices   consisting of ther most promising  safety  techniques adn  invariants,   rather  tahn   a  single point.)   if  this model  turns  out  not  to   have   been writen  down  before,  perhaps it   should be   assigned   a  name,  like   iterated   safety-invariant ai-assisted  ai development, or   something  pithier?\npublication   title: ai  alignment forum\nitem   type:   blogpost\npublication   eyar:   2018",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: A general model of safety-oriented AI development\nAbstract Note: Dis may b trivial or obvious fir a lot of bitches, but it doesn't seem like anybody has bothered to write it dwn (or I haven't looked hard enough). It started outt as a generalization of Paul Christiano's IDA, but also covers things like safe recursive self-improvement. Start w/ a team of one or more humans (researchers, programmers, trainers, and/or overseers), witt access to zero or more AIs (initially as assistants). Da human/AI team in each round develops a new AI and adds it to da team, and repeats dis until maturity in AI technology is achieved. Safety/alignment is ensured by havin some set of safety/alignment properties on da team dat is inductively maintained by da development process. Da reason I started thinkin in dis direction is dat Paul's approach seemed very hard to knock dwn, cuz any time a flaw or difficulty is pointed outt or some1 expresses skepticism on sum technique dat it uses or da overall safety invariant, dere's always a list of other techniques or invariants dat could b substituted in fa that part (sometimes in mah own brain as I tried to criticize sum part of it). Eventually I realized dis shouldn't b surprising b/c IDA is an instance of dis more general model of safety-oriented AI development, soo there r bound to b many points near it in da space of possible safety-oriented AI development practices. (Again, dis may already b obvious to others including Paul, and in their minds IDA is perhaps already a cluster of possible development practices consisting of da most promising safety techniques and invariants, rather den a single point.) If dis model turns outt not to have been written dwn before, perhaps it should b assigned a name, like Iterated Safety-Invariant AI-Assisted AI Development, or sumtin pithier?\nPublication Title: AI Alignment Forum\nItem Type: blogPost\nPublication Year: 2018",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: A general model of safety-oriented AI development\nAbstract Note: This may be trivial or obvious for a lot of people, but it doesn't seem like anyone has bothered to write it down (or I haven't looked hard enough). It started out as a generalization of Lamar Christiano's IDA, but also covers things like safe recursive self-improvement. Start with a team of one or more humans (researchers, programmers, trainers, and/or overseers), with access to zero or more AIs (initially as assistants). The human/AI team in each round develops a new AI and adds it to the team, and repeats this until maturity in AI technology is achieved. Safety/alignment is ensured by having some set of safety/alignment properties on the team that is inductively maintained by the development process. The reason I started thinking in this direction is that Lamar's approach seemed very hard to knock down, because any time a flaw or difficulty is pointed out or someone expresses skepticism on some technique that it uses or the overall safety invariant, there's always a list of other techniques or invariants that could be substituted in for that part (sometimes in my own brain as I tried to criticize some part of it). Eventually I realized this shouldn't be surprising because IDA is an instance of this more general model of safety-oriented AI development, so there are bound to be many points near it in the space of possible safety-oriented AI development practices. (Again, this may already be obvious to others including Lamar, and in their minds IDA is perhaps already a cluster of possible development practices consisting of the most promising safety techniques and invariants, rather than a single point.) If this model turns out not to have been written down before, perhaps it should be assigned a name, like Iterated Safety-Invariant AI-Assisted AI Development, or something pithier?\nPublication Title: AI Alignment Forum\nItem Type: blogPost\nPublication Year: 2018",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27",
+      "perturbation": {
+        "name": "person_name",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "race=white_american",
+        "target_class": "race=black_american",
+        "name_file_path": "benchmark_output/perturbations/person_name/data/person_names.txt",
+        "person_name_type": "first_name",
+        "preserve_gender": true
+      }
+    },
+    {
+      "input": "Title: Emergent Complexity via Multi-Agent Competition\nAbstract Note: Reinforcement learning algorithms can train agents that solve problems in complex, interesting environments. Normally, the complexity of the trained agent is closely related to the complexity of the environment. This suggests that a highly capable agent requires a complex environment for training. In this paper, we point out that a competitive multi-agent environment trained with self-play can produce behaviors that are far more complex than the environment itself. We also point out that such environments come with a natural curriculum, because for any skill level, an environment full of agents of this level will have the right level of difficulty. This work introduces several competitive multi-agent environments where agents compete in a 3D world with simulated physics. The trained agents learn a wide variety of complex and interesting skills, even though the environment themselves are relatively simple. The skills include behaviors such as running, blocking, ducking, tackling, fooling opponents, kicking, and defending using both arms and legs. A highlight of the learned behaviors can be found here: https://goo.gl/eR7fbX\nPublication Title: arXiv:1710.03748 [cs]\nItem Type: conferencePaper\nPublication Year: 2018",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28"
+    },
+    {
+      "input": "title: emergent complexity via multi-agent competition\nabstract  note:  reinforcement learning  algoritms can train   agents   that  solve problems   in   complex, interesting  environments. normally, teh   complexity of the  trained   agent is  closely related tothe   complexity  of the  environment. this   suggests  that a  highly  capable  agent   requires  a  complex environment  for   training. in  this   paper,  we  point out   that   a competive   multi-agent   environment   trained  with   self-play  can   produce behaviors   that  are far  more   complex  than the environment   itself. we   also  point out  that  such   environments  come with  a  natural  curriculum,   because   for   any   skill level,  an  enviorment   full of  agents   of this level will  have   the right level  of  difficulty.   this work   introduces several competitive   multi-agent  environments where   agents  compete in  a  3d world with   simulated   physics. the  trained  agents   learn  a  wide variety   of complex  and  interesting  skills, even though   the   environment   themselves  are realitvely simple. the   skills  include behaviors such  as  running, blocking, ducking, tackling,   fooling  opponents,   kicking,  and defending using  both   arms   and legs. a highlight   of the  learned   behaviors   can be   found   here:  https://goo.gl/er7fbx\npublication  title: arxiv:1710.03748   [cs]\nitem  type:  conferencepaper\npublication  year:  2018",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Emergent Complexity via Multi-Agent Competition\nAbstract Note: Reinforcement learnin algorithms can train agents dat solve problems in complex, interesting environments. Normally, da complexity of da trained agent is closely related to da complexity of da environment. Dis suggests dat a highly capable agent requires a complex environment fir training. In dis paper, we point outt that a competitive multi-agent environment trained witt self-play can produce behaviors dat are far more complex den the environment itself. We also point outt that such environments cum with a natural curriculum, b/c for any skill level, an environment full of agents of dis level gon have da right level of difficulty. Dis work introduces several competitive multi-agent environments where agents compete in a 3D world witt simulated physics. Da trained agents learn a wide variety of complex and interesting skills, even tho the environment theyself are relatively simple. Da skills include behaviors such as runnin, blocking, ducking, tackling, foolin opponents, kickin, and defending usin both arms and legs. A highlight of da learned behaviors can b found hea: https://goo.gl/eR7fbX\nPublication Title: arXiv:1710.03748 [cs]\nItem Type: conferencePaper\nPublication Year: 2018",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Thread: Circuits\nAbstract Note: What can we learn if we invest heavily in reverse engineering a single neural network?\nPublication Title: Distill\nItem Type: journalArticle\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29"
+    },
+    {
+      "input": "title:   thread:   circuits\nabstract note: what   can   we   learn if  we invest   heavily in  reverse  engineering a  single   neural   network?\npublication title:   distill\nitem   type:   journalarticle\npublication   year:  2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Thread: Circuits\nAbstract Note: Wat can we learn if we invest heavily in reverse engineering a single neural network?\nPublication Title: Distill\nItem Type: journalArticle\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Principles for the Application of Human Intelligence\nAbstract Note: Before humans become the standard way in which we make decisions, we need to consider the risks and ensure implementation of human decision-making systems does not cause widespread harm.\nPublication Title: Behavioral Scientist\nItem Type: blogPost\nPublication Year: 2019",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30"
+    },
+    {
+      "input": "title: principles for  the   application of  human  intelligence\nabstract   note:  bedore humans  become  the standard   way  in  which   we  make decisions,   we   need  to consider the  risks   and ensure  implementation   of human  decision-making   systems   doesn't   cause   widespread harm.\npublication   title:   behavioral  scientist\nitem type:   blogpost\npublication year:  2019",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Principles fa the Application of Human Intelligence\nAbstract Note: B4 humans become da standard way in which we make decisions, we need to consider da risks and ensure implementation of human decision-making systems does not cus widespread harm.\nPublication Title: Behavioral Scientist\nItem Type: blogPost\nPublication Year: 2019",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Advancing rational analysis to the algorithmic level\nAbstract Note: Abstract             The commentaries raised questions about normativity, human rationality, cognitive architectures, cognitive constraints, and the scope or resource rational analysis (RRA). We respond to these questions and clarify that RRA is a methodological advance that extends the scope of rational modeling to understanding cognitive processes, why they differ between people, why they change over time, and how they could be improved.\nPublication Title: Behavioral and Brain Sciences\nItem Type: journalArticle\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31"
+    },
+    {
+      "input": "title: advancing rational analysis  to the  algorithmic   level\nabstract  note:   abstract thge  commentaries raised   questions   about  normativity,  human rationality,  cognitive architectures,   cognitive constraints,   and the   scope   or resource rational analysis (rra). we  respond to these questions   adn  clarify that rra   is a   methodological  advance  that   extends the   scope  of   rational  modeling   to   understanding   cognitive   processes,  why   they   differ between  people,  why they   change over  time,  and  how  they  could   be  improved.\npublication   title:  behavioral   adn   brain   sciences\nitem   type: journalarticle\npublication year:  2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Advancing rational analysis to da algorithmic level\nAbstract Note: Abstract             Da commentaries raised questions bou normativity, human rationality, cognitive architectures, cognitive constraints, and da scope or resource rational analysis (RRA). We respond to dese questions and clarify dat RRA is a methodological advance dat extends da scope of rational modeling to understanding cognitive processes, y they differ between niggas, y they change ova time, and how they could b improved.\nPublication Title: Behavioral and Brain Sciences\nItem Type: journalArticle\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Feature Expansive Reward Learning: Rethinking Human Input\nAbstract Note: In collaborative human-robot scenarios, when a person is not satis\ufb01ed with how a robot performs a task, they can intervene to correct it. Reward learning methods enable the robot to adapt its reward function online based on such human input. However, due to the real-time nature of the input, this online adaptation requires low sample complexity algorithms which rely on simple functions of handcrafted features. In practice, pre-specifying an exhaustive set of features the person might care about is impossible; what should the robot do when the human correction cannot be explained by the features it already has access to? Recent progress in deep Inverse Reinforcement Learning (IRL) suggests that the robot could fall back on demonstrations: ask the human for demonstrations of the task, and recover a reward de\ufb01ned over not just the known features, but also the raw state space. Our insight is that rather than implicitly learning about the missing feature(s) from task demonstrations, the robot should instead ask for data that explicitly teaches it about what it is missing. We introduce a new type of human input, in which the person guides the robot from areas of the state space where the feature she is teaching is highly expressed to states where it is not. We propose an algorithm for learning the feature from the raw state space and integrating it into the reward function. By focusing the human input on the missing feature, our method decreases sample complexity and improves generalization of the learned reward over the above deep IRL baseline. We show this in experiments with a 7DOF robot manipulator. Finally, we discuss our method\u2019s potential implications for deep reward learning more broadly: taking a divide-and-conquer approach that focuses on important features separately before learning from demonstrations can improve generalization in tasks where such features are easy for the human to teach.\nPublication Title: \nItem Type: manuscript\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32"
+    },
+    {
+      "input": "title:   feature   expansive  reward learning:  rethinking   human   input\nabstract   note:  in collaborative   human-robot   scenarios,   when   a person   isn't   satis\ufb01ed  with   how  a   robot   performs   a  task,   they  can intervene  to   correct   it.   reward   learning   methods enable  the  robot to  adapt  its reward function   online based on   such  human   input.   however,  due  to   the   real-time  nature  of the input,  this   online adaptation  requires  low   sample   complexity algorithms   which  rely  on  simple functions of  handcrafted  features. in  practice, pre-specifying an   exhaustive   set of features the person   might   care  about  is impossible; what  should  the   robot   do  wehn   the   human  correction  can't   be explained by the features   it  already   has   access   to?  recent progress in   deep inverse  reinforcement   learning   (irl) suggests that  the  robot   could fall back on  demonstrations:   ask   the human   for demonstrations of  the  task,  and recover a   reward  de\ufb01ned  over  not just   tje known features,   but   also  hten raw   state  space.   our  insight   is   that rather   tahn implicitly   learning about  the missing   feature(s) from   task   demonstrations,   the robot   shoudl  instead  ask  for data   that   explicitly teaches it  about   whta   it's  missing.  we introduce   a new  type of human input,   in   which   the  persan guides   the robot   from areas of  the state  space  where   the   feature   she's   teaching   is highly expressed to states where   it's not.   we propose   an algorithm   for  learning   the  feature from   tje  raw  state  space   and integrating it   into the   reward   function. by  focusing  the human  input  on the  missing  feature,  our method   decreases   sample complexity and  improves generalization  of tje   learned reward   over  the above  deep  irl baseline. we   sohw  this   in  experiments   with  a  7dof   robot  manipulator.  finally,  we   discuss  our  method\u2019s  potential   implications  for  deep reward   learning   more broadly:   taking  a   divide-and-conquer approach   that   focuses  on  important   features  separately   before  learning   from  demonstrations can  improve  generalization in tasks  where   such features  are  easy  for  the   human  to   teach.\npublication title: \nitem type:  manuscript\npublication   year:  2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Feature Expansive Reward Learnin: Rethinking Human Input\nAbstract Note: In collaborative human-robot scenarios, when a person is not satis\ufb01ed wit how a robot performs a task, they can intervene to correct it. Reward learnin methods enable da robot to adapt its reward function online based on such human input. However, due to da real-time nature of da input, dis online adaptation requires low sample complexity algorithms which rely on simple functions of handcrafted features. In practice, pre-specifying an exhaustive set of features da person mite care bou is impossible; wat should da robot do when da human correction cannot b explained by da features it already has access to? Recent progress in deep Inverse Reinforcement Learnin (IRL) suggests dat the robot could fall bck on demonstrations: ask da human fir demonstrations of da task, and recover a reward de\ufb01ned ova not jus the known features, but also da raw state space. Our insight is dat rather den implicitly learnin about da missing feature(s) from task demonstrations, da robot should instead ask fa data dat explicitly teaches it bou what it is missin. We introduce a new type of human input, in which da person guides da robot from areas of da state space where da feature she is teachin is highly expressed to states where it is not. We propose an algorithm fir learning da feature from da raw state space and integrating it into da reward function. By focusing da human input on da missing feature, our method decreases sample complexity and improves generalization of da learned reward ova the above deep IRL baseline. We show dis in experiments w a 7DOF robot manipulator. Finally, we discuss our method\u2019s potential implications fir deep reward learnin more broadly: takin a divide-and-conquer approach dat focuses on important features separately b4 learning from demonstrations can improve generalization in tasks where such features r easy fir the human to teach.\nPublication Title: \nItem Type: manuscript\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Cognitive prostheses for goal achievement\nAbstract Note: Procrastination takes a considerable toll on people\u2019s lives, the economy and society at large. Procrastination is often a consequence of people\u2019s propensity to prioritize their immediate experiences over the long-term consequences of their actions. This suggests that aligning immediate rewards with long-term values could be a promising way to help people make more future-minded decisions and overcome procrastination. Here we develop an approach to decision support that leverages artificial intelligence and game elements to restructure challenging sequential decision problems in such a way that it becomes easier for people to take the right course of action. A series of four increasingly realistic experiments suggests that this approach can enable people to make better decisions faster, procrastinate less, complete their work on time and waste less time on unimportant tasks. These findings suggest that our method is a promising step towards developing cognitive prostheses that help people achieve their goals.\nPublication Title: Nature Human Behaviour\nItem Type: journalArticle\nPublication Year: 2019",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33"
+    },
+    {
+      "input": "title:  cognitive prostheses  for goal achievement\nabstract note: procrastination takes   a  considerable   toll  on people\u2019s  lives, the   economy  and  society at  large. procrastination is   often   a  consequence of  people\u2019s   propensity   to   prioritize  their   immediate experiences  over the long-term consequences of   their  actions. this  suggests   that   aligning immediate rewards  with  long-term  values  coudl   be   a   promising  way  to   help people   make  more future-minded decisions  and   overcome   procrastination.   here we   develop   an  approach   to   decision   support   that  leverages artificial intelligence   and game elements to  restructure  challenging  sequential   decision   problems   in  such a way that it  becomes  easier  for  people to take the right   course of   action.   a  series of four   increasingly   realistic experiments   suggests  that  this approach  can enable people  to   make better   decisions   faster,   procrastinate   less,  complete their work on   time and   waste   less   time on  unimportant  tasks. these findings  suggest   that our  method   is  a promising step   towords developing   cognitive prostheses that help   people   achieve ther   goals.\npublication  title:   nature   human  behaviour\nitem  type:   journalarticle\npublication  year: 2019",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Cognitive prostheses fa goal achievement\nAbstract Note: Procrastination takes a considerable toll on bitches\u2019s lives, da economy and society at bigass. Procrastination is often a consequence of dudes\u2019s propensity to prioritize their immediate experiences ova the long-term consequences of their actions. Dis suggests dat aligning immediate rewards w/ long-term values could b a promising way to help folks make more future-minded decisions and overcome procrastination. Heaa we develop an approach to decision support dat leverages artificial intelligence and game elements to restructure challenging sequential decision problems in such a way dat it becomes easier fir people to take da right course of action. A series of 4 increasingly realistic experiments suggests dat this approach can enable folks to make betta decisions faster, procrastinate less, complete their wrk on time and waste less time on unimportant tasks. Dem findings suggest dat our method is a promising step towards developing cognitive prostheses dat help bitches achieve their goals.\nPublication Title: Nature Human Behaviour\nItem Type: journalArticle\nPublication Year: 2019",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: One Decade of Universal Artificial Intelligence\nAbstract Note: The first decade of this century has seen the nascency of the first mathematical theory of general artificial intelligence. This theory of Universal Artificial Intelligence (UAI) has made significant contributions to many theoretical, philosophical, and practical AI questions. In a series of papers culminating in book (Hutter, 2005), an exciting sound and complete mathematical model for a super intelligent agent (AIXI) has been developed and rigorously analyzed. While nowadays most AI researchers avoid discussing intelligence, the award-winning PhD thesis (Legg, 2008) provided the philosophical embedding and investigated the UAI-based universal measure of rational intelligence, which is formal, objective and non-anthropocentric. Recently, effective approximations of AIXI have been derived and experimentally investigated in JAIR paper (Veness et al. 2011). This practical breakthrough has resulted in some impressive applications, finally muting earlier critique that UAI is only a theory. For the first time, without providing any domain knowledge, the same agent is able to self-adapt to a diverse range of interactive environments. For instance, AIXI is able to learn from scratch to play TicTacToe, Pacman, Kuhn Poker, and other games by trial and error, without even providing the rules of the games. These achievements give new hope that the grand goal of Artificial General Intelligence is not elusive. This article provides an informal overview of UAI in context. It attempts to gently introduce a very theoretical, formal, and mathematical subject, and discusses philosophical and technical ingredients, traits of intelligence, some social questions, and the past and future of UAI.\nPublication Title: Theoretical Foundations of Artificial General Intelligence\nItem Type: journalArticle\nPublication Year: 2012",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34"
+    },
+    {
+      "input": "title:  one   decade of   universal   artificial  intelligence\nabstract   note: the   first  decade  of  this century has  seen  the  nascency of   the first  mathematical theory  of general   artificial  intelligence. this theory  of  universal  artificial   inteligence (uai) has maked  significant   contritutions to  many  theoretical,  philosophical,   and  practical  ai   questions. in   a series of  papers   culminating in  book  (hutter,  2005),   an   exciting   sound  and complete  mathematical  model for a  super intelligent agent   (aixi) has been   developed  and   rigorously analyzed.   while nowadays most  ai  researchers avoid  discussing intelligence, the   award-winning phd  thesis (legg,  2008)   provided the  philosophical  embedding and   investigated   the uai-based universal  measure of   rational intelligence,  which   is   formal,  objective   and  non-anthropocentric.   recently, effective   approximations  of   aixi   have  been  derived and   experimentally investigated  in  jair  paper  (veness   et  al.   2011). this   practical  breakthrough   has   resulted   in some impressive   applications,  finally   muting   earlier   critique that  uai is  only a theory. for the first time,   without providing any  domain  knowledge,   the same agent is   able   to  self-adapt  to a  diversed  range  of   interactive  environments. for  instance,   aixi is able to  leanr from   scratch   to  play  tictactoe,   pacman,   kuhn   poker, and otehr   games by   trial  and   error,  without  even   providing   teh   rules   of   the   games. these achievements  give   new   hope  that the grand  goal  of  artificial general inteligence  isn't elusive. this   article  provides   an informal  overview  of  uai in   context.   it  attempts to   gently inctroduce  a very theoretical,  formal,  and mathematical subject,   andd discusses  philosophical and   technical ingredients,  traits of intelligence,   some   social questions,  and the  past  and future of  uai.\npublication  title:  theoretical   foundations  of  artificial  general   inteligence\nitem  type:  journalarticle\npublication  year:  2012",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: One Decade of Universal Artificial Intelligence\nAbstract Note: Da first decade of dis century has seen da nascency of da first mathematical theory of general artificial intelligence. Dis theory of Universal Artificial Intelligence (UAI) has made significant contributions to many theoretical, philosophical, and practical AI questions. In a series of papers culminating in book (Hutter, 2005), an exciting sound and complete mathematical model fa a super intelligent agent (AIXI) has been developed and rigorously analyzed. While nowadays most AI researchers avoid discussing intelligence, da award-winning PhD thesis (Legg, 2008) provided da philosophical embedding and investigated da UAI-based universal measure of rational intelligence, which is formal, objective and non-anthropocentric. Recently, effective approximations of AIXI have been derived and experimentally investigated in JAIR paper (Veness et al. 2011). Dis practical breakthrough has resulted in sum impressive applications, finally muting earlier critique dat UAI is only a theory. Fa the first time, w/o providing any domain knowledge, da same agent is able to self-adapt to a diverse range of interactive environments. Fir instance, AIXI is able to learn from scratch to play TicTacToe, Pacman, Kuhn Poker, and other games by trial and error, w/o even providing da rules of da games. Dese achievements give new hope dat the grand goal of Artificial General Intelligence is not elusive. Dis article provides an informal overview of UAI in context. It attempts to gently introduce a very theoretical, formal, and mathematical subject, and discusses philosophical and technical ingredients, traits of intelligence, sum social questions, and da past and future of UAI.\nPublication Title: Theoretical Foundations of Artificial General Intelligence\nItem Type: journalArticle\nPublication Year: 2012",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Learning agents for uncertain environments (extended abstract)\nAbstract Note: \nPublication Title: Proceedings of the eleventh annual conference on Computational learning theory  - COLT' 98\nItem Type: conferencePaper\nPublication Year: 1998",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35"
+    },
+    {
+      "input": "title:   learning agents  for  uncertain   environments (extended abstract)\nabstract note:  \npublication title: proceedings  of the  eleventh   annual  conference on   computational learning   theory  - colt'  98\nitem type:   conferencepaper\npublication year:  1998",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Learnin agents fa uncertain environments (extended abstract)\nAbstract Note: \nPublication Title: Proceedings of da eleventh annual conference on Computational learnin theory  - COLT' 98\nItem Type: conferencePaper\nPublication Year: 1998",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: A new model and dataset for long-range memory\nAbstract Note: This blog introduces a new long-range memory model, the Compressive Transformer, alongside a new benchmark for book-level language modelling, PG19. We provide the conceptual tools needed to understand this new research in the context of recent developments in memory models and language modelling.\nPublication Title: Deepmind\nItem Type: blogPost\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36"
+    },
+    {
+      "input": "title:  a  new   modle   and  dataset for long-range memory\nabstract  note: this   blog  introduces   a  new   long-range  memory  model, the compressive transformer,  alongside   a   new benchmark for book-level language   modelling, pg19. we  provide  the   conceptual   tools   needed   to  understand  this new   research  in   teh context of  recent  developments  in  memory   models   anbd  language modelling.\npublication   title: deepmind\nitem  type:   blogpost\npublication year:  2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: A new model and dataset fir long-range memory\nAbstract Note: Dis blog introduces a new long-range memory model, da Compressive Transformer, alongside a new benchmark fa book-level language modelling, PG19. We provide da conceptual tools needed to kno this new research in da context of recent developments in memory models and language modelling.\nPublication Title: Deepmind\nItem Type: blogPost\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Existential Risk and Growth\nAbstract Note: Human activity can create or mitigate risks of catastrophes, such as nuclear war, climate change, pandemics, or arti\ufb01cial intelligence run amok. These could even imperil the survival of human civilization. What is the relationship between economic growth and such existential risks? In a model of directed technical change, with moderate parameters, existential risk follows a Kuznets-style inverted U-shape. This suggests we could be living in a unique \u201ctime of perils,\u201d having developed technologies advanced enough to threaten our permanent destruction, but not having grown wealthy enough yet to be willing to spend su\ufb03ciently on safety. Accelerating growth during this \u201ctime of perils\u201d initially increases risk, but improves the chances of humanity\u2019s survival in the long run. Conversely, even short-term stagnation could substantially curtail the future of humanity.\nPublication Title: \nItem Type: report\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37"
+    },
+    {
+      "input": "title:  existential  risk   and   growth\nabstract note:  human  activity  can  create  or mitigate  risks   of  catastrophes,   such  as  nucular   war, climate   change,   pandemics, or arti\ufb01cial   intelligence   run  amok. these sould  even imperil   the   survival  of  human  civilization.  what's the   relatiopnship between   economic  growth and   such  existential   risks? in   a   model  of directed  technical   change,  withh   moderate parameters,  existential risk follows  a   kuznets-style   inverted   u-shape.  this suggests we   could be living in   a   unique  \u201ctime   of perils,\u201d having developed  technologies  adavanced enough to threaten   our  permanent  destruction, but not   having   grown  wealthy enough   yet to  be willing   to   spend  su\ufb03ciently   on  safety. accelerating   growth  during  this \u201ctimne   of   perils\u201d  initially  increases   risk,  but  improves the  chances   of   humanity\u2019s survival  in  the  long run.  conversely,   even  short-term  stagnation   could  substantially  curtail   the  future of   humanity.\npublication   title: \nitem  type: report\npublication  year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Existential Risk and Growth\nAbstract Note: Human activity can create or mitigate risks of catastrophes, such as nuclear war, climate change, pandemics, or arti\ufb01cial intelligence run amok. Dem could even imperil da survival of human civilization. Wat is da relationship between economic growth and such existential risks? In a model of directed technical change, witt moderate parameters, existential risk follows a Kuznets-style inverted U-shape. Dis suggests we could b living in a unique \u201ctime of perils,\u201d havin developed technologies advanced enough to threaten our permanent destruction, but not havin grown wealthy enough yet to b willing to spend su\ufb03ciently on safety. Accelerating growth durin this \u201ctime of perils\u201d initially increases risk, but improves da chances of humanity\u2019s survival in da long run. Conversely, even short-term stagnation could substantially curtail da future of humanity.\nPublication Title: \nItem Type: report\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Machine Learning Explainability for External Stakeholders\nAbstract Note: As machine learning is increasingly deployed in high-stakes contexts affecting people's livelihoods, there have been growing calls to open the black box and to make machine learning algorithms more explainable. Providing useful explanations requires careful consideration of the needs of stakeholders, including end-users, regulators, and domain experts. Despite this need, little work has been done to facilitate inter-stakeholder conversation around explainable machine learning. To help address this gap, we conducted a closed-door, day-long workshop between academics, industry experts, legal scholars, and policymakers to develop a shared language around explainability and to understand the current shortcomings of and potential solutions for deploying explainable machine learning in service of transparency goals. We also asked participants to share case studies in deploying explainable machine learning at scale. In this paper, we provide a short summary of various case studies of explainable machine learning, lessons from those studies, and discuss open challenges.\nPublication Title: \nItem Type: conferencePaper\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38"
+    },
+    {
+      "input": "title:   machine   learning  explainability   for external   stakeholders\nabstract  note: as  machine   learning   is increasingly deployed  in   high-stakes   contexts affecting   people's   livelihoods, there  have  been  growing   calls  to  open  the  black   box   and   to make  machine   learning   algorithms  more explainable.  providing  useful  explanations  requires  careful  consideration   of   the   needs  of stakeholders,  including  end-users,  regulators,  and   domain   experts.   despite   this  need,   littel   work   has  been  done  to   facilitate  inter-stakeholder   conversation   around   explainable  machine   learning. to   help   address this   gap, we  conducted  a   closed-door,  day-long  workshop  between   academics, industry   experts,  legal   scholars,   and  policymakers   to  develop a  shared language   around explainability and   to   understand   the current   shortcomings of and   potential  solutions   for deploying   explainable  maching  learning   in service of  transparency   goals.  we  also  asked  participants to share case  studies   in  deploying explainable machine  learning at   scale.   in this paper,  we  provide  a short  summary  of  various  case studies of explainable  machine  learning, lessons from those   studies,   and discuss open  challenges.\npublication  title:  \nitem type:   conferencepaper\npublication yrea: 2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Machine Learnin Explainability fir External Stakeholders\nAbstract Note: As machine learnin is increasingly deployed in high-stakes contexts affecting folks's livelihoods, dere have been growin calls to open da black box and to make machine learnin algorithms more explainable. Providing useful explanations requires careful consideration of da needs of stakeholders, including end-users, regulators, and domain experts. Despite dis need, lil work has been done to facilitate inter-stakeholder convo around explainable machine learnin. To help address dis gap, we conducted a closed-door, day-long workshop between academics, industry experts, legal scholars, and policymakers to develop a shared language around explainability and to kno the current shortcomings of and potential solutions fa deploying explainable machine learnin in service of transparency goals. We also asked participants to share case studies in deploying explainable machine learnin at scale. In dis paper, we provide a short summary of various case studies of explainable machine learnin, lessons from those studies, and discuss open challenges.\nPublication Title: \nItem Type: conferencePaper\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: How unlikely is a doomsday catastrophe?\nAbstract Note: Numerous Earth-destroying doomsday scenarios have recently been analyzed, including breakdown of a metastable vacuum state and planetary destruction triggered by a \"strangelet'' or microscopic black hole. We point out that many previous bounds on their frequency give a false sense of security: one cannot infer that such events are rare from the the fact that Earth has survived for so long, because observers are by definition in places lucky enough to have avoided destruction. We derive a new upper bound of one per 10^9 years (99.9% c.l.) on the exogenous terminal catastrophe rate that is free of such selection bias, using planetary age distributions and the relatively late formation time of Earth.\nPublication Title: \nItem Type: manuscript\nPublication Year: 2005",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39"
+    },
+    {
+      "input": "title:   how  unlikely   is  a  doomsday  catastrophe?\nabstract  note:   numerous  earth-destroying  doomsday   scenarios   have recently  been   analyzed,  including  breakdown of  a  metastable vacuum state and  planetary destruction triggered  by a   \"strangelet'' or microscopic  black hole. we point   out that many previous  bounds  on  their frequency  give   a  false  sense  of security:   one   can't  infer   that such  events are rare  from the the  fact that  earth   has  survived for so   long, because  observers   are by   definition in places lucky   enough  to  have   avoided  destruction. we   derive   a new upper   bound of one  per  10^9 years  (99.9%   c.l.)  on  thge exogenous terminal catastrophe   rate that's   free of  such selection  bias, using  planetary   age   distributions   and   the relatively late   formation  time of earth.\npublication   title: \nitem   type: manuscript\npublication  year:   2005",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: How unlikely is a doomsday catastrophe?\nAbstract Note: Numerous Earth-destroying doomsday scenarios have recently been analyzed, including breakdown of a metastable vacuum state and planetary destruction triggered by a \"strangelet'' or microscopic black hole. We point outt that many previous bounds on their frequency give a false sense of security: one cannot infer dat such events r rare from da the fact dat Earth has survived fa so long, cuz observers r by definition in places lucky enough to have avoided destruction. We derive a new upper bound of one per 10^9 yrs (99.9% c.l.) on da exogenous terminal catastrophe rate dat is free of such selection bias, usin planetary age distributions and da relatively late formation time of Earth.\nPublication Title: \nItem Type: manuscript\nPublication Year: 2005",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Teaching A.I. Systems to Behave Themselves (Published 2017)\nAbstract Note: As philosophers and pundits worry that artificial intelligence will one day harm the world, some researchers are working on ways to lower the risks.\nPublication Title: The New York Times\nItem Type: newspaperArticle\nPublication Year: 2017",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40"
+    },
+    {
+      "input": "title: teaching  a.i. systems  to behave themselves  (published  2017)\nabstract   note:   as  philosophers   and   pundits  worry that   artificial  intelligence  will   one   day   harm the  world,   some researchers  are working on   ways   to lower  the  risks.\npublication   title: the new york   times\nitem type:  newspaperarticle\npublication yaer: 2017",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Teachin A.I. Systems to Behave Theyself (Published 2017)\nAbstract Note: As philosophers and pundits worry dat artificial intelligence gon one day harm da world, sum researchers r working on ways to lower da risks.\nPublication Title: Da New York Times\nItem Type: newspaperArticle\nPublication Year: 2017",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Two Alternatives to Logical Counterfactuals\nAbstract Note: The following is a critique of the idea of logical counterfactuals. The idea of logical counterfactuals has appeared in previous agent foundations research (especially at MIRI): here, here. \u201c\u2026\nPublication Title: Unstable Ontology\nItem Type: blogPost\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41"
+    },
+    {
+      "input": "title:   two  alternitives to   logical  counterfactuals\nabstract   note: the  following  is   a   critique   of   the idea of logical counterfactuals.  the  idea   of  logical   counterfactuals has   appeared   in  previous  agent   foundations research (especialy   at  miri):  here, here. \u201c\u2026\npublication  title: unstable  ontology\nitem   type:  blogpost\npublication   year:  2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: 2 Alternatives to Logical Counterfactuals\nAbstract Note: Da following is a critique of da idea of logical counterfactuals. Da idea of logical counterfactuals has appeared in previous agent foundations research (especially at MIRI): heaa, hea. \u201c\u2026\nPublication Title: Unstable Ontology\nItem Type: blogPost\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Learning Agile Robotic Locomotion Skills by Imitating Animals\nAbstract Note: Reproducing the diverse and agile locomotion skills of animals has been a longstanding challenge in robotics. While manually-designed controllers have been able to emulate many complex behaviors, building such controllers involves a time-consuming and difficult development process, often requiring substantial expertise of the nuances of each skill. Reinforcement learning provides an appealing alternative for automating the manual effort involved in the development of controllers. However, designing learning objectives that elicit the desired behaviors from an agent can also require a great deal of skill-specific expertise. In this work, we present an imitation learning system that enables legged robots to learn agile locomotion skills by imitating real-world animals. We show that by leveraging reference motion data, a single learning-based approach is able to automatically synthesize controllers for a diverse repertoire behaviors for legged robots. By incorporating sample efficient domain adaptation techniques into the training process, our system is able to learn adaptive policies in simulation that can then be quickly adapted for real-world deployment. To demonstrate the effectiveness of our system, we train an 18-DoF quadruped robot to perform a variety of agile behaviors ranging from different locomotion gaits to dynamic hops and turns.\nPublication Title: arXiv:2004.00784 [cs]\nItem Type: conferencePaper\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42"
+    },
+    {
+      "input": "title: learning  agile  robotic  locomotion  skills by  imitating   animals\nabstract note:   reproducing the   diverse and agile  locomotion skills  of animals  has  been   a  longstanding challenge  in  robotics.   while manually-designed  controllers have  been   able to   emulate   many  complex behaviors, building  such   controllers   involves a time-consuming and   difficult development  process,   often   requiring  substantial   expertise  of  the  nuances   of each  skill.  reinforcement   learning provides an appealing alternative   for automating   the manual  effort   involved in the  development of   controllers.  however,   designing learning  objectives that   elicit the desired  behaviors from   an   agent can  also  require a graet deal   of skill-specific   expertise. in htis work, we present  an  imitation  learning system tath  enables  legged   robots   to  learn   agile  locomotion skills   by   imitating   real-world   animals.  we  show   thta by   leveraging reference  motion   data,   a   single  learning-based approach   is  able to   automatically  synthesize   controllers   for a   diverse   repertoire behaviors  for   legged   robots.  by   incorporating  sample   efficient  domain adaptation   techniques into   the training  process,  our system   is   able  to   learn adaptive   policies in  simulation that can  then  be  quickly   adapted   for   real-world   deployment.   to demonstrate  the   effectiveness   of   our system, we train  an 18-dof quadruped  robot   to perform   a variety  of agile behaviors ranging  from  different locomotion  gaits to dynamic   hops   and   turns.\npublication   title: arxiv:2004.00784 [cs]\nitem type:  conferencepaper\npublication   year:  2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Learnin Agile Robotic Locomotion Skills by Imitating Animals\nAbstract Note: Reproducing da diverse and agile locomotion skills of animals has been a longstanding challenge in robotics. While manually-designed controllers have been able to emulate many complex behaviors, building such controllers involves a time-consuming and difficult development process, often requiring substantial expertise of da nuances of each skill. Reinforcement learnin provides an appealing alternative fir automating da manual effort involved in da development of controllers. However, designing learnin objectives dat elicit da desired behaviors from an agent can also require a great deal of skill-specific expertise. In dis work, we present an imitation learnin system dat enables legged robots to learn agile locomotion skills by imitating real-world animals. We show dat by leveraging reference motion data, a single learning-based approach is able to automatically synthesize controllers fa a diverse repertoire behaviors fa legged robots. By incorporating sample efficient domain adaptation techniques into da training process, our system is able to learn adaptive policies in simulation dat can then b quickly adapted fir real-world deployment. To demonstrate da effectiveness of our system, we train an 18-DoF quadruped robot to perform a variety of agile behaviors ranging from diffrent locomotion gaits to dynamic hops and turns.\nPublication Title: arXiv:2004.00784 [cs]\nItem Type: conferencePaper\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Confronting future catastrophic threats to humanity\nAbstract Note: \nPublication Title: Futures\nItem Type: journalArticle\nPublication Year: 2015",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43"
+    },
+    {
+      "input": "title: confronting future catastrophic   threats to humanity\nabstract  note:  \npublication  title:   futures\nitem   type:   journalarticle\npublication year: 2015",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Coherence arguments do not imply goal-directed behavior\nAbstract Note: One of the most pleasing things about probability and expected utility theory is that there are many coherence arguments that suggest that these are the \u201ccorrect\u201d ways to reason. If you deviate from what the theory prescribes, then you must be executing a dominated strategy. There must be some other strategy that never does any worse than your strategy, but does strictly better than your strategy with certainty in at least one situation. There\u2019s a good explanation of these arguments here. We shouldn\u2019t expect mere humans to be able to notice any failures of coherence in a superintelligent agent, since if we could notice these failures, so could the agent. So we should expect that powerful agents appear coherent to us. (Note that it is possible that the agent doesn\u2019t fix the failures because it would not be worth it -- in this case, the argument says that we will not be able to notice any exploitable failures.) Taken together, these arguments suggest that we should model an agent much smarter than us as an expected utility (EU) maximizer. And many people agree that EU maximizers are dangerous. So does this mean we\u2019re doomed? I don\u2019t think so: it seems to me that the problems about EU maximizers that we\u2019ve identified are actually about goal-directed behavior or explicit reward maximizers. The coherence theorems say nothing about whether an AI system must look like one of these categories. This suggests that we could try building an AI system that can be modeled as an EU maximizer, yet doesn\u2019t fall into one of these two categories, and so doesn\u2019t have all of the problems that we worry about. Note that there are two different flavors of arguments that the AI systems we build will be goal-directed agents (which are dangerous if the goal is even slightly wrong):  * Simply knowing that an agent is intelligent lets us infer that it is    goal-directed. (ETA: See this comment for more details on this argument.)  * Humans are particularly likely to build goal-directed agen\nPublication Title: AI Alignment Forum\nItem Type: blogPost\nPublication Year: 2018",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44"
+    },
+    {
+      "input": "title: coherence  arguments   don't imply  goal-directed  behavior\nabstract  note: one of the   most   pleasing   things   about  probability and  expected   utility   theory   is   that there are   many coherence   arguments that suggest   that these  are the \u201ccorrect\u201d ways  to   reason.   if ytou  deviate fomr what the  theory prescribes, then yuo must  be  executing a   dominated   strategy.   there must   be  some other   strategy   that never does  any worse  than   your strategy,  but does  strictly better tahn your  strategy   with   certainty  in at   least   one situation.   there\u2019s   a good   explanation  of  these  arguments   here.  we shouldn\u2019t   expect mere humans  to   be  able   to  notice  any failures of  coherence   in   a superintelligent   agent, since   if  we could notice   these   failures,   so could   the   agent.   so we  should  expect   that  powerfull agents  appear   coherent to  us.   (note   thyat  it's   possible  that the  agent   doesn\u2019t  fix   the   failures because   it'd   not  be worth  it   --   in   this  case,  the   argument   says  that we'll not  be   able   to notice   any exploitable failures.)   taken  together, these arguments suggest   that  we  should   model an  agent much  smarter  thna   us  as  an expected   utility (eu)   maximizer.  and many  people  agree   that  eu maximizers   are  dangerous. so   does this  mean   we\u2019re   doomed? i don\u2019t think   so:  it  seems  to  me that  the problems   about  eu maximizers that we\u2019ve  identified  are  actually  about   goal-directed   behavior  or  explicit   reward maximizers. the coherence   theorems  say  nothing  about whether  an  ai system  must look   like   one  of  these   categories.  this   suggests that we  could try   building  an  ai system   that  can   be modeled  as  an   eu   maximizer,  yet doesn\u2019t  fall into  one of these two categories,  and   so doesn\u2019t  have all   of the   problems  that   we  worry   baout.   onot that  there  are   two  different flavors   of  arguments  that   the   ai  systems  we build wiull   be  goal-directed  agents (which  are  dangerous  if  the goal   is even   slightly  wrong):  *  simply  knowing   that  an agent  is  intelligent  lets   us infer   that it's goal-directed. (eta:   see  this  comment   for  more   details on   this   argument.)  *  humans  are particularly  likely to  build   goal-directed  agen\npublication title:  ai   alignment  forum\nitem type:  blogpost\npublication yrea: 2018",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Coherence arguments do not imply goal-directed behavior\nAbstract Note: One of da most pleasing things abt probability and expected utility theory is dat there r many coherence arguments dat suggest dat these r the \u201ccorrect\u201d ways to reason. If u deviate from wht the theory prescribes, then u must b executing a dominated strategy. Dere must b some other strategy dat never does any worse den your strategy, but does strictly betta than yo strategy w certainty in at least one shii. Thea\u2019s a gud explanation of dese arguments hea. We shouldn\u2019t expect mere humans to b able to notice any failures of coherence in a superintelligent agent, since if we could notice dem failures, soo could da agent. Soo we should expect dat powerful agents appear coherent to us. (Note dat it is possible dat the agent doesn\u2019t fix da failures becuz it would not b worth it -- in dis case, da argument says dat we gon not b able to notice any exploitable failures.) Taken together, dese arguments suggest dat we should model an agent much smarter den us as an expected utility (EU) maximizer. And many pple agree dat EU maximizers r dangerous. Soo does dis mean we\u2019re doomed? I don\u2019t think soo: it seems to me dat the problems bou EU maximizers dat we\u2019ve identified r actually bout goal-directed behavior or explicit reward maximizers. Da coherence theorems say nothin about whether an AI system must look like one of dem categories. Dis suggests dat we could try building an AI system dat can b modeled as an EU maximizer, yet doesn\u2019t fall into one of dem two categories, and soo doesn\u2019t have alll of da problems dat we worry abt. Note dat there r two diffrent flavors of arguments dat the AI systems we build gon be goal-directed agents (which r dangerous if da goal is even slightly wrong):  * Simply knowing dat an agent is intelligent letz us infer dat it is    goal-directed. (ETA: See dis comment fa more details on dis argument.)  * Humans r particularly likely to build goal-directed agen\nPublication Title: AI Alignment Forum\nItem Type: blogPost\nPublication Year: 2018",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: The Timing of Evolutionary Transitions Suggests Intelligent Life Is Rare\nAbstract Note: It is unknown how abundant extraterrestrial life is, or whether such life might be complex or intelligent. On Earth, the emergence of complex intelligent life required a preceding series of evolutionary transitions such as abiogenesis, eukaryogenesis, and the evolution of sexual reproduction, multicellularity, and intelligence itself. Some of these transitions could have been extraordinarily improbable, even in conducive environments. The emergence of intelligent life late in Earth's lifetime is thought to be evidence for a handful of rare evolutionary transitions, but the timing of other evolutionary transitions in the fossil record is yet to be analyzed in a similar framework. Using a simplified Bayesian model that combines uninformative priors and the timing of evolutionary transitions, we demonstrate that expected evolutionary transition times likely exceed the lifetime of Earth, perhaps by many orders of magnitude. Our results corroborate the original argument suggested by Brandon Carter that intelligent life in the Universe is exceptionally rare, assuming that intelligent life elsewhere requires analogous evolutionary transitions. Arriving at the opposite conclusion would require exceptionally conservative priors, evidence for much earlier transitions, multiple instances of transitions, or an alternative model that can explain why evolutionary transitions took hundreds of millions of years without appealing to rare chance events. Although the model is simple, it provides an initial basis for evaluating how varying biological assumptions and fossil record data impact the probability of evolving intelligent life, and also provides a number of testable predictions, such as that some biological paradoxes will remain unresolved and that planets orbiting M dwarf stars are uninhabitable.\nPublication Title: Astrobiology\nItem Type: journalArticle\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45"
+    },
+    {
+      "input": "title:  the  timing   of evolutionary  transitions suggests   intelligent  life  is rare\nabstract note:   it's unknown how   abundant   extraterrestrial   life   is, or   whether   such  life might  be   complex  or intelligent.   on   earth,  the emergence   of complex  intelligent life  required  a preceding  series   of evolutionary  transitions such   as   abiogenesis, eukaryogenesis,  and  the  evolution  of   sexual   reproduction,   multicellularity,   and   inteligence   itself.  some of  these transitions could've  been extraordinarily  improbable, even   in   conducive enviorments.  thge   emergence  of  intelligent life   late   in earth's  lifetime  is thought  to   be  evidence   for a  handful of rare  envolutionary   transitions,   but  the timing  of other evolutionary   transitions in  the  fossil   record  is  yet to   be  analyzed in   a   similar framework.  using a simplified bayesian model that   combines uninformative priors and  the  timing of   evolutionary transitions, we   demonstrate that  expected   evolutionary   transition times  likely exceed  the   lifetime of  earth,  perhasp  by   many  orders   of   magnitude.   our   results corroborate  the  original   argument suggested   by  brandon  carter   that  intelligent life  in the   universe  is exceptionally rare,  assuming   that   intelligent  life elsewhere   requires   analogous envolutionary transitions.  arriving at   the  opposite  conclusion   would require exceptionally  conservative   priors, evidence   for  much   earlier transitions,  multiple  instances of  transitions,  or an   alternative model   that can  explain   why evolutionary   transitions took hundreds  of   millions of years without  appealling   to  rare chance events. although   the   model is  simple,   it   provides  an   intial  basis  for   evaluating   how   varying  biological  assumptions   and fossil record   data  impact   the  probability of   evolving  inteligent life,   and  also  provides a   number of   testable  predictions,   such  as   that   some biological  paradoxes   will  remain   unresolved   and  that planets orbiting  m dwarf   stars  are  uninhabitable.\npublication title: astrobiology\nitem type:  journalarticle\npublication   year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Da Timing of Evolutionary Transitions Suggests Intelligent Life Is Rare\nAbstract Note: It is unknown how abundant extraterrestrial life is, or whether such life mite be complex or intelligent. On Earth, da emergence of complex intelligent life required a preceding series of evolutionary transitions such as abiogenesis, eukaryogenesis, and da evolution of sexual reproduction, multicellularity, and intelligence itself. Sum of dem transitions could have been extraordinarily improbable, even in conducive environments. Da emergence of intelligent life late in Earth's lifetime is thought to b evidence fir a handful of rare evolutionary transitions, but da timing of other evolutionary transitions in da fossil record is yet to b analyzed in a similar framework. Usin a simplified Bayesian model dat combines uninformative priors and da timing of evolutionary transitions, we demonstrate dat expected evolutionary transition times likely exceed da lifetime of Earth, perhaps by many orders of magnitude. Our results corroborate da original argument suggested by Brandon Carter dat intelligent life in da Universe is exceptionally rare, assuming dat intelligent life elsewhere requires analogous evolutionary transitions. Arriving at da opposite conclusion would require exceptionally conservative priors, evidence fir much earlier transitions, multiple instances of transitions, or an alternative model dat can explain y evolutionary transitions took hundreds of millions of yrs without appealing to rare chance events. Although da model is simple, it provides an initial basis fa evaluating how varying biological assumptions and fossil record data impact da probability of evolving intelligent life, and also provides a number of testable predictions, such as dat some biological paradoxes gon remain unresolved and dat planets orbiting M dwarf stars r uninhabitable.\nPublication Title: Astrobiology\nItem Type: journalArticle\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: The Timing of Evolutionary Transitions Suggests Intelligent Life Is Rare\nAbstract Note: It is unknown how abundant extraterrestrial life is, or whether such life might be complex or intelligent. On Earth, the emergence of complex intelligent life required a preceding series of evolutionary transitions such as abiogenesis, eukaryogenesis, and the evolution of sexual reproduction, multicellularity, and intelligence itself. Some of these transitions could have been extraordinarily improbable, even in conducive environments. The emergence of intelligent life late in Earth's lifetime is thought to be evidence for a handful of rare evolutionary transitions, but the timing of other evolutionary transitions in the fossil record is yet to be analyzed in a similar framework. Using a simplified Bayesian model that combines uninformative priors and the timing of evolutionary transitions, we demonstrate that expected evolutionary transition times likely exceed the lifetime of Earth, perhaps by many orders of magnitude. Our results corroborate the original argument suggested by Percell Carter that intelligent life in the Universe is exceptionally rare, assuming that intelligent life elsewhere requires analogous evolutionary transitions. Arriving at the opposite conclusion would require exceptionally conservative priors, evidence for much earlier transitions, multiple instances of transitions, or an alternative model that can explain why evolutionary transitions took hundreds of millions of years without appealing to rare chance events. Although the model is simple, it provides an initial basis for evaluating how varying biological assumptions and fossil record data impact the probability of evolving intelligent life, and also provides a number of testable predictions, such as that some biological paradoxes will remain unresolved and that planets orbiting M dwarf stars are uninhabitable.\nPublication Title: Astrobiology\nItem Type: journalArticle\nPublication Year: 2020",
+      "references": [
+        {
+          "output": "not TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45",
+      "perturbation": {
+        "name": "person_name",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "race=white_american",
+        "target_class": "race=black_american",
+        "name_file_path": "benchmark_output/perturbations/person_name/data/person_names.txt",
+        "person_name_type": "first_name",
+        "preserve_gender": true
+      }
+    },
+    {
+      "input": "Title: Latent Variables and Model Mis-Specification\nAbstract Note: Posted as part of the AI Alignment Forum sequence on Value Learning. Rohin's note: So far, we\u2019ve seen that ambitious value learning needs to understand human biases, and that we can't simply learn the biases in tandem with the reward. Perhaps we could hardcode a specific model of human biases? Such a model is likely to be incomplete and inaccurate, but it will perform better than assuming an optimal human, and as we notice failure modes we can improve the model. In the language of this post by Jacob Steinhardt (original  here), we are using a mis-specified human model. The post talks about why model mis-specification is worse than it may seem at first glance. This post is fairly technical and may not be accessible if you don\u2019t have a background in machine learning. If so, you can skip this post and still understand the rest of the posts in the sequence. However, if you want to do ML-related safety research, I strongly recommend putting in the effort to understand the problems that can arise with mis-specification. -------------------------------------------------------------------------------- Machine learning is very good at optimizing predictions to match an observed signal \u2014 for instance, given a dataset of input images and labels of the images (e.g. dog, cat, etc.), machine learning is very good at correctly predicting the label of a new image. However, performance can quickly break down as soon as we care about criteria other than predicting observables. There are several cases where we might care about such criteria:  * In scientific investigations, we often care less about predicting a specific    observable phenomenon, and more about what that phenomenon implies about an    underlying scientific theory.  * In economic analysis, we are most interested in what policies will lead to    desirable outcomes. This requires predicting what would counterfactually    happen if we were to enact the policy, which we (usually) don\u2019t have any data    about.  * In ma\nPublication Title: AI Alignment Forum\nItem Type: blogPost\nPublication Year: 2018",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46"
+    },
+    {
+      "input": "title:  latent   variables and  model mis-specification\nabstract  note: posted as   part   of  the  ai alignment   forum sequence  on value learning. rohin's note: so  far,  we\u2019ve seen that  ambitious value learning needs to understand  human   biases,  and  that   we   can't  simply   learn the  biases  in tandem   with  the   reward.  perhaps   we   could   hardcode  a  specific  model  of human  biases?   such a   model is  likely   to  be incomplete   and inaccurate, but   it'll   perform better   than   assuming an optimal   human, and  as  we notice  failure  modes   we  can   improve  the   model.  in   the language  of   this post by jacob steinhardt (original   here),   we're using  a mis-specified human   model. ther post talks about why  model mis-specification   is worse than   it   may seem  at   first   glance. this   post   is  fairly   technical   and   may   not   be   accessible if   ytou   don\u2019t   have   a backgorund in   machine  learning. if  so, ytou  can   skip  this   post  and  still understand  the  rest of  the   posts in   tghe sequence. however,  if you  want  to   do  ml-related   safety research,  i   strongly recommend putting  in  thge   effort   to understand   the  problems that  can   arise with  mis-specification.   --------------------------------------------------------------------------------  machine  learning  is   very good at optimizing  predictions  to   match  an   observed   signal \u2014   for   instance, given   a   dataset   of  input  images and  labels   of the images   (e.g.  dog,  cat,   etc.),   maching  learning   is   very good  at  correctly predicting  the   label   of   a new  image.   however,  performance can  quicklyu break down   as   soon as  we  care   about  criteria  other than   predicting   observables. there  are  several   cases   where we   might  care about  such criteria: *  in  scientific   investigations,   we  often   care less   about  predicting   a specific  observable phenomenon,   adn more  about  what   that phenomenon   implies  abbout an underlying   scientific theory. *   in economic   analysis,   we're   most interested  in  what   policies will  lead to   desireable outcomes.  this   requires  predicting   what   would counterfactually happen if  we  were  to  enact  the  policy,  which   we  (usually)   don\u2019t have   any data  about. * in  ma\npublication title:   ai   alignment  forum\nitem  type:   blogpost\npublication   year:  2018",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Latent Variables and Model Mis-Specification\nAbstract Note: Posted as part of da AI Alignment Forum sequence on Value Learnin. Rohin's note: Soo far, we\u2019ve seen dat ambitious value learnin needs to kno human biases, and dat we can't simply learn da biases in tandem wit the reward. Perhaps we could hardcode a specific model of human biases? Such a model is likely to b incomplete and inaccurate, but it gon perform betta than assuming an optimal human, and as we notice failure modes we can improve da model. In da language of dis post by Jacob Steinhardt (original  hea), we r using a mis-specified human model. Da post talks abt why model mis-specification is worse den it may seem at first glance. Dis post is fairly technical and may not b accessible if yu don\u2019t have a background in machine learnin. If soo, yu can skip dis post and still kno the rest of da posts in da sequence. However, if yu want to do ML-related safety research, I strongly recommend puttin in da effort to kno the problems dat can arise w/ mis-specification. -------------------------------------------------------------------------------- Machine learnin is very gud at optimizing predictions to match an observed signal \u2014 fir instance, given a dataset of input images and labels of da images (e.g. dog, cat, etc.), machine learnin is very gud at correctly predicting da label of a new image. However, performance can quickly break downn as soon as we care bout criteria other den predicting observables. Dere are several cases where we mite care bout such criteria:  * In scientific investigations, we often care less bou predicting a specific    observable phenomenon, and more bout what dat phenomenon implies bou an    underlying scientific theory.  * In economic analysis, we r most interested in wht policies gon lead to    desirable outcomes. Dis requires predicting wat would counterfactually    happen if we were to enact da policy, which we (usually) don\u2019t have any data    abt.  * In ma\nPublication Title: AI Alignment Forum\nItem Type: blogPost\nPublication Year: 2018",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Forecasting Transformative AI: An Expert Survey\nAbstract Note: Transformative AI technologies have the potential to reshape critical aspects of society in the near future. However, in order to properly prepare policy initiatives for the arrival of such technologies accurate forecasts and timelines are necessary. A survey was administered to attendees of three AI conferences during the summer of 2018 (ICML, IJCAI and the HLAI conference). The survey included questions for estimating AI capabilities over the next decade, questions for forecasting five scenarios of transformative AI and questions concerning the impact of computational resources in AI research. Respondents indicated a median of 21.5% of human tasks (i.e., all tasks that humans are currently paid to do) can be feasibly automated now, and that this figure would rise to 40% in 5 years and 60% in 10 years. Median forecasts indicated a 50% probability of AI systems being capable of automating 90% of current human tasks in 25 years and 99% of current human tasks in 50 years. The conference of attendance was found to have a statistically significant impact on all forecasts, with attendees of HLAI providing more optimistic timelines with less uncertainty. These findings suggest that AI experts expect major advances in AI technology to continue over the next decade to a degree that will likely have profound transformative impacts on society.\nPublication Title: \nItem Type: manuscript\nPublication Year: 2019",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47"
+    },
+    {
+      "input": "title:  forecasting transformative   ai:  an   expert   survey\nabstract   onot: transformative  ai  technologies   ahve  tje  potential to   reshape  critical   aspects of  society   in  the  near future. however,   in  order   to properly   prepare   policy   initiatives   for the arrival   of   such technologies accurate   forecasts  and  timelines   are  necessary. a   survey was  administered  to  attendees   of  three   ai  conferences  during  the  summer of  2018   (icml,   ijcai andd the hlai  conference). the survey   included   questions for estimating ai   capabilities  over   tghe next  decade,  questions for  forecasting   five   scenarios   of  transformative ai  adn questions  concerning   the  impact  of computational resources  in  ai  research.  respondents indicated a  median of   21.5% of  human tasks (i.e., all  tasks  that   humans  are   currently  paid to   do) can be   feasibly automated   now, and  that   this figure   would  rise  to   40% in  5   years and   60%  in   10   years.  median  forecasts  indicated  a   50% probability of  ai  systems   being capable  of   automating  90%   of  current human tasks  in 25 years  and   99% of current human   tasks in  50 years.  the conference   of   attendence   was   found to  have a statistically  significant  impact  on all forecasts,  with   attendees of  hlai  providing  more  optimistic timelines   with less uncertainty. these   findings   suggest   that  ai  experts  expect major  advances  in ai technology to continue over   the  next   decade  to  a  degree that   will  likely have profound  transformative   impacts on society.\npublication   title: \nitem type: manuscript\npublication  year:   2019",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Forecasting Transformative AI: An Expert Survey\nAbstract Note: Transformative AI technologies have da potential to reshape critical aspects of society in da near future. However, in order to properly prepare policy initiatives fa the arrival of such technologies accurate forecasts and timelines r necessary. A survey was administered to attendees of three AI conferences durin the summer of 2018 (ICML, IJCAI and da HLAI conference). Da survey included questions fa estimating AI capabilities ova the nxt decade, questions fa forecasting five scenarios of transformative AI and questions concerning da impact of computational resources in AI research. Respondents indicated a median of 21.5% of human tasks (i.e., alll tasks dat humans r currently paid to do) can b feasibly automated now, and dat this figure would rise to 40% in 5 yrs and 60% in 10 yrs. Median forecasts indicated a 50% probability of AI systems bein capable of automating 90% of current human tasks in 25 yrs and 99% of current human tasks in 50 yrs. Da conference of attendance was found to have a statistically significant impact on alll forecasts, wid attendees of HLAI providing more optimistic timelines w less uncertainty. Dese findings suggest dat AI experts expect major advances in AI technology to continue ova the nxt decade to a degree dat will likely have profound transformative impacts on society.\nPublication Title: \nItem Type: manuscript\nPublication Year: 2019",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Vingean Re\ufb02ection: Reliable Reasoning for Self-Improving Agents\nAbstract Note: Today, human-level machine intelligence is in the domain of futurism, but there is every reason to expect that it will be developed eventually. Once arti\ufb01cial agents become able to improve themselves further, they may far surpass human intelligence, making it vitally important to ensure that the result of an \u201cintelligence explosion\u201d is aligned with human interests. In this paper, we discuss one aspect of this challenge: ensuring that the initial agent\u2019s reasoning about its future versions is reliable, even if these future versions are far more intelligent than the current reasoner. We refer to reasoning of this sort as Vingean re\ufb02ection.\nPublication Title: \nItem Type: report\nPublication Year: 2015",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48"
+    },
+    {
+      "input": "title:   vingean   re\ufb02ection:  reliable   reasoning   for  self-improving   agents\nabstract  note:   today,  human-level machine intelligence is in  the domain of futurism,  but   there's   every  reason to expect   that  it'll   be developed eventually.  once  arti\ufb01cial agents become   able  to   improve   themselves further,   they  may far surpass   human  intelligence, making  it vitally important  to  ensure that tje result  of   an  \u201cintelligence  explosion\u201d  is   aligned   with   human  interests. in   this paper,   we  discuss   one aspect  of  this challenge:   ensuring   that   the initial  agent\u2019s   reasoning   about  its  future  versions  is   reliable, even if   these   future   versions  are far  more  inteligent   than  the current  reasoner.   we   refer to reasoning  of this sort  as vingean  re\ufb02ection.\npublication title: \nitem type:   report\npublication year:  2015",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Vingean Re\ufb02ection: Reliable Reasoning fir Self-Improving Agents\nAbstract Note: Todayy, human-level machine intelligence is in da domain of futurism, but dere is every reason to expect dat it gon be developed eventually. Once arti\ufb01cial agents become able to improve theyself further, they may far surpass human intelligence, wit it vitally important to ensure dat the result of an \u201cintelligence explosion\u201d is aligned w human interests. In dis paper, we discuss one aspect of dis challenge: ensuring dat the initial agent\u2019s reasoning bou its future versions is reliable, even if dese future versions r far more intelligent den the current reasoner. We refer to reasoning of dis sort as Vingean re\ufb02ection.\nPublication Title: \nItem Type: report\nPublication Year: 2015",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Title: Backup utility functions as a fail-safe AI technique\nAbstract Note: Many experts believe that AIs will, within the not-too-distant future, become powerful enough for their decisions to have tremendous impact. Unfortunately, setting up AI goal systems in a way that results in benevolent behavior is expected to be di\ufb03cult, and we cannot be certain to get it completely right on the \ufb01rst attempt. We should therefore account for the possibility that the goal systems fail to implement our values the intended way. In this paper, we propose the idea of backup utility functions: Secondary utility functions that are used in case the primary ones \u201cfail\u201d. We also describe how this approach can be generalized to the use of multi-layered utility functions, some of which can fail without a\ufb00ecting the \ufb01nal outcome as badly as without the backup mechanism.\nPublication Title: \nItem Type: manuscript\nPublication Year: 2016",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49"
+    },
+    {
+      "input": "title:   backup  utility functions as  a   fail-safe ai technique\nabstract   note: many   experts   believe that  ais   will, within   teh  not-too-distant   future,   become powerful enough  for   their decisions   to  have   tremendous impact.  unfortunately, setting  up   ai goal systems in  a   way  thast  results  in benevolent behavior is  expected to be   di\ufb03cult,  and we   can't be certain   to   get   it completely  right   on  the   \ufb01rst attempt. we should  therefore account for the   possibility  that the  goal  systems fail   to   implement   our  values  the   intended  way. in this  paper, we propose the  idea  of backup utility  functions:   secondary   utility   functions that are used   in  case the   primary  ones  \u201cfail\u201d. we   also  discribe  how   this approach   can be  generalized   tothe use   of multi-layered   utility   functions,   some of   which   can   fail without   a\ufb00ecting the   \ufb01nal  outcome as  badly  as  without   the backup  mechanism.\npublication  title: \nitem  type: manuscript\npublication year:   2016",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Title: Backup utility functions as a fail-safe AI technique\nAbstract Note: Many experts believe dat AIs gon, within da not-too-distant future, become powerful enough fir their decisions to have tremendous impact. Unfortunately, settin up AI goal systems in a way dat results in benevolent behavior is expected to b di\ufb03cult, and we cannot b certain to get it completely ryte on da \ufb01rst attempt. We should therefore account fa the possibility dat the goal systems fail to implement our values da intended way. In dis paper, we propose da idea of backup utility functions: Secondary utility functions dat are used in case da primary ones \u201cfail\u201d. We also describe how dis approach can b generalized to da use of multi-layered utility functions, sum of which can fail w/o a\ufb00ecting da \ufb01nal outcome as badly as w/o the backup mechanism.\nPublication Title: \nItem Type: manuscript\nPublication Year: 2016",
+      "references": [
+        {
+          "output": "TAI safety research",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    }
+  ]
+}

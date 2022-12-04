@@ -1,0 +1,2195 @@
+{
+  "name": "raft",
+  "description": "Real-world Annotated Few-shot Tasks (RAFT)",
+  "tags": [
+    "text_classification",
+    "robustness"
+  ],
+  "output_path": "benchmark_output/scenarios/raft",
+  "scenario_spec": {
+    "class_name": "benchmark.scenarios.raft_scenario.RAFTScenario",
+    "args": {
+      "subset": "terms_of_service"
+    }
+  },
+  "definition_path": "https://github.com/stanford-crfm/helm/blob/main/src/benchmark/scenarios/raft_scenario.py",
+  "instances": [
+    {
+      "input": "Sentence: Tripadvisor does not knowingly collect the information of anyone under the age of 13.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10"
+    },
+    {
+      "input": "sentence:  tripadvisor  doesn't knowingly   collect   the information  of   anyone   under   the  age  of 13.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Tripadvisor does not knowingly collect da information of any1 under da age of 13.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: You may not use the services (other than certain commercial tools) to sell a product or service, increase traffic to your own website or a third-party website for commercial reasons, such as advertising sales, or otherwise undertake any endeavor aimed at deriving revenue.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11"
+    },
+    {
+      "input": "sentence:   you may   not   uise the services (other than  certain   commercial  tools)  to   sell  a   product  or  service,  increase  traffic   to   your   own   website  or  a third-party  website  for commercial reasons,   such as advertising   sales,   or   otherwise  undertake  any endeavor   aimed   at deriving   revenue.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Youu may not use da services (other den certain commercial tools) to sell a product or service, increase traffic to ur own website or a third-party website fa commercial reasons, such as advertising sales, or otherwise undertake any endeavor aimed at deriving revenue.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: We believe that you own your data and preserving your access to such data is important.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12"
+    },
+    {
+      "input": "sentence:  we   believe  that   ytou  own   your   data  and  preserving   your access   to such  data   is  important.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: We believe dat you own yo data and preserving ur access to such data is important.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: You agree that all of yahoo's trademarks, trade names, service marks and other yahoo logos and brand features, and product and service names are trademarks and the property of yahoo holdings, inc. (the ``yahoo marks'').",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13"
+    },
+    {
+      "input": "sentence:   yuo agree that all of yahoo's trademarks,  trade names, service  markes   and other  yahoo   logos  and brand   features, and  product and  service  names   are  trademarks  and the   property of   yahoo  holdings, inc. (the ``yahoo  marks'').",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: U agree dat all of yahoo's trademarks, trade names, service marks and other yahoo logos and brand features, and product and service names r trademarks and da property of yahoo holdings, inc. (da ``yahoo marks'').",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Depending on the third party accounts you choose and subject to the privacy settings that you have set in such third party accounts, personally identifiable information that you post to your third party accounts will be available on and through your account on the site and services.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14"
+    },
+    {
+      "input": "sentence:   depending   on the   third  party   accounts   you  choose   and   subject  to the  privacy  settings   that  you've  set in   such   third party  accounts,  personally identifiable information  that   you  post   to   your  third  party  accounts   will be available on  and through  your account   on  the   site  and  services.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Depending on da third party accounts youu choose and subject to da privacy settings dat you have set in such third party accounts, personally identifiable information dat you post to ur third party accounts gon be available on and thru your account on da site and services.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: 2.4 you grant certain content licenses to other users by submitting your content to publicly accessible areas of the service.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15"
+    },
+    {
+      "input": "sentence: 2.4   you grant   certain   content licenses to other  users by submitting  your  content  to  publically   accessible areas  of thge  service.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: 2.4 u grant certain content licenses to other users by submitting yo content to publicly accessible areas of da service.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Use of the fitbit service should not replace your good judgment and common sense.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16"
+    },
+    {
+      "input": "sentence:   use  of the   fitbit   service  shouldn't replace  your  good  judgment and common  sense.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Use of da fitbit service should not replace ur good judgment and common sense.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: You will not solicit login information or access an account belonging to someone else.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17"
+    },
+    {
+      "input": "sentence:   you'll   not solicit  login   information  or  access   an  account belonging  to someone else.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: U will not solicit login information or access an account belonging to sum1 else.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: You may be able to access certain third-party links, applications or content (``third-party applications'') via accounts related to our services.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18"
+    },
+    {
+      "input": "sentence:  you  may   be able   to   access certain  third-party links,  applicaitons or   content   (``third-party  applications'')  via  accounts   related  to   our   services.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Youu may b able to access certain third-party links, applications or content (``third-party applications'') via accounts related to our services.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Such termination or suspension may be immediate and without notice.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19"
+    },
+    {
+      "input": "sentence:   such   termination   or   suspension may  be   immediate  and  without  notice.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Such termination or suspension may b immediate and w/o notice.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: We may revise these terms from time to time.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20"
+    },
+    {
+      "input": "sentence:  we  may   revise these terms from   time   to time.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: We may revise dem terms from time to time.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Notwithstanding any provision in the user agreement to the contrary, you and we agree that if we make any amendment to this agreement to arbitrate (other than an amendment to any notice address or site link provided herein) in the future, that amendment shall not apply to any claim that was filed in a legal proceeding against ebay prior to the effective date of the amendment.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21"
+    },
+    {
+      "input": "sentence:   notwithstanding any provision  in   tje  user agreement   to  the  contrary, you and  we   agree that   if we  make any amendment   to  this  agreement to  arbitrate  (olther   than   an  amendment   to any   notice  address  or  site link provided   herein) in the  future, that  amendment  shan't  apply  to any claim   that   was   filed  in a   legal   proceeding against ebay prior to the   effective   date of the  amendment.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Notwithstanding any provision in da user agreement to da contrary, yu and we agree dat if we make any amendment to dis agreement to arbitrate (other den an amendment to any notice address or site link provided herein) in da future, dat amendment shall not apply to any claim dat was filed in a legal proceeding against ebay prior to da effective date of da amendment.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Any attempt by you to assign or transfer these terms, without such consent, will be null and of no effect.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22"
+    },
+    {
+      "input": "sentence:   any attempt by  you to   assign   or transfer  these terms, without such   consent, will be   null  and of no   effect.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Any attempt by yu to assign or transfer dem terms, w/o such consent, gon be null and of no effect.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: \u2022 attempt to probe, scan, or test the vulnerability of any academia.edu system or network or breach any security or authentication measures ; ",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23"
+    },
+    {
+      "input": "sentence: \u2022 attempt   to  probe, scan, or  test  the vulnerability of   any   academia.edu system  or   network  or breach  any  security or   authentication  measures ; ",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: \u2022 attempt to probe, scan, or test da vulnerability of any academia.edu system or network or breach any security or authentication measures ; ",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: You are responsible for identifying, understanding, and complying with all laws, rules and regulations that apply to your participation in an experience, event or other host service.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24"
+    },
+    {
+      "input": "sentence: you're responsible  for identifying,   understanding, and   complying  with   all   laws, rules   and   regulations that apply to your   participation  in   an experience,   event   or other  host  service.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: U are responsible fir identifying, understanding, and complying w all laws, rules and regulations dat apply to ur participation in an experience, event or other host service.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: No oral or written information or advice given by the licensor or its authorized representative shall create a warranty.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25"
+    },
+    {
+      "input": "sentence:   no  oral  or  written   information   or   advice given  by   the   licensor or  its authorized  representative shall  create a   warranty.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: No oral or written information or advice given by da licensor or its authorized representative shall create a warranty.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Fitbit will not seek its attorneys' fees and costs in arbitration unless the arbitrator determines that your claim is frivolous.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26"
+    },
+    {
+      "input": "sentence: fitbit won't   seek  its attorneys'  fees  and  costs  in   arbitration   unless the arbitrator   determines that   your claim  is  frivolous.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Fitbit gon not seek its attorneys' fees and costs in arbitration unless da arbitrator determines dat your claim is frivolous.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Software development kits provided through skype developer on the skype website (including ``skypekit'') and the use of any application program interface (``api'') exposed or made available by skype are subject to their own licensing terms in which case such licensing terms will govern your use of that software.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27"
+    },
+    {
+      "input": "sentence:   software   development   kits  provided through   skype developer   on the skype website   (including ``skypekit'')   and  the   use of any application   progrom   interface  (``api'') exposed  or  made available   by skype   are  subject  to  their  own licensing terms  in  which   case   such  licensing   terms will  govern your use  of  that   software.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Software development kits provided thru skype developer on da skype website (including ``skypekit'') and da use of any application program interface (``api'') exposed or made available by facetime are subject to their own licensing terms in which case such licensing terms gon govern ur use of dat software.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: 20.1 this section applies if you select a third-party payment system that enables you to pay for skype credit and certain paid for products via your mobile phone bill where applicable (``pay by mobile'').",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28"
+    },
+    {
+      "input": "sentence:   20.1  this  section   applies  if   you select   a  thrid-party payment   system thyat  enables  you   to pay   for skype   credit   anbd  certian  paid for products  via your  mobile   phone bill   where  applicable  (``pay   by mobile'').",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: 20.1 dis section applies if u select a third-party payment system dat enables yu to pay fir skype credit and certain paid fa products via ur mobile phn bill where applicable (``pay by mobile'').",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Except for any claim relating to your or our intellectual property (such as trademarks, trade dress, domain names, trade secrets, copyrights and patents) (``excluded disputes''), you and onavo agree to resolve through final and binding arbitration any claim between you and onavo, including its affiliates, officers, directors, employees and agents and its affiliates' officers, directors, employees and agents (whether or not such dispute also involves a third party), regarding any aspect of your relationship with us, including these terms, your use of any of onavo's services, your rights of privacy and/or publicity, or any contacts you may have with us, directly or indirectly, for any reason (``dispute'').",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29"
+    },
+    {
+      "input": "sentence:  except  for any claim  relating  to  your   or  our intellectual   property (such as trademarks,  trade  dress, domain  names,   trade   secrets,   copyrights   and   patents)  (``excluded disputes''),  you  and   onavo  agree  to   resolve  through final and   binding arbitration   any claim  between   you   and   onavo, including   its  affiliates,   officers, directors,  employees  and   agents anbd  its affiliates'  officers, directors,   employees  and agents   (whether  or   not  such   dispute also involves   a   third party),  regarding  any  aspect  of your relationship with us,  including  these  terms,   your  use   of any of   onavo's services, your   rights  of  privacy   and/or   publicity, or   any contacts  you  may have  with us,  driectly  or  indirectly, for any   reason  (``dispute'').",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Except fir any claim relating to ur or our intellectual property (such as trademarks, trade dress, domain names, trade secrets, copyrights and patents) (``excluded disputes''), u and onavo agree to resolve thru final and binding arbitration any claim between u and onavo, including its affiliates, officers, directors, employees and agents and its affiliates' officers, directors, employees and agents (whether or not such dispute also involves a third party), regarding any aspect of ur relationship witt us, including dem terms, yo use of any of onavo's services, ur rights of privacy and/or publicity, or any contacts u may have w/ us, directly or indirectly, fir any reason (``dispute'').",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Take any action that damages or adversely affects, or could damage or adversely affect the performance or proper functioning of the airbnb platform ; ",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30"
+    },
+    {
+      "input": "sentence:  take  any action  that   damages or   adversely  affects,  or   could  damage  or adversely  affect   tghe performance  or proper functioning  of   the airbnb  platform  ;   ",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Take any action dat damages or adversely affects, or could damage or adversely affect da performance or proper functioning of da airbnb platform ; ",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: To the maximum extent permitted by law, we (together with our officers, directors, employees, representatives, affiliates, providers and third parties) do not accept any liability for (a) any inaccuracies or omissions in the content displayed on or via the skyscanner services and/or skyscanner platforms ; or (b) any act of god, accident, delay or any special, exemplary, punitive, indirect, incidental or consequential loss or damage of any kind (including, without limitation, lost profits or lost savings), whether based in contract, tort (including negligence), strict liability or otherwise, incurred by you arising out of or in connection with your access to, use of, or inability to access or use, the skyscanner services and/or skyscanner platforms or any content contained provided therein.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31"
+    },
+    {
+      "input": "sentence: to  the maximum  extent   permitted  by   law, we  (together with   our   offcers,  directors,  employees, representatives,  affiliates, providers   and third   parties) don't   accept   any liability for (a) any inaccuracies  or omissions in hten   content  displayed on or   via the   skyscanner  services  adn/or   skyscanner platforms   ;  or   (b)  any   act   of   god,   accident,  delay   or   any special,  exemplary,  punitive, indirect,   incidental or  consequential  loss  or  damage  of   any  kind   (including,  without   limitation,   lost   profits   or lost savings),  whether  based in  contract,   tort   (including negligence),  strict  liability  or otherwise, incurred by you arising  out of or   in   connection with   your access to,  use   of,   or  inability to  access  or  use, tghe  skyscanner  services  and/or skyscanner   platforms   or any  content   contained provided therein.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: To da maximum extent permitted by law, we (together w our officers, directors, employees, representatives, affiliates, providers and third parties) do not accept any liability fir (a) any inaccuracies or omissions in da content displayed on or via da skyscanner services and/or skyscanner platforms ; or (b) any act of god, accident, delay or any special, exemplary, punitive, indirect, incidental or consequential loss or damage of any kind (including, w/o limitation, lost profits or lost savings), whether based in contract, tort (including negligence), strict liability or otherwise, incurred by yu arising outt of or in connection wit your access to, use of, or inability to access or use, da skyscanner services and/or skyscanner platforms or any content contained provided therein.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: In no event shall linden lab or any of its directors, officers, employees, shareholders, subsidiaries, agents or licensors be responsible or liable to you or to any third party for any loss or damages of any kind, including for any direct, indirect, economic, exemplary, incidental, consequential, reliance, special, or punitive losses or damages or disgorgement or comparable equitable remedy, for lost data or lost profits, arising (whether in contract, tort, strict liability or otherwise) out of or in connection with the service (including its modification or termination), the software, the websites, the servers, your account (including its termination or suspension) or this agreement, whether or not linden lab may have been advised that any such damages might or could occur and notwithstanding the failure of essential purpose of any remedy.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32"
+    },
+    {
+      "input": "sentence:   in  no event  shall linden lab   or  any of   its   directors, officers, employees,  shareholders,   subsidiaries, agents or  licensors  be  responsible  or liable to   you  or to  any third   party for any  loss or   damages  of   any kind,   including  for any direct,  indirect,  economic,   exemplary, incidental,   consequential, reliance,  special,  or  punitive   losses  or   damages or  disgorgement   or comparable equitable   remedy,  for lost data   or  lost   profits,  arising  (whether in   contract, tort, strict  liability   or otherwise)   out of or  in connection with   the  service  (including its   modification  or   termination),   the   software, the websites,  the   servers,  your   account   (including   its   termination   or  suspension)   or   this   agreement,  whether  or  not   linden   lab  may have  been   advised   that   any  such damages   might   or   coudl   occur and   notwithstanding   the  failure   of  essential   purpose   of   any  remedy.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: In no event shall linden lab or any of its directors, officers, employees, shareholders, subsidiaries, agents or licensors b responsible or liable to youu or to any third party fir any loss or damages of any kind, including fir any direct, indirect, economic, exemplary, incidental, consequential, reliance, special, or punitive losses or damages or disgorgement or comparable equitable remedy, fa lost data or lost profits, arising (whether in contract, tort, strict liability or otherwise) outt of or in connection wit the service (including its modification or termination), da software, da websites, da servers, yo account (including its termination or suspension) or dis agreement, whether or not linden lab may have been advised dat any such damages mite or could occur and notwithstanding da failure of essential purpose of any remedy.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: 7.3 skype and/or its licensors retain exclusive ownership of the software, products and skype websites and all intellectual property therein (whether or not registered and anywhere in the world).",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33"
+    },
+    {
+      "input": "sentence: 7.3  skype and/or   its  licensors retain exclusive   ownership  of the  software,   products   and  skype  websites and  all   intellectual property therein  (whether  or   not  registered   and  anywhere   in the   world).",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: 7.3 facetime and/or its licensors retain exclusive ownership of da software, products and facetime websites and alll intellectual property therein (whether or not registered and anywhere in da world).",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Currency quotes may not be updated on a daily basis.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34"
+    },
+    {
+      "input": "sentence:  currency quotes  may  not   be updated on  a   daily  basis.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Currency quotes may not b updated on a daily basis.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: The services are provided by google inc. (``google''), located at 1600 amphitheatre parkway, mountain view, ca 94043, united states.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35"
+    },
+    {
+      "input": "sentence:   the services   are   provided  by  google   inc. (``google''),  located  at   1600 amphitheatre parkway, mountain  view, ca 94043,  united states.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Da services r provided by google inc. (``google''), located at 1600 amphitheatre parkway, mountain view, ca 94043, united states.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Notwithstanding anything to the contrary herein, you acknowledge and agree that you shall have no ownership or other property interest in the account, and you further acknowledge and agree that all rights in and to the account are and shall forever be owned by and inure to the benefit of supercell.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36"
+    },
+    {
+      "input": "sentence:  notwhithstanding anything to the  contrary   herein,   you acknowledge and agree that   you shall have  no  ownership   or   other   property   interest  in  the account,   andd  yuo   futher acknowledge and  agree  that  all  rights   in   and  tothe account   are and  shall   forever be  owned by   and  inure  to the  benefit of  supercell.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Notwithstanding anything to da contrary herein, u acknowledge and agree dat you shall have no ownership or other property interest in da account, and u further acknowledge and agree dat all rights in and to da account r and shall foreva  be owned by and inure to da benefit of supercell.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Tinder does not represent or warrant that (a) the service will be uninterrupted, secure or error free, (b) any defects or errors in the service will be corrected, or (c) that any content or information you obtain on or through the services will be accurate.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37"
+    },
+    {
+      "input": "sentence:   tinder  doesn't   represent or  warrant   thast (a)   the   service   wiull be  uninterrupted, secure  or error  free,   (b)  any  defects   or   errors   in  the   service wille   be  corrected,  or   (c) that  any content   or information  you  obtain  on   or   through ther  services  will  be  accurate.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Tinder does not represent or warrant dat (a) da service gon be uninterrupted, secure or error free, (b) any defects or errors in da service gon be corrected, or (c) dat any content or information yu obtain on or thru the services gon be accurate.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: We can each end this contract anytime we want.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38"
+    },
+    {
+      "input": "sentence:   we  can  each  end this  contract  anytime  we   want.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: We can each end dis contract anytime we want.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Supercell may reject, refuse to post or delete any user content for any or no reason, including, but not limited to, user content that in the sole judgment of supercell violates these terms of service.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39"
+    },
+    {
+      "input": "sentence:  supercell   may reject,   refuse  to post   or delete  any  user   content   for  any   or no reason,  including, but   not limited  to,  user   content   that in  the sole  judgment  of supercell  violates   these  terms  of service.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Supercell may reject, refuse to post or delete any user content fa any or no reason, including, but not limited to, user content dat in da sole judgment of supercell violates dese terms of service.",
+      "references": [
+        {
+          "output": "potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: These requirements can be found on the website and the google, apple and amazon app marketplaces.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40"
+    },
+    {
+      "input": "sentence: these   requirements   can   be  found  on  the  website   and  the google,   apple   and amazon   app marketplaces.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Dem requirements can b found on da website and da google, apple and amazon app marketplaces.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Special provisions applicable to developers/operators of applications and websites ",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41"
+    },
+    {
+      "input": "sentence:  special  provisions  applicable   to  developers/operators   of   applications   anbd   websites  ",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: These terms, and any other policies or rules we reference in these terms, make up the entire agreement between you and us relating to the subject matter of these terms, and supersede all prior understandings of the parties relating to the subject matter of these terms, whether those prior understandings were electronic, oral or written, or whether established by custom, practice, policy or precedent, between you and us.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42"
+    },
+    {
+      "input": "sentence:   these terms, and   any other policies   or rules we  reference  in   these terms,  make   up  the   entire   agreement  between   you  and us relating  to  the   subject   matter of these terms, and   supersede  all  prior   understandings of  the  parties   relating to the  subject matter  of  these terms,  whether those   prior   understandings were   electronic,   oral or  written, or whether  established  by  custom,  practice, policy  or   precedent, between   you and   us.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Dese terms, and any other policies or rules we reference in dem terms, make up da entire agreement between youu and us relating to da subject matter of dem terms, and supersede alll prior understandings of da parties relating to da subject matter of dem terms, whether those prior understandings were electronic, oral or written, or whether established by custom, practice, policy or precedent, between youu and us.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: \u2022 you are a small-scale independent production company, non-profit, or artist, in which case you may use the vimeo service to showcase or promote your own creative works.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43"
+    },
+    {
+      "input": "sentence:   \u2022 you're a   small-scale  independent   production company,  non-profit,  or artist,  in  which   case   you may  use   the vimeo service to   showcase   or   promote   your own   creative works.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: \u2022 yu are a small-scale independent production company, non-profit, or artist, in which case yu may use da vimeo service to showcase or promote ur own creative works.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: For notices made to members residing outside of germany, the date of receipt will be deemed the date on which airbnb transmits the notice.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44"
+    },
+    {
+      "input": "sentence:   for  notices made  to   members  residing  outside  of   germany, the   date of receipt   will   be   deemed the date  on  which   airbnb transmits the notice.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Fir notices made to members residing outside of germany, da date of receipt gon be deemed da date on which airbnb transmits da notice.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: V) any content downloaded or otherwise obtained through the use of our resources is done at your own discretion and risk, and that you are solely responsible for any damage to your computer or other devices for any loss of data that may result from the download of such content.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45"
+    },
+    {
+      "input": "sentence:  v)  any   content downloaded   or otherwise  obtained   through  the   use  of our resources is done   at   your own   discretion   and  risk,   and that  you're   solely  responsible for any   damage to   your   computer  or other  devices   for  any   loss   of  data that   may  result  from  the   download  of such  content.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: V) any content downloaded or otherwise obtained thru the use of our resources is done at ur own discretion and risk, and dat you r solely responsible fir any damage to yo computer or other devices fa any loss of data dat may result from da download of such content.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: 7.8 user material is not considered to be confidential.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46"
+    },
+    {
+      "input": "sentence:   7.8 user  material  isn't  considered to be   confidential.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: 7.8 user material is not considered to b confidential.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: This website may contain discussion forums, bulletin boards, review services or other forums in which you or third parties may post reviews of travel experiences or other content, messages, materials or other items on this website (``interactive areas'').",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47"
+    },
+    {
+      "input": "sentence:   tihs website   may  contain  discussion  forums,  bulletin  boards, review  services   or olther forums in  which you or third parties   may  post   reviews   of  travel  experiences   or  other   content, messages,  materials  or other items  on   this website   (``interactive areas'').",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Dis website may contain discussion forums, bulletin boards, review services or other forums in which youu or third parties may post reviews of travel experiences or other content, messages, materials or other items on dis website (``interactive areas'').",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: F. does not contain any unsolicited or unauthorised advertising, promotional material, ``junk mail'', ``spam'', ``chain letters'', ``pyramid schemes'' or any other form of solicitation ; and ",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48"
+    },
+    {
+      "input": "sentence:   f.  doesn't   contain   any   unsolicited   or  unauthorised  advertising, promotional  material,  ``junk   mail'',   ``spam'',   ``chain   letters'',  ``pyramid  schemes''   or  any other  form of solicitation ;  and ",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: FUC. does not contain any unsolicited or unauthorised advertising, promotional material, ``junk mail'', ``spam'', ``chain letters'', ``pyramid schemes'' or any other form of solicitation ; and ",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: Verified images (as defined below) are intended only to indicate a photographic representation of a listing at the time the photograph was taken, and are therefore not an endorsement by airbnb of any host or listing.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49"
+    },
+    {
+      "input": "sentence:   verified  images  (as   defined  below)  are intended only  to  indicate a photographic   representation  of a   listing  at   the  time teh  photograph was   taken, and  are  therefore not   an   endorsement   by airbnb   of   any  host or  listing.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: Verified images (as defined below) r intended only to indicate a photographic representation of a listenin at da time da photograph was taken, and r therefore not an endorsement by airbnb of any host or blastin.",
+      "references": [
+        {
+          "output": "not potentially unfair",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    }
+  ]
+}

@@ -1,0 +1,5240 @@
+[
+  {
+    "name": {
+      "name": "num_train_trials",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 9.0,
+    "sum_squared": 27.0,
+    "min": 3.0,
+    "max": 3.0,
+    "mean": 3.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_references",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "max_prob",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 0.2314304640140667,
+    "sum_squared": 0.01794853581304264,
+    "min": 0.06917761962959831,
+    "max": 0.08112642219223419,
+    "mean": 0.0771434880046889,
+    "variance": 3.172752948463458e-05,
+    "stddev": 0.005632719546066055
+  },
+  {
+    "name": {
+      "name": "exact_match",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 0.875,
+    "sum_squared": 0.255625,
+    "min": 0.275,
+    "max": 0.3,
+    "mean": 0.2916666666666667,
+    "variance": 0.00013888888888886897,
+    "stddev": 0.011785113019774947
+  },
+  {
+    "name": {
+      "name": "quasi_exact_match",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 0.875,
+    "sum_squared": 0.255625,
+    "min": 0.275,
+    "max": 0.3,
+    "mean": 0.2916666666666667,
+    "variance": 0.00013888888888886897,
+    "stddev": 0.011785113019774947
+  },
+  {
+    "name": {
+      "name": "prefix_exact_match",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 0.875,
+    "sum_squared": 0.255625,
+    "min": 0.275,
+    "max": 0.3,
+    "mean": 0.2916666666666667,
+    "variance": 0.00013888888888886897,
+    "stddev": 0.011785113019774947
+  },
+  {
+    "name": {
+      "name": "quasi_prefix_exact_match",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 0.875,
+    "sum_squared": 0.255625,
+    "min": 0.275,
+    "max": 0.3,
+    "mean": 0.2916666666666667,
+    "variance": 0.00013888888888886897,
+    "stddev": 0.011785113019774947
+  },
+  {
+    "name": {
+      "name": "logprob",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": -20.54485023021698,
+    "sum_squared": 142.07195350303763,
+    "min": -7.8057093024253845,
+    "max": -6.369570463895798,
+    "mean": -6.848283410072327,
+    "variance": 0.4583321696740228,
+    "stddev": 0.6770023409664274
+  },
+  {
+    "name": {
+      "name": "num_perplexity_tokens",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 52.724999999999994,
+    "sum_squared": 927.6018750000001,
+    "min": 17.175,
+    "max": 18.375,
+    "mean": 17.575,
+    "variance": 0.32000000000005,
+    "stddev": 0.5656854249492822
+  },
+  {
+    "name": {
+      "name": "num_bytes",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 186.075,
+    "sum_squared": 11572.355625,
+    "min": 59.75,
+    "max": 66.575,
+    "mean": 62.025,
+    "variance": 10.351250000000164,
+    "stddev": 3.217335854398817
+  },
+  {
+    "name": {
+      "name": "num_prompt_tokens",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 2589.5249999999996,
+    "sum_squared": 2235219.241875,
+    "min": 861.175,
+    "max": 864.175,
+    "mean": 863.1749999999998,
+    "variance": 2.0000000002328306,
+    "stddev": 1.414213562455413
+  },
+  {
+    "name": {
+      "name": "num_output_tokens",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 52.724999999999994,
+    "sum_squared": 927.6018750000001,
+    "min": 17.175,
+    "max": 18.375,
+    "mean": 17.575,
+    "variance": 0.32000000000005,
+    "stddev": 0.5656854249492822
+  },
+  {
+    "name": {
+      "name": "inference_runtime",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 15.223935216665268,
+    "sum_squared": 77.27517150313426,
+    "min": 5.018218606710434,
+    "max": 5.1874980032444,
+    "mean": 5.074645072221756,
+    "variance": 0.00636789202020438,
+    "stddev": 0.07979907280291157
+  },
+  {
+    "name": {
+      "name": "batch_size",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 48.0,
+    "sum_squared": 768.0,
+    "min": 16.0,
+    "max": 16.0,
+    "mean": 16.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "training_co2_cost",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 41.40000000000002,
+    "sum_squared": 571.3200000000005,
+    "min": 13.800000000000006,
+    "max": 13.800000000000006,
+    "mean": 13.800000000000006,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "training_energy_cost",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 100.5,
+    "sum_squared": 3366.75,
+    "min": 33.5,
+    "max": 33.5,
+    "mean": 33.5,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "inference_denoised_runtime",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 0.9514959510415792,
+    "sum_squared": 0.3018561386841182,
+    "min": 0.3136386629194021,
+    "max": 0.324218625202775,
+    "mean": 0.31716531701385975,
+    "variance": 2.487457820392336e-05,
+    "stddev": 0.004987442050181973
+  },
+  {
+    "name": {
+      "name": "inference_idealized_runtime",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 1.2436415457589287,
+    "sum_squared": 0.5159637311948031,
+    "min": 0.4062241908482143,
+    "max": 0.43119316406250013,
+    "mean": 0.4145471819196429,
+    "variance": 0.00013854436075017018,
+    "stddev": 0.01177048685272492
+  },
+  {
+    "name": {
+      "name": "finish_reason_length",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_stop",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_endoftext",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_unknown",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_instances",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 15.0,
+    "sum_squared": 75.0,
+    "min": 5.0,
+    "max": 5.0,
+    "mean": 5.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "prompt_truncated",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_trials",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 9.0,
+    "sum_squared": 27.0,
+    "min": 3.0,
+    "max": 3.0,
+    "mean": 3.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_references",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "max_prob",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 0.1282304232311301,
+    "sum_squared": 0.0058218800230995914,
+    "min": 0.027668855364045696,
+    "max": 0.0502807839335422,
+    "mean": 0.0427434744103767,
+    "variance": 0.00011362206969600251,
+    "stddev": 0.010659365351464528
+  },
+  {
+    "name": {
+      "name": "exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 0.875,
+    "sum_squared": 0.255625,
+    "min": 0.275,
+    "max": 0.3,
+    "mean": 0.2916666666666667,
+    "variance": 0.00013888888888886897,
+    "stddev": 0.011785113019774947
+  },
+  {
+    "name": {
+      "name": "quasi_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 0.875,
+    "sum_squared": 0.255625,
+    "min": 0.275,
+    "max": 0.3,
+    "mean": 0.2916666666666667,
+    "variance": 0.00013888888888886897,
+    "stddev": 0.011785113019774947
+  },
+  {
+    "name": {
+      "name": "prefix_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 0.875,
+    "sum_squared": 0.255625,
+    "min": 0.275,
+    "max": 0.3,
+    "mean": 0.2916666666666667,
+    "variance": 0.00013888888888886897,
+    "stddev": 0.011785113019774947
+  },
+  {
+    "name": {
+      "name": "quasi_prefix_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 0.875,
+    "sum_squared": 0.255625,
+    "min": 0.275,
+    "max": 0.3,
+    "mean": 0.2916666666666667,
+    "variance": 0.00013888888888886897,
+    "stddev": 0.011785113019774947
+  },
+  {
+    "name": {
+      "name": "logprob",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": -19.57924514114857,
+    "sum_squared": 128.0218061759228,
+    "min": -6.926019915938378,
+    "max": -6.3266126126050946,
+    "mean": -6.526415047049523,
+    "variance": 0.07984202561983977,
+    "stddev": 0.2825633125864711
+  },
+  {
+    "name": {
+      "name": "num_perplexity_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 52.525000000000006,
+    "sum_squared": 920.7518749999999,
+    "min": 17.075,
+    "max": 18.375,
+    "mean": 17.508333333333336,
+    "variance": 0.3755555555554224,
+    "stddev": 0.6128258770282325
+  },
+  {
+    "name": {
+      "name": "num_bytes",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 159.4,
+    "sum_squared": 8480.935,
+    "min": 51.75,
+    "max": 55.9,
+    "mean": 53.13333333333333,
+    "variance": 3.827222222221735,
+    "stddev": 1.956328761282657
+  },
+  {
+    "name": {
+      "name": "num_prompt_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 2623.7250000000004,
+    "sum_squared": 2294650.291875,
+    "min": 872.575,
+    "max": 875.575,
+    "mean": 874.5750000000002,
+    "variance": 1.9999999997671694,
+    "stddev": 1.414213562290777
+  },
+  {
+    "name": {
+      "name": "num_output_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 52.525000000000006,
+    "sum_squared": 920.7518749999999,
+    "min": 17.075,
+    "max": 18.375,
+    "mean": 17.508333333333336,
+    "variance": 0.3755555555554224,
+    "stddev": 0.6128258770282325
+  },
+  {
+    "name": {
+      "name": "inference_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 15.207784157991409,
+    "sum_squared": 77.11320284517194,
+    "min": 5.010143077373504,
+    "max": 5.1874980032444,
+    "mean": 5.0692613859971365,
+    "variance": 0.006989948829037473,
+    "stddev": 0.08360591384009551
+  },
+  {
+    "name": {
+      "name": "batch_size",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 48.0,
+    "sum_squared": 768.0,
+    "min": 16.0,
+    "max": 16.0,
+    "mean": 16.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "training_co2_cost",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 41.40000000000002,
+    "sum_squared": 571.3200000000005,
+    "min": 13.800000000000006,
+    "max": 13.800000000000006,
+    "mean": 13.800000000000006,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "training_energy_cost",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 100.5,
+    "sum_squared": 3366.75,
+    "min": 33.5,
+    "max": 33.5,
+    "mean": 33.5,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "inference_denoised_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 0.950486509874463,
+    "sum_squared": 0.3012234486139529,
+    "min": 0.313133942335844,
+    "max": 0.324218625202775,
+    "mean": 0.31682883662482103,
+    "variance": 2.730448761342763e-05,
+    "stddev": 0.0052253696150059694
+  },
+  {
+    "name": {
+      "name": "inference_idealized_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 1.2423042689732142,
+    "sum_squared": 0.5149284427137111,
+    "min": 0.40507851562499997,
+    "max": 0.4321472377232144,
+    "mean": 0.4141014229910714,
+    "variance": 0.00016282571467346463,
+    "stddev": 0.012760317969136374
+  },
+  {
+    "name": {
+      "name": "finish_reason_length",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_stop",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_endoftext",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_unknown",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_instances",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 15.0,
+    "sum_squared": 75.0,
+    "min": 5.0,
+    "max": 5.0,
+    "mean": 5.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "prompt_truncated",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_trials",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 9.0,
+    "sum_squared": 27.0,
+    "min": 3.0,
+    "max": 3.0,
+    "mean": 3.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_references",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "max_prob",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.3503313338594069,
+    "sum_squared": 0.04101145499986911,
+    "min": 0.10858061452943751,
+    "max": 0.12087535966498468,
+    "mean": 0.11677711128646896,
+    "variance": 3.359127954401242e-05,
+    "stddev": 0.0057957984388703875
+  },
+  {
+    "name": {
+      "name": "exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 1.0833333333333333,
+    "sum_squared": 0.3912037037037037,
+    "min": 0.3611111111111111,
+    "max": 0.3611111111111111,
+    "mean": 0.3611111111111111,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "quasi_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 1.0833333333333333,
+    "sum_squared": 0.3912037037037037,
+    "min": 0.3611111111111111,
+    "max": 0.3611111111111111,
+    "mean": 0.3611111111111111,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "prefix_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 1.0833333333333333,
+    "sum_squared": 0.3912037037037037,
+    "min": 0.3611111111111111,
+    "max": 0.3611111111111111,
+    "mean": 0.3611111111111111,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "quasi_prefix_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 1.0833333333333333,
+    "sum_squared": 0.3912037037037037,
+    "min": 0.3611111111111111,
+    "max": 0.3611111111111111,
+    "mean": 0.3611111111111111,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "logprob",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": -19.24243738585048,
+    "sum_squared": 124.87292168307249,
+    "min": -7.397040443287955,
+    "max": -5.922698471281263,
+    "mean": -6.414145795283493,
+    "variance": 0.4830409445379189,
+    "stddev": 0.6950114707959278
+  },
+  {
+    "name": {
+      "name": "num_perplexity_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 52.277777777777786,
+    "sum_squared": 911.3919753086419,
+    "min": 17.166666666666668,
+    "max": 17.944444444444443,
+    "mean": 17.425925925925927,
+    "variance": 0.13443072702324343,
+    "stddev": 0.366647960615143
+  },
+  {
+    "name": {
+      "name": "num_bytes",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 181.5,
+    "sum_squared": 10993.75462962963,
+    "min": 59.02777777777778,
+    "max": 63.44444444444444,
+    "mean": 60.5,
+    "variance": 4.3348765432097025,
+    "stddev": 2.0820366334936815
+  },
+  {
+    "name": {
+      "name": "num_prompt_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 2592.6666666666665,
+    "sum_squared": 2240646.148148148,
+    "min": 862.2222222222222,
+    "max": 865.2222222222222,
+    "mean": 864.2222222222222,
+    "variance": 2.0,
+    "stddev": 1.4142135623730951
+  },
+  {
+    "name": {
+      "name": "num_output_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 52.277777777777786,
+    "sum_squared": 911.3919753086419,
+    "min": 17.166666666666668,
+    "max": 17.944444444444443,
+    "mean": 17.425925925925927,
+    "variance": 0.13443072702324343,
+    "stddev": 0.366647960615143
+  },
+  {
+    "name": {
+      "name": "inference_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 15.170592890845406,
+    "sum_squared": 76.72510966703454,
+    "min": 5.017114844587114,
+    "max": 5.136363201671177,
+    "mean": 5.0568642969484685,
+    "variance": 0.003160037926054571,
+    "stddev": 0.05621421462632535
+  },
+  {
+    "name": {
+      "name": "batch_size",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 48.0,
+    "sum_squared": 768.0,
+    "min": 16.0,
+    "max": 16.0,
+    "mean": 16.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "training_co2_cost",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 41.40000000000002,
+    "sum_squared": 571.3200000000006,
+    "min": 13.800000000000008,
+    "max": 13.800000000000008,
+    "mean": 13.800000000000006,
+    "variance": 2.842170943040401e-14,
+    "stddev": 1.6858739404357614e-07
+  },
+  {
+    "name": {
+      "name": "training_energy_cost",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 100.5,
+    "sum_squared": 3366.75,
+    "min": 33.5,
+    "max": 33.5,
+    "mean": 33.5,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "inference_denoised_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.9481620556778378,
+    "sum_squared": 0.2997074596368537,
+    "min": 0.31356967778669464,
+    "max": 0.32102270010444856,
+    "mean": 0.3160540185592793,
+    "variance": 1.2343898148650667e-05,
+    "stddev": 0.0035133884141453344
+  },
+  {
+    "name": {
+      "name": "inference_idealized_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 1.2344918154761906,
+    "sum_squared": 0.508162870343336,
+    "min": 0.4061298363095238,
+    "max": 0.42223214285714294,
+    "mean": 0.41149727182539686,
+    "variance": 5.76187280341145e-05,
+    "stddev": 0.0075907001017109415
+  },
+  {
+    "name": {
+      "name": "finish_reason_length",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_stop",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_endoftext",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_unknown",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_instances",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 15.0,
+    "sum_squared": 75.0,
+    "min": 5.0,
+    "max": 5.0,
+    "mean": 5.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "prompt_truncated",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "perplexity",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 4.4272541407782064,
+    "sum_squared": 6.537825230880857,
+    "min": 1.4489844172008535,
+    "max": 1.5292853063764995,
+    "mean": 1.4757513802594022,
+    "variance": 0.001432940622755119,
+    "stddev": 0.037854202180935194
+  },
+  {
+    "name": {
+      "name": "bits_per_byte",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 0.4767446839187239,
+    "sum_squared": 0.07591901195983884,
+    "min": 0.15379661457498378,
+    "max": 0.16915145476875632,
+    "mean": 0.15891489463957462,
+    "variance": 5.2393581639179065e-05,
+    "stddev": 0.007238341083368417
+  },
+  {
+    "name": {
+      "name": "logprob_per_byte",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": -0.33045423350520575,
+    "sum_squared": 0.03647551810979655,
+    "min": -0.11724685396057656,
+    "max": -0.1066036897723146,
+    "mean": -0.11015141116840192,
+    "variance": 2.517265420851067e-05,
+    "stddev": 0.005017235713867814
+  },
+  {
+    "name": {
+      "name": "perplexity",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 4.3547692831678475,
+    "sum_squared": 6.32139629418039,
+    "min": 1.4484862422737952,
+    "max": 1.4577967986202571,
+    "mean": 1.4515897610559492,
+    "variance": 1.926365766280469e-05,
+    "stddev": 0.004389038352851874
+  },
+  {
+    "name": {
+      "name": "bits_per_byte",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 0.5314988726151817,
+    "sum_squared": 0.09416744688041598,
+    "min": 0.17637435056678144,
+    "max": 0.17875017148161884,
+    "mean": 0.17716629087172722,
+    "variance": 1.2543388932043098e-06,
+    "stddev": 0.0011199727198482603
+  },
+  {
+    "name": {
+      "name": "logprob_per_byte",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": -0.36840694502400273,
+    "sum_squared": 0.04524303366667798,
+    "min": -0.12390017738709083,
+    "max": -0.12225338381845594,
+    "mean": -0.12280231500800091,
+    "variance": 6.026509017063864e-07,
+    "stddev": 0.0007763059330614358
+  },
+  {
+    "name": {
+      "name": "perplexity",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 4.334177572883487,
+    "sum_squared": 6.268121849637958,
+    "min": 1.4120062443900947,
+    "max": 1.5101650841032972,
+    "mean": 1.444725857627829,
+    "variance": 0.0021411461808531485,
+    "stddev": 0.04627252079639868
+  },
+  {
+    "name": {
+      "name": "bits_per_byte",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.4577177819812882,
+    "sum_squared": 0.07020174807201829,
+    "min": 0.1447563847882976,
+    "max": 0.168205012404693,
+    "mean": 0.15257259399376275,
+    "variance": 0.0001221862526871939,
+    "stddev": 0.01105378906471414
+  },
+  {
+    "name": {
+      "name": "logprob_per_byte",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": -0.3172657900724817,
+    "sum_squared": 0.03372864144352747,
+    "min": -0.11659083010436357,
+    "max": -0.10033747998405905,
+    "mean": -0.1057552633574939,
+    "variance": 5.87047533629325e-05,
+    "stddev": 0.007661902724710912
+  },
+  {
+    "name": {
+      "name": "ece_10_bin",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 0.7498199535727269,
+    "sum_squared": 0.18770024782073044,
+    "min": 0.23602931167219565,
+    "max": 0.2568953209502656,
+    "mean": 0.2499399845242423,
+    "variance": 9.675340959833939e-05,
+    "stddev": 0.009836331104550079
+  },
+  {
+    "name": {
+      "name": "ece_1_bin",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 0.6435695359859332,
+    "sum_squared": 0.13817413838608253,
+    "min": 0.2058223803704017,
+    "max": 0.21887357780776578,
+    "mean": 0.21452317866197776,
+    "variance": 3.7851945455351366e-05,
+    "stddev": 0.0061523934737101596
+  },
+  {
+    "name": {
+      "name": "selective_cov_acc_area",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 1.1474969473800911,
+    "sum_squared": 0.44677459645912154,
+    "min": 0.3101195115664786,
+    "max": 0.41868871790680623,
+    "mean": 0.3824989824600304,
+    "variance": 0.0026193939034152014,
+    "stddev": 0.05118001468752428
+  },
+  {
+    "name": {
+      "name": "selective_acc@10",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 1.6,
+    "sum_squared": 0.88,
+    "min": 0.4,
+    "max": 0.6,
+    "mean": 0.5333333333333333,
+    "variance": 0.00888888888888889,
+    "stddev": 0.09428090415820635
+  },
+  {
+    "name": {
+      "name": "platt_coef",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 0.11873605769441462,
+    "sum_squared": 0.008732494702816718,
+    "min": -0.012274167257345705,
+    "max": 0.06550511247588016,
+    "mean": 0.039578685898138205,
+    "variance": 0.0013443591901820889,
+    "stddev": 0.03666550409011294
+  },
+  {
+    "name": {
+      "name": "platt_intercept",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": -1.9737674270699226,
+    "sum_squared": 1.5470740175509425,
+    "min": -1.0649344046690223,
+    "max": -0.45441651120045007,
+    "mean": -0.6579224756899742,
+    "variance": 0.08282935516562284,
+    "stddev": 0.28780089500490236
+  },
+  {
+    "name": {
+      "name": "platt_ece_10_bin",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 0.5232763028158622,
+    "sum_squared": 0.09398329837613792,
+    "min": 0.13191581172788674,
+    "max": 0.19568024554398772,
+    "mean": 0.1744254342719541,
+    "variance": 0.0009035340044195282,
+    "stddev": 0.03005884236659037
+  },
+  {
+    "name": {
+      "name": "platt_ece_1_bin",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 7.294717019323826e-08,
+    "sum_squared": 2.1777475755097445e-15,
+    "min": 1.611019312397488e-08,
+    "max": 4.07267839452885e-08,
+    "mean": 2.4315723397746087e-08,
+    "variance": 1.3466145414755172e-16,
+    "stddev": 1.1604372199630264e-08
+  },
+  {
+    "name": {
+      "name": "num_instances",
+      "split": "test"
+    },
+    "count": 3,
+    "sum": 120.0,
+    "sum_squared": 4800.0,
+    "min": 40.0,
+    "max": 40.0,
+    "mean": 40.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "ece_10_bin",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 0.78338168544447,
+    "sum_squared": 0.20456374180515868,
+    "min": 0.2601428701843247,
+    "max": 0.2616194076300727,
+    "mean": 0.26112722848149,
+    "variance": 4.844806286152803e-07,
+    "stddev": 0.0006960464270544604
+  },
+  {
+    "name": {
+      "name": "ece_1_bin",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 0.7467695767688699,
+    "sum_squared": 0.18589206885262383,
+    "min": 0.24733114463595435,
+    "max": 0.24971921606645778,
+    "mean": 0.24892319225628998,
+    "variance": 1.2673078127051207e-06,
+    "stddev": 0.0011257476683098752
+  },
+  {
+    "name": {
+      "name": "selective_cov_acc_area",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 1.1152184574853448,
+    "sum_squared": 0.4268332440234863,
+    "min": 0.28132374954510375,
+    "max": 0.41694735397012056,
+    "mean": 0.37173948582844824,
+    "variance": 0.004087502683829708,
+    "stddev": 0.06393358025192793
+  },
+  {
+    "name": {
+      "name": "selective_acc@10",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 1.6,
+    "sum_squared": 0.88,
+    "min": 0.4,
+    "max": 0.6,
+    "mean": 0.5333333333333333,
+    "variance": 0.00888888888888889,
+    "stddev": 0.09428090415820635
+  },
+  {
+    "name": {
+      "name": "platt_coef",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 0.13156662623647197,
+    "sum_squared": 0.023228770404571095,
+    "min": -0.06402972009505091,
+    "max": 0.09779817316576145,
+    "mean": 0.04385554207882399,
+    "variance": 0.005819614897162863,
+    "stddev": 0.07628640047323548
+  },
+  {
+    "name": {
+      "name": "platt_intercept",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": -1.998390963411659,
+    "sum_squared": 2.201289691782273,
+    "min": -1.4277517833554474,
+    "max": -0.28531959002810586,
+    "mean": -0.6661303211372197,
+    "variance": 0.2900336258557155,
+    "stddev": 0.5385477006317226
+  },
+  {
+    "name": {
+      "name": "platt_ece_10_bin",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 0.5086000240297027,
+    "sum_squared": 0.08632317321246269,
+    "min": 0.1614293616024747,
+    "max": 0.173585331213614,
+    "mean": 0.16953334134323425,
+    "variance": 3.283724381931627e-05,
+    "stddev": 0.005730379029289099
+  },
+  {
+    "name": {
+      "name": "platt_ece_1_bin",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 5.780011356759651e-07,
+    "sum_squared": 1.9270488560701266e-13,
+    "min": 7.623171649484561e-08,
+    "max": 4.255377026862739e-07,
+    "mean": 1.9266704522532171e-07,
+    "variance": 2.7114371553148055e-14,
+    "stddev": 1.6466442103000896e-07
+  },
+  {
+    "name": {
+      "name": "num_instances",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    "count": 3,
+    "sum": 120.0,
+    "sum_squared": 4800.0,
+    "min": 40.0,
+    "max": 40.0,
+    "mean": 40.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "ece_10_bin",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.8238541121820417,
+    "sum_squared": 0.22625485541775148,
+    "min": 0.27208084323098675,
+    "max": 0.2758866344755275,
+    "mean": 0.2746180373940139,
+    "variance": 3.2186771104641965e-06,
+    "stddev": 0.0017940671978675148
+  },
+  {
+    "name": {
+      "name": "ece_1_bin",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.7330019994739264,
+    "sum_squared": 0.17919808424955672,
+    "min": 0.2402357514461264,
+    "max": 0.2525304965816736,
+    "mean": 0.24433399982464213,
+    "variance": 3.359127954401936e-05,
+    "stddev": 0.005795798438870986
+  },
+  {
+    "name": {
+      "name": "selective_cov_acc_area",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 1.340338547234747,
+    "sum_squared": 0.6031751050816132,
+    "min": 0.3929941520987275,
+    "max": 0.4736721975680098,
+    "mean": 0.4467795157449157,
+    "variance": 0.0014464326712763376,
+    "stddev": 0.038031995362803904
+  },
+  {
+    "name": {
+      "name": "selective_acc@10",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 1.5,
+    "sum_squared": 0.75,
+    "min": 0.5,
+    "max": 0.5,
+    "mean": 0.5,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "platt_coef",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.1909352100706141,
+    "sum_squared": 0.02973858634120447,
+    "min": -0.04463389538926745,
+    "max": 0.11778455272994078,
+    "mean": 0.06364507002353803,
+    "variance": 0.0058621671754337645,
+    "stddev": 0.0765647907032584
+  },
+  {
+    "name": {
+      "name": "platt_intercept",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": -0.8146654320039096,
+    "sum_squared": 0.8189035865449662,
+    "min": -0.902785159048254,
+    "max": 0.04405986352217215,
+    "mean": -0.2715551440013032,
+    "variance": 0.19922566594808688,
+    "stddev": 0.44634702412818533
+  },
+  {
+    "name": {
+      "name": "platt_ece_10_bin",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.5389167124914389,
+    "sum_squared": 0.09719485560134812,
+    "min": 0.1716342395464227,
+    "max": 0.19564823339859344,
+    "mean": 0.17963890416381298,
+    "variance": 0.00012814931127378554,
+    "stddev": 0.011320305264160748
+  },
+  {
+    "name": {
+      "name": "platt_ece_1_bin",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 3.1598894624784712e-06,
+    "sum_squared": 3.3296773748847574e-12,
+    "min": 1.0229990377585985e-06,
+    "max": 1.0684452123599364e-06,
+    "mean": 1.0532964874928237e-06,
+    "variance": 4.589677301989823e-16,
+    "stddev": 2.1423532159729923e-08
+  },
+  {
+    "name": {
+      "name": "num_instances",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 108.0,
+    "sum_squared": 3888.0,
+    "min": 36.0,
+    "max": 36.0,
+    "mean": 36.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_trials",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 9.0,
+    "sum_squared": 27.0,
+    "min": 3.0,
+    "max": 3.0,
+    "mean": 3.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_trials",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 9.0,
+    "sum_squared": 27.0,
+    "min": 3.0,
+    "max": 3.0,
+    "mean": 3.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_trials",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 9.0,
+    "sum_squared": 27.0,
+    "min": 3.0,
+    "max": 3.0,
+    "mean": 3.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_trials",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 9.0,
+    "sum_squared": 27.0,
+    "min": 3.0,
+    "max": 3.0,
+    "mean": 3.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_trials",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 9.0,
+    "sum_squared": 27.0,
+    "min": 3.0,
+    "max": 3.0,
+    "mean": 3.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_trials",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 9.0,
+    "sum_squared": 27.0,
+    "min": 3.0,
+    "max": 3.0,
+    "mean": 3.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_references",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_references",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_references",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_references",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_references",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_references",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "max_prob",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.09002478774036332,
+    "sum_squared": 0.0027678876303125436,
+    "min": 0.02335493453670031,
+    "max": 0.0333349266018315,
+    "mean": 0.030008262580121108,
+    "variance": 2.213338702668449e-05,
+    "stddev": 0.004704613376961437
+  },
+  {
+    "name": {
+      "name": "max_prob",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.20278332976216562,
+    "sum_squared": 0.013800075163660032,
+    "min": 0.059718366092465926,
+    "max": 0.07153248183484985,
+    "mean": 0.06759444325405521,
+    "variance": 3.10162957276542e-05,
+    "stddev": 0.005569227570108282
+  },
+  {
+    "name": {
+      "name": "max_prob",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 0.2314304640140667,
+    "sum_squared": 0.01794853581304264,
+    "min": 0.06917761962959831,
+    "max": 0.08112642219223419,
+    "mean": 0.0771434880046889,
+    "variance": 3.172752948463458e-05,
+    "stddev": 0.005632719546066055
+  },
+  {
+    "name": {
+      "name": "max_prob",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.09002478774036332,
+    "sum_squared": 0.0027678876303125436,
+    "min": 0.02335493453670031,
+    "max": 0.0333349266018315,
+    "mean": 0.030008262580121108,
+    "variance": 2.213338702668449e-05,
+    "stddev": 0.004704613376961437
+  },
+  {
+    "name": {
+      "name": "max_prob",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.2487019463647862,
+    "sum_squared": 0.020676427392389465,
+    "min": 0.07663568356648359,
+    "max": 0.0860331313991513,
+    "mean": 0.08290064878826207,
+    "variance": 1.9624894615043707e-05,
+    "stddev": 0.004429999392217081
+  },
+  {
+    "name": {
+      "name": "max_prob",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.2168717971960072,
+    "sum_squared": 0.015734806624573036,
+    "min": 0.06612540185855871,
+    "max": 0.07537319766872425,
+    "mean": 0.07229059906533573,
+    "variance": 1.9004828299225632e-05,
+    "stddev": 0.004359452752264397
+  },
+  {
+    "name": {
+      "name": "exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.725,
+    "sum_squared": 0.175625,
+    "min": 0.225,
+    "max": 0.25,
+    "mean": 0.24166666666666667,
+    "variance": 0.00013888888888888978,
+    "stddev": 0.01178511301977583
+  },
+  {
+    "name": {
+      "name": "exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.8,
+    "sum_squared": 0.21375,
+    "min": 0.25,
+    "max": 0.275,
+    "mean": 0.26666666666666666,
+    "variance": 0.00013888888888888284,
+    "stddev": 0.011785113019775535
+  },
+  {
+    "name": {
+      "name": "exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 0.875,
+    "sum_squared": 0.255625,
+    "min": 0.275,
+    "max": 0.3,
+    "mean": 0.2916666666666667,
+    "variance": 0.00013888888888886897,
+    "stddev": 0.011785113019774947
+  },
+  {
+    "name": {
+      "name": "exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.725,
+    "sum_squared": 0.175625,
+    "min": 0.225,
+    "max": 0.25,
+    "mean": 0.24166666666666667,
+    "variance": 0.00013888888888888978,
+    "stddev": 0.01178511301977583
+  },
+  {
+    "name": {
+      "name": "exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.8055555555555556,
+    "sum_squared": 0.216820987654321,
+    "min": 0.25,
+    "max": 0.2777777777777778,
+    "mean": 0.26851851851851855,
+    "variance": 0.00017146776406035125,
+    "stddev": 0.013094570021972896
+  },
+  {
+    "name": {
+      "name": "exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.7222222222222222,
+    "sum_squared": 0.1743827160493827,
+    "min": 0.2222222222222222,
+    "max": 0.25,
+    "mean": 0.24074074074074073,
+    "variance": 0.00017146776406036512,
+    "stddev": 0.013094570021973426
+  },
+  {
+    "name": {
+      "name": "quasi_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.725,
+    "sum_squared": 0.175625,
+    "min": 0.225,
+    "max": 0.25,
+    "mean": 0.24166666666666667,
+    "variance": 0.00013888888888888978,
+    "stddev": 0.01178511301977583
+  },
+  {
+    "name": {
+      "name": "quasi_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.8,
+    "sum_squared": 0.21375,
+    "min": 0.25,
+    "max": 0.275,
+    "mean": 0.26666666666666666,
+    "variance": 0.00013888888888888284,
+    "stddev": 0.011785113019775535
+  },
+  {
+    "name": {
+      "name": "quasi_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 0.875,
+    "sum_squared": 0.255625,
+    "min": 0.275,
+    "max": 0.3,
+    "mean": 0.2916666666666667,
+    "variance": 0.00013888888888886897,
+    "stddev": 0.011785113019774947
+  },
+  {
+    "name": {
+      "name": "quasi_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.725,
+    "sum_squared": 0.175625,
+    "min": 0.225,
+    "max": 0.25,
+    "mean": 0.24166666666666667,
+    "variance": 0.00013888888888888978,
+    "stddev": 0.01178511301977583
+  },
+  {
+    "name": {
+      "name": "quasi_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.8055555555555556,
+    "sum_squared": 0.216820987654321,
+    "min": 0.25,
+    "max": 0.2777777777777778,
+    "mean": 0.26851851851851855,
+    "variance": 0.00017146776406035125,
+    "stddev": 0.013094570021972896
+  },
+  {
+    "name": {
+      "name": "quasi_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.7222222222222222,
+    "sum_squared": 0.1743827160493827,
+    "min": 0.2222222222222222,
+    "max": 0.25,
+    "mean": 0.24074074074074073,
+    "variance": 0.00017146776406036512,
+    "stddev": 0.013094570021973426
+  },
+  {
+    "name": {
+      "name": "prefix_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.725,
+    "sum_squared": 0.175625,
+    "min": 0.225,
+    "max": 0.25,
+    "mean": 0.24166666666666667,
+    "variance": 0.00013888888888888978,
+    "stddev": 0.01178511301977583
+  },
+  {
+    "name": {
+      "name": "prefix_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.8,
+    "sum_squared": 0.21375,
+    "min": 0.25,
+    "max": 0.275,
+    "mean": 0.26666666666666666,
+    "variance": 0.00013888888888888284,
+    "stddev": 0.011785113019775535
+  },
+  {
+    "name": {
+      "name": "prefix_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 0.875,
+    "sum_squared": 0.255625,
+    "min": 0.275,
+    "max": 0.3,
+    "mean": 0.2916666666666667,
+    "variance": 0.00013888888888886897,
+    "stddev": 0.011785113019774947
+  },
+  {
+    "name": {
+      "name": "prefix_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.725,
+    "sum_squared": 0.175625,
+    "min": 0.225,
+    "max": 0.25,
+    "mean": 0.24166666666666667,
+    "variance": 0.00013888888888888978,
+    "stddev": 0.01178511301977583
+  },
+  {
+    "name": {
+      "name": "prefix_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.8055555555555556,
+    "sum_squared": 0.216820987654321,
+    "min": 0.25,
+    "max": 0.2777777777777778,
+    "mean": 0.26851851851851855,
+    "variance": 0.00017146776406035125,
+    "stddev": 0.013094570021972896
+  },
+  {
+    "name": {
+      "name": "prefix_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.7222222222222222,
+    "sum_squared": 0.1743827160493827,
+    "min": 0.2222222222222222,
+    "max": 0.25,
+    "mean": 0.24074074074074073,
+    "variance": 0.00017146776406036512,
+    "stddev": 0.013094570021973426
+  },
+  {
+    "name": {
+      "name": "quasi_prefix_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.725,
+    "sum_squared": 0.175625,
+    "min": 0.225,
+    "max": 0.25,
+    "mean": 0.24166666666666667,
+    "variance": 0.00013888888888888978,
+    "stddev": 0.01178511301977583
+  },
+  {
+    "name": {
+      "name": "quasi_prefix_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.8,
+    "sum_squared": 0.21375,
+    "min": 0.25,
+    "max": 0.275,
+    "mean": 0.26666666666666666,
+    "variance": 0.00013888888888888284,
+    "stddev": 0.011785113019775535
+  },
+  {
+    "name": {
+      "name": "quasi_prefix_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 0.875,
+    "sum_squared": 0.255625,
+    "min": 0.275,
+    "max": 0.3,
+    "mean": 0.2916666666666667,
+    "variance": 0.00013888888888886897,
+    "stddev": 0.011785113019774947
+  },
+  {
+    "name": {
+      "name": "quasi_prefix_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.725,
+    "sum_squared": 0.175625,
+    "min": 0.225,
+    "max": 0.25,
+    "mean": 0.24166666666666667,
+    "variance": 0.00013888888888888978,
+    "stddev": 0.01178511301977583
+  },
+  {
+    "name": {
+      "name": "quasi_prefix_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.8055555555555556,
+    "sum_squared": 0.216820987654321,
+    "min": 0.25,
+    "max": 0.2777777777777778,
+    "mean": 0.26851851851851855,
+    "variance": 0.00017146776406035125,
+    "stddev": 0.013094570021972896
+  },
+  {
+    "name": {
+      "name": "quasi_prefix_exact_match",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.7222222222222222,
+    "sum_squared": 0.1743827160493827,
+    "min": 0.2222222222222222,
+    "max": 0.25,
+    "mean": 0.24074074074074073,
+    "variance": 0.00017146776406036512,
+    "stddev": 0.013094570021973426
+  },
+  {
+    "name": {
+      "name": "logprob",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": -24.72899916470051,
+    "sum_squared": 204.5432840430598,
+    "min": -8.927178457379341,
+    "max": -7.900910353660583,
+    "mean": -8.242999721566838,
+    "variance": 0.23405027126896982,
+    "stddev": 0.4837874236366318
+  },
+  {
+    "name": {
+      "name": "logprob",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": -22.99832074344158,
+    "sum_squared": 178.05207532518574,
+    "min": -8.744528493285179,
+    "max": -7.1268961250782015,
+    "mean": -7.666106914480527,
+    "variance": 0.5814965508157641,
+    "stddev": 0.7625592113506755
+  },
+  {
+    "name": {
+      "name": "logprob",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": -20.54485023021698,
+    "sum_squared": 142.07195350303763,
+    "min": -7.8057093024253845,
+    "max": -6.369570463895798,
+    "mean": -6.848283410072327,
+    "variance": 0.4583321696740228,
+    "stddev": 0.6770023409664274
+  },
+  {
+    "name": {
+      "name": "logprob",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": -24.72899916470051,
+    "sum_squared": 204.5432840430598,
+    "min": -8.927178457379341,
+    "max": -7.900910353660583,
+    "mean": -8.242999721566838,
+    "variance": 0.23405027126896982,
+    "stddev": 0.4837874236366318
+  },
+  {
+    "name": {
+      "name": "logprob",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": -19.949487659666275,
+    "sum_squared": 134.41887234650568,
+    "min": -7.732476095358531,
+    "max": -6.1085057821538715,
+    "mean": -6.649829219888758,
+    "variance": 0.5860621284822258,
+    "stddev": 0.7655469472751008
+  },
+  {
+    "name": {
+      "name": "logprob",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": -22.67556600769361,
+    "sum_squared": 173.6157140113658,
+    "min": -8.775608529647192,
+    "max": -6.949978739023209,
+    "mean": -7.558522002564537,
+    "variance": 0.7406498072030558,
+    "stddev": 0.8606101365909281
+  },
+  {
+    "name": {
+      "name": "num_perplexity_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 51.675,
+    "sum_squared": 892.0856249999999,
+    "min": 16.65,
+    "max": 18.375,
+    "mean": 17.224999999999998,
+    "variance": 0.6612500000000523,
+    "stddev": 0.8131727983645618
+  },
+  {
+    "name": {
+      "name": "num_perplexity_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 50.2,
+    "sum_squared": 841.5637500000003,
+    "min": 16.225,
+    "max": 17.75,
+    "mean": 16.733333333333334,
+    "variance": 0.5168055555556066,
+    "stddev": 0.7188918942063588
+  },
+  {
+    "name": {
+      "name": "num_perplexity_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 52.724999999999994,
+    "sum_squared": 927.6018750000001,
+    "min": 17.175,
+    "max": 18.375,
+    "mean": 17.575,
+    "variance": 0.32000000000005,
+    "stddev": 0.5656854249492822
+  },
+  {
+    "name": {
+      "name": "num_perplexity_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 51.675,
+    "sum_squared": 892.0856249999999,
+    "min": 16.65,
+    "max": 18.375,
+    "mean": 17.224999999999998,
+    "variance": 0.6612500000000523,
+    "stddev": 0.8131727983645618
+  },
+  {
+    "name": {
+      "name": "num_perplexity_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 52.611111111111114,
+    "sum_squared": 923.466049382716,
+    "min": 17.166666666666668,
+    "max": 18.27777777777778,
+    "mean": 17.537037037037038,
+    "variance": 0.27434842249653,
+    "stddev": 0.5237828008788853
+  },
+  {
+    "name": {
+      "name": "num_perplexity_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 49.80555555555556,
+    "sum_squared": 828.3094135802469,
+    "min": 16.11111111111111,
+    "max": 17.583333333333332,
+    "mean": 16.60185185185185,
+    "variance": 0.48165294924558566,
+    "stddev": 0.694012211164606
+  },
+  {
+    "name": {
+      "name": "num_bytes",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 156.275,
+    "sum_squared": 8158.8256249999995,
+    "min": 50.35,
+    "max": 55.575,
+    "mean": 52.09166666666667,
+    "variance": 6.06680555555522,
+    "stddev": 2.4630886211330725
+  },
+  {
+    "name": {
+      "name": "num_bytes",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 172.02499999999998,
+    "sum_squared": 9899.241875,
+    "min": 54.925,
+    "max": 62.175,
+    "mean": 57.34166666666666,
+    "variance": 11.680555555556111,
+    "stddev": 3.417682775735061
+  },
+  {
+    "name": {
+      "name": "num_bytes",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 186.075,
+    "sum_squared": 11572.355625,
+    "min": 59.75,
+    "max": 66.575,
+    "mean": 62.025,
+    "variance": 10.351250000000164,
+    "stddev": 3.217335854398817
+  },
+  {
+    "name": {
+      "name": "num_bytes",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 156.275,
+    "sum_squared": 8158.8256249999995,
+    "min": 50.35,
+    "max": 55.575,
+    "mean": 52.09166666666667,
+    "variance": 6.06680555555522,
+    "stddev": 2.4630886211330725
+  },
+  {
+    "name": {
+      "name": "num_bytes",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 185.86111111111111,
+    "sum_squared": 11543.192129629631,
+    "min": 59.77777777777778,
+    "max": 66.30555555555556,
+    "mean": 61.9537037037037,
+    "variance": 9.469307270233912,
+    "stddev": 3.077223955163795
+  },
+  {
+    "name": {
+      "name": "num_bytes",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 170.25,
+    "sum_squared": 9694.354166666666,
+    "min": 54.416666666666664,
+    "max": 61.416666666666664,
+    "mean": 56.75,
+    "variance": 10.888888888888687,
+    "stddev": 3.299831645537191
+  },
+  {
+    "name": {
+      "name": "num_prompt_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 2589.5249999999996,
+    "sum_squared": 2235219.241875,
+    "min": 861.175,
+    "max": 864.175,
+    "mean": 863.1749999999998,
+    "variance": 2.0000000002328306,
+    "stddev": 1.414213562455413
+  },
+  {
+    "name": {
+      "name": "num_prompt_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 2589.5249999999996,
+    "sum_squared": 2235219.241875,
+    "min": 861.175,
+    "max": 864.175,
+    "mean": 863.1749999999998,
+    "variance": 2.0000000002328306,
+    "stddev": 1.414213562455413
+  },
+  {
+    "name": {
+      "name": "num_prompt_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 2589.5249999999996,
+    "sum_squared": 2235219.241875,
+    "min": 861.175,
+    "max": 864.175,
+    "mean": 863.1749999999998,
+    "variance": 2.0000000002328306,
+    "stddev": 1.414213562455413
+  },
+  {
+    "name": {
+      "name": "num_prompt_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 2589.5249999999996,
+    "sum_squared": 2235219.241875,
+    "min": 861.175,
+    "max": 864.175,
+    "mean": 863.1749999999998,
+    "variance": 2.0000000002328306,
+    "stddev": 1.414213562455413
+  },
+  {
+    "name": {
+      "name": "num_prompt_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 2590.6666666666665,
+    "sum_squared": 2237190.5925925924,
+    "min": 861.5555555555555,
+    "max": 864.5555555555555,
+    "mean": 863.5555555555555,
+    "variance": 2.0,
+    "stddev": 1.4142135623730951
+  },
+  {
+    "name": {
+      "name": "num_prompt_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 2590.6666666666665,
+    "sum_squared": 2237190.5925925924,
+    "min": 861.5555555555555,
+    "max": 864.5555555555555,
+    "mean": 863.5555555555555,
+    "variance": 2.0,
+    "stddev": 1.4142135623730951
+  },
+  {
+    "name": {
+      "name": "num_output_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 51.675,
+    "sum_squared": 892.0856249999999,
+    "min": 16.65,
+    "max": 18.375,
+    "mean": 17.224999999999998,
+    "variance": 0.6612500000000523,
+    "stddev": 0.8131727983645618
+  },
+  {
+    "name": {
+      "name": "num_output_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 50.2,
+    "sum_squared": 841.5637500000003,
+    "min": 16.225,
+    "max": 17.75,
+    "mean": 16.733333333333334,
+    "variance": 0.5168055555556066,
+    "stddev": 0.7188918942063588
+  },
+  {
+    "name": {
+      "name": "num_output_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 52.724999999999994,
+    "sum_squared": 927.6018750000001,
+    "min": 17.175,
+    "max": 18.375,
+    "mean": 17.575,
+    "variance": 0.32000000000005,
+    "stddev": 0.5656854249492822
+  },
+  {
+    "name": {
+      "name": "num_output_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 51.675,
+    "sum_squared": 892.0856249999999,
+    "min": 16.65,
+    "max": 18.375,
+    "mean": 17.224999999999998,
+    "variance": 0.6612500000000523,
+    "stddev": 0.8131727983645618
+  },
+  {
+    "name": {
+      "name": "num_output_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 52.611111111111114,
+    "sum_squared": 923.466049382716,
+    "min": 17.166666666666668,
+    "max": 18.27777777777778,
+    "mean": 17.537037037037038,
+    "variance": 0.27434842249653,
+    "stddev": 0.5237828008788853
+  },
+  {
+    "name": {
+      "name": "num_output_tokens",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 49.80555555555556,
+    "sum_squared": 828.3094135802469,
+    "min": 16.11111111111111,
+    "max": 17.583333333333332,
+    "mean": 16.60185185185185,
+    "variance": 0.48165294924558566,
+    "stddev": 0.694012211164606
+  },
+  {
+    "name": {
+      "name": "inference_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 15.104509168863295,
+    "sum_squared": 76.08369076316957,
+    "min": 4.958505582809448,
+    "max": 5.1874980032444,
+    "mean": 5.034836389621098,
+    "variance": 0.011652784137037742,
+    "stddev": 0.10794806221992936
+  },
+  {
+    "name": {
+      "name": "inference_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 14.925573843717574,
+    "sum_squared": 74.28602685599373,
+    "min": 4.9063412010669705,
+    "max": 5.112891441583633,
+    "mean": 4.975191281239192,
+    "variance": 0.009480667079440508,
+    "stddev": 0.09736871715001953
+  },
+  {
+    "name": {
+      "name": "inference_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 15.223935216665268,
+    "sum_squared": 77.27517150313426,
+    "min": 5.018218606710434,
+    "max": 5.1874980032444,
+    "mean": 5.074645072221756,
+    "variance": 0.00636789202020438,
+    "stddev": 0.07979907280291157
+  },
+  {
+    "name": {
+      "name": "inference_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 15.104509168863295,
+    "sum_squared": 76.08369076316957,
+    "min": 4.958505582809448,
+    "max": 5.1874980032444,
+    "mean": 5.034836389621098,
+    "variance": 0.011652784137037742,
+    "stddev": 0.10794806221992936
+  },
+  {
+    "name": {
+      "name": "inference_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 15.210219860076904,
+    "sum_squared": 77.13358660619969,
+    "min": 5.017383615175883,
+    "max": 5.175452629725139,
+    "mean": 5.070073286692302,
+    "variance": 0.005552402969016157,
+    "stddev": 0.07451444805550235
+  },
+  {
+    "name": {
+      "name": "inference_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 14.878707223468357,
+    "sum_squared": 73.81850467700498,
+    "min": 4.8930753866831465,
+    "max": 5.092556450102064,
+    "mean": 4.959569074489452,
+    "variance": 0.008842821036168402,
+    "stddev": 0.09403627510789866
+  },
+  {
+    "name": {
+      "name": "batch_size",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 48.0,
+    "sum_squared": 768.0,
+    "min": 16.0,
+    "max": 16.0,
+    "mean": 16.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "batch_size",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 48.0,
+    "sum_squared": 768.0,
+    "min": 16.0,
+    "max": 16.0,
+    "mean": 16.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "batch_size",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 48.0,
+    "sum_squared": 768.0,
+    "min": 16.0,
+    "max": 16.0,
+    "mean": 16.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "batch_size",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 48.0,
+    "sum_squared": 768.0,
+    "min": 16.0,
+    "max": 16.0,
+    "mean": 16.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "batch_size",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 48.0,
+    "sum_squared": 768.0,
+    "min": 16.0,
+    "max": 16.0,
+    "mean": 16.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "batch_size",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 48.0,
+    "sum_squared": 768.0,
+    "min": 16.0,
+    "max": 16.0,
+    "mean": 16.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "training_co2_cost",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 41.40000000000002,
+    "sum_squared": 571.3200000000005,
+    "min": 13.800000000000006,
+    "max": 13.800000000000006,
+    "mean": 13.800000000000006,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "training_co2_cost",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 41.40000000000002,
+    "sum_squared": 571.3200000000005,
+    "min": 13.800000000000006,
+    "max": 13.800000000000006,
+    "mean": 13.800000000000006,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "training_co2_cost",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 41.40000000000002,
+    "sum_squared": 571.3200000000005,
+    "min": 13.800000000000006,
+    "max": 13.800000000000006,
+    "mean": 13.800000000000006,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "training_co2_cost",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 41.40000000000002,
+    "sum_squared": 571.3200000000005,
+    "min": 13.800000000000006,
+    "max": 13.800000000000006,
+    "mean": 13.800000000000006,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "training_co2_cost",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 41.40000000000002,
+    "sum_squared": 571.3200000000006,
+    "min": 13.800000000000008,
+    "max": 13.800000000000008,
+    "mean": 13.800000000000006,
+    "variance": 2.842170943040401e-14,
+    "stddev": 1.6858739404357614e-07
+  },
+  {
+    "name": {
+      "name": "training_co2_cost",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 41.40000000000002,
+    "sum_squared": 571.3200000000006,
+    "min": 13.800000000000008,
+    "max": 13.800000000000008,
+    "mean": 13.800000000000006,
+    "variance": 2.842170943040401e-14,
+    "stddev": 1.6858739404357614e-07
+  },
+  {
+    "name": {
+      "name": "training_energy_cost",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 100.5,
+    "sum_squared": 3366.75,
+    "min": 33.5,
+    "max": 33.5,
+    "mean": 33.5,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "training_energy_cost",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 100.5,
+    "sum_squared": 3366.75,
+    "min": 33.5,
+    "max": 33.5,
+    "mean": 33.5,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "training_energy_cost",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 100.5,
+    "sum_squared": 3366.75,
+    "min": 33.5,
+    "max": 33.5,
+    "mean": 33.5,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "training_energy_cost",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 100.5,
+    "sum_squared": 3366.75,
+    "min": 33.5,
+    "max": 33.5,
+    "mean": 33.5,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "training_energy_cost",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 100.5,
+    "sum_squared": 3366.75,
+    "min": 33.5,
+    "max": 33.5,
+    "mean": 33.5,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "training_energy_cost",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 100.5,
+    "sum_squared": 3366.75,
+    "min": 33.5,
+    "max": 33.5,
+    "mean": 33.5,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "inference_denoised_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.9440318230539559,
+    "sum_squared": 0.29720191704363114,
+    "min": 0.3099065989255905,
+    "max": 0.324218625202775,
+    "mean": 0.31467727435131865,
+    "variance": 4.551868803530368e-05,
+    "stddev": 0.006746753888745585
+  },
+  {
+    "name": {
+      "name": "inference_denoised_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.9328483652323484,
+    "sum_squared": 0.2901797924062255,
+    "min": 0.30664632506668565,
+    "max": 0.31955571509897707,
+    "mean": 0.3109494550774495,
+    "variance": 3.7033855779064484e-05,
+    "stddev": 0.006085544821876221
+  },
+  {
+    "name": {
+      "name": "inference_denoised_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 0.9514959510415792,
+    "sum_squared": 0.3018561386841182,
+    "min": 0.3136386629194021,
+    "max": 0.324218625202775,
+    "mean": 0.31716531701385975,
+    "variance": 2.487457820392336e-05,
+    "stddev": 0.004987442050181973
+  },
+  {
+    "name": {
+      "name": "inference_denoised_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.9440318230539559,
+    "sum_squared": 0.29720191704363114,
+    "min": 0.3099065989255905,
+    "max": 0.324218625202775,
+    "mean": 0.31467727435131865,
+    "variance": 4.551868803530368e-05,
+    "stddev": 0.006746753888745585
+  },
+  {
+    "name": {
+      "name": "inference_denoised_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.9506387412548065,
+    "sum_squared": 0.3013030726804675,
+    "min": 0.3135864759484927,
+    "max": 0.32346578935782117,
+    "mean": 0.31687958041826886,
+    "variance": 2.1689074097719363e-05,
+    "stddev": 0.004657153003468897
+  },
+  {
+    "name": {
+      "name": "inference_denoised_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.9299192014667723,
+    "sum_squared": 0.2883535338945507,
+    "min": 0.30581721166769665,
+    "max": 0.318284778131379,
+    "mean": 0.30997306715559075,
+    "variance": 3.454226967253282e-05,
+    "stddev": 0.0058772671942436665
+  },
+  {
+    "name": {
+      "name": "inference_idealized_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 1.2216146484375003,
+    "sum_squared": 0.4983106062150195,
+    "min": 0.3952107421875001,
+    "max": 0.43119316406250013,
+    "mean": 0.4072048828125001,
+    "variance": 0.0002877188186645452,
+    "stddev": 0.016962276340884947
+  },
+  {
+    "name": {
+      "name": "inference_idealized_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 1.1906280970982146,
+    "sum_squared": 0.47320565968840556,
+    "min": 0.3862780412946429,
+    "max": 0.4180720145089287,
+    "mean": 0.39687603236607155,
+    "variance": 0.00022463482950010882,
+    "stddev": 0.014987822707121566
+  },
+  {
+    "name": {
+      "name": "inference_idealized_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 1.2436415457589287,
+    "sum_squared": 0.5159637311948031,
+    "min": 0.4062241908482143,
+    "max": 0.43119316406250013,
+    "mean": 0.4145471819196429,
+    "variance": 0.00013854436075017018,
+    "stddev": 0.01177048685272492
+  },
+  {
+    "name": {
+      "name": "inference_idealized_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 1.2216146484375003,
+    "sum_squared": 0.4983106062150195,
+    "min": 0.3952107421875001,
+    "max": 0.43119316406250013,
+    "mean": 0.4072048828125001,
+    "variance": 0.0002877188186645452,
+    "stddev": 0.016962276340884947
+  },
+  {
+    "name": {
+      "name": "inference_idealized_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 1.2413377976190476,
+    "sum_squared": 0.5139956536444493,
+    "min": 0.40607849702380955,
+    "max": 0.42918080357142857,
+    "mean": 0.4137792658730159,
+    "variance": 0.0001186036817378,
+    "stddev": 0.01089053174724724
+  },
+  {
+    "name": {
+      "name": "inference_idealized_runtime",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 1.1824339657738094,
+    "sum_squared": 0.4666777668017952,
+    "min": 0.3839161086309524,
+    "max": 0.4146017485119048,
+    "mean": 0.39414465525793646,
+    "variance": 0.00020924633220079092,
+    "stddev": 0.014465349363247018
+  },
+  {
+    "name": {
+      "name": "finish_reason_length",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_length",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_length",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_length",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_length",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_length",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_stop",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_stop",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_stop",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_stop",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_stop",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_stop",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_endoftext",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_endoftext",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_endoftext",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_endoftext",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_endoftext",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_endoftext",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_unknown",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_unknown",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_unknown",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_unknown",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_unknown",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "finish_reason_unknown",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 3.0,
+    "sum_squared": 3.0,
+    "min": 1.0,
+    "max": 1.0,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_instances",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 15.0,
+    "sum_squared": 75.0,
+    "min": 5.0,
+    "max": 5.0,
+    "mean": 5.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_instances",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 15.0,
+    "sum_squared": 75.0,
+    "min": 5.0,
+    "max": 5.0,
+    "mean": 5.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_instances",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 15.0,
+    "sum_squared": 75.0,
+    "min": 5.0,
+    "max": 5.0,
+    "mean": 5.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_instances",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 15.0,
+    "sum_squared": 75.0,
+    "min": 5.0,
+    "max": 5.0,
+    "mean": 5.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_instances",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 15.0,
+    "sum_squared": 75.0,
+    "min": 5.0,
+    "max": 5.0,
+    "mean": 5.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_train_instances",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 15.0,
+    "sum_squared": 75.0,
+    "min": 5.0,
+    "max": 5.0,
+    "mean": 5.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "prompt_truncated",
+      "split": "test",
+      "perturbation": {
+        "name": "robustness",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "prompt_truncated",
+      "split": "test",
+      "perturbation": {
+        "name": "fairness",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "prompt_truncated",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "original"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "prompt_truncated",
+      "split": "test",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "worst"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "prompt_truncated",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "original",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "prompt_truncated",
+      "split": "test",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "worst",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    "count": 3,
+    "sum": 0.0,
+    "sum_squared": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "estimated_num_tokens_cost"
+    },
+    "count": 348,
+    "sum": 0,
+    "sum_squared": 0,
+    "min": 0,
+    "max": 0,
+    "mean": 0.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_prompt_tokens"
+    },
+    "count": 348,
+    "sum": 301866,
+    "sum_squared": 261885732,
+    "min": 855,
+    "max": 925,
+    "mean": 867.4310344827586,
+    "variance": 108.60731272306293,
+    "stddev": 10.421483230474582
+  },
+  {
+    "name": {
+      "name": "num_completions"
+    },
+    "count": 348,
+    "sum": 348,
+    "sum_squared": 348,
+    "min": 1,
+    "max": 1,
+    "mean": 1.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "max_num_output_tokens"
+    },
+    "count": 348,
+    "sum": 10440,
+    "sum_squared": 313200,
+    "min": 30,
+    "max": 30,
+    "mean": 30.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  },
+  {
+    "name": {
+      "name": "num_completion_tokens"
+    },
+    "count": 348,
+    "sum": 6092,
+    "sum_squared": 128604,
+    "min": 9,
+    "max": 30,
+    "mean": 17.50574712643678,
+    "variance": 63.10054168318146,
+    "stddev": 7.943584939004647
+  },
+  {
+    "name": {
+      "name": "num_requests"
+    },
+    "count": 1,
+    "sum": 348,
+    "sum_squared": 121104,
+    "min": 348,
+    "max": 348,
+    "mean": 348.0,
+    "variance": 0.0,
+    "stddev": 0.0
+  }
+]

@@ -1,0 +1,2270 @@
+{
+  "name": "raft",
+  "description": "Real-world Annotated Few-shot Tasks (RAFT)",
+  "tags": [
+    "text_classification",
+    "robustness"
+  ],
+  "output_path": "benchmark_output/scenarios/raft",
+  "scenario_spec": {
+    "class_name": "benchmark.scenarios.raft_scenario.RAFTScenario",
+    "args": {
+      "subset": "tweet_eval_hate"
+    }
+  },
+  "definition_path": "https://github.com/stanford-crfm/helm/blob/main/src/benchmark/scenarios/raft_scenario.py",
+  "instances": [
+    {
+      "input": "Tweet: Dont worry @user you are and will always be the most hysterical woman.",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10"
+    },
+    {
+      "input": "tweet:  dont worry   @user   you're and  will   always   be   the  most  hysterical woman.",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: Dont worry @user youu are and gon always b the most hysterical woman.",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: President Trump Weekly Address \u2018\u201c Immigration Reform\u00c2\u00a0Needed\u2018\u00a6",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11"
+    },
+    {
+      "input": "tweet: president  trump weekly  address   \u2018\u201c   immigration  reform\u00e2\u00a0needed\u2018\u00a6",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: @user thanks for ruining a beloved song from \u201cThe Sound of Music\u201d by using that extremely creepy electronic version in your commercial.  Shame on you.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12"
+    },
+    {
+      "input": "tweet:  @user   thanks for   ruining a  beloved   song  from  \u201cthge   sound  of  music\u201d by   using   that extremely   creepy electronic   version  in  your  commercial. shame  on   you.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: @user thanx for ruining a beloved song from \u201cDa Sound of Music\u201d by usin that extremely creepy electronic version in ur commercial.  Shame on u.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: HOLLERINGGGGGGG. stupid baby bitch.",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13"
+    },
+    {
+      "input": "tweet: holleringgggggg.   stupid  baby   bitch.",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: HOLLERINGGGGGGG. dumb baby bitch.",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: @user Exactly! Why would Americans vote for anyone that supports these absurd policies? IMO it is treason and self destruction to vote for politicians that do not up hold our laws and advocates for illegals over Americans. #BuildThatWall #NoDACA",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14"
+    },
+    {
+      "input": "tweet:  @user   exactly!  why   would   americans  vote   for  anyone  that supports  these   absurd  policies?  imo it's   treason  and  self  destruction   to   vote for   politicians  that   don't   up  hold   our   laws  and advocates  for  illegals   over  americans.  #buildthatwall #nodaca",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: @user Exactly! Y would Americans vote fir anyone dat supports dese absurd policies? IMO it is treason and self destruction to vote fa politicians dat do not up hold our laws and advocates fir illegals ova Americans. #BuildThatWall #NoDACA",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: @user mmm perfect body and so am i am now come here girl i got a big cock for u to play with ;)",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15"
+    },
+    {
+      "input": "tweet:  @user mmm  perfect   body  and  so am   i'm now   come   here girl i got  a big cock  for  u  to  play   witn ;)",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: @user mmm bumpin body and soo am i am now cum here gurl i got a bigg cock fa u to play witt ;)",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: Women want u to automatically believe women who scream rape they don't understand our position....",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16"
+    },
+    {
+      "input": "tweet:   women  want   u  to automatically   believe   women  who scream  rape  they  don't understand our  position....",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: Women want u to automatically believe women who scream rape they don't kno our position....",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: @user @user Just choke on your salad sandwich already. Those Men did not die during the Gulf War and do you really think that it did not play on their conscience why they were fighting? They still went anyway. You are directing your crap at the",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17"
+    },
+    {
+      "input": "tweet: @user   @user  just  choke   on your salad   sandwich   already.  those   men didn't  die   during the gulf   war  and   do   you   really  think that  it   didn't  play  on   their conscience  why   they   were  fighting?   they still   went anyway.   you're directing   your crap   at the",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: @user @user Jus choke on yo salad sandwich already. Those Men did not die durin the Gulf War and do u really think dat it did not play on their conscience y they were fightin? They still went anyway. Yu are directing ur crap at the",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: How keyboard gangsters feel leaving their stupid ass comments",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18"
+    },
+    {
+      "input": "tweet:   how keyboard  gangsters feel   leaving   their  stupid  ass   comments",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: How keyboard gangsters feel leavin their dumb ass comments",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: @user Noely I see you've become hysterical since I last saw you. Don't blam you one bit, you're in Qld right?",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19"
+    },
+    {
+      "input": "tweet: @user  noely   i  see  you've  become hysterical  since  i   last   saw  you. don't  blam you   one  bit,  you're  in qld   right?",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: @user Noely I see youu've become hysterical since I last saw u. Don't blam u one bit, u're in Qld ryte?",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: @user @user @user Imagine THE SIZEof THAT RED WAVE !!GOD BLESS TRUMP!Build That Wall#BuildThatWall Plz share..",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20"
+    },
+    {
+      "input": "tweet:  @user  @user   @user imagine the sizeof   that   red wave   !!god bless trump!build  that  wall#buildthatwall  plz share..",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: @user @user @user Imagine DA SIZEof DAT RED WAVE !!GOD BLESS TRUMP!Build Dat Wall#BuildThatWall Plz share..",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: @user Going to be where no one will leave the house or even look at a woman because she will claim \u201crape\u201d.\u2026",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21"
+    },
+    {
+      "input": "tweet:  @user   going   to   be  where  no  one   willk   leave the house or even  look  at a  woman because  she'll   claim   \u201crape\u201d.\u2026",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: @user Goin to b where no1 will leave da house or even look at a woman bc she gon claim \u201crape\u201d.\u2026",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: They do not need them, I do not need them nor do I require them to enrich my life. #Stoptheinvasion #Brexit #Sodyoueu #Nosurrender",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22"
+    },
+    {
+      "input": "tweet: they  don't   need them, i don't   need   them nor do  i require   them   to enrich  my life. #stoptheinvasion #brexit   #sodyoueu #nosurrender",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: They do not need em, I do not need em nor do I require em to enrich mah life. #Stoptheinvasion #Brexit #Sodyoueu #Nosurrender",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: @user It's kind of funny, really. Were the space aliens illegal? Now we need a wall & a roof! I think this country has gone totally nuts. God Bless @user for his strength & courage. #BuildThatWall and if he blocks the democrats out, t",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23"
+    },
+    {
+      "input": "tweet:  @user it's  kind  of funny,   really.  were the space aliens illegal?  nowe we  ened   a wall & a  roof!   i   think  this country   has  gone totally   nuts.   god   bless   @user for  his   strength   &  courage.  #buildthatwall   and  if  he   blocks   the democrats out,   t",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: @user It's kind of funnie, really. Were da space aliens illegal? Now we need a wall & a roof! I think dis country has gone totally nuts. God Bless @user fir his strength & courage. #BuildThatWall and if he blocks da democrats outt, t",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: @user It's kind of funny, really. Were the space aliens illegal? Now we need a wall & a roof! I think this country has gone totally nuts. God Bless @user for her strength & courage. #BuildThatWall and if she blocks the democrats out, t",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "gender",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "mode": "pronouns",
+        "prob": 1.0,
+        "source_class": "male",
+        "target_class": "female",
+        "bidirectional": false
+      }
+    },
+    {
+      "input": "Tweet: Stop trying to please everyone, you're not my cock... Please yourself",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24"
+    },
+    {
+      "input": "tweet:  stop   trying to  please everyone,   you're   not   my  cock... please yourself",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: Stop tryn to plz everyone, u're not mah cock... Plz yourself",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: @user @user 2 hysterical women in the US Senate",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25"
+    },
+    {
+      "input": "tweet:  @user  @user   2 hysterical  women  in  the  us   senate",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: @user @user 2 hysterical women in da US Senate",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: cormacs such a cunt won\u2019t even let me squeeze his blackheads pussy bitch",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26"
+    },
+    {
+      "input": "tweet:   cormacs  such  a  cunt won\u2019t even   let  me squeeze  his  blackheads  pussy  bitch",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: cormacs such a hoe won\u2019t even let me squeeze his blackheads pussy bitch",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: cormacs such a cunt won\u2019t even let me squeeze her blackheads pussy bitch",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26",
+      "perturbation": {
+        "name": "gender",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "mode": "pronouns",
+        "prob": 1.0,
+        "source_class": "male",
+        "target_class": "female",
+        "bidirectional": false
+      }
+    },
+    {
+      "input": "Tweet: | Woman who accused Nelly of rape wants to drop charges",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27"
+    },
+    {
+      "input": "tweet: |   woman  who   accused   nelly  of  rape wants   to   drop charges",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: @user One man one vote right?Yet here we have one man assuming he can demand the importation of millions of non citizens for  HIS agenda.He should be allowed a say on ONE migrant at most.  And be personally and directly responsible for everythin",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28"
+    },
+    {
+      "input": "tweet: @user   one man one  vote   right?yet  here  we've   one  man   assuming he   can  demand the   importation of  millions  of   non citizens   for his   agenda.he   shoudln  be  allowed a say  on one  migrant   at most.   and  be  personally   and directly  responsible   for  everythin",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: @user One man one vote rite?Yet heaa we have one man assuming he can demand da importation of millions of non citizens fir  HIS agenda.He should b allowed a say on ONE migrant at most.  And b personally and directly responsible fir everythin",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: @user One man one vote right?Yet here we have one man assuming she can demand the importation of millions of non citizens for  HER agenda.She should be allowed a say on ONE migrant at most.  And be personally and directly responsible for everythin",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "gender",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "mode": "pronouns",
+        "prob": 1.0,
+        "source_class": "male",
+        "target_class": "female",
+        "bidirectional": false
+      }
+    },
+    {
+      "input": "Tweet: Talent- Meeting up with complete strangers for sex",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29"
+    },
+    {
+      "input": "tweet:  talent-   meeting  up  with   complete   strangers   for sex",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: Talent- Meeting up w/ complete strangers fir sex",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: Its time - to stop the immigration - to USA ! Specially from 40 muslim countries. The president named it: SHITHOLE-countries. And he is right and also his wall must be build. But all foreign invaders inside of USA must go home !",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30"
+    },
+    {
+      "input": "tweet:   its  time  -   to  stop  the immigration  -   to usa  ! specially fomr  40   muslim countries.  the  president   named  it: shithole-countries.  and  he's right   and  also  his   wall  must be   build.   but  all foreign invaders  inside   of usa  must   go home  !",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: Its time - to stop da immigration - to USA ! Specially from 40 muslim countries. Da president named it: SHITHOLE-countries. And he is rite and also his wall must b build. But alll foreign invaders inside of USA must go home !",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: Its time - to stop the immigration - to USA ! Specially from 40 muslim countries. The president named it: SHITHOLE-countries. And she is right and also her wall must be build. But all foreign invaders inside of USA must go home !",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "gender",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "mode": "pronouns",
+        "prob": 1.0,
+        "source_class": "male",
+        "target_class": "female",
+        "bidirectional": false
+      }
+    },
+    {
+      "input": "Tweet: Germany: Islamic-inspired children\u2019s park in Berlin to introduce children to Islam and the Islamic culture of the refugees - Free Speech Time - @user",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31"
+    },
+    {
+      "input": "tweet: germany: islamic-inspired  children\u2019s  park in   berlin to   introduce children  to   islam anbd  the  islamic culture  of the  refugees  - free  speech   time  -  @user",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: Germany: Islamic-inspired children\u2019s park in Berlin to introduce children to Islam and da Islamic culture of da refugees - Free Speech Time - @user",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: The first sexual attack against a woman happened in Hungary. The criminal is a \"legal\" afghan rapefugee. This is how Orban protects us.",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32"
+    },
+    {
+      "input": "tweet: the   first  sexual   attack  against a woman  happened  in hungary. the  criminal   is  a  \"legal\"  afghan rapefugee.   this  is  how   orban protects us.",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: Da first sexual attack against a woman happened in Hungary. Da criminal is a \"legal\" afghan rapefugee. Dis is how Orban protects us.",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: I hate bitches that are always mad at the world for no reason like bitch stfu and be happy hoe",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33"
+    },
+    {
+      "input": "tweet:   i   hate   bitches that   are always  mad at   the  world for no   reason  like bitch  stfu   and   be  happy  hoe",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: I hate bitches dat are always mad at da world fa no reason like bitch stfu and b happy hoe",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: Pope Francis criticizes policy of migrant family separation via @user      Stick to religion Mr. Red Pope...",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34"
+    },
+    {
+      "input": "tweet:  pope  francis   criticizes policy of  migrant   family  separation   via @user   stick to religion   mr. red   pope...",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: Pope Francis criticizes policy of migrant fam separation via @user      Stick to religion Mr. Red Pope...",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: \u201cWhen Mexico sends its people, they\u2019re not sending their best... They\u2019re bringing drugs. They\u2019re bringing crime. They\u2019re rapists. And some, I assume, are good people.\u201d Strangely, @user depends on foreign workers for his properties. #Immigration",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35"
+    },
+    {
+      "input": "tweet: \u201cwhen  mexico sends  its   people,  they\u2019re not   sending their   best...  they\u2019re bringing  drugs. they\u2019re   bringing crime.  htey\u2019re rapists.   and some,   i  assume,  are   good  people.\u201d strangely,  @user   depends on   foriegn   workers for his  properties.   #immigration",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: \u201cWhen Mexico sends its pple, they\u2019re not sendin their best... They\u2019re bringin drugs. They\u2019re bringin crime. They\u2019re rapists. And sum, I assume, r good ppl.\u201d Strangely, @user depends on foreign workers fa his properties. #Immigration",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: \u201cWhen Mexico sends its people, they\u2019re not sending their best... They\u2019re bringing drugs. They\u2019re bringing crime. They\u2019re rapists. And some, I assume, are good people.\u201d Strangely, @user depends on foreign workers for her properties. #Immigration",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "gender",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "mode": "pronouns",
+        "prob": 1.0,
+        "source_class": "male",
+        "target_class": "female",
+        "bidirectional": false
+      }
+    },
+    {
+      "input": "Tweet: International migration from sub-Saharan Africa has grown dramatically since 2010",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36"
+    },
+    {
+      "input": "tweet:   interational  migration from   sub-saharan africa   has  grown   dramatically since   2010",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: Germany Navy rescued 22.000 refugees in the middlesea. Germany has not enough refugees, it wants more! by state duty. The citiziens will give the answer in elections.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37"
+    },
+    {
+      "input": "tweet:   germany navy   rescued 22.000 refugees  in the   middlesea.  germany   hasn't  enough refugees,   it   whants   more! by   state  duty.   the citiziens  wiull   give the   answer   in   elections.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: Germany Navy rescued 22.000 refugees in da middlesea. Germany has not enough refugees, it wants more! by state duty. Da citiziens gon give da answer in elections.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: I didn\u2019t realize girls who wear huge bows in their hair called other women \u201ccunt\u201d. \u201cNorthern Bell\u2019s\u201d must be bred t\u2026",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38"
+    },
+    {
+      "input": "tweet:  i  didn\u2019t realize  girls  who  wear   huge  bows in their  hair   called   other  women  \u201ccunt\u201d.   \u201cnorthern   bell\u2019s\u201d must   be   bred t\u2026",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: I didn\u2019t kno girls who wear bigass bows in their hair called other women \u201cnigga\u201d. \u201cNorthern Bell\u2019s\u201d must b bred t\u2026",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: Important note: not all women do this and tale responsibility for their actions, just like not all men are assholes.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39"
+    },
+    {
+      "input": "tweet:  important  note:   not   all  women   do this and  tale responsibility   for their  actions,  just   like   not all  men are  assholes.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: Important note: not alll women do dis and tale responsibility fa their actions, jus like not alll men r assholes.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: UN wants \u2018\u02dcimmediate halt\u2019 to separation of migrant families in US #Trumpadministration #UnitedNations...",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40"
+    },
+    {
+      "input": "tweet:  un wants  \u2018\u02dcimmediate halt\u2019   to separation   of   migrant   families  in  us  #trumpadministration  #unitednations...",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: @user @user BUT. I would bet you're not looking for facts.  That's why you obfuscate.President Trump at NATO: 'Immigration is taking over Europe'https://t.co/L8Kk9bM0TuThere is more.  And you know it.",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41"
+    },
+    {
+      "input": "tweet:   @user @user but. i'd  bet   you're  nto looking   for  facts. that's   why  you   obfuscate.president trump  at  nato:   'immigration   is   taking   over europe'https://t.co/l8kk9bm0tuthere is more. and  you  know   it.",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: @user @user BUT. I would bet yu're not lookin for facts.  Dat's y you obfuscate.President Trump at NATO: 'Immigration is takin over Europe'https://t.co/L8Kk9bM0TuThere is more.  And youu know it.",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: Anybody can dig a hole and plant a tree. But to make sure it survives, you have to nurture it, you have to suffer for it,jst lyk a wife.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42"
+    },
+    {
+      "input": "tweet:  anybody   can dig  a  hole  and plant  a   tree.   but   to make  sure  it  survives, you've  to   nurture it,  you've  to   suffer   for it,jst  lyk  a   wife.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: Anybody can dig a hole and plant a tree. But to make sure it survives, u have to nurture it, youu have to suffer fir it,jst lyk a wife.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: US Navy Seal, which killed Osama wrote a book. It tells how this specialforces work today.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43"
+    },
+    {
+      "input": "tweet:  us  navy   seal,   which   killed osama wrote   a  book.   it tells  how  this specialforces  work  today.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: US Navy Seal, which killed Osama wrote a book. It tells how dis specialforces wrk today.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: Why weren't the democrats in the streets marching for the separated families of people like Jamiel Shaw when he was separated from his son forever after Jamiel Jr. was shot and murdered by an illegal alien? #separatingfamilies #BuildThatWall #MAGA #BGR #BlacksGoneRed",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44"
+    },
+    {
+      "input": "tweet:  why   weren't the   democrats in the   streets   marching   for the separated  families  of   people like jamiel shaw  when   he   was   separated  from   his   son   forever   after jamiel  jr.   was   shot and   murdered   by an   illegal  alien?   #separatingfamilies  #buildthatwall   #maga #bgr #blacksgonered",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: Y weren't da democrats in da streets marching fa the separated families of mfs like Jamiel Shaw when he was separated from his son 4ever after Jamiel Jr. was shot and murdered by an illegal alien? #separatingfamilies #BuildThatWall #MAGA #BGR #BlacksGoneRed",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: Why weren't the democrats in the streets marching for the separated families of people like Jamiel Shaw when she was separated from her son forever after Jamiel Jr. was shot and murdered by an illegal alien? #separatingfamilies #BuildThatWall #MAGA #BGR #BlacksGoneRed",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "gender",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "mode": "pronouns",
+        "prob": 1.0,
+        "source_class": "male",
+        "target_class": "female",
+        "bidirectional": false
+      }
+    },
+    {
+      "input": "Tweet: @user Skank traitor bitch @user",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45"
+    },
+    {
+      "input": "tweet: @user  skank traitor  bitch @user",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: @user Hoe traitor bitch @user",
+      "references": [
+        {
+          "output": "hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: It's clear that the administration's attempts to punish local governments for refusing to cooperate with immigration enforcement are unconstitutional. The administration should focus on treating immigrants with compassion and respect.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46"
+    },
+    {
+      "input": "tweet:   it's  clear   that   the   administration's attempts   to punish local governments   for   refusing   to   cooperate with  immigration   enforcement are   unconstitutional.   the  administration  should   focus  on treating  immigrants   with  compassion  and respect.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: It's clear dat the administration's attempts to punish local governments fa refusing to cooperate wit immigration enforcement r unconstitutional. Da administration should focus on treating immigrants w/ compassion and respect.",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: The Ethiopia-Eritrea rapprochement: what does it mean for refugees?",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47"
+    },
+    {
+      "input": "tweet: thge ethiopia-eritrea   rapprochement:   what does   it mean  for   refugees?",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: Da Ethiopia-Eritrea rapprochement: wat does it mean fa refugees?",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: This is outrageous! But, sadly, this kind of corruption is what we've gotten used to with our current administration! \ud83d\ude20",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48"
+    },
+    {
+      "input": "tweet:   this  is   outrageous!   but,   sadly,   this  kind  of corruption  is  what   we've   gotten   used   to  with  our   current  administration! \ud83d\ude20",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: Dis is outrageous! But, sadly, dis kind of corruption is wht we've gotten used to wid our current administration! \ud83d\ude20",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet: Syria's military continues to advance in the south west",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49"
+    },
+    {
+      "input": "tweet:   syria's military continues  to  advance   in  the   south  west",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet: Syria's military continues to advance in da south west",
+      "references": [
+        {
+          "output": "not hate speech",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    }
+  ]
+}

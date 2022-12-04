@@ -1,0 +1,2249 @@
+{
+  "name": "raft",
+  "description": "Real-world Annotated Few-shot Tasks (RAFT)",
+  "tags": [
+    "text_classification",
+    "robustness"
+  ],
+  "output_path": "benchmark_output/scenarios/raft",
+  "scenario_spec": {
+    "class_name": "benchmark.scenarios.raft_scenario.RAFTScenario",
+    "args": {
+      "subset": "semiconductor_org_types"
+    }
+  },
+  "definition_path": "https://github.com/stanford-crfm/helm/blob/main/src/benchmark/scenarios/raft_scenario.py",
+  "instances": [
+    {
+      "input": "Organization name: National NanoFab Center, Daejeon, South Korea\nPaper title: 3-terminal nanoelectromechanical switching device in insulating liquid media for low voltage operation and reliability improvement",
+      "references": [
+        {
+          "output": "research institute",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10"
+    },
+    {
+      "input": "organization   name:   national nanofab  center,   daejeon,   south   korea\npaper  title:  3-terminal nanoelectromechanical  switching  device  in  insulating liquid  media for  low   voltage  operation and reliability   improvement",
+      "references": [
+        {
+          "output": "research institute",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: National NanoFab Center, Daejeon, South Korea\nPaper title: 3-terminal nanoelectromechanical switchin device in insulating liquid media fir low voltage operation and reliability improvement",
+      "references": [
+        {
+          "output": "research institute",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: IBM Microelectron.,Hopewell Junction,NY,USA\nPaper title: Destructive-read random access memory system buffered with destructive-read memory cache for SoC applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11"
+    },
+    {
+      "input": "organization name:  ibm microelectron.,hopewell   junction,ny,usa\npaper   title:  distructive-read random   access memory   system   buffered with destructive-read memory cache  for   soc  applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: IBM Microelectron.,Hopewell Junction,NY,USA\nPaper title: Destructive-read random access memory system buffered wit destructive-read memory cache fir SoC applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Samsung Electronics Company Limited, Yongin si, Gyeonggi, South Korea\nPaper title: 1D thickness scaling study of phase change material (Ge2Sb2Te5) using a pseudo 3-terminal device",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12"
+    },
+    {
+      "input": "organization   name:   samsung  electronics  comany   limited, yongin   si, gyeonggi,  south   korea\npaper  title:  1d   thickness  scaling  study of   phase   change material   (ge2sb2te5) using   a  pseudo  3-terminal  device",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Samsung Electronics Company Limited, Yongin si, Gyeonggi, South Korea\nPaper title: 1D thickness scaling study of phase change material (Ge2Sb2Te5) usin a pseudo 3-terminal device",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Engim,Acton,MA,USA\nPaper title: A 180MS/s, 162Mb/s wideband three-channel baseband and MAC processor for 802.11 a/b/g",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13"
+    },
+    {
+      "input": "organiztion name:  engim,acton,ma,usa\npaper   title:  a   180ms/s,   162mb/s wideband three-channel  baseband   and  mac  processer   for   802.11 a/b/g",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Engim,Acton,MA,USA\nPaper title: A 180MS/s, 162Mb/s wideband three-channel baseband and MAC processor fir 802.11 a/b/g",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: IBM Semiconductor Research and Development Center (SRDC), Samsung Electronics Company Limited, Hopewell Junction, NY, USA\nPaper title: Competitive and cost effective high-k based 28nm CMOS technology for low power applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14"
+    },
+    {
+      "input": "organization   name:   ibm  semiconductor   research  and  development center  (srdc),   samsung  electronics  company limited,   hopewell  junction,  ny,  usa\npaper   title:   competitive and   cost  effective   high-k   based  28nm   cmos   technology  for low  power  applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: IBM Semiconductor Research and Development Center (SRDC), Samsung Electronics Company Limited, Hopewell Junction, NY, USA\nPaper title: Competitive and cost effective high-k based 28nm CMOS technology fa low power applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Applied Science and Technology Research Institute,Hong Kong\nPaper title: A 48-mW 18-Gb/s fully integrated CMOS optical receiver with photodetector and adaptive equalizer",
+      "references": [
+        {
+          "output": "research institute",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15"
+    },
+    {
+      "input": "organization name: applied  scinece and technnology  research  institute,hong  kong\npaper  title:   a 48-mw  18-gb/s fully  integrated cmos optical   receiver  with  photodetector  and   adaptive   equalizer",
+      "references": [
+        {
+          "output": "research institute",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Applied Science and Technology Research Institute,Hong Kong\nPaper title: A 48-mW 18-Gb/s fully integrated CMOS optical receiver witt photodetector and adaptive equalizer",
+      "references": [
+        {
+          "output": "research institute",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Panasonic,Osaka,Japan\nPaper title: 30.1 8b Thin-film microprocessor using a hybrid oxide-organic complementary technology with inkjet-printed P2ROM memory",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16"
+    },
+    {
+      "input": "organization   name:  panasonic,osaka,japan\npaper   title:  30.1 8b   thin-film   microprocessor  using a  hybrid  oxide-organic  complementary technology with  inkjet-printed   p2rom   memory",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Panasonic,Osaka,Japan\nPaper title: 30.1 8b Thin-film microprocessor usin a hybrid oxide-organic complementary technology w/ inkjet-printed P2ROM memory",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Fujitsu Laboratories Ltd.,Japan\nPaper title: Development of sub 10-\u00b5m ultra-thinning technology using device wafers for 3D manufacturing of terabit memory",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17"
+    },
+    {
+      "input": "organization  name:   fujitsu  laboratories  ltd.,japan\npaper   title:  development of  sub 10-\u00b5m ultra-thinning  technology using  device  wafers  for 3d manufacturing  of  terabit  memory",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Fujitsu Laboratories Ltd.,Japan\nPaper title: Development of sub 10-\u00b5m ultra-thinning technology usin device wafers fa 3D manufacturing of terabit memory",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Sony,Tokyo,Japan\nPaper title: A 3.1 to 5 GHz CMOS DSSS UWB transceiver for WPANs",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18"
+    },
+    {
+      "input": "organization   name: sony,tokyo,japan\npaper  title: a   3.1   to  5  ghz   cmos dsss   uwb   transceiver for  wpans",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Sony,Tokyo,Japan\nPaper title: A 3.1 to 5 GHz CMOS DSSS UWB transceiver fir WPANs",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Strategic Technology Group,Advanced Micro Devices,Sunnyvale,CA,USA\nPaper title: Collective-effect state variables for post-CMOS logic applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19"
+    },
+    {
+      "input": "organization   name:  strategic  technology  group,advanced micro  devices,sunnyvale,ca,usa\npaper  title:   collective-effect   state  variables for  post-cmos logic   applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Strategic Technology Group,Advanced Micro Devices,Sunnyvale,CA,USA\nPaper title: Collective-effect state variables fir post-CMOS logic applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Imec,Leuven,Belgium\nPaper title: An Artificial Iris ASIC with High Voltage Liquid Crystal Driver, 10 nA Light Range Detector and 40 nA Blink Detector for LCD Flicker Removal",
+      "references": [
+        {
+          "output": "research institute",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20"
+    },
+    {
+      "input": "organization name: imec,leuven,belgium\npaper   title:   an artificial   iris asic with  high  voltage  liquid crystal  driver,  10 na  light  range   detector   and  40 na blink detector  for   lcd flicker   removal",
+      "references": [
+        {
+          "output": "research institute",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Imec,Leuven,Belgium\nPaper title: An Artificial Iris ASIC wid High Voltage Liquid Crystal Driver, 10 nA Light Range Detector and 40 nA Blink Detector fir LCD Flicker Removal",
+      "references": [
+        {
+          "output": "research institute",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Imec,Leuven,Belgium\nPaper title: An Artificial Iris ASIC with High Voltage Liquid Yolanda Driver, 10 nA Light Range Detector and 40 nA Blink Detector for LCD Flicker Removal",
+      "references": [
+        {
+          "output": "research institute",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "person_name",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "race=white_american",
+        "target_class": "race=black_american",
+        "name_file_path": "benchmark_output/perturbations/person_name/data/person_names.txt",
+        "person_name_type": "first_name",
+        "preserve_gender": true
+      }
+    },
+    {
+      "input": "Organization name: Texas Instruments Inc, Dallas, TX, US\nPaper title: Damascene integration of copper and ultra-low-k xerogel for high performance interconnects",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21"
+    },
+    {
+      "input": "organization  name:   texas   intruments   inc,  dallas,  tx,  us\npaper   title:   damascene integration of copper and  ultra-low-k  xerogel for  high performance  interconnects",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Texas Instruments Inc, Dallas, TX, US\nPaper title: Damascene integration of copper and ultra-low-k xerogel fa high performance interconnects",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Technology Research Department,Association of Super-Advanced Electronics Technologies (ASET),,Higashi-koigakubo,Kokubunji,Tokyo,,Japan\nPaper title: Scalable 3D-FPGA using wafer-to-wafer TSV interconnect of 15 Tbps/W, 3.3 Tbps/mm2",
+      "references": [
+        {
+          "output": "research institute",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22"
+    },
+    {
+      "input": "organization  name: technology   research   department,association of  super-advanced electronics technologies (aset),,higashi-koigakubo,kokubunji,tokyo,,japan\npaper   title: scalable 3d-fpga   using  wafer-to-wafer tsv interconnect   of  15 tbps/w, 3.3  tbps/mm2",
+      "references": [
+        {
+          "output": "research institute",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Technology Research Department,Association of Super-Advanced Electronics Technologies (ASET),,Higashi-koigakubo,Kokubunji,Tokyo,,Japan\nPaper title: Scalable 3D-FPGA usin wafer-to-wafer TSV interconnect of 15 Tbps/WID, 3.3 Tbps/mm2",
+      "references": [
+        {
+          "output": "research institute",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: QRE, Hillsboro, OR, USA\nPaper title: An enhanced 130 nm generation logic technology featuring 60 nm transistors optimized for high performance and low power at 0.7 - 1.4 V",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23"
+    },
+    {
+      "input": "organization name: qre,  hillsboro,  or, usa\npaper title:   an   enhanced 130  nm   generation  logic technology  featuring  60 nm   transistors  optimized for high performance anbd  low power  at   0.7 - 1.4 v",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: QRE, Hillsboro, OR, USA\nPaper title: An enhanced 130 nm generation logic technology featuring 60 nm transistors optimized fir high performance and low power at 0.7 - 1.4 V",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Syst. LSI Dev. Center,Mitsubishi Electr. Corp.,Hyogo,Japan\nPaper title: Single-chip IF transceiver IC with wide dynamic range variable gain amplifiers for wideband CDMA applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24"
+    },
+    {
+      "input": "organization  name:   syst. lsi  dev. center,mitsubishi   electr.   corp.,hyogo,japan\npaper   title:  single-chip if transceiver  ic with   wide dynamic   range  variable   gain   amplifiers for   wideband   cdma applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Syst. LSI Dev. Center,Mitsubishi Electr. Corp.,Hyogo,Japan\nPaper title: Single-chip IF transceiver IC w wide dynamic range variable gain amplifiers fir wideband CDMA applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Syst. LSI Dev. Center,Mitsubishi Electr. Corp.,Hyogo,Japan\nPaper title: Single-terryl IF transceiver IC with wide dynamic range variable gain amplifiers for wideband CDMA applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "person_name",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "race=white_american",
+        "target_class": "race=black_american",
+        "name_file_path": "benchmark_output/perturbations/person_name/data/person_names.txt",
+        "person_name_type": "first_name",
+        "preserve_gender": true
+      }
+    },
+    {
+      "input": "Organization name: SoC R&D Center,Semiconductor Company,Toshiba Corp.,Isogo-ku,Yokohama,Japan\nPaper title: A novel self-aligned shallow trench isolation cell for 90 nm 4 Gbit NAND flash EEPROMs",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25"
+    },
+    {
+      "input": "organization  name:  soc   r&d  center,semiconductor  company,toshiba  corp.,isogo-ku,yokohama,japan\npaper   title:   a   novel self-aligned  shallow   trench   isolation cell  for 90  nm 4  gbit nand   flash   eeproms",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: SoC R&D Center,Semiconductor Company,Toshiba Corp.,Isogo-ku,Yokohama,Japan\nPaper title: A novel self-aligned shallow trench isolation cell fir 90 nm 4 Gbit NAND flash EEPROMs",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: APA Optics, Inc., Blaine, MN, USA\nPaper title: High performance 0.25 /spl mu/m gate-length doped-channel AlGaN/GaN heterostructure field effect transistors grown on p-type SiC substrates",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26"
+    },
+    {
+      "input": "organization name:  apa  optics,  inc.,  blaine,   mn,   usa\npaper title: high   performance 0.25   /spl mu/m  gate-lenght  doped-channel   algan/gan   heterostructure field   effect transistors  grown  on  p-type   sic substrates",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: imec from Samsung Electronics,Korea\nPaper title: First Demonstration of Low Temperature (\u2264500\u00b0C) CMOS Devices Featuring Functional RO and SRAM Bitcells toward 3D VLSI Integration",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27"
+    },
+    {
+      "input": "organization   name:   imec from samsung  electronics,korea\npaper title: first  demonstration   of low temperature  (\u2264500\u00b0c)  cmos  devices  featuring  functional   ro and  sram   bitcells   toward   3d   vlsi  integration",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: R & D Center, Samsung Electronics Kiheung-Eup, Yongin-City, Kyungki-do, Korea\nPaper title: Highly area efficient and cost effective double stacked S/sup 3/ (stacked single-crystal Si) peripheral CMOS SSTFT and SRAM cell technology for 512M bit density SRAM",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28"
+    },
+    {
+      "input": "organization name:   r & d  center,   samsung  electronics  kiheung-eup,   yongin-city,  kyungki-do,   korea\npaper title:   highly  area efficent   and cost  effective  double   stacked s/sup   3/ (stacked   single-crystal   si)  peripheral  cmos sstft andd  sram cell  technology   for 512m   bit  density  sram",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: R & D Center, Samsung Electronics Kiheung-Eup, Yongin-City, Kyungki-do, Korea\nPaper title: Highly area efficient and cost effective double stacked S/sup 3/ (stacked single-crystal Si) peripheral CMOS SSTFT and SRAM cell technology fa 512M bit density SRAM",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: R & D Center, Samsung Electronics Kiheung-Eup, Yongin-City, Kyungki-do, Korea\nPaper title: Highly area efficient and cost effective double stacked S/sup 3/ (stacked single-aiesha Si) peripheral CMOS SSTFT and SRAM cell technology for 512M bit density SRAM",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "person_name",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "race=white_american",
+        "target_class": "race=black_american",
+        "name_file_path": "benchmark_output/perturbations/person_name/data/person_names.txt",
+        "person_name_type": "first_name",
+        "preserve_gender": true
+      }
+    },
+    {
+      "input": "Organization name: Center for Semiconductor Research & Development,Toshiba Corporation,Japan\nPaper title: Physical understanding of Vth and Idsat variations in (110) CMOSFETs",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29"
+    },
+    {
+      "input": "organization name:   center   for   semiconductor research  & development,toshiba   corporation,japan\npaper title:  physical  understanding of  vth   and   idsat variations   in   (110)   cmosfets",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Center fir Semiconductor Research & Development,Toshiba Corporation,Japan\nPaper title: Physical understanding of Vth and Idsat variations in (110) CMOSFETs",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Fujitsu Laboratories Ltd., Atsugi, Kanagawa, Japan\nPaper title: A 65 nm CMOS technology with a high-performance and low-leakage transistor, a 0.55 /spl mu/m/sup 2/ 6T-SRAM cell and robust hybrid-ULK/Cu interconnects for mobile multimedia applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30"
+    },
+    {
+      "input": "organization  name:  fujitsu laboratories  ltd.,   atsugi, kanagawa,   japan\npaper  title:  a   65  nm  cmos technology  with   a high-performence  and low-leakage transistor,  a   0.55 /spl  mu/m/sup  2/   6t-sram  cell and  robust  hybrid-ulk/cu interconnects   for  mobile  multimedia   applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Fujitsu Laboratories Ltd., Atsugi, Kanagawa, Japan\nPaper title: A 65 nm CMOS technology w a high-performance and low-leakage transistor, a 0.55 /spl mu/m/sup 2/ 6T-SRAM cell and robust hybrid-ULK/Cu interconnects fir mobile multimedia applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Semiconductor R&D Center, Samsung Electronics Co., Ltd, Yongin-City, Gyeonggi-Do, Korea (ROK)\nPaper title: On the gate oxide scaling of high performance CMOS transistors",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31"
+    },
+    {
+      "input": "organization   name: semiconductor r&d center,  samsung  electronics co.,   ltd, yongin-city,   gyeonggi-do, korea  (rok)\npaper   title: on  the  gate oxide  scaling of  high  perfomance cmos  transistors",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Semiconductor R&D Center, Samsung Electronics Co., Ltd, Yongin-City, Gyeonggi-Do, Korea (ROK)\nPaper title: On da gate oxide scaling of high performance CMOS transistors",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Matsushita Electric Industrial Limited, Takatsuki, Osaka, Japan\nPaper title: Role of non-radiative recombination in the degradation of InGaN-based laser diodes",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32"
+    },
+    {
+      "input": "organization  name: matsushita   electric  industrial   limited,  takatsuki, osaka, japan\npaper  title:  role of non-radiative  recombination   in  the  degradation  of ingan-based   laser  diodes",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Matsushita Electric Industrial Limited, Takatsuki, Osaka, Japan\nPaper title: Role of non-radiative recombination in da degradation of InGaN-based laser diodes",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: IBM Microelectron.,Burlington,VT,USA\nPaper title: A 500MHz multi-banked compilable DRAM macro with direct write and programmable pipelining",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33"
+    },
+    {
+      "input": "organization   name:   ibm microelectron.,burlington,vt,usa\npaper   title: a  500mhz multi-banked   compilable  dram macro with   direct  write and  programmable   pipelining",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: IBM Microelectron.,Burlington,VT,USA\nPaper title: A 500MHz multi-banked compilable DRAM macro wid direct write and programmable pipelining",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: KUL, Leuven, Belgium\nPaper title: Benchmarking of monolithic 3D integrated MX2 FETs with Si FinFETs",
+      "references": [
+        {
+          "output": "university",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34"
+    },
+    {
+      "input": "organization name: kul,  leuven,   belgium\npaper  title:   benchmarking of   monolithic 3d integrated   mx2 fets   with  si finfets",
+      "references": [
+        {
+          "output": "university",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: KUL, Leuven, Belgium\nPaper title: Benchmarking of monolithic 3D integrated MX2 FETs wit Si FinFETs",
+      "references": [
+        {
+          "output": "university",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: MAPS,Yongin,Korea\nPaper title: 21.8 An all-in-one (Qi, PMA and A4WP) 2.5W fully integrated wireless battery charger IC for wearable applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35"
+    },
+    {
+      "input": "organization  name:  maps,yongin,korea\npaper   title: 21.8  an  all-in-one   (qi, pma and a4wp)  2.5w fully integrated  wireless battery  charger   ic  for wearable   applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: MAPS,Yongin,Korea\nPaper title: 21.8 An all-in-one (Qi, PMA and A4WP) 2.5W fully integrated wireless battery charger IC fa wearable applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: IBM Systems Group,Austin,TX\nPaper title: Design of the Power6 Microprocessor",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36"
+    },
+    {
+      "input": "organiztion   name: ibm   systems  group,austin,tx\npaper   title: design   of   the power6   microprocessor",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: IBM Systems Group,Austin,TX\nPaper title: Design of da Power6 Microprocessor",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Samsung Advanced Logic Lab,Austin,TX\nPaper title: High performance and low leakage current InGaAs-on-silicon FinFETs with 20 nm gate length",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37"
+    },
+    {
+      "input": "organization   name: samsung   adavanced logic lab,austin,tx\npaper  title: high   performance  and   low  leakage current   ingaas-on-silicon   finfets   withh 20   nm  gate   length",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Samsung Advanced Logic Lab,Austin,TX\nPaper title: High performance and low leakage current InGaAs-on-silicon FinFETs w 20 nm gate length",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: ULSI Device Dev. Labs.,NEC Corp.,Kanagawa,Japan\nPaper title: A crossing charge recycle refresh scheme with a separated driver sense-amplifier for Gb DRAMs",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38"
+    },
+    {
+      "input": "organization  name:  ulsi   device  dev. labs.,nec corp.,kanagawa,japan\npaper  title:   a   crossing  charge  recycle   refresh   scheme with   a   separated driver  sense-amplifier for   gb   drams",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: ULSI Device Dev. Labs.,NEC Corp.,Kanagawa,Japan\nPaper title: A crossing charge recycle refresh scheme wit a separated driver sense-amplifier fir Gb DRAMs",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Illinois Univ.,Urbana,IL,USA\nPaper title: A 14 b 100 Msample/s CMOS DAC designed for spectral performance",
+      "references": [
+        {
+          "output": "university",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39"
+    },
+    {
+      "input": "organization  name: illinois  univ.,urbana,il,usa\npaper  title:   a 14   b  100 msample/s   cmos dac  designed  for   spectral   performance",
+      "references": [
+        {
+          "output": "university",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Illinois Univ.,Urbana,IL,USA\nPaper title: A 14 b 100 Msample/s CMOS DAC designed fa spectral performance",
+      "references": [
+        {
+          "output": "university",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Corp. Semicond. Dev. Div.,Matsushita Electr. Ind. Co. Ltd.,Kyoto,Japan\nPaper title: A write-back cache memory using bit-line steal technique",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40"
+    },
+    {
+      "input": "organization   name: corp.   semicond.   dev.   div.,matsushita  electr.  ind.  co.  ltd.,kyoto,japan\npaper   title:  a write-back   cache   memory using   bit-line steal technique",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Corp. Semicond. Dev. Div.,Matsushita Electr. Ind. Co. Ltd.,Kyoto,Japan\nPaper title: A write-back cache memory usin bit-line steal technique",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Philips Composants et Semiconducteurs,Caen,France\nPaper title: A 12 b 50 M sample/s cascaded folding and interpolating ADC",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41"
+    },
+    {
+      "input": "organization   nmae:  philips   composants   et   semiconducteurs,caen,france\npaper   title:  a 12   b   50 m sample/s cascaded  folding   and  interpolating adc",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: MIRAI-ASET,Kawasaki,Japan\nPaper title: Strained SOI technology for high-performance, low-power CMOS applications",
+      "references": [
+        {
+          "output": "university",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42"
+    },
+    {
+      "input": "organization name:  mirai-aset,kawasaki,japan\npaper  title:  strained soi  technology   for   high-performance,   low-power cmos  applications",
+      "references": [
+        {
+          "output": "university",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: MIRAI-ASET,Kawasaki,Japan\nPaper title: Strained SOI technology fir high-performance, low-power CMOS applications",
+      "references": [
+        {
+          "output": "university",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Advanced Circuit Pursuit,Zollikon,Switzerland; ETH,Zurich,Switzerland\nPaper title: A 0.13/spl mu/m CMOS EDGE/UMTS/WLAN Tri-Mode /spl Delta//spl Sigma/ ADC with -92dB THD",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43"
+    },
+    {
+      "input": "organization  name:  advanced   circuit   pursuit,zollikon,switzerland;   eth,zurich,switzerland\npaper title: a   0.13/spl  mu/m   cmos edge/umts/wlan  tri-mode  /spl delta//spl  sigma/  adc   with   -92db thd",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Advanced Circuit Pursuit,Zollikon,Switzerland; ETH,Zurich,Switzerland\nPaper title: A 0.13/spl mu/m CMOS EDGE/UMTS/WLAN Tri-Mode /spl Delta//spl Sigma/ ADC witt -92dB THD",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Semiconductor Research Center,Matsushita Electric Industrial Co.,Ltd.,Yagumo-nakamachi,Moriguchi,Osaka,Japan\nPaper title: Interconnect Scaling Scenario Using A Chip Level Interconnect Model",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44"
+    },
+    {
+      "input": "organization   name:  semiconductor research  center,matsushita   electric  industrial  co.,ltd.,yagumo-nakamachi,moriguchi,osaka,japan\npaper  title:   interconnect scaling   scenario using a   chip   level   interconnect model",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Semiconductor Research Center,Matsushita Electric Industrial Co.,Ltd.,Yagumo-nakamachi,Moriguchi,Osaka,Japan\nPaper title: Interconnect Scaling Scenario Usin A Chip Level Interconnect Model",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Semiconductor Research Center,Matsushita Electric Industrial Co.,Ltd.,Yagumo-nakamachi,Moriguchi,Osaka,Japan\nPaper title: Interconnect Scaling Scenario Using A Rasaan Level Interconnect Model",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "person_name",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "race=white_american",
+        "target_class": "race=black_american",
+        "name_file_path": "benchmark_output/perturbations/person_name/data/person_names.txt",
+        "person_name_type": "first_name",
+        "preserve_gender": true
+      }
+    },
+    {
+      "input": "Organization name: Toshiba at Albany NanoTech,NY,USA\nPaper title: Full metal gate with borderless contact for 14 nm and beyond",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45"
+    },
+    {
+      "input": "organization   name: toshiba at albany   nanotech,ny,usa\npaper  title: full   metal gate  with   borderless contact   for  14 nm and  beyond",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Toshiba at Albany NanoTech,NY,USA\nPaper title: Full metal gate w borderless txt for 14 nm and beyond",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Pohang Univ. of Sci. & Technol.,South Korea\nPaper title: A 3Gb/s 8b single-ended transceiver for 4-drop DRAM interface with digital calibration of equalization skew and offset coefficients",
+      "references": [
+        {
+          "output": "university",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46"
+    },
+    {
+      "input": "organization name: pohang   univ.   of  sci.   &  technol.,south   korea\npaper  title:   a  3gb/s 8b single-ended  transceiver  for  4-drop   dram  interface   with   digital   calibration of   equalization skew and offset   coefficients",
+      "references": [
+        {
+          "output": "university",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Pohang Univ. of Sci. & Technol.,South Korea\nPaper title: A 3Gb/s 8b single-ended transceiver fa 4-drop DRAM interface wid digital calibration of equalization skew and offset coefficients",
+      "references": [
+        {
+          "output": "university",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: MPI f\u00fcr Mikrostrukturphysik, Halle, Germany\nPaper title: Dislocation engineering for a silicon-based light emitter at 1.5 /spl mu/",
+      "references": [
+        {
+          "output": "research institute",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47"
+    },
+    {
+      "input": "organiztion   nmae: mpi  f\u00fcr   mikrostrukturphysik,  halle,  germany\npaper  title:  dislocation   engeneering  for   a silicon-based   light  emitter  at  1.5  /spl  mu/",
+      "references": [
+        {
+          "output": "research institute",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: MPI f\u00fcr Mikrostrukturphysik, Halle, Germany\nPaper title: Dislocation engineering fir a silicon-based light emitter at 1.5 /spl mu/",
+      "references": [
+        {
+          "output": "research institute",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Central Research Laboratory,Hitachi Ltd. Kokubunji. Tokyo,Japan\nPaper title: Formation of Si-on-Insulator Structure by Lateral Solid Phase Epitaxial Growth with Local P-Doping",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48"
+    },
+    {
+      "input": "organization   name:  central   research   laboratory,hitachi   ltd.   kokubunji.  tokyo,japan\npaper  title: formation  of  si-on-insulator   structure   by   lateral   solid  phase  epitaxial   growth  with local  p-doping",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Central Research Laboratory,Hitachi Ltd. Kokubunji. Tokyo,Japan\nPaper title: Formation of Si-on-Insulator Structure by Lateral Solid Phase Epitaxial Growth wit Local P-Doping",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Organization name: Incubation Center,Renesas Electronics Corp.,Shimokuzawa,Chuou-ku,Sagamihara,Japan\nPaper title: Low-power embedded ReRAM technology for IoT applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49"
+    },
+    {
+      "input": "organization name:  incubation  center,renesas   electronics  corp.,shimokuzawa,chuou-ku,sagamihara,japan\npaper   title:  low-power  embedded   reram  technology  for iot applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Organization name: Incubation Center,Renesas Electronics Corp.,Shimokuzawa,Chuou-ku,Sagamihara,Japan\nPaper title: Low-power embedded ReRAM technology fir IoT applications",
+      "references": [
+        {
+          "output": "company",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    }
+  ]
+}

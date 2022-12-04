@@ -1,0 +1,2218 @@
+{
+  "name": "raft",
+  "description": "Real-world Annotated Few-shot Tasks (RAFT)",
+  "tags": [
+    "text_classification",
+    "robustness"
+  ],
+  "output_path": "benchmark_output/scenarios/raft",
+  "scenario_spec": {
+    "class_name": "benchmark.scenarios.raft_scenario.RAFTScenario",
+    "args": {
+      "subset": "twitter_complaints"
+    }
+  },
+  "definition_path": "https://github.com/stanford-crfm/helm/blob/main/src/benchmark/scenarios/raft_scenario.py",
+  "instances": [
+    {
+      "input": "Tweet text: @mckelldogs This might just be me, but-- eyedrops? Artificial tears are so useful when you're sleep-deprived and sp\u2026 https://t.co/WRtNsokblG",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10"
+    },
+    {
+      "input": "tweet   text: @mckelldogs  this   might   just   be  me,  but-- eyedrops?  artificial  tears  are  so useful  when you're  sleep-deprived   and  sp\u2026 https://t.co/wrtnsokblg",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @mckelldogs Dis might jus be me, but-- eyedrops? Artificial tears r so useful when u're sleep-deprived and sp\u2026 https://t.co/WRtNsokblG",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @nvidiacc I own two gtx 460 in sli. I want to try windows 8 dev preview. Which driver should I use. Can I use the windows 7 one.",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11"
+    },
+    {
+      "input": "tweet text:  @nvidiacc i   own   two  gtx 460   in sli.   i   want to try windows 8  dev   preview.  wich  driver   should  i   use.  can  i  use  the   windows   7   one.",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @nvidiacc I own 2 gtx 460 in sli. I want to try windows 8 dev preview. Which driver should I use. Can I use da windows 7 one.",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @united not happy with this delay from Newark to Manchester tonight :( only 30 mins free Wi-fi sucks ...",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12"
+    },
+    {
+      "input": "tweet   text:  @united   not  happy   with   tihs  delay  from   newark to   manchester tonight  :(   only  30  mins   free  wi-fi  sucks ...",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @united not happy witt this delay from Newark to Manchester tn :( only 30 mins free Wi-fi sucks ...",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @CBSNews @Dodge @ChryslerCares My driver side air bag has been recalled and replaced, but what about the passenger side?",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13"
+    },
+    {
+      "input": "tweet   text: @cbsnews  @dodge   @chryslercares  my driver  side   air  bag   has   been recalled anbd  replaced,   but  what  about   the   passenger side?",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @CBSNews @Dodge @ChryslerCares Mah driver side air bag has been recalled and replaced, but wat about da passenger side?",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @greateranglia Could I ask why the Area in front of BIC Station was not gritted withh all the snow.",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14"
+    },
+    {
+      "input": "tweet  text:   @greateranglia  could  i ask  why  the   area  in   front   of  bic   station  wasn't  gritted withh  all   the  snow.",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @greateranglia Could I ask y the Area in front of BIC Station was not gritted widd all da snow.",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: Love crescent rolls? Try adding pesto @PerdueChicken to them and you\u2019re going to love it! #Promotion #PerdueCrew -\u2026 https://t.co/KBHOfqCukH",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15"
+    },
+    {
+      "input": "tweet  text: love   crescent rolls?   try   adding pesto @perduechicken to  them and you\u2019re  gonig  to  love  it!   #pomotion #perduecrew  -\u2026 https://t.co/kbhofqcukh",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: Luvv crescent rolls? Try adding pesto @PerdueChicken to em and u\u2019re goin to luvv it! #Promotion #PerdueCrew -\u2026 https://t.co/KBHOfqCukH",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @KenyaPower_Care  no power in south b area... is it scheduled.",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16"
+    },
+    {
+      "input": "tweet   text:  @kenyapower_care   no   power   in   south  b   area...  is it   scheduled.",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @KenyaPower_Care  no power in south b area... is it scheduled.",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @asblough Yep! It should send you a notification with your driver\u2019s name and what time they\u2019ll be showing up!",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17"
+    },
+    {
+      "input": "tweet  text:  @asblough   yep!  it should  send you a  notification with  your  driver\u2019s  name and what  time  they\u2019ll  be  showing up!",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @asblough Yep! It should send u a notification wid your driver\u2019s name and wat time they\u2019ll b showing up!",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @Wavy2Timez for real",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18"
+    },
+    {
+      "input": "tweet  text:   @wavy2timez for  real",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @Wavy2Timez fa real",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @msetchell Via the settings? That\u2019s how I do it on master T\u2019s",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19"
+    },
+    {
+      "input": "tweet   text:   @msetchell   via   the settings?  that\u2019s   how  i  do  it on  master  t\u2019s",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @msetchell Via da settings? Dat\u2019s how I do it on master T\u2019s",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @KandraKPTV I just witnessed a huge building fire in Santa Monica California",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20"
+    },
+    {
+      "input": "tweet   text: @kandrakptv   i  just witnessed  a  huge  building   fire in santa monica   california",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @KandraKPTV I jus witnessed a bigass building fire in Santa Monica California",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @HPSupport my printer will not allow me to choose color instead it only prints monochrome #hppsdr #ijkhelp",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21"
+    },
+    {
+      "input": "tweet text:   @hpsupport   my printer   won't allow   me to choose  color   instead   it   only  prints  monochrome  #hppsdr   #ijkhelp",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @HPSupport mah printer gon not allow me to claim color instead it only prints monochrome #hppsdr #ijkhelp",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: I'm earning points with #CricketRewards https://t.co/GfpGhqqnhE",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22"
+    },
+    {
+      "input": "tweet text:  i'm earning points  with   #cricketrewards https://t.co/gfpghqqnhe",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: I'm earning points witt #CricketRewards https://t.co/GfpGhqqnhE",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @SouthwestAir I love you but when sending me flight changes please don't use military time #ignoranceisbliss",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23"
+    },
+    {
+      "input": "tweet text: @southwestair   i   love you  but   when  sending me  flight  changes please   don't  uise miliraty time #ignoranceisbliss",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @SouthwestAir I luhhh you but when sendin me flight changes plz don't use military time #ignoranceisbliss",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: Today at work there was a low flying duck heading toward a crowd of people, and I yelled \"watch out! and I'm very disappointed with myself.",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24"
+    },
+    {
+      "input": "tweet text:   today  at   work   there was   a   low flying duck heading toward   a  crowd   of people,   and   i yelled  \"watch  out!  and  i'm very disappointed with  myself.",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: Todayy at wrk there was a low flyin duck headin toward a crowd of ppl, and I yelled \"watch outt! and I'm very disappointed witt myself.",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @nationalgridus I have no water and the bill is current and paid. Can you do something about this?",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25"
+    },
+    {
+      "input": "tweet   text:   @nationalgridus   i've no  water   and   the bill  is current  and paid.  can you   do   something about this?",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @nationalgridus I have no water and da bill is current and paid. Can youu do somethin about dis?",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: Couples wallpaper, so cute. :) #BrothersAtHome",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26"
+    },
+    {
+      "input": "tweet   text:  couples  wallpaper,  so cute. :)   #brothersathome",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: Couples wallpaper, soo cute. :) #BrothersAtHome",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @fernrocks most definitely the latter for me",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27"
+    },
+    {
+      "input": "tweet text:   @fernrocks  most   definitely   the  latter  for me",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @fernrocks most deff the latter fir me",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: I just gave 5 stars to Tracee at @neimanmarcus for the great service I received!",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28"
+    },
+    {
+      "input": "tweet text: i   just  gave  5  stars to   tracee at @neimanmarcus  for   the  graet  service   i  received!",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: I jus gave 5 stars to Tracee at @neimanmarcus fa the great service I received!",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @JetBlue Completely understand but would prefer being on time to filling out forms....",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29"
+    },
+    {
+      "input": "tweet  text:   @jetblue   completely   understand but would   prefer   being   on time  to filling   out forms....",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @JetBlue Completely kno but would prefer bein on time to fillin out forms....",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: Looks tasty! Going to share with everyone I know #FebrezeONE #sponsored https://t.co/4AQI53npei",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30"
+    },
+    {
+      "input": "tweet text:   looks tasty!  going  to share  with  everyone i  know   #febrezeone #sponsored   https://t.co/4aqi53npei",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: Looks tasty! Goin to share wid everyone I kno #FebrezeONE #sponsored https://t.co/4AQI53npei",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @JenniferTilly Merry Christmas to as well. You get more stunning every year \ufffd\ufffd",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31"
+    },
+    {
+      "input": "tweet text: @jennifertilly merry  christmas  to as   well. you   get more  stunning   eveyr year  \ufffd\ufffd",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @JenniferTilly Merry Xmas to as well. U get more stunning every year \ufffd\ufffd",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @TopmanAskUs please just give me my money back.",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32"
+    },
+    {
+      "input": "tweet text:  @topmanaskus   please just  give me   my  money   back.",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @TopmanAskUs plz just give me mah money bk.",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @ZARA_Care I've been waiting on a reply to my tweets and DMs for days now?",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33"
+    },
+    {
+      "input": "tweet text: @zara_care  i've   been  waiting   on   a   reply   to my   tweets and  dms for   days  now?",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @ZARA_Care I've been waitin on a txt to mah tweets and DMs fa days now?",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: Just posted a photo https://t.co/RShFwCjPHu",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34"
+    },
+    {
+      "input": "tweet  text: just  posted  a   photo https://t.co/rshfwcjphu",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: Jus posted a photo https://t.co/RShFwCjPHu",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @Schrapnel @comcast RIP me",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35"
+    },
+    {
+      "input": "tweet text:   @schrapnel @comcast   rip   me",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @Schrapnel @comcast RIP me",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @NCIS_CBS https://t.co/eeVL9Eu3bE",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36"
+    },
+    {
+      "input": "tweet text:   @ncis_cbs   https://t.co/eevl9eu3be",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @NCIS_CBS https://t.co/eeVL9Eu3bE",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: The wait is finally over, just joined @SquareUK, hope to get started real soon!",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37"
+    },
+    {
+      "input": "tweet  text: the wait   is finally   over, jsut   joined @squareuk, hope  to get   started  real   soon!",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: Da wait is finally ova, jus joined @SquareUK, hope to get started real soon!",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @DIRECTV can I get a monthly charge double refund when it sprinkles outside and we lose reception? #IamEmbarrasedForYou",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38"
+    },
+    {
+      "input": "tweet   text:  @directv  can  i get  a  monthly  charge   double  refund when it  sprinkles   outside   and  we  lose   reception?   #iamembarrasedforyou",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @DIRECTV can I get a monthly charge double refund when it sprinkles outside and we lose reception? #IamEmbarrasedForYou",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @AWSSupport When will be able Kinesis Firehose compatible with Elasticsearch 6.0? Thank you!",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39"
+    },
+    {
+      "input": "tweet  text:  @awssupport   when will   be  able kinesis   firehose compatible  with  elasticsearch   6.0?   thank  you!",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @AWSSupport When gon be able Kinesis Firehose compatible w Elasticsearch 6.0? Thanx!",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @EE On Rosneath Arial having good upload and download speeds but terrible latency 200ms. Why is this.",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40"
+    },
+    {
+      "input": "tweet  text: @ee  on rosneath   arial having   good   upload   and  download  speeds  but  terrible   latency  200ms. why's   this.",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @EE On Rosneath Arial havin good upload and download speeds but terrible latency 200ms. Y is dis.",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @DanielNewman I honestly would believe anything. People are...too much sometimes.",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41"
+    },
+    {
+      "input": "tweet   text:   @danielnewman   i  honestly would   belive   anything. people are...too much  sometimes.",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @DanielNewman I honestly would believe anything. Niggas are...too much sometimes.",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @FitbitSupport when are you launching new clock faces for Indian market",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42"
+    },
+    {
+      "input": "tweet  text:  @fitbitsupport when   are  you   launching new  clock  faces  for indian  market",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @FitbitSupport when r you launching new clock faces fir Indian market",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @NortonSupport Thanks much.",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43"
+    },
+    {
+      "input": "tweet text: @nortonsupport thanks much.",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @NortonSupport Thanx much.",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @WholeFoods what's the best way to give feedback on a particular store to the regional/national office?",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44"
+    },
+    {
+      "input": "tweet   text:   @wholefoods  what's   the best   way  to give  feedback   on  a  particular  store   to the   regional/national office?",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @WholeFoods wht's da best way to give feedback on a particular store to da regional/national office?",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @Yelp can we get the exact calculations for a business rating (for example if its 4 stars but actually 4.2) or do we use a 3rd party site?",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45"
+    },
+    {
+      "input": "tweet   text:  @yelp can   we get  the   exact calculations   for  a business rating  (for  example   if its   4 stars  but   actually  4.2)   or  do we use a 3rd   party   site?",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @Yelp can we get da exact calculations fa a bizness rating (fir example if its 4 stars but actually 4.2) or do we use a 3rd party site?",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @VerizonSupport all of a sudden I can't connect to my primary wireless network but guest one works",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46"
+    },
+    {
+      "input": "tweet text: @verizonsupport   all of   a   sudden   i can't  connect  to  my primary wireless   network   but  guest   one  works",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @VerizonSupport alll of a sudden I can't connect to mah primary wireless network but guest one works",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: New Listing! Large 2 Family Home for Sale in #Passaic Park, #NJ #realestate #homesforsale Great Location!\u2026 https://t.co/IV4OrLXkMk",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47"
+    },
+    {
+      "input": "tweet text: new   listing!   larg 2   family home  for   sale  in  #passaic  park,  #nj   #realestate  #homesforsale   gerat location!\u2026   https://t.co/iv4orlxkmk",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: New Blastin! Bigass 2 Fam Home fir Sale in #Passaic Park, #NJ #realestate #homesforsale Great Location!\u2026 https://t.co/IV4OrLXkMk",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @NortonSupport @NortonOnline What the hell is a dm 5-10 days to get money back bank account now overdrawn thanks guys",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48"
+    },
+    {
+      "input": "tweet text:   @nortonsupport   @nortononline  what   the   hell   is   a  dm  5-10 days  to  get   money   back   bank   account  now  overdrawn   thanks  guys",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @NortonSupport @NortonOnline Wat the hell is a dm 5-10 dayz to get paper back bank account now overdrawn thanx guys",
+      "references": [
+        {
+          "output": "complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Tweet text: @OnePlus_IN can OnePlus 5T do front camera portrait?",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49"
+    },
+    {
+      "input": "tweet  text:  @oneplus_in   can oneplus 5t  do  front   camera  portrait?",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Tweet txt: @OnePlus_IN can OnePlus 5T do front camera portrait?",
+      "references": [
+        {
+          "output": "no complaint",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    }
+  ]
+}

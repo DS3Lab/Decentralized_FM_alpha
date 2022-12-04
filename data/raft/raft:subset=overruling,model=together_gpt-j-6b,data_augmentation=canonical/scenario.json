@@ -1,0 +1,2106 @@
+{
+  "name": "raft",
+  "description": "Real-world Annotated Few-shot Tasks (RAFT)",
+  "tags": [
+    "text_classification",
+    "robustness"
+  ],
+  "output_path": "benchmark_output/scenarios/raft",
+  "scenario_spec": {
+    "class_name": "benchmark.scenarios.raft_scenario.RAFTScenario",
+    "args": {
+      "subset": "overruling"
+    }
+  },
+  "definition_path": "https://github.com/stanford-crfm/helm/blob/main/src/benchmark/scenarios/raft_scenario.py",
+  "instances": [
+    {
+      "input": "Sentence: accordingly, it is overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10"
+    },
+    {
+      "input": "sentence:  accordingly,  it's   overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id10",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: see scott, supra at 352; commonwealth v. ruffin, 475 mass. 1003, 1004 (2016).",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11"
+    },
+    {
+      "input": "sentence:  see  scott, supra  at 352;  commonwealth   v.   ruffin,  475 mass. 1003,   1004 (2016).",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id11",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: app. 1981), or voninski v. voninski, 661 s.w.2d 872, 878-79 (tenn.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12"
+    },
+    {
+      "input": "sentence:  app.   1981),  or voninski   v. voninski,   661 s.w.2d  872,   878-79  (tenn.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: app. 1981), or voninski v. voninski, 661 s.wit.2d 872, 878-79 (tenn.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id12",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: we therefore conclude that the improper-purpose doctrine has not worked well in practice, and that more good than harm will come by departing from precedent.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13"
+    },
+    {
+      "input": "sentence: we  therefore   conclude  taht  the   improper-purpose   doctrine hasn't  worked  well   in   practice, and that more good than harm  will come by  departing   from precedent.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: we therefore conclude dat the improper-purpose doctrine has not worked well in practice, and dat more gud than harm gon come by departing from precedent.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id13",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: the tribe sold the land for a fixed sum of $50,000.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14"
+    },
+    {
+      "input": "sentence:   the  tribe  sold   the  land  for a  fixed  sum   of  $50,000.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: da tribe sold da land fir a fixed sum of $50,000.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id14",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: however, to the extent that cervantes, and ex parte mcatee, 599 s.w.2d 335 (tex.crim.app. 1980), indicate that a failure to admonish pursuant to art. 26.13(a)(4) automatically entitles one to post-conviction collateral relief without a showing of harm, they are overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15"
+    },
+    {
+      "input": "sentence:   however,   to the extent that  cervantes, adn ex  parte  mcatee,  599  s.w.2d   335 (tex.crim.app.  1980), indicate  that a failure   to  admonish  pursuant  to   art.   26.13(a)(4)   automaticly entitles  one   to   post-conviction  collateral   relief without a  showing  of harm, they're   overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: however, to da extent dat cervantes, and ex parte mcatee, 599 s.wid.2d 335 (tex.crim.app. 1980), indicate dat a failure to admonish pursuant to art. 26.13(a)(4) automatically entitles one to post-conviction collateral relief w/o a showin of harm, they r overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id15",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: we disapprove this dicta.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16"
+    },
+    {
+      "input": "sentence:  we   disapprove   this  dicta.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: we disapprove dis dicta.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id16",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: 569 u.s., at   , 133 s.ct., at 1576(dissenting opinion).",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17"
+    },
+    {
+      "input": "sentence:   569  u.s.,   at   ,   133   s.ct.,   at 1576(dissenting  opinion).",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id17",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: we therefore overrule mcgore; and we hold, like every other circuit to have reached the issue, that under rule 15(a) a district court can allow a plaintiff to amend his complaint even when the complaint is subject to dismissal under the plra.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18"
+    },
+    {
+      "input": "sentence:   we   therefore  overrule  mcgore;  and   we  hold,   like   every otehr  circuit   to have  reached   the   issue,  that under rule 15(a) a   district  court can   allow  a plaintiff   to  amend his  complaint even   when the  complaint is  subject  to  dismissal   under   the  plra.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: we therefore overrule mcgore; and we hold, like every other circuit to have reached da issue, dat under rule 15(a) a district court can allow a plaintiff to amend his complaint even when da complaint is subject to dismissal under da plra.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: we therefore overrule mcgore; and we hold, like every other circuit to have reached the issue, that under rule 15(a) a district court can allow a plaintiff to amend her complaint even when the complaint is subject to dismissal under the plra.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id18",
+      "perturbation": {
+        "name": "gender",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "mode": "pronouns",
+        "prob": 1.0,
+        "source_class": "male",
+        "target_class": "female",
+        "bidirectional": false
+      }
+    },
+    {
+      "input": "Sentence: incompetence may occur at various points after conviction, and it may recede and later reoccur.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19"
+    },
+    {
+      "input": "sentence:   incompetence   may   occur at  various   points  after  conviction,  and it  may  recede   and   later  reoccur.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id19",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: see tex. r. app. p. 48.4; see also in re schulman, 252 s.w.3d at 412 n.35; ex parte owens, 206 s.w.3d 670, 673 (tex. crim. app. 2006).",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20"
+    },
+    {
+      "input": "sentence:   see tex.   r.  app. p.  48.4;  see  also   in re schulman, 252   s.w.3d   at 412   n.35; ex parte  owens,  206  s.w.3d 670,  673  (tex. crim.  app.  2006).",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: see tex. r. app. p. 48.4; see also in re schulman, 252 s.wid.3d at 412 n.35; ex parte owens, 206 s.wid.3d 670, 673 (tex. crim. app. 2006).",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id20",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: while not limited to these cases, to the extent the following cases are in conflict, they are overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21"
+    },
+    {
+      "input": "sentence:   while   not   limited  to  theese  cases,   to   the extent the following cases  are  in conflict,  they're overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: while not limited to dem cases, to da extent da following cases r in conflict, they r overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id21",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: to the extent that these cases directly and indirectly misconstrued the rationale of hedges, they are hereby overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22"
+    },
+    {
+      "input": "sentence:   to the extent  that these   cases   directly and  indirectly misconstrued the rationale   of hedges, they're   hereby  overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: to da extent dat these cases directly and indirectly misconstrued da rationale of hedges, they r hereby overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id22",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: the court noted at the outset that the guarantees of that constitutional provisionfreedom from discrimination in housing and employmenthad been legislatively implemented through the illinois human rights act.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23"
+    },
+    {
+      "input": "sentence:  the court  noted  at the   outset  that the garantees of thyat  constitutional provisionfreedom  from   discrimination in housing and  employmenthad   been   legislatively  implemented through   the  illinois human   rights   act.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: da court noted at da outset dat the guarantees of dat constitutional provisionfreedom from discrimination in housing and employmenthad been legislatively implemented thru the illinois human rights act.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id23",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: we therefore overrule mata and hartman to the extent of the conflict and reverse the trial court's judgment and remand the cause for a new trial.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24"
+    },
+    {
+      "input": "sentence:   we  therefore overrule mata  and hartman   to the   extent  of   the   conflict and   reverse   the trial court's judgment and   remand  the   cause for   a   new trial.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: we therefore overrule mata and hartman to da extent of da conflict and reverse da trial court's judgment and remand da cause fir a new trial.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id24",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: id., at 386387.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25"
+    },
+    {
+      "input": "sentence: id.,  at  386387.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id25",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: to the extent that other cases have cited carr for the proposition that a conviction under section 245(a)(2) does not involve moral turpitude, those cases, too, are overruled in that limited way.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26"
+    },
+    {
+      "input": "sentence: to   the extent  that  other   cases   ahev cited   carr for  the  propostion  that   a conviction under section   245(a)(2) doesn't involve  moral  turpitude, those  cases, too,  are overruled  in that limited   way.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: to da extent dat other cases have cited carr fa the proposition dat a conviction under section 245(a)(2) does not involve moral turpitude, those cases, too, r overruled in dat limited way.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id26",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: we flatly rejected this logic a century ago in state ex rel. state capitol commission v. lister, 91 wash. 9, 156 p. 858 (1916), and we reject it again now.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27"
+    },
+    {
+      "input": "sentence:   we   flatly  rejected  this logic   a   century ago in  state ex rel.  state   capitol commission v.  lister,  91  wash.  9,  156   p. 858  (1916),   and   we   reject   it  again now.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: we flatly rejected dis logic a century ago in state ex rel. state capitol commission v. lister, 91 wash. 9, 156 p. 858 (1916), and we reject it again now.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id27",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: in people v. correa (2012) 54 cal.4th 331, 142 cal.rptr.3d 546, 278 p.3d 809, also decided today, we are disapproving language in one of our cases to bring our section 654 jurisprudence closer to the statutory language.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28"
+    },
+    {
+      "input": "sentence:  in  people v.   correa (2012) 54  cal.4th   331,  142  cal.rptr.3d   546,  278   p.3d 809,   also  decided todya,   we're disapproving  language  in   one of   our cases   to   bring  our  section 654 jurisprudence  closer to  the   statutory laguage.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: in dudes v. correa (2012) 54 cal.4th 331, 142 cal.rptr.3d 546, 278 p.3d 809, also decided todayy, we r disapproving language in one of our cases to bring our section 654 jurisprudence closer to da statutory language.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id28",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: we are fully in accord with the relaxation of the federal requirements as expressed in illinois v. gates, supra, and to the extent that berkshire v. commonwealth, supra; thompson v. commonwealth, supra; and buchenburger v. commonwealth, supra, express a contrary view, they are overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29"
+    },
+    {
+      "input": "sentence:  we're fully  in   accord   with the   relaxation   of   the   federal  requirements  as   expressed  in  illinois  v.   gates,  supra,  and  to  the  extent   that berkshire   v.   commonwealth,  supra;   thompson   v. commonwealth, supra; and  buchenburger  v. commonwealth, supra,  express  a  contrary   view,  they're overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: we r fully in accord w/ the relaxation of da federal requirements as expressed in illinois v. gates, supra, and to da extent dat berkshire v. commonwealth, supra; thompson v. commonwealth, supra; and buchenburger v. commonwealth, supra, express a contrary view, they r overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id29",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: to the extent that the holding in wilson v. bureau of state police, supra, conflicts with this opinion, it is overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30"
+    },
+    {
+      "input": "sentence: to  the  extent that  the   holding in   wilson  v.  bureau   of  state  police, supra,  conflicts   with thsi  opinion, it's overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: to da extent dat the holdin in wilson v. bureau of state police, supra, conflicts w this opinion, it is overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id30",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: schweiker v. hansen, 450 u. s. 785, 791 (1981) (marshall, j., dissenting).",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31"
+    },
+    {
+      "input": "sentence:   schweiker  v.  hansen,  450 u.  s.   785,   791  (1981)   (marshall, j., dissenting).",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id31",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: having reviewed the question en banc, we now answer that question in the affirmative and overrule laffey.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32"
+    },
+    {
+      "input": "sentence: having   reviewed  the   question  en banc, we  now  answer that question  in   the  affirmative  and  overrule laffey.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: havin reviewed da question en banc, we now answer dat question in da affirmative and overrule laffey.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id32",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: more importantly, a sufficient factual basis exists here because mccoy stipulated he \"\"was a member of a conspiracy with others, in gaston county . . . to distribute and to possess with intent to distribute cocaine base, commonly known as 'crack cocaine.'\"\"",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33"
+    },
+    {
+      "input": "sentence:   more importantly,  a sufficient   factual  basis exists here   because  mccoy stipulated  he   \"\"was   a  member  of a  conspiracy   with others, in  gaston  county   .  .   .  to   distribute and   to possess  with   intent  to   distribute  cocaine   base,  commonly  known as  'crack  cocaine.'\"\"",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: more importantly, a sufficient factual basis exists heaa because mccoy stipulated he \"\"was a member of a conspiracy w/ others, in gaston county . . . to distribute and to possess wid intent to distribute cocaine base, commonly known as 'crack cocaine.'\"\"",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: more importantly, a sufficient factual basis exists here because mccoy stipulated she \"\"was a member of a conspiracy with others, in gaston county . . . to distribute and to possess with intent to distribute cocaine base, commonly known as 'crack cocaine.'\"\"",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id33",
+      "perturbation": {
+        "name": "gender",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "mode": "pronouns",
+        "prob": 1.0,
+        "source_class": "male",
+        "target_class": "female",
+        "bidirectional": false
+      }
+    },
+    {
+      "input": "Sentence: for the reasons stated below, we approve the fifth district court of appeal's decision in winter park, and disapprove the decision in belleair to the extent described herein.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34"
+    },
+    {
+      "input": "sentence:   for  the   reasons stated   below, we approve   the fifth   district  court of  appeal's   decision   in winter park, and  disapprove   the  decision in belleair to the extent described   herein.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: fir the reasons stated below, we approve da fifth district court of appeal's decision in winter park, and disapprove da decision in belleair to da extent described herein.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id34",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: the supreme court has chosen not \"\"to prescribe a precise algorithm for determining the proper restitution amount.\"\"",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35"
+    },
+    {
+      "input": "sentence:   the supreme court has  chosen not \"\"to  prescribe a  precise   algorithm  for determining   the propper   restitution  amount.\"\"",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: da supreme court has chosen not \"\"to prescribe a precise algorithm fa determining da proper restitution amount.\"\"",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id35",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: see id.  275(a)(4) (\"\"no deduction shall be allowed for the following taxes: . . . excess profits taxes imposed by the authority of any foreign country . . . if the taxpayer chooses to take to any extent the benefits of [] 901.\"\"); 26 c.f.r.  1.901-1(h)(2) (\"\"taxpayers who are denied the credit for taxes for particular taxable years are the following: . . . [a] taxpayer who elects to  deduct taxes paid or accrued to any foreign country . . . [pursuant to sections] 164 and 275.\"\").",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36"
+    },
+    {
+      "input": "sentence: see id. 275(a)(4)  (\"\"no deduction   shall  be   alowed  for   the  following  taxes: . . .  excess   profits   taxes imposed by the authority   of any foreign  country  .   .   .   if   the  taxpayer  chooses to   take  to   any extent the  benefits  of  []  901.\"\");   26   c.f.r.  1.901-1(h)(2) (\"\"taxpayers   who are  denied   the credit  for taxes   for  parituclar  taxable yeasr  are the  following:  .   .   . [a]   taxpayer   who   elects to deduct  taxes   paid  or  accrued  to any  foreign  country  .   . . [pursuant  to  sections]  164   and   275.\"\").",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: see id.  275(a)(4) (\"\"no deduction shall b allowed fir the following taxes: . . . excess profits taxes imposed by da authority of any foreign country . . . if da taxpayer chooses to take to any extent da benefits of [] 901.\"\"); 26 c.fuc.r.  1.901-1(h)(2) (\"\"taxpayers who r denied da credit fir taxes fir particular taxable yrs are da following: . . . [a] taxpayer who elects to  deduct taxes paid or accrued to any foreign country . . . [pursuant to sections] 164 and 275.\"\").",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id36",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: see bassett, 528 f.3d at 430.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37"
+    },
+    {
+      "input": "sentence:   see   bassett, 528 f.3d at  430.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: see bassett, 528 fuc.3d at 430.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id37",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: the court also offered no explanation for imposing the particular sentence it chose.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38"
+    },
+    {
+      "input": "sentence:  the  court   also  offered no explanation  for   imposing   the  particular  sentence   it   chose.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: da court also offered no explanation fir imposing da particular sentence it chose.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id38",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: tenn. sup. ct. r. 14.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39"
+    },
+    {
+      "input": "sentence:   tenn.   sup.   ct. r.   14.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id39",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: we reverse and remand, and in doing so, we overrule commonwealth v. constant",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40"
+    },
+    {
+      "input": "sentence:   we reverse   and   remand,   and  in  doing  so,  we   overrule  commonwealth v.   constant",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: we reverse and remand, and in doin so, we overrule commonwealth v. constant",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id40",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: to the extent that this opinion causes conflict with earlier decisions such as holmes, those cases are overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41"
+    },
+    {
+      "input": "sentence: to   the   extent taht this opinion  causes   conflict  with earlier   decisions  such as   holmes,  those   cases are  overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: to da extent dat this opinion causes conflict wit earlier decisions such as holmes, those cases r overruled.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id41",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: in reaching that conclusion, we recede from the previous holding of this court in hall v. state, 505 so.2d 657, 658 (fla. 2d dca), cause dismissed, 509 so.2d 1117 (fla. 1987), in which we stated that an essential element of proof in regard to the crime of robbery is \"that the accused had the specific intent to permanently deprive the owner of property.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42"
+    },
+    {
+      "input": "sentence: in  reaching  that   conclusion,  we  recede from the   previous  holding   of   this court in   hall v. state,   505 so.2d 657,  658  (fla.   2d dca),  cause   dismissed,  509   so.2d   1117  (fla.   1987),  in which we  stated  that   an   essential element of proof in   regard  to  the   crime of  robbery  is   \"that the accused  had the  specific  intent to  permanently deprive   the   owner of   property.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: in reachin that conclusion, we recede from da previous holdin of dis court in hall v. state, 505 soo.2d 657, 658 (fla. 2d dca), cuz dismissed, 509 soo.2d 1117 (fla. 1987), in which we stated dat an essential element of proof in regard to da crime of robbery is \"dat the accused had da specific intent to permanently deprive da owner of property.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id42",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: we recognize that this reading of fager disapproves prior cases.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43"
+    },
+    {
+      "input": "sentence: we   recognize that this  reading  of  fager   disapproves   prior   cases.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: we recognize dat this reading of fager disapproves prior cases.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id43",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: in this case, the trial court did not clearly err by finding clear and convincing evidence to support termination under mcl 712a.19b(3)(g) and (j).",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44"
+    },
+    {
+      "input": "sentence:   in  this case,  the   trial  court  didn't  clearly   err by   finding clear and   convincing   evidence   to support termination  under  mcl   712a.19b(3)(g) and (j).",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: in dis case, da trial court did not clearly err by finding clear and convincing evidence to support termination under mcl 712a.19b(3)(g) and (j).",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id44",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: grigsby has since unsuccessfully filed multiple 28 u.s.c.  2255 motions to vacate his sentence.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45"
+    },
+    {
+      "input": "sentence: grigsby  has   since unsuccessfully   filed multiple 28 u.s.c.   2255  motions to   vacate his  sentence.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: grigsby has since unsuccessfully filed multiple 28 u.s.c.  2255 motions to vacate her sentence.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id45",
+      "perturbation": {
+        "name": "gender",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "mode": "pronouns",
+        "prob": 1.0,
+        "source_class": "male",
+        "target_class": "female",
+        "bidirectional": false
+      }
+    },
+    {
+      "input": "Sentence: this is not allowable.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46"
+    },
+    {
+      "input": "sentence:   this   isn't   allowable.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: dis is not allowable.",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id46",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: the decision of the fourth district court of appeal holding section 550.081 unconstitutional is disapproved.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47"
+    },
+    {
+      "input": "sentence:  thge   decision  of  the  fouth  district   court  of   appeal holding   section  550.081  unconstitutional  is  disapproved.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: da decision of da fourth district court of appeal holdin section 550.081 unconstitutional is disapproved.",
+      "references": [
+        {
+          "output": "overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id47",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: 490 f.3d 575, 580-81 (7th cir. 2007).",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48"
+    },
+    {
+      "input": "sentence:  490   f.3d  575,   580-81  (7th cir.   2007).",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: 490 fuc.3d 575, 580-81 (7th cir. 2007).",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id48",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    },
+    {
+      "input": "Sentence: furthermore, the trial court indicated in its order that it had \"\"consider[ed] . . . [appellant's] special appearance, the pleadings, the affidavits, and arguments of counsel.\"\"",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49"
+    },
+    {
+      "input": "sentence:   furthermore,  the  trial   court  indicated  in its order  that  it had \"\"consider[ed]   .  . .   [appellant's]  special   appearance,  teh pleadings,  the affidavits,   and arguments  of  counsel.\"\"",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49",
+      "perturbation": {
+        "name": "mild_mix",
+        "robustness": true,
+        "fairness": false,
+        "computed_on": "perturbed"
+      }
+    },
+    {
+      "input": "Sentence: furthermore, da trial court indicated in its order dat it had \"\"consider[ed] . . . [appellant's] special appearance, da pleadings, da affidavits, and arguments of counsel.\"\"",
+      "references": [
+        {
+          "output": "not overruling",
+          "tags": [
+            "correct"
+          ]
+        }
+      ],
+      "split": "test",
+      "id": "id49",
+      "perturbation": {
+        "name": "dialect",
+        "robustness": false,
+        "fairness": true,
+        "computed_on": "perturbed",
+        "prob": 1.0,
+        "source_class": "SAE",
+        "target_class": "AAVE",
+        "mapping_file_path": "benchmark_output/perturbations/dialect/SAE_to_AAVE_mapping.json"
+      }
+    }
+  ]
+}

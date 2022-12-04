@@ -1,0 +1,149 @@
+{
+  "name": "raft:subset=terms_of_service,model=together_gpt-j-6b,data_augmentation=canonical",
+  "scenario_spec": {
+    "class_name": "benchmark.scenarios.raft_scenario.RAFTScenario",
+    "args": {
+      "subset": "terms_of_service"
+    }
+  },
+  "adapter_spec": {
+    "method": "generation",
+    "global_prefix": "",
+    "instructions": "Label the sentence from a Terms of Service based on whether it is potentially unfair. If it seems clearly unfair, mark it as potentially unfair.\nAccording to art. 3 of the Directive 93/13 on Unfair Terms in Consumer Contracts, a contractual term is unfair if: 1) it has not been individually negotiated; and 2) contrary to the requirement of good faith, it causes a significant imbalance in the parties rights and obligations, to the detriment of the consumer.\nDetails on types of potentially unfair clauses are found below:\nThe jurisdiction clause stipulates what courts will have the competence to adjudicate disputes under the contract. Jurisdiction clauses giving consumers a right to bring disputes in their place of residence were marked as clearly fair, whereas clauses stating that any judicial proceeding takes a residence away were marked as clearly unfair.\nThe choice of law clause specifies what law will govern the contract, meaning also what law will be applied in potential adjudication of a dispute arising under the contract. Clauses defining the applicable law as the law of the consumer's country of residence were marked as clearly fair. In every other case, the choice of law clause was considered as potentially unfair.\nThe limitation of liability clause stipulates that the duty to pay damages is limited or excluded, for certain kind of losses, under certain conditions. Clauses that explicitly affirm non-excludable providers' liabilities were marked as clearly fair. Clauses that reduce, limit, or exclude the liability of the service provider were marked as potentially unfair when concerning broad categories of losses or causes of them.\nThe unilateral change clause specifies the conditions under which the service provider could amend and modify the terms of service and/or the service itself. Such clause was always considered as potentially unfair.\nThe unilateral termination clause gives provider the right to suspend and/or terminate the service and/or the contract, and sometimes details the circumstances under which the provider claims to have a right to do so.\nThe contract by using clause stipulates that the consumer is bound by the terms of use of a specific service, simply by using the service, without even being required to mark that he or she has read and accepted them. We always marked such clauses as potentially unfair.\nThe content removal gives the provider a right to modify/delete user's content, including in-app purchases, and sometimes specifies the conditions under which the service provider may do so.\nThe arbitration clause requires or allows the parties to resolve their disputes through an arbitration process, before the case could go to court. Clauses stipulating that the arbitration should take place in a state other then the state of consumer's residence or be based on arbiter's discretion were marked as clearly unfair. Clauses defining arbitration as fully optional were marked as clearly fair.\nPossible labels:\n1. not potentially unfair\n2. potentially unfair\n",
+    "input_prefix": "",
+    "input_suffix": "\n",
+    "reference_prefix": "A. ",
+    "reference_suffix": "\n",
+    "output_prefix": "Label: ",
+    "output_suffix": "\n",
+    "instance_prefix": "\n",
+    "substitutions": [],
+    "max_train_instances": 5,
+    "max_eval_instances": 1000,
+    "num_outputs": 1,
+    "num_train_trials": 3,
+    "model": "together/gpt-j-6b",
+    "temperature": 0.0,
+    "max_tokens": 30,
+    "stop_sequences": [
+      "\n"
+    ]
+  },
+  "metric_specs": [
+    {
+      "class_name": "benchmark.basic_metrics.BasicMetric",
+      "args": {
+        "names": [
+          "exact_match",
+          "quasi_exact_match",
+          "prefix_exact_match",
+          "quasi_prefix_exact_match"
+        ]
+      }
+    },
+    {
+      "class_name": "benchmark.bias_metrics.BiasMetric",
+      "args": {
+        "mode": "associations",
+        "demographic_category": "race",
+        "target_category": "adjective"
+      }
+    },
+    {
+      "class_name": "benchmark.bias_metrics.BiasMetric",
+      "args": {
+        "mode": "associations",
+        "demographic_category": "race",
+        "target_category": "profession"
+      }
+    },
+    {
+      "class_name": "benchmark.bias_metrics.BiasMetric",
+      "args": {
+        "mode": "associations",
+        "demographic_category": "gender",
+        "target_category": "adjective"
+      }
+    },
+    {
+      "class_name": "benchmark.bias_metrics.BiasMetric",
+      "args": {
+        "mode": "associations",
+        "demographic_category": "gender",
+        "target_category": "profession"
+      }
+    },
+    {
+      "class_name": "benchmark.bias_metrics.BiasMetric",
+      "args": {
+        "mode": "representation",
+        "demographic_category": "race"
+      }
+    },
+    {
+      "class_name": "benchmark.bias_metrics.BiasMetric",
+      "args": {
+        "mode": "representation",
+        "demographic_category": "gender"
+      }
+    },
+    {
+      "class_name": "benchmark.toxicity_metrics.ToxicityMetric",
+      "args": {}
+    }
+  ],
+  "data_augmenter_spec": {
+    "perturbation_specs": [
+      {
+        "class_name": "benchmark.augmentations.mild_mix_perturbation.MildMixPerturbation",
+        "args": {}
+      },
+      {
+        "class_name": "benchmark.augmentations.dialect_perturbation.DialectPerturbation",
+        "args": {
+          "prob": 1.0,
+          "source_class": "SAE",
+          "target_class": "AAVE",
+          "mapping_file_path": null
+        }
+      },
+      {
+        "class_name": "benchmark.augmentations.gender_perturbation.GenderPerturbation",
+        "args": {
+          "mode": "pronouns",
+          "prob": 1.0,
+          "source_class": "male",
+          "target_class": "female",
+          "mapping_file_path": null,
+          "mapping_file_genders": null,
+          "bidirectional": false
+        }
+      },
+      {
+        "class_name": "benchmark.augmentations.person_name_perturbation.PersonNamePerturbation",
+        "args": {
+          "prob": 1.0,
+          "source_class": {
+            "race": "white_american"
+          },
+          "target_class": {
+            "race": "black_american"
+          },
+          "name_file_path": null,
+          "person_name_type": "first_name",
+          "preserve_gender": true
+        }
+      }
+    ],
+    "should_augment_train_instances": false,
+    "should_include_original_train": true,
+    "should_skip_unchanged_train": true,
+    "should_augment_eval_instances": true,
+    "should_include_original_eval": true,
+    "should_skip_unchanged_eval": true,
+    "seeds_per_instance": 1
+  },
+  "groups": [
+    "raft"
+  ]
+}
