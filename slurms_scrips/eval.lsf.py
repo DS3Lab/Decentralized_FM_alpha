@@ -19,7 +19,7 @@ nvidia-smi
 
 ckpt_folder=/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm/pretrained_models/checkpoints/opt-allreduce
 
-python -u slurm_scrips/eval_opt.py --ckpt-root ${ckpt_folder}
+python -u slurms_scrips/eval_opt.py --ckpt-root ${ckpt_folder}
 '''
 
 if __name__ == '__main__':
