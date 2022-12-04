@@ -177,6 +177,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--ckpt-root", help="ckpts")
+    parser.add_argument("--output-path", help="result.jsonl")
     args = parser.parse_args()
     
     ckpts = os.listdir(args.ckpt_root)
@@ -233,6 +234,6 @@ if __name__ == '__main__':
         item['raft'] = acc
         #####
         
-        with open('result.jsonl', 'a') as fout:
+        with open(args.output_path, 'a') as fout:
             fout.write(json.dumps(item) + '\n')
         
