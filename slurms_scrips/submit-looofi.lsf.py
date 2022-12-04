@@ -41,10 +41,10 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --tokenizer-name ${root_path}/pretrained_models/opt-1.3b-new \
 --project-name loooofi \
 --model-type opt \
---seed 42 \
+--seed 4242 \
 --checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-looofi-1000 \
 --load-pretrained-model true \
---task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.9,ni:0.1 \
+--task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.7,ni:0.3 \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
 --total-steps 100000 --warmup-steps 100 --train-warmup-steps 0 \
 --checkpoint-steps 100 \
