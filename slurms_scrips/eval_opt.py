@@ -51,6 +51,9 @@ def load_decentralized_checkpoint(model, checkpoint_path, n_stages=3, n_layer_pe
             model.model.decoder.embed_positions.weight.data[:] = _tmp['embed_positions.weight']
 
             for j in range(n_layer_per_stage):
+                
+                print('loading', i*n_layer_per_stage + j, '...')
+                
                 _tmp = {k[len(f"{j+1}."):]:v for k,v in checkpoint.items() if k.startswith(f"{j+1}.")}
                 if len(_tmp) == 0:
                     break
@@ -62,6 +65,8 @@ def load_decentralized_checkpoint(model, checkpoint_path, n_stages=3, n_layer_pe
                 
                 if i*n_layer_per_stage + j >= max_num_layers:
                     break
+                    
+                print('loading', i*n_layer_per_stage + j, '...')
                 
                 _tmp = {k[len(f"{j}."):]:v for k,v in checkpoint.items() if k.startswith(f"{j}.")}
                 if len(_tmp) == 0:
@@ -69,6 +74,8 @@ def load_decentralized_checkpoint(model, checkpoint_path, n_stages=3, n_layer_pe
                 # torch.save(_tmp, os.path.join(output_path, f'pytorch_{i*n_layer_per_stage + j}.pt'))
                 model.model.decoder.layers[i*n_layer_per_stage + j].load_state_dict(_tmp)
 
+            print('loading final layer...')
+            
             _tmp = {k[len(f"{n_layer_per_stage}."):]:v for k,v in checkpoint.items() if k.startswith(f"{n_layer_per_stage}.")}
             assert len(_tmp) > 0
             # torch.save(_tmp, os.path.join(output_path, f'pytorch_lm_head.pt'))
@@ -80,6 +87,9 @@ def load_decentralized_checkpoint(model, checkpoint_path, n_stages=3, n_layer_pe
 
         else:
             for j in range(n_layer_per_stage):
+                
+                print('loading', i*n_layer_per_stage + j, '...')
+                
                 _tmp = {k[len(f"{j}."):]:v for k,v in checkpoint.items() if k.startswith(f"{j}.")}
                 if len(_tmp) == 0:
                     break
