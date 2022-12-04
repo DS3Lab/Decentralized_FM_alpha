@@ -193,7 +193,7 @@ if __name__ == '__main__':
     model = model.cuda()
     
     for ckpt_path in ckpt_paths:
-        load_decentralized_checkpoint(model, ckpt_path, n_stages=2, n_layer_per_stage=12, max_num_layers=24)
+        load_decentralized_checkpoint(model, ckpt_path, n_stages=3, n_layer_per_stage=12, max_num_layers=24)
         
         # for i in range(24):
         #     model.transformer.h[i].attn.bias.data[:] = 1
