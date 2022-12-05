@@ -4,7 +4,7 @@ import uuid
 
 template = '''#!/bin/bash
 #BSUB -n 4                     # 1 cores
-#BSUB -W 23:59                   # 3-minutes run-time
+#BSUB -W 3:59                   # 3-minutes run-time
 #BSUB -R "rusage[mem=8000]"     # 32 GB per core
 #BSUB -R "rusage[ngpus_excl_p=1]"
 #BSUB -R "select[gpu_mtotal0>=20000]"
