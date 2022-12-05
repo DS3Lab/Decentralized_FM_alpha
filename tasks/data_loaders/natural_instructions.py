@@ -55,11 +55,18 @@ class StreamDataset(IterableDataset):
         self.sample_splitters = ['\n', '\n\n', '\n\n', '\n\n\n', '\n###\n', '\n---\n']
         self.answer_splitters = ['\n', '\n', '\n\n']
         
+        self.iter_count = 0
+        
     def state_dict(self):
-        return {}
+        return {
+            'iter_count': self.iter_count,
+        }
     
     def load_state_dict(self, state_dict):
-        pass
+        try:
+            self.iter_count = state_dict['iter_count']
+        except:
+            print('cannot load ni states.')
     
     def sample_text_from_task(self, task):
         
@@ -117,6 +124,8 @@ class StreamDataset(IterableDataset):
 
             input_ids = self.sample_text_from_task(task)
 
+            self.iter_count += 1
+            
             yield {
                 'input_ids': input_ids,
             }
@@ -128,6 +137,10 @@ class StreamDataset(IterableDataset):
     def __iter__(self):
         if self.it is None:
             self.it = self.get_stream()
+            
+        for i in range(self.iter_count):
+            next(self.it)
+            
         return self.it
     
     
