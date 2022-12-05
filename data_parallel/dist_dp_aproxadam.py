@@ -55,7 +55,7 @@ def step_update(self, dp_optimizer=None):
                 state["exp_avg"] = torch.zeros_like(p.data, dtype=(torch.float16 if use_fp16 else torch.float32))
                 state["exp_avg_global"] = torch.zeros_like(p.data, dtype=(torch.float16 if use_fp16 else torch.float32))
                 # Exponential moving average of squared gradient values
-                state["exp_avg_sq"] = torch.zeros_like(p.data, dtype=(torch.float16 if use_fp16 else torch.float32))
+                state["exp_avg_sq"] = torch.zeros_like(p.data)
                 state["first"] = True
 
             exp_avg, exp_avg_sq, exp_avg_g = state["exp_avg"], state["exp_avg_sq"], state["exp_avg_global"]
@@ -63,7 +63,7 @@ def step_update(self, dp_optimizer=None):
 
             state["step"] += 1
             
-            grad = grad.half() # todo
+            grad = grad # todo
 
             # Decay the first and second moment running average coefficient
             # In-place operations to update the averages at the same time
@@ -78,7 +78,7 @@ def step_update(self, dp_optimizer=None):
             step_size = step_size * math.sqrt(bias_correction2) / bias_correction1
 
             # p.data.addcdiv_(exp_avg - h, denom, value=-step_size)
-            p.data.addcdiv_(exp_avg.to(p.dtype), denom.to(p.dtype), value=-step_size)
+            p.data.addcdiv_(exp_avg.to(p.dtype), denom, value=-step_size)
 
             if state["step"] % sync_steps == 0:
                 if state["first"]:
