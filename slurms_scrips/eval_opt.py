@@ -184,7 +184,9 @@ if __name__ == '__main__':
     ckpts = os.listdir(args.ckpt_root)
     if args.step_set is not None:
         args.step_set = args.step_set.split(',')
+        print(args.step_set)
         ckpts = [ckpt for ckpt in ckpts if ckpt in args.step_set]
+    print(ckpts)
     ckpt_paths = [os.path.join(args.ckpt_root, ckpt) for ckpt in sorted(ckpts)]
     
     config = AutoConfig.from_pretrained('facebook/opt-1.3b')
