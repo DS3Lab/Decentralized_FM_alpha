@@ -9,7 +9,7 @@ from compress.fixpoint import *
 from compress import flag
 
 
-sync_prob = 0.02
+sync_prob = 0.04
 sync_steps = int(1 / sync_prob)
 
 @torch.no_grad()
