@@ -52,7 +52,7 @@ def step_update(self, dp_optimizer=None):
             if len(state) == 0:
                 state["step"] = 0
                 # Exponential moving average of gradient values
-                state["exp_avg"] = torch.zeros_like(p.data)
+                state["exp_avg"] = torch.zeros_like(p.data, dtype=(torch.float16 if use_fp16 else torch.float32))
                 state["exp_avg_global"] = torch.zeros_like(p.data, dtype=(torch.float16 if use_fp16 else torch.float32))
                 # Exponential moving average of squared gradient values
                 state["exp_avg_sq"] = torch.zeros_like(p.data)
@@ -80,31 +80,31 @@ def step_update(self, dp_optimizer=None):
             # p.data.addcdiv_(exp_avg - h, denom, value=-step_size)
             p.data.addcdiv_(exp_avg.to(p.dtype), denom, value=-step_size)
 
-            if state["step"] % sync_steps == 0:
-                if state["first"]:
-                    print('first sync...')
-                    state["first"] = False
-                    exp_avg_g.data[:] = exp_avg
+#             if state["step"] % sync_steps == 0:
+#                 if state["first"]:
+#                     print('first sync...')
+#                     state["first"] = False
+#                     exp_avg_g.data[:] = exp_avg
                     
-                    with torch.cuda.stream(dp_optimizer.dp_comm_stream):
-                        cupy_dp_stream = cupy.cuda.ExternalStream(dp_optimizer.dp_comm_stream.cuda_stream)
-                        dp_optimizer.dp_comm_stream.record_event(dp_optimizer.mmt_start_event)
-                        exp_avg_g.data /= dp_optimizer.dp_group_size
-                        dp_optimizer.dp_comm.all_reduce(exp_avg_g.data, stream=cupy_dp_stream)
-                        dp_optimizer.dp_comm_stream.record_event(dp_optimizer.mmt_ready_event)
+#                     with torch.cuda.stream(dp_optimizer.dp_comm_stream):
+#                         cupy_dp_stream = cupy.cuda.ExternalStream(dp_optimizer.dp_comm_stream.cuda_stream)
+#                         dp_optimizer.dp_comm_stream.record_event(dp_optimizer.mmt_start_event)
+#                         exp_avg_g.data /= dp_optimizer.dp_group_size
+#                         dp_optimizer.dp_comm.all_reduce(exp_avg_g.data, stream=cupy_dp_stream)
+#                         dp_optimizer.dp_comm_stream.record_event(dp_optimizer.mmt_ready_event)
                         
-                else:
-                    print(f'sync... at {state["step"]}')
-                    exp_avg.mul_(0.5).add_(exp_avg_g, alpha=1.0 - 0.5)
-                    exp_avg_g.data[:] = exp_avg
+#                 else:
+#                     print(f'sync... at {state["step"]}')
+#                     exp_avg.mul_(0.5).add_(exp_avg_g, alpha=1.0 - 0.5)
+#                     exp_avg_g.data[:] = exp_avg
                     
-                    with torch.cuda.stream(dp_optimizer.dp_comm_stream):
-                        dp_optimizer.dp_comm_stream.wait_event(dp_optimizer.mmt_ready_event)
-                        cupy_dp_stream = cupy.cuda.ExternalStream(dp_optimizer.dp_comm_stream.cuda_stream)
-                        dp_optimizer.dp_comm_stream.record_event(dp_optimizer.mmt_start_event)
-                        exp_avg_g.data /= dp_optimizer.dp_group_size
-                        dp_optimizer.dp_comm.all_reduce(exp_avg_g.data, stream=cupy_dp_stream)
-                        dp_optimizer.dp_comm_stream.record_event(dp_optimizer.mmt_ready_event)
+#                     with torch.cuda.stream(dp_optimizer.dp_comm_stream):
+#                         dp_optimizer.dp_comm_stream.wait_event(dp_optimizer.mmt_ready_event)
+#                         cupy_dp_stream = cupy.cuda.ExternalStream(dp_optimizer.dp_comm_stream.cuda_stream)
+#                         dp_optimizer.dp_comm_stream.record_event(dp_optimizer.mmt_start_event)
+#                         exp_avg_g.data /= dp_optimizer.dp_group_size
+#                         dp_optimizer.dp_comm.all_reduce(exp_avg_g.data, stream=cupy_dp_stream)
+#                         dp_optimizer.dp_comm_stream.record_event(dp_optimizer.mmt_ready_event)
                     
             
             if group["weight_decay"] > 0.0:
