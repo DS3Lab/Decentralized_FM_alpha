@@ -52,7 +52,7 @@ def step_update(self, dp_optimizer=None):
             if len(state) == 0:
                 state["step"] = 0
                 # Exponential moving average of gradient values
-                state["exp_avg"] = torch.zeros_like(p.data, dtype=(torch.float16 if use_fp16 else torch.float32))
+                state["exp_avg"] = torch.zeros_like(p.data)
                 state["exp_avg_global"] = torch.zeros_like(p.data, dtype=(torch.float16 if use_fp16 else torch.float32))
                 # Exponential moving average of squared gradient values
                 state["exp_avg_sq"] = torch.zeros_like(p.data)
