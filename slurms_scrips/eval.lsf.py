@@ -28,15 +28,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     step_set = [
-        # "checkpoint_100",
-        # "checkpoint_200",
-        # "checkpoint_300",
-        # "checkpoint_500",
-        # "checkpoint_1000",
-        # "checkpoint_1500",
-        # "checkpoint_2000",
-        # "checkpoint_2500",
-        # "checkpoint_3000",
+        "checkpoint_100",
+        "checkpoint_200",
+        "checkpoint_500",
+        "checkpoint_1000",
+        "checkpoint_1500",
+        "checkpoint_2000",
+        "checkpoint_2500",
+        "checkpoint_3000",
         "checkpoint_3500",
         "checkpoint_4000",
         "checkpoint_4500",

@@ -3,6 +3,7 @@ from .dist_dp_central_ps import CentralPSDP
 from .dist_dp_sharded_ps import ShardedPSDP
 from .dist_dp_sharded_ps_compressed import ShardedPSDPCompressed
 from .dist_dp_local import LocalDP
+from .dist_dp_prox import ProxDP
 from .dist_dp_proxskip import ProxSkipDP
 from .dist_dp_proxskip_adam import ProxSkipAdamDP
 
@@ -19,6 +20,8 @@ def get_dp_module(args, device, module, optimizer):
         return ShardedPSDPCompressed(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'local':
         return LocalDP(args, device, module, optimizer, flatten=False)
+    elif args.dp_mode == 'prox':
+        return ProxDP(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'proxskip':
         return ProxSkipDP(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'proxadam':
