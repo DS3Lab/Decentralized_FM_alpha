@@ -56,7 +56,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --dp-mode prox \
 --pp-mode gpipe --profiling no-profiling"
 
-python -u ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0 # rank will be rewriten
+python -u ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0 # prox
 '''
 
 if __name__ == '__main__':
