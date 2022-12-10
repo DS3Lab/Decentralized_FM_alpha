@@ -12,7 +12,7 @@ template = '''#!/bin/bash
 #SBATCH --mem-per-cpu=8G
 #SBATCH --output=/cluster/home/juewang/fm/juewang/exe_log/gpt_j_6b_slurm_%j.log
 
-# module load gcc/6.3.0 cuda/11.0.3 eth_proxy       # Load modules from Euler setup
+module load gcc/6.3.0 cuda/11.0.3 eth_proxy       # Load modules from Euler setup
 source activate pipeline                          # Activate my conda python environment
 cd /cluster/home/juewang/fm/juewang/Decentralized_FM_alpha_train     # Change directory
 
