@@ -4,7 +4,8 @@ import uuid
 
 template = '''#!/bin/bash
 #SBATCH --job-name=gpt_j_6b
-#SBATCH --gpus=gtx_3090:1
+#SBATCH --gpus=1 
+#SBATCH --gres=gpumem:20g
 #SBATCH --time=3:59:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
