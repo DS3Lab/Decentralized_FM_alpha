@@ -56,6 +56,12 @@ def step_update(self, dp_optimizer=None):
                 # Exponential moving average of squared gradient values
                 state["exp_avg_sq"] = torch.zeros_like(p.data)
                 state["first"] = True
+                
+            if "train_mask" in state and state["train_mask"].dtype != torch.bool:
+                print(f"wrong train_mask.dtype: {state['train_mask'].dtype}")
+                print('reinit it...')
+                state["train_mask"] = torch.ones_like(p, dtype=torch.bool)
+                state["train_mask"].view(-1)[::sync_steps] = False
 
             exp_avg, exp_avg_sq = state["exp_avg"], state["exp_avg_sq"]
             beta1, beta2 = group["betas"]
