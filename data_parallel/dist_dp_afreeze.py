@@ -82,21 +82,38 @@ def step_update(self, dp_optimizer=None):
             else:
                 p.data.addcdiv_(exp_avg.to(p.dtype), denom, value=-step_size)
 
-            if state["step"] % sync_steps == 0:
+#             if state["step"] % sync_steps == 0:
+#                 if state["first"]:
+#                     print('first sync...')
+#                     state["first"] = False
+                    
+#                     # true --> train, false --> comm
+#                     state["train_mask"] = (torch.rand_like(p) > 0.5)
+                        
+#                 else:
+#                     print(f'sync... at {state["step"]}')
+#                     data = p.data[~state["train_mask"]]
+#                     data /= dp_optimizer.dp_group_size
+#                     dp_optimizer.dp_comm.all_reduce(data)
+#                     p.data[~state["train_mask"]] = data
+#                     state["train_mask"] = ~state["train_mask"]
+            if p.numel() >= sync_steps:
                 if state["first"]:
                     print('first sync...')
                     state["first"] = False
-                    
-                    # true --> train, false --> comm
-                    state["train_mask"] = (torch.rand_like(p) > 0.5)
-                        
+                    state["train_mask"] = torch.ones_like(p, dtype=torch.bool)
+                    state["train_mask"].view(-1)[::sync_steps] = False
                 else:
                     print(f'sync... at {state["step"]}')
                     data = p.data[~state["train_mask"]]
                     data /= dp_optimizer.dp_group_size
                     dp_optimizer.dp_comm.all_reduce(data)
                     p.data[~state["train_mask"]] = data
-                    state["train_mask"] = ~state["train_mask"]
+                    state["train_mask"] = state["train_mask"].roll(1)
+            else:
+                print('warn: small param block!')
+                p.data /= dp_optimizer.dp_group_size
+                dp_optimizer.dp_comm.all_reduce(p.data)
             
             if group["weight_decay"] > 0.0:
                 if 'train_mask' in state:
