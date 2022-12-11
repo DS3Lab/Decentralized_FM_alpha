@@ -6,7 +6,7 @@ template = '''#!/bin/bash
 #SBATCH --job-name=gpt_j_6b
 #SBATCH --gpus=1 
 #SBATCH --gres=gpumem:20g
-#SBATCH --time=3:59:00
+#SBATCH --time=9:59:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=8G
@@ -43,7 +43,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --project-name loooofi \
 --model-type opt \
 --seed 4242 \
---checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-afreeze-20x-new \
+--checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-afreeze-50x-new \
 --load-pretrained-model true \
 --task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.5,ni:0.5 \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
