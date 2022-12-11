@@ -3,7 +3,7 @@ import os
 import uuid
 
 template = '''#!/bin/bash
-#SBATCH --job-name=gpt_j_6b_200x
+#SBATCH --job-name=gpt_j_6b_20x
 #SBATCH --gpus=1 
 #SBATCH --gres=gpumem:20g
 #SBATCH --time=9:59:00
@@ -43,7 +43,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --project-name loooofi \
 --model-type opt \
 --seed 4242 \
---checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-afreeze-200x-new \
+--checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-afreeze-20x-new2 \
 --load-pretrained-model true \
 --task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.5,ni:0.5 \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
