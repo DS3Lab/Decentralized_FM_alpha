@@ -11,7 +11,7 @@ from compress import flag
 
 sync_steps = 25
 sync_prob = 1.0 / sync_steps
-global_sync_steps = 2
+global_sync_steps = 1
 
 @torch.no_grad()
 def step_update(self, dp_optimizer=None):
