@@ -9,7 +9,7 @@ from compress.fixpoint import *
 from compress import flag
 
 
-sync_prob = 0.02
+sync_prob = 0.01
 sync_steps = int(1 / sync_prob)
 
 @torch.no_grad()
@@ -112,6 +112,7 @@ def step_update(self, dp_optimizer=None):
                 else:
                     print(f'sync... at {state["step"]}')
                     data = p.data[~state["train_mask"]]
+                    print(p.numel() / data.numel(), 'X')
                     data /= dp_optimizer.dp_group_size
                     dp_optimizer.dp_comm.all_reduce(data)
                     p.data[~state["train_mask"]] = data

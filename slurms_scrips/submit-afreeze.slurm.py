@@ -43,7 +43,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --project-name loooofi \
 --model-type opt \
 --seed 4242 \
---checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-afreeze-50x-new \
+--checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-afreeze-100x-new \
 --load-pretrained-model true \
 --task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.5,ni:0.5 \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
