@@ -9,8 +9,9 @@ from compress.fixpoint import *
 from compress import flag
 
 
-sync_steps = 20
+sync_steps = 25
 sync_prob = 1.0 / sync_steps
+global_sync_steps = 2
 
 @torch.no_grad()
 def step_update(self, dp_optimizer=None):
@@ -67,8 +68,6 @@ def step_update(self, dp_optimizer=None):
             beta1, beta2 = group["betas"]
 
             state["step"] += 1
-            
-            grad = grad # todo
 
             # Decay the first and second moment running average coefficient
             # In-place operations to update the averages at the same time
@@ -103,24 +102,28 @@ def step_update(self, dp_optimizer=None):
 #                     dp_optimizer.dp_comm.all_reduce(data)
 #                     p.data[~state["train_mask"]] = data
 #                     state["train_mask"] = ~state["train_mask"]
-            if p.numel() >= sync_steps:
-                if state["first"]:
-                    print('first sync...')
-                    state["first"] = False
-                    state["train_mask"] = torch.ones_like(p, dtype=torch.bool)
-                    state["train_mask"].view(-1)[::sync_steps] = False
+
+            if state["step"] % global_sync_steps == 0:
+                if p.numel() >= sync_steps:
+                    if state["first"]:
+                        print('first sync...')
+                        state["first"] = False
+                        state["train_mask"] = torch.ones_like(p, dtype=torch.bool)
+                        state["train_mask"].view(-1)[::sync_steps] = False
+                    else:
+                        print(f'sync... at {state["step"]}')
+                        data = p.data[~state["train_mask"]]
+                        print(p.numel() / data.numel(), 'X')
+                        data /= dp_optimizer.dp_group_size
+                        dp_optimizer.dp_comm.all_reduce(data)
+                        p.data[~state["train_mask"]] = data
+                        state["train_mask"] = state["train_mask"].roll(1)
                 else:
-                    print(f'sync... at {state["step"]}')
-                    data = p.data[~state["train_mask"]]
-                    print(p.numel() / data.numel(), 'X')
-                    data /= dp_optimizer.dp_group_size
-                    dp_optimizer.dp_comm.all_reduce(data)
-                    p.data[~state["train_mask"]] = data
-                    state["train_mask"] = state["train_mask"].roll(1)
+                    print('warn: small param block!')
+                    p.data /= dp_optimizer.dp_group_size
+                    dp_optimizer.dp_comm.all_reduce(p.data)
             else:
-                print('warn: small param block!')
-                p.data /= dp_optimizer.dp_group_size
-                dp_optimizer.dp_comm.all_reduce(p.data)
+                print('skipping')
             
             if group["weight_decay"] > 0.0:
                 if 'train_mask' in state:
