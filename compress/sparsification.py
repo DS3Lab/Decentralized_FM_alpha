@@ -10,7 +10,7 @@ def topr(x, ratio):
     numel = x.numel()
     k = max(int(numel * ratio), 1)
     _, indexes = torch.topk(torch.abs(x_flat.data), k=k, sorted=False)
-    masks = torch.zeros_like(x_flat, dtype=torch.bool)
+    masks = torch.zeros_like(x_flat, dtype=torch.uint8)
     masks[indexes] = 1
     masks = masks.view(x.shape)
     values = x.data[masks]
@@ -19,11 +19,11 @@ def topr(x, ratio):
 def topk(x, k, return_values=True):
     x_flat = x.view(-1)
     _, indexes = torch.topk(torch.abs(x_flat.data), k=k, sorted=False)
-    masks = torch.zeros_like(x_flat, dtype=torch.bool)
+    masks = torch.zeros_like(x_flat, dtype=torch.uint8)
     masks[indexes] = 1
     masks = masks.view(x.shape)
     if return_values:
-        values = x.data[masks]
+        values = x.data[masks.bool()]
         return values, masks
     else:
         return masks
@@ -40,6 +40,6 @@ def decompress_topk(values, masks, original_shape):
         cupy.unpackbits(tensor_to_cupy(masks))
     )
     x = torch.zeros(masks.shape, dtype=values.dtype, device=values.device)
-    x[masks] = values
+    x[masks.bool()] = values
     x = x.view(original_shape)
     return x
