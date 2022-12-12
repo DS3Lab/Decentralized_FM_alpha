@@ -7,6 +7,7 @@ from .dist_dp_local import LocalDP
 from .dist_dp_prox import ProxDP
 from .dist_dp_aproxadam import AProxAdamDP
 from .dist_dp_afreeze import AFreezeDP
+from .dist_dp_atopk import ATopKDP
 from .dist_dp_proxskip import ProxSkipDP
 from .dist_dp_proxskip_adam import ProxSkipAdamDP
 
@@ -35,6 +36,8 @@ def get_dp_module(args, device, module, optimizer):
         return AProxAdamDP(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'afreeze':
         return AFreezeDP(args, device, module, optimizer, flatten=False)
+    elif args.dp_mode == 'atopk':
+        return ATopKDP(args, device, module, optimizer, flatten=False)
     else:
         print("Not recognize this data parallel mode.")
         assert False
