@@ -3,7 +3,7 @@ import os
 import uuid
 
 template = '''#!/bin/bash
-#SBATCH --job-name=opt_topk
+#SBATCH --job-name=opt_allreduce
 #SBATCH --gpus=1 
 #SBATCH --gres=gpumem:20g
 #SBATCH --time=9:59:00
@@ -34,8 +34,6 @@ export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
 
-export DP_TOP_K=0.001
-
 root_path=/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm
 
 main_program=dist_lm_pretrain.py
@@ -45,7 +43,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --project-name loooofi \
 --model-type opt \
 --seed 4242 \
---checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-topk-1000x \
+--checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-allreduce-1x \
 --load-pretrained-model true \
 --task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.5,ni:0.5 \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
@@ -56,7 +54,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --world-size ${world_size} --pipeline-group-size ${pp_degree} --data-group-size ${dp_degree} \
 --job-id ${job_id} --net-interface ${netif} \
 --fp16 \
---dp-mode sharded_ps_topk \
+--dp-mode allreduce \
 --pp-mode gpipe --profiling no-profiling"
 
 python -u ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0 # topk
