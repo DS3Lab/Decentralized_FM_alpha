@@ -1,6 +1,7 @@
 from .dist_dp_allreduce import AllReduceDP
 from .dist_dp_central_ps import CentralPSDP
 from .dist_dp_sharded_ps import ShardedPSDP
+from .dist_dp_sharded_ps_topk import ShardedPSDPTopK
 from .dist_dp_sharded_ps_compressed import ShardedPSDPCompressed
 from .dist_dp_local import LocalDP
 from .dist_dp_prox import ProxDP
@@ -18,6 +19,8 @@ def get_dp_module(args, device, module, optimizer):
         return CentralPSDP(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'sharded_ps':
         return ShardedPSDP(args, device, module, optimizer, flatten=False)
+    elif args.dp_mode == 'sharded_ps_topk':
+        return ShardedPSDPTopK(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'sharded_ps_compressed':
         return ShardedPSDPCompressed(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'local':

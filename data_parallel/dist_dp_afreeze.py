@@ -8,10 +8,17 @@ from .flatten_utils import flatten_params, flatten_tensors
 from compress.fixpoint import *
 from compress import flag
 
+import os
 
-sync_steps = 25
-sync_prob = 1.0 / sync_steps
-global_sync_steps = 4
+if 'SYNC_STEPS' not in os.environ:
+    sync_steps = 25
+    sync_prob = 1.0 / sync_steps
+    global_sync_steps = 1
+    
+else:
+    sync_steps = int(os.environ['SYNC_STEPS'])
+    sync_prob = 1.0 / sync_steps
+    global_sync_steps = 1
 
 @torch.no_grad()
 def step_update(self, dp_optimizer=None):
@@ -86,22 +93,6 @@ def step_update(self, dp_optimizer=None):
                 p.data.addcdiv_(exp_avg * state["train_mask"].to(p.dtype), denom, value=-step_size)
             else:
                 p.data.addcdiv_(exp_avg.to(p.dtype), denom, value=-step_size)
-
-#             if state["step"] % sync_steps == 0:
-#                 if state["first"]:
-#                     print('first sync...')
-#                     state["first"] = False
-                    
-#                     # true --> train, false --> comm
-#                     state["train_mask"] = (torch.rand_like(p) > 0.5)
-                        
-#                 else:
-#                     print(f'sync... at {state["step"]}')
-#                     data = p.data[~state["train_mask"]]
-#                     data /= dp_optimizer.dp_group_size
-#                     dp_optimizer.dp_comm.all_reduce(data)
-#                     p.data[~state["train_mask"]] = data
-#                     state["train_mask"] = ~state["train_mask"]
 
             if state["step"] % global_sync_steps == 0:
                 if p.numel() >= sync_steps:
