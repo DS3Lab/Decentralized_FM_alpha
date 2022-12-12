@@ -34,7 +34,7 @@ export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
 
-export DP_TOP_K=0.01
+export DP_TOP_K=0.04
 
 root_path=/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm
 
@@ -45,7 +45,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --project-name loooofi \
 --model-type opt \
 --seed 4242 \
---checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-topk-100x \
+--checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-topk-25x \
 --load-pretrained-model true \
 --task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.5,ni:0.5 \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
