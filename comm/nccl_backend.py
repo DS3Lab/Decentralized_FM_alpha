@@ -350,7 +350,7 @@ class NCCLCommunicator:
             
             # decompress
             tensor_chunks_compressed = [compress_topk(
-                _data, int(topk_ratio * tensor.numel())) for _data in tensor_chunks]
+                _data, int(topk_ratio * _data.numel())) for _data in tensor_chunks]
             
             # update worker errors
             for i in range(self.comm_group_size):
@@ -393,7 +393,7 @@ class NCCLCommunicator:
             # server error compensation
             tensor_server.add_(server_error)
             
-            tensor_server_compressed = compress_topk(tensor_server, int(topk_ratio * tensor.numel()))
+            tensor_server_compressed = compress_topk(tensor_server, int(topk_ratio * tensor_server.numel()))
             
             # update server error
             server_error.set_((tensor_server - decompress_topk(
@@ -449,7 +449,7 @@ class NCCLCommunicator:
             
             # decompress
             tensor_chunks_compressed = [compress_topk(
-                _data, int(topk_ratio * tensor.numel())) for _data in tensor_chunks]
+                _data, int(topk_ratio * _data.numel())) for _data in tensor_chunks]
             
             # update worker errors
             del tensor_chunks
@@ -488,7 +488,7 @@ class NCCLCommunicator:
             # server error compensation
             tensor_server.add_(server_error)
             
-            tensor_server_compressed = compress_topk(tensor_server, int(topk_ratio * tensor.numel()))
+            tensor_server_compressed = compress_topk(tensor_server, int(topk_ratio * tensor_server.numel()))
             
             # update server error
             server_error.set_((tensor_server - decompress_topk(
@@ -546,7 +546,7 @@ class NCCLCommunicator:
             
             # decompress
             tensor_chunks_compressed = [compress_topk(
-                _data, int(topk_ratio * tensor.numel())) for _data in tensor_chunks]
+                _data, int(topk_ratio * _data.numel())) for _data in tensor_chunks]
             
             # del tensor_chunks
 #             caller.dp_comm_stream.record_event(caller.worker_compress_end_event)
@@ -584,7 +584,7 @@ class NCCLCommunicator:
             # server error compensation
             tensor_server.add_(server_error)
             
-            tensor_server_compressed = compress_topk(tensor_server, int(topk_ratio * tensor.numel()))
+            tensor_server_compressed = compress_topk(tensor_server, int(topk_ratio * tensor_server.numel()))
             
             # update server error
             server_error.set_((tensor_server - decompress_topk(
@@ -618,7 +618,7 @@ class NCCLCommunicator:
                     decompress_topk(*_data, original_shape=original_shape)
             
             updated = (tensor != 0)
-            # print(updated.sum() / updated.numel(), '<-- should be a small value')
+            print(updated.sum() / updated.numel(), '<-- should be a small value')
             
             global_data.data += tensor
             data.data[updated] = global_data.data[updated].to(data.dtype) # update current p

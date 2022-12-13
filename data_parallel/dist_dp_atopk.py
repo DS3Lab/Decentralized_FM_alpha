@@ -108,6 +108,7 @@ def step_update(self, dp_optimizer=None):
             # cupy_dp_stream = cupy.cuda.ExternalStream(dp_optimizer.torch_optim_comp_stream.cuda_stream)
             # # dp_optimizer.torch_optim_comp_stream.wait_event(dp_optimizer.backward_ready_event)
             # print('sync_prob', sync_prob)
+            # print(p.dtype, p.device, state["global_p"].dtype, state["global_p"].device)
             dp_optimizer.dp_comm.all_reduce_opt_topk_2(
                 p.data.view(-1), 
                 global_data=state["global_p"].data.view(-1),
@@ -238,7 +239,7 @@ class ATopKDP:
         _data = torch.zeros(chunk_size, device=data.device, dtype=data.dtype)
 
         _data_compressed = compress_topk(
-            _data, int(topk_ratio * data.numel()))
+            _data, int(topk_ratio * _data.numel()))
         grad_buffer = [
             (torch.zeros_like(_data_compressed[0]),
              torch.zeros_like(_data_compressed[1])) for i in range(self.dp_group_size)

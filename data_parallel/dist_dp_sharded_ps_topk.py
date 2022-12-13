@@ -294,7 +294,7 @@ class ShardedPSDPTopK:
         _data = torch.zeros(chunk_size, device=data.device, dtype=data.dtype)
 #         _data_compressed = compress_flexible_nbits(_data, bits=bits, scale_dims=tuple())
         _data_compressed = compress_topk(
-            _data, int(topk_ratio * data.numel()))
+            _data, int(topk_ratio * _data.numel()))
         grad_buffer = [
             (torch.zeros_like(_data_compressed[0]),
              torch.zeros_like(_data_compressed[1])) for i in range(self.dp_group_size)
