@@ -232,6 +232,7 @@ class AFreezeCompressDP:
                                 comm_data = torch.zeros(
                                     comm_mask.sum().item(), dtype=torch.float16, device=para.device
                                 )
+                                print('comm_data:', comm_data.shape)
                                 comm_data_list.append(comm_data)
 
                             # global para
@@ -240,6 +241,7 @@ class AFreezeCompressDP:
                             # server error
                             server_error = torch.zeros_like(global_para.chunk(self.dp_group_size, 0)[0])
 
+                            print('server error shape:', server_error)
                             dp_state_dict[name] = {
                                 "comm_mask_list": comm_mask_list,
                                 "comm_data_list": comm_data_list,
