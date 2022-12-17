@@ -279,7 +279,7 @@ class AFreezeCompressDP:
                         cupy.cuda.nccl.groupEnd()
 
                         server_data = sum(comm_buffer_list) / len(comm_buffer_list)
-                        print('test:', server_data.shape, server_mask.sum().item())
+                        print('test:', server_data.shape, server_mask.sum().item(), server_error[server_mask].shape)
                         server_data.add_(server_error[server_mask])
                         server_data_compressed = self._decompress(self._compress(server_data))
                         server_error.data[server_mask] = (server_data - server_data_compressed)
