@@ -7,7 +7,7 @@ from .utils import *
 
 def topr(x, ratio):
     x_flat = x.view(-1)
-    numel = x.numel()
+    numel = x_flat.numel()
     k = max(int(numel * ratio), 1)
     _, indexes = torch.topk(torch.abs(x_flat.data), k=k, sorted=False)
     masks = torch.zeros_like(x_flat, dtype=torch.uint8)
@@ -27,7 +27,14 @@ def topk(x, k, return_values=True):
         return values, masks
     else:
         return masks
-
+    
+def compress_topr(x, r):
+    values, masks = topr(x, r)
+    masks = cupy_to_tensor(
+        cupy.packbits(tensor_to_cupy(masks))
+    )
+    return values, masks
+    
 def compress_topk(x, k):
     values, masks = topk(x, k)
     masks = cupy_to_tensor(
