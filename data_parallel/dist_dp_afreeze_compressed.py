@@ -22,8 +22,9 @@ else:
     global_sync_steps = 1
     
     
-quantization_bits = 4
-top_k_ratio = 0.2
+quantization_bits = int(os.environ.get('QUANT_BITS', 8))
+quantization_bucket_size = int(os.environ.get('QUANT_BUCKET_SIZE', 128))
+top_k_ratio = float(os.environ.get('TOPK_RATIO', 0.5))
     
 
 class AFreezeCompressDP:
@@ -146,8 +147,8 @@ class AFreezeCompressDP:
                     x_hat = compress_topr(x, top_k_ratio)
                     x = decompress_topk(*x_hat, shape)
 
-                    x_hat = compress_flexible_nbits_by_bucket(x, bits=quantization_bits, scale_method='max', bucket_size=128)
-                    x = decompress_flexible_nbits_by_bucket(*x_hat, bits=quantization_bits, original_shape=shape, bucket_size=128)
+                    x_hat = compress_flexible_nbits_by_bucket(x, bits=quantization_bits, scale_method='max', bucket_size=quantization_bucket_size)
+                    x = decompress_flexible_nbits_by_bucket(*x_hat, bits=quantization_bits, original_shape=shape, bucket_size=quantization_bucket_size)
                     x = x.to(dtype)
                 else:
                     print(x)
@@ -211,7 +212,7 @@ class AFreezeCompressDP:
                                 para_shape[0] = para_shape[0] // self.dp_group_size
                                 comm_mask = torch.zeros(para_shape, dtype=torch.bool, device=para.device)
                                 comm_mask.view(-1)[::sync_steps] = True
-                                n_potisive = comm_mask.sum().item() // 128 * 128
+                                n_potisive = comm_mask.sum().item() // quantization_bucket_size * quantization_bucket_size
                                 if n_potisive != 0:
                                     comm_mask.view(-1)[comm_mask.view(-1).cumsum(-1) > n_potisive] = False
                                     assert comm_mask.sum().item() == n_potisive
