@@ -216,6 +216,7 @@ class AFreezeCompressDP:
                             comm_data_list = []
                             for i in range(self.dp_group_size):
                                 para_shape = list(para.shape)
+                                assert para_shape[0] == para_shape[0] // self.dp_group_size * self.dp_group_size
                                 para_shape[0] = para_shape[0] // self.dp_group_size
                                 comm_mask = torch.zeros(para_shape, dtype=torch.bool, device=para.device)
                                 comm_mask.view(-1)[::sync_steps] = True
@@ -282,7 +283,7 @@ class AFreezeCompressDP:
                         cupy.cuda.nccl.groupEnd()
 
                         server_data = sum(comm_buffer_list) / len(comm_buffer_list)
-                        print('test:', server_data.shape, server_mask.sum().item(), server_error[server_mask].shape)
+                        # print('test:', server_data.shape, server_mask.sum().item(), server_error[server_mask].shape)
                         server_data.add_(server_error[server_mask])
                         server_data_compressed = self._decompress(self._compress(server_data))
                         server_error.data[server_mask] = (server_data - server_data_compressed)
