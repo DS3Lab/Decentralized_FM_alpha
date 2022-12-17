@@ -241,7 +241,7 @@ class AFreezeCompressDP:
                             # server error
                             server_error = torch.zeros_like(global_para.chunk(self.dp_group_size, 0)[0])
 
-                            print('server error shape:', server_error)
+                            print('server error shape:', server_error.shape)
                             dp_state_dict[name] = {
                                 "comm_mask_list": comm_mask_list,
                                 "comm_data_list": comm_data_list,
@@ -279,6 +279,7 @@ class AFreezeCompressDP:
                         cupy.cuda.nccl.groupEnd()
 
                         server_data = sum(comm_buffer_list) / len(comm_buffer_list)
+                        print('test:', server_data.shape, server_mask.sum().item())
                         server_data.add_(server_error[server_mask])
                         server_data_compressed = self._decompress(self._compress(server_data))
                         server_error.data[server_mask] = (server_data - server_data_compressed)
