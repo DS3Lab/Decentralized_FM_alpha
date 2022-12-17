@@ -205,6 +205,8 @@ class AFreezeCompressDP:
                 for i_group, group in enumerate(self.optimizer.optimizer.param_groups):
                     for i_para, para in enumerate(group["params"]):
                         
+                        para = para.view(-1)
+                        
                         name = f"{i_group}-{i_para}"
                     
                         dp_state_dict = self.dp_state_dict
