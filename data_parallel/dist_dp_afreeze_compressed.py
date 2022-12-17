@@ -23,7 +23,7 @@ else:
     
     
 quantization_bits = 4
-top_k_ratio = 0.5
+top_k_ratio = 0.2
     
 
 class AFreezeCompressDP:
