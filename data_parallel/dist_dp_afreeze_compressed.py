@@ -22,19 +22,8 @@ else:
     global_sync_steps = 1
     
     
-def _type_torch_to_cupy(torch_type: torch.dtype):
-    # print(torch_type)
-    mappings = {
-        torch.uint8: cupy.cuda.nccl.NCCL_UINT8,
-        torch.int32: cupy.cuda.nccl.NCCL_INT32,
-        torch.int64: cupy.cuda.nccl.NCCL_INT64,
-        torch.int: cupy.cuda.nccl.NCCL_INT,
-        torch.float16: cupy.cuda.nccl.NCCL_FLOAT16,
-        torch.float32: cupy.cuda.nccl.NCCL_FLOAT32,
-        torch.float64: cupy.cuda.nccl.NCCL_FLOAT64,
-        torch.float: cupy.cuda.nccl.NCCL_FLOAT
-    }
-    return mappings[torch_type]
+quantization_bits = 4
+top_k_ratio = 0.5
     
 
 class AFreezeCompressDP:
@@ -154,11 +143,11 @@ class AFreezeCompressDP:
             with cupy_dp_stream:
                 
                 if x.numel() >= 1:
-                    x_hat = compress_topr(x, 0.5)
+                    x_hat = compress_topr(x, top_k_ratio)
                     x = decompress_topk(*x_hat, shape)
 
-                    x_hat = compress_flexible_nbits_by_bucket(x, bits=8, scale_method='max', bucket_size=128)
-                    x = decompress_flexible_nbits_by_bucket(*x_hat, bits=8, original_shape=shape, bucket_size=128)
+                    x_hat = compress_flexible_nbits_by_bucket(x, bits=quantization_bits, scale_method='max', bucket_size=128)
+                    x = decompress_flexible_nbits_by_bucket(*x_hat, bits=quantization_bits, original_shape=shape, bucket_size=128)
                     x = x.to(dtype)
                 else:
                     print(x)
