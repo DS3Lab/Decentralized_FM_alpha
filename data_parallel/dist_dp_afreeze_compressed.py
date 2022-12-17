@@ -241,7 +241,7 @@ class AFreezeCompressDP:
                             # server error
                             # server_error = torch.zeros_like(global_para.chunk(self.dp_group_size, 0)[self.dp_rank])
                             server_error = torch.zeros(
-                                comm_data_list[self.dp_rank].shape, dtype=torch.float16, device=global_para.device,
+                                comm_mask_list[self.dp_rank].shape, dtype=torch.float16, device=global_para.device,
                             )
 
                             print('server error shape:', server_error.shape)
