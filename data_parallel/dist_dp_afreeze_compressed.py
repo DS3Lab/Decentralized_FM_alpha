@@ -225,6 +225,7 @@ class AFreezeCompressDP:
                                     assert comm_mask.sum().item() == n_potisive
                                 else:
                                     comm_mask[:] = True
+                                print('comm_mask:', comm_mask.sum().item())
                                 comm_mask_list.append(comm_mask)
 
                                 # data to send
