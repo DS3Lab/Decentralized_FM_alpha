@@ -34,10 +34,10 @@ export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
 
-export SYNC_STEPS=1
+export SYNC_STEPS=5
 export QUANT_BITS=4
 export QUANT_BUCKET_SIZE=128
-export TOPK_RATIO=0.008
+export TOPK_RATIO=0.04
 
 root_path=/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm
 
@@ -48,7 +48,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --project-name loooofi \
 --model-type opt \
 --seed 4242 \
---checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-afreeze-compressed-1x-in4-top0.8 \
+--checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-afreeze-compressed-5x-in4-top4 \
 --load-pretrained-model true \
 --task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.5,ni:0.5 \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
