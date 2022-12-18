@@ -71,9 +71,9 @@ if __name__ == '__main__':
     #     template = f.read()
 
     job_id = str(uuid.uuid4())
-    pp_degree=3
+    pp_degree=4
     dp_degree=4
-    n_layer_per_device=12
+    n_layer_per_device=8
     world_size = pp_degree * dp_degree
 
     template = template.replace('{{JOB_ID}}', job_id)
