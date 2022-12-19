@@ -10,6 +10,7 @@ from .dist_dp_atopk import ATopKDP
 from .dist_dp_proxskip import ProxSkipDP
 from .dist_dp_proxskip_adam import ProxSkipAdamDP
 from .dist_dp_afreeze_compressed import AFreezeCompressDP
+from .dist_dp_afreeze_compressed_2 import AFreezeCompress2DP
 
 
 def get_dp_module(args, device, module, optimizer):
@@ -36,6 +37,8 @@ def get_dp_module(args, device, module, optimizer):
         return AFreezeDP(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'afreeze_compressed':
         return AFreezeCompressDP(args, device, module, optimizer, flatten=False)
+    elif args.dp_mode == 'afreeze_compressed_2':
+        return AFreezeCompress2DP(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'atopk':
         return ATopKDP(args, device, module, optimizer, flatten=False)
     else:

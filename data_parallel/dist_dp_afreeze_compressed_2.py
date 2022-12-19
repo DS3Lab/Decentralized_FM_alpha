@@ -27,7 +27,7 @@ quantization_bucket_size = int(os.environ.get('QUANT_BUCKET_SIZE', 128))
 top_k_ratio = float(os.environ.get('TOPK_RATIO', 0.5))
     
 
-class AFreezeCompressDP:
+class AFreezeCompress2DP:
     def __init__(self, args, device, module: torch.nn.Module, optimizer: torch.optim.Optimizer = None, flatten=False):
         assert not flatten
         self.dp_bits = args.dp_bits
@@ -142,16 +142,8 @@ class AFreezeCompressDP:
         with torch.cuda.stream(self.dp_comm_stream):
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
             with cupy_dp_stream:
-                
-                if x.numel() >= 1:
-                    x_hat = compress_topr(x, top_k_ratio)
-                    x = decompress_topk(*x_hat, shape)
-
-                    x_hat = compress_flexible_nbits_by_bucket(x, bits=quantization_bits, scale_method='max', bucket_size=quantization_bucket_size)
-                    x = decompress_flexible_nbits_by_bucket(*x_hat, bits=quantization_bits, original_shape=shape, bucket_size=quantization_bucket_size)
-                    x = x.to(dtype)
-                else:
-                    print(x)
+                x_hat = compress_topr(x, top_k_ratio)
+                x = decompress_topk(*x_hat, shape)
         
         return x
     
@@ -203,27 +195,12 @@ class AFreezeCompressDP:
 
                         if name not in dp_state_dict:
 
-                            # comm mask
-                            comm_mask_list = []
                             comm_data_list = []
                             for i in range(self.dp_group_size):
-                                para_shape = list(para.shape)
-                                assert para_shape[0] == para_shape[0] // self.dp_group_size * self.dp_group_size
-                                para_shape[0] = para_shape[0] // self.dp_group_size
-                                comm_mask = torch.zeros(para_shape, dtype=torch.bool, device=para.device)
-                                comm_mask.view(-1)[::sync_steps] = True
-                                n_potisive = comm_mask.sum().item() // quantization_bucket_size * quantization_bucket_size
-                                if n_potisive != 0:
-                                    comm_mask.view(-1)[comm_mask.view(-1).cumsum(-1) > n_potisive] = False
-                                    assert comm_mask.sum().item() == n_potisive
-                                else:
-                                    comm_mask[:] = True
-                                print('comm_mask:', comm_mask.sum().item(), comm_mask.shape)
-                                comm_mask_list.append(comm_mask)
-
+                                
                                 # data to send
                                 comm_data = torch.zeros(
-                                    comm_mask.sum().item(), dtype=torch.float16, device=para.device
+                                    para.numel() // self.dp_group_size, dtype=torch.float16, device=para.device
                                 )
                                 print('comm_data:', comm_data.shape)
                                 comm_data_list.append(comm_data)
@@ -232,32 +209,27 @@ class AFreezeCompressDP:
                             global_para = para.data.half()
 
                             # server error
-                            # server_error = torch.zeros_like(global_para.chunk(self.dp_group_size, 0)[self.dp_rank])
-                            server_error = torch.zeros(
-                                comm_mask_list[self.dp_rank].shape, dtype=torch.float16, device=global_para.device,
-                            )
+                            server_error = torch.zeros_like(global_para.chunk(self.dp_group_size, 0)[self.dp_rank])
+                            # server_error = torch.zeros(
+                            #     comm_data_list[self.dp_rank].shape, dtype=torch.float16, device=global_para.device,
+                            # )
 
                             print('server error shape:', server_error.shape)
                             dp_state_dict[name] = {
-                                "comm_mask_list": comm_mask_list,
                                 "comm_data_list": comm_data_list,
                                 "global_para": global_para,
                                 "server_error": server_error,
                             }
                         else:
-                            for i in range(self.dp_group_size):
-                                dp_state_dict[name]['comm_mask_list'][i] = dp_state_dict[name]['comm_mask_list'][i].roll(1)
+                            pass
 
-                        comm_mask_list = dp_state_dict[name]["comm_mask_list"]
                         comm_data_list = dp_state_dict[name]["comm_data_list"]
                         global_para = dp_state_dict[name]["global_para"]
                         chunk_size = global_para.size(0) // self.dp_group_size
                         server_error = dp_state_dict[name]["server_error"]
-                        server_mask = comm_mask_list[self.dp_rank]
 
                         for i in range(self.dp_group_size):
-                            comm_mask = comm_mask_list[i]
-                            comm_data_list[i].data[:] = (para[i*chunk_size:(i+1)*chunk_size][comm_mask] - global_para[i*chunk_size:(i+1)*chunk_size][comm_mask]).half()
+                            comm_data_list[i].data[:] = (para[i*chunk_size:(i+1)*chunk_size] - global_para[i*chunk_size:(i+1)*chunk_size]).half()
                             # if self.dp_rank == 0:
                             #     print('real d', comm_data_list[i].data[0])
                         comm_data_compressed_list = [
@@ -266,7 +238,7 @@ class AFreezeCompressDP:
                         
                         # revert
                         for i, _data_compressed in enumerate(comm_data_compressed_list):
-                            para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] -= _data_compressed
+                            para.data[i*chunk_size:(i+1)*chunk_size] -= _data_compressed
 
                         cupy.cuda.nccl.groupStart()
                         for i in range(self.dp_group_size):
@@ -279,9 +251,9 @@ class AFreezeCompressDP:
                         cupy.cuda.nccl.groupEnd()
 
                         server_data = sum(comm_buffer_list) / len(comm_buffer_list)
-                        server_data.add_(server_error[server_mask])
+                        server_data.add_(server_error)
                         server_data_compressed = self._decompress(self._compress(server_data))
-                        server_error.data[server_mask] = (server_data - server_data_compressed)
+                        server_error.data = (server_data - server_data_compressed)
 
                         cupy.cuda.nccl.groupStart()
                         for i in range(self.dp_group_size):
@@ -295,8 +267,13 @@ class AFreezeCompressDP:
 
                         for i, _data in enumerate(comm_buffer_list):
                             
-                            para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data
-                            global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data
+                            # updated = (_data != 0)
+                            # print(updated.sum() / updated.numel(), '<-- should be a small value')
+                            
+                            para.data[i*chunk_size:(i+1)*chunk_size] += _data
+                            global_para.data[i*chunk_size:(i+1)*chunk_size] += _data
+                            
+                            # para.data[i*chunk_size:(i+1)*chunk_size] = global_para.data[i*chunk_size:(i+1)*chunk_size]
                             
                             # para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] = \
                             # global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]].float()
