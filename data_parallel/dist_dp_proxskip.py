@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.cuda
 import math
+import os
 from comm.comm_utils import *
 from .flatten_utils import flatten_params, flatten_tensors
 from compress.fixpoint import *
