@@ -143,15 +143,28 @@ class AFreezeCompressDP:
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
             with cupy_dp_stream:
                 
-                if x.numel() >= 1:
-                    x_hat = compress_topr(x, top_k_ratio)
-                    x = decompress_topk(*x_hat, shape)
-
-                    x_hat = compress_flexible_nbits_by_bucket(x, bits=quantization_bits, scale_method='max', bucket_size=quantization_bucket_size)
-                    x = decompress_flexible_nbits_by_bucket(*x_hat, bits=quantization_bits, original_shape=shape, bucket_size=quantization_bucket_size)
-                    x = x.to(dtype)
+                k = max(int(top_k_ratio * x.numel()), 1)
+                if k >= quantization_bucket_size:
+                    # ensure dividable
+                    k = k // quantization_bucket_size * quantization_bucket_size
                 else:
-                    print(x)
+                    # bucket_size will be set to k internally
+                    pass
+                    
+                values, masks, indices = compress_topk(x, k, return_indices=True)
+                
+                # if k > 10 and self.dp_rank==0:
+                #     print('indices:', indices)
+
+                values_q, scales_q = compress_flexible_nbits_by_bucket(values, bits=quantization_bits, scale_method='max', bucket_size=quantization_bucket_size)
+                
+                # if k > 10 and self.dp_rank==0:
+                #     print('integers:', unpack_low_bit_tensor(values_q, quantization_bits, values.shape))
+                    
+                values = decompress_flexible_nbits_by_bucket(values_q, scales_q, bits=quantization_bits, original_shape=values.shape, bucket_size=quantization_bucket_size)
+                    
+                x = decompress_topk(values, masks, x.shape)
+                x = x.to(dtype)
         
         return x
     

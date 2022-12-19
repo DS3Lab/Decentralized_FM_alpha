@@ -9,7 +9,14 @@ from compress.fixpoint import *
 from compress import flag
 
 
-sync_prob = 0.02
+if 'SYNC_STEPS' not in os.environ:
+    sync_steps = 25
+    sync_prob = 1.0 / sync_steps
+    global_sync_steps = 1
+else:
+    sync_steps = int(os.environ['SYNC_STEPS'])
+    sync_prob = 1.0 / sync_steps
+    global_sync_steps = 1
 
 @torch.no_grad()
 def step_update(self, freeze=False, dp_optimizer=None):

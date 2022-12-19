@@ -1,6 +1,7 @@
 import torch
 import cupy
 import numpy as np
+import math
 
 from .utils import *
 
@@ -193,6 +194,9 @@ def compress_flexible_nbits_by_bucket(x, bits, scale_method='max', bucket_size=5
     # support any bits
     # CUDA only
     
+    if bucket_size > x.numel():
+        bucket_size = x.numel()
+    
     x, scale = _compress_nbits_by_bucket(x, bits=bits, scale_method=scale_method, bucket_size=bucket_size)
     
     x = pack_low_bit_tensor(x, bits)
@@ -203,6 +207,10 @@ def compress_flexible_nbits_by_bucket(x, bits, scale_method='max', bucket_size=5
 def decompress_flexible_nbits_by_bucket(x, scale, bits, original_shape, bucket_size=512):
     # support any bits, but need to know original_shape
     # CUDA only
+    
+    numel = math.prod(original_shape)
+    if bucket_size > numel:
+        bucket_size = numel
     
     x = unpack_low_bit_tensor(x, bits, original_shape)
 
