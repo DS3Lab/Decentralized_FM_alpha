@@ -21,7 +21,7 @@ else:
     sync_prob = 1.0 / sync_steps
     global_sync_steps = 1
     
-    
+global_lr = float(os.environ.get('GLOBAL_LR', 1.0))
 quantization_bits = int(os.environ.get('QUANT_BITS', 8))
 quantization_bucket_size = int(os.environ.get('QUANT_BUCKET_SIZE', 128))
 top_k_ratio = float(os.environ.get('TOPK_RATIO', 0.5))
@@ -308,8 +308,8 @@ class AFreezeCompressDP:
 
                         for i, _data in enumerate(comm_buffer_list):
                             
-                            para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data
-                            global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data
+                            para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data * global_lr
+                            global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data * global_lr
                             
                             # para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] = \
                             # global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]].float()
