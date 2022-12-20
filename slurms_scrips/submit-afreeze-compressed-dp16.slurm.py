@@ -33,10 +33,10 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
-export WANDB_NAME=opt-slot-sgd-25x-in8-top50-dp16
+export WANDB_NAME=opt-slot-sgd-10x-in4-top50-dp16
 
-export SYNC_STEPS=25
-export QUANT_BITS=8
+export SYNC_STEPS=10
+export QUANT_BITS=4
 export QUANT_BUCKET_SIZE=128
 export TOPK_RATIO=0.5
 
