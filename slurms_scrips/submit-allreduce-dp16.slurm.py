@@ -43,13 +43,13 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --project-name loooofi \
 --model-type opt \
 --seed 4242 \
---checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-allreduce-2-dp16 \
+--checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-allreduce-dp16-len512 \
 --load-pretrained-model true \
 --task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.5,ni:0.5 \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
 --total-steps 100000 --warmup-steps 100 --train-warmup-steps 0 \
 --checkpoint-steps 100 \
---lr 1e-4 --seq-length 2048 --batch-size 16 --micro-batch-size 1 --gradient-accumulate-step 1 \
+--lr 1e-4 --seq-length 512 --batch-size 16 --micro-batch-size 1 --gradient-accumulate-step 1 \
 --dist-url tcp://127.0.0.1:9011 \
 --world-size ${world_size} --pipeline-group-size ${pp_degree} --data-group-size ${dp_degree} \
 --job-id ${job_id} --net-interface ${netif} \
