@@ -138,7 +138,7 @@ class AFreezeCompressDP:
                     # self.profile_mark_allreduce_start(name)
                     self.dp_comm.all_reduce(para.grad, stream=cupy_dp_stream)
                     # self.profile_mark_allreduce_end(name)
-            self.dp_comm_stream.record_event(self.allreduce_grad_ready_event)
+            self.dp_comm_stream.record_event(self.sync_gradients_ready_event)
             
     def _compress(self, x):
         # return x
