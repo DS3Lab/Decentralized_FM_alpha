@@ -33,13 +33,13 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
-export WANDB_NAME=opt-slot-sgd-10x-in4-top50-dp16-glr2
+export WANDB_NAME=opt-slot-sgd-10x-in4-top50-dp16-warm100
 
 export SYNC_STEPS=10
 export QUANT_BITS=4
 export QUANT_BUCKET_SIZE=128
 export TOPK_RATIO=0.5
-export GLOBAL_LR=2
+export GLOBAL_LR=1
 
 root_path=/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm
 
@@ -54,7 +54,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --load-pretrained-model true \
 --task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.5,ni:0.5 \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
---total-steps 100000 --warmup-steps 100 --train-warmup-steps 0 \
+--total-steps 100000 --warmup-steps 100 --train-warmup-steps 100 \
 --checkpoint-steps 100 \
 --lr 1e-4 --seq-length 2048 --batch-size 16 --micro-batch-size 1 --gradient-accumulate-step 1 \
 --dist-url tcp://127.0.0.1:9011 \

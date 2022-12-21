@@ -123,17 +123,22 @@ class AFreezeCompressDP:
             
         del self._local_parameters_backup
             
-    def _sync_gradients(self):
+    def _allreduce_gradients(self):
         with torch.cuda.stream(self.dp_comm_stream):
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
             self.dp_comm_stream.wait_event(self.backward_ready_event)
-            self.profile_mark_sync_grad_start()
-            # step_update_exp_avg(self.optimizer)
-            for para in self.module.parameters():
-                para.grad /= self.dp_group_size
-                self.dp_comm.all_reduce(para.grad, stream=cupy_dp_stream)
-            self.profile_mark_allreduce_end()
-            self.dp_comm_stream.record_event(self.sync_gradients_ready_event)
+            if self.flatten:
+                self.profile_mark_allreduce_start()
+                self.dp_comm.all_reduce(self.flatten_para.grad, stream=cupy_dp_stream)
+                self.profile_mark_allreduce_end()
+            else:
+                for name, para in self.module.named_parameters():
+                    if para.grad is None:
+                        continue
+                    self.profile_mark_allreduce_start(name)
+                    self.dp_comm.all_reduce(para.grad, stream=cupy_dp_stream)
+                    self.profile_mark_allreduce_end(name)
+            self.dp_comm_stream.record_event(self.allreduce_grad_ready_event)
             
     def _compress(self, x):
         # return x
@@ -334,7 +339,10 @@ class AFreezeCompressDP:
 #                 para.data[comm_mask] = buffer.to(para.dtype)
             
     def optimizer_step(self):
-        self._partial_sync()
+        if flag.FLAG_DISABLE_COMPRESSION:
+            self._allreduce_gradients()
+        else:
+            self._partial_sync()
         with torch.cuda.stream(self.torch_optim_comp_stream):
             self.torch_optim_comp_stream.wait_event(self.sync_gradients_ready_event)
             self.profile_mark_optimizer_step_start()
