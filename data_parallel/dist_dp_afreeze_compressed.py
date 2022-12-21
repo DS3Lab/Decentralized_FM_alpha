@@ -128,16 +128,16 @@ class AFreezeCompressDP:
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
             self.dp_comm_stream.wait_event(self.backward_ready_event)
             if self.flatten:
-                self.profile_mark_allreduce_start()
+                # self.profile_mark_allreduce_start()
                 self.dp_comm.all_reduce(self.flatten_para.grad, stream=cupy_dp_stream)
                 self.profile_mark_allreduce_end()
             else:
                 for name, para in self.module.named_parameters():
                     if para.grad is None:
                         continue
-                    self.profile_mark_allreduce_start(name)
+                    # self.profile_mark_allreduce_start(name)
                     self.dp_comm.all_reduce(para.grad, stream=cupy_dp_stream)
-                    self.profile_mark_allreduce_end(name)
+                    # self.profile_mark_allreduce_end(name)
             self.dp_comm_stream.record_event(self.allreduce_grad_ready_event)
             
     def _compress(self, x):
