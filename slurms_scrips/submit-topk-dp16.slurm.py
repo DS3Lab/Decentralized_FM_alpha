@@ -33,9 +33,9 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
-export WANDB_NAME=opt-topk-200x-dp16-len512
+export WANDB_NAME=opt-topk-500x-dp16-len512
 
-export DP_TOP_K=0.005
+export DP_TOP_K=0.002
 
 root_path=/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm
 
