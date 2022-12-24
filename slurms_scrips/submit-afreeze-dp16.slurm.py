@@ -10,7 +10,7 @@ template = '''#!/bin/bash
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=8G
-#SBATCH --output=/cluster/home/juewang/fm/juewang/exe_log/opt_%j.log
+#SBATCH --output=/cluster/home/juewang/fm/juewang/exe_log/gpt_j_6b_slurm_%j.log
 
 module load gcc/6.3.0 cuda/11.0.3 eth_proxy       # Load modules from Euler setup
 source activate pipeline                          # Activate my conda python environment
@@ -33,7 +33,7 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
-export WANDB_NAME=opt-proxskip-200x-dp16-len512
+export WANDB_NAME=opt-slot-sgd-100x-len512
 
 export SYNC_STEPS=200
 
@@ -46,7 +46,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --project-name slot-sgd \
 --model-type opt \
 --seed 4242 \
---checkpoint-path ${root_path}/pretrained_models/checkpoints/$WANDB_NAME \
+--checkpoint-path ${root_path}/pretrained_models/checkpoints/${WANDB_NAME} \
 --load-pretrained-model true \
 --task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.5,ni:0.5 \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
@@ -57,7 +57,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --world-size ${world_size} --pipeline-group-size ${pp_degree} --data-group-size ${dp_degree} \
 --job-id ${job_id} --net-interface ${netif} \
 --fp16 \
---dp-mode proxskip \
+--dp-mode afreeze \
 --pp-mode gpipe --profiling no-profiling"
 
 python -u ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0 # aprox
