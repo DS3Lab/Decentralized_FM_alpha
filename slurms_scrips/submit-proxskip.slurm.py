@@ -33,9 +33,9 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
-export WANDB_NAME=opt-proxskip-500x
+export WANDB_NAME=opt-proxskip-200x
 
-export SYNC_STEPS=500
+export SYNC_STEPS=200
 
 root_path=/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm
 
