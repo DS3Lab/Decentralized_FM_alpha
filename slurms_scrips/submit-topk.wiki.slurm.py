@@ -33,8 +33,9 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
+export WANDB_NAME=opt-topk-200x-wiki
 
-export DP_TOP_K=0.01
+export DP_TOP_K=0.005
 
 root_path=/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm
 
@@ -42,10 +43,10 @@ main_program=dist_lm_pretrain.py
 
 ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --tokenizer-name ${root_path}/pretrained_models/opt-1.3b-new \
---project-name loooofi \
+--project-name slot-sgd \
 --model-type opt \
 --seed 4242 \
---checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-topk-100x-wiki \
+--checkpoint-path ${root_path}/pretrained_models/checkpoints/$WANDB_NAME \
 --load-pretrained-model true \
 --task-name /cluster/home/juewang/scratch/wiki103.jsonl \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \

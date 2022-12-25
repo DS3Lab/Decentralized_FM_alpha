@@ -3,14 +3,14 @@ import os
 import uuid
 
 template = '''#!/bin/bash
-#SBATCH --job-name=opt_allreduce
+#SBATCH --job-name=opt_1.3b
 #SBATCH --gpus=1 
 #SBATCH --gres=gpumem:20g
 #SBATCH --time=9:59:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem-per-cpu=8G
-#SBATCH --output=/cluster/home/juewang/fm/juewang/exe_log/opt_slurm_%j.log
+#SBATCH --mem-per-cpu=6G
+#SBATCH --output=/cluster/home/juewang/fm/juewang/exe_log/opt_%j.log
 
 module load gcc/6.3.0 cuda/11.0.3 eth_proxy       # Load modules from Euler setup
 source activate pipeline                          # Activate my conda python environment
@@ -33,6 +33,9 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
+export WANDB_NAME=opt-proxskip-200x-wiki
+
+export SYNC_STEPS=200
 
 root_path=/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm
 
@@ -43,7 +46,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --project-name slot-sgd \
 --model-type opt \
 --seed 4242 \
---checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-allreduce-x1-wiki \
+--checkpoint-path ${root_path}/pretrained_models/checkpoints/$WANDB_NAME \
 --load-pretrained-model true \
 --task-name /cluster/home/juewang/scratch/wiki103.jsonl \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
@@ -54,10 +57,10 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --world-size ${world_size} --pipeline-group-size ${pp_degree} --data-group-size ${dp_degree} \
 --job-id ${job_id} --net-interface ${netif} \
 --fp16 \
---dp-mode allreduce \
+--dp-mode proxskip \
 --pp-mode gpipe --profiling no-profiling"
 
-python -u ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0 # topk
+python -u ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0 # aprox
 '''
 
 if __name__ == '__main__':
@@ -66,9 +69,9 @@ if __name__ == '__main__':
     #     template = f.read()
 
     job_id = str(uuid.uuid4())
-    pp_degree=3
+    pp_degree=4
     dp_degree=4
-    n_layer_per_device=12
+    n_layer_per_device=8
     world_size = pp_degree * dp_degree
 
     template = template.replace('{{JOB_ID}}', job_id)

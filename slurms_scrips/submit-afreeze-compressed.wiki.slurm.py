@@ -33,8 +33,9 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
+export WANDB_NAME=opt-slot-sgd-10x-int4-top0.2-wiki
 
-export SYNC_STEPS=25
+export SYNC_STEPS=10
 export QUANT_BITS=4
 export QUANT_BUCKET_SIZE=128
 export TOPK_RATIO=0.2
@@ -45,10 +46,10 @@ main_program=dist_lm_pretrain.py
 
 ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --tokenizer-name ${root_path}/pretrained_models/opt-1.3b-new \
---project-name loooofi \
+--project-name slot-sgd \
 --model-type opt \
 --seed 4242 \
---checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-afreeze-compressed-25x-in4-top20-wiki \
+--checkpoint-path ${root_path}/pretrained_models/checkpoints/$WANDB_NAME \
 --load-pretrained-model true \
 --task-name /cluster/home/juewang/scratch/wiki103.jsonl \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
