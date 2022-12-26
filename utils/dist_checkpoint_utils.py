@@ -67,7 +67,7 @@ def save_checkpoint(pipe, args):
     checkpoint_step_path = os.path.join(args.checkpoint_path, f"checkpoint_{latest_step}")
     
     os.system(f"mkdir -p {checkpoint_step_path}")
-        
+
     torch.save(
         pipe.model.model.state_dict(),
         os.path.join(
@@ -129,5 +129,3 @@ def load_stream_dataloader_state_dict(dataloader, pipe, args):
     except Exception as e:
         
         print('failed to load dataset state_dict.')
-        
-        

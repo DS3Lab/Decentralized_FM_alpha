@@ -162,17 +162,15 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
                     pipe.dp_optim.allreduce_parameters()
                 if dp_rank == 0:
                     save_checkpoint(pipe, args)
+                    checkpoint_step_path = os.path.join(args.checkpoint_path, f"checkpoint_{pipe.global_step}")
+                    pipe.save_on_disk(checkpoint_step_path)
                 if do_sync_before_save:
                     pipe.dp_optim.rollback_parameters()
-        
     else:
-        
         while True:
-            
             pp_comm.broadcast(stop_flag, 0)
             if stop_flag.item() == 1:
                 break
-                
             pp_comm.broadcast(input_ids, 0)
             # pp_comm.broadcast(prefix_masks, 0)
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
