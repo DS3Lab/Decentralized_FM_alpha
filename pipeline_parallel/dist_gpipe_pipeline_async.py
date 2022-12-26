@@ -164,7 +164,7 @@ class GpipeAsync:
                 
                 wandb.init(
                     project=args.project_name, 
-                    entity='pipeline-activation-compression',
+                    # entity='pipeline-activation-compression',
                     config=args,
                 )
             if self.pp_rank == self.pipeline_group_size - 1:
