@@ -172,8 +172,8 @@ class GpipeAsync:
                         re.sub('[^a-zA-Z0-9 \n\.]', '_', args.task_name)
 
                 wandb.init(
-                    project=args.project_name,
-                    entity='pipeline-activation-compression',
+                    project=args.project_name, 
+                    # entity='pipeline-activation-compression',
                     config=args,
                 )
                 api_key = os.environ.get('COMET_ML_KEY')
