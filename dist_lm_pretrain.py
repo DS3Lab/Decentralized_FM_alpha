@@ -157,13 +157,12 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(input_ids, labels, loss_func=gpt_loss_func) # lm loss func
             
-            if pipe.global_step % args.checkpoint_steps == 0:
+            if pipe.global_step % args.checkpoint_steps == 0 or pipe.global_step == args.total_steps:
                 if do_sync_before_save:
                     pipe.dp_optim.allreduce_parameters()
                 if dp_rank == 0:
                     save_checkpoint(pipe, args)
-                    checkpoint_step_path = os.path.join(args.checkpoint_path, f"checkpoint_{pipe.global_step}")
-                    pipe.save_on_disk(checkpoint_step_path)
+                    pipe.save_on_disk(args.checkpoint_path)
                 if do_sync_before_save:
                     pipe.dp_optim.rollback_parameters()
     else:
