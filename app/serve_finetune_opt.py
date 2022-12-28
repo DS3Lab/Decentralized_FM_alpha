@@ -24,7 +24,8 @@ class FinetuneOPT(FastTrainingInterface):
             my_env['DATASET_URL'] = args[0]['dataset_url']
             for k in args[0]['arguments']:
                 my_env[k.upper()] = str(args[0]['arguments'][k])
-            my_env['CUDA_VISIBLE_DEVICES']="0,1"
+            if os.environ.get("CUDA_VISIBLE_DEVICES") is None:
+                my_env['CUDA_VISIBLE_DEVICES']="0,1"
             proc = subprocess.Popen(
                 "/bin/bash api_finetune.sh",
                 shell=True,
