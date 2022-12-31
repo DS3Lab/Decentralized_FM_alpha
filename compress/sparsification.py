@@ -57,5 +57,4 @@ def decompress_topk(values, masks, original_shape):
     )
     x = torch.zeros(masks.shape, dtype=values.dtype, device=values.device)
     x[masks.bool()] = values
-    x = x.view(original_shape)
     return x

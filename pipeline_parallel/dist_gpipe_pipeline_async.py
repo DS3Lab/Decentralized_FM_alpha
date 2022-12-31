@@ -31,7 +31,14 @@ def get_parameter_names(model, forbidden_layer_types):
 
 def create_optimizer(model, weight_decay=0.01, learning_rate=2e-5,
                      adam_beta1=0.9, adam_beta2=0.999, adam_epsilon=1e-6):
-    from torch.optim import AdamW
+    
+    try:
+        from bitsandbytes.optim import Adam8bit as AdamW
+        print('>>>>> using 8bit-AdamW')
+    except:
+        print('>>>>> using AdamW')
+        from torch.optim import AdamW
+    
     decay_parameters = get_parameter_names(model, [torch.nn.LayerNorm])
     decay_parameters = [
         name for name in decay_parameters if "bias" not in name]
@@ -177,14 +184,15 @@ class GpipeAsync:
                     config=args,
                 )
                 api_key = os.environ.get('COMET_ML_KEY')
-                print("initializing...")
-                self.experiment = Experiment(
-                    api_key=api_key,
-                    project_name="together_finetune",
-                    experiment_key=args.project_name,
-                    workspace="together",
-                    log_env_details=True, log_env_gpu=True, log_env_cpu=True, log_env_host=True
-                )
+                if api_key:
+                    print("initializing...")
+                    self.experiment = Experiment(
+                        api_key=api_key,
+                        project_name="together_finetune",
+                        experiment_key=args.project_name,
+                        workspace="together",
+                        log_env_details=True, log_env_gpu=True, log_env_cpu=True, log_env_host=True
+                    )
 
             if self.pp_rank == self.pipeline_group_size - 1:
                 self.output_micro_batches_grad = None
@@ -545,10 +553,11 @@ class GpipeAsync:
                 }, step=self.global_step,
             )
             print("logging...")
-            self.experiment.log_metrics({
-                'loss': sum(tr_loss)/len(tr_loss),
-                'lr': self.scheduler.get_last_lr()[0],
-            }, step=self.global_step)
+            if hasattr(self, 'experiment'):
+                self.experiment.log_metrics({
+                    'loss': sum(tr_loss)/len(tr_loss),
+                    'lr': self.scheduler.get_last_lr()[0],
+                }, step=self.global_step)
 
     def profiling_backward_stage(self):
         torch.cuda.synchronize()
