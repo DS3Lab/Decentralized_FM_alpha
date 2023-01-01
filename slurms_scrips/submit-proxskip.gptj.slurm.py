@@ -3,14 +3,14 @@ import os
 import uuid
 
 template = '''#!/bin/bash
-#SBATCH --job-name=opt_1.3b
+#SBATCH --job-name=gptj
 #SBATCH --gpus=1 
 #SBATCH --gres=gpumem:20g
-#SBATCH --time=9:59:00
+#SBATCH --time=23:59:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=6G
-#SBATCH --output=/cluster/home/juewang/fm/juewang/exe_log/opt_%j.log
+#SBATCH --output=/cluster/home/juewang/fm/juewang/exe_log/gptj_%j.log
 
 module load gcc/6.3.0 cuda/11.0.3 eth_proxy       # Load modules from Euler setup
 source activate pipeline                          # Activate my conda python environment
