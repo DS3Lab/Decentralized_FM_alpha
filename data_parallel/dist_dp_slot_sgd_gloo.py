@@ -25,9 +25,33 @@ global_lr = float(os.environ.get('GLOBAL_LR', 1.0))
 quantization_bits = int(os.environ.get('QUANT_BITS', 8))
 quantization_bucket_size = int(os.environ.get('QUANT_BUCKET_SIZE', 128))
 top_k_ratio = float(os.environ.get('TOPK_RATIO', 0.5))
-    
 
-class AFreezeCompressDP:
+import zlib
+
+try:
+    import lz4.frame
+except:
+    pass
+
+def _lossless_compress(data):
+    assert data.dtype == torch.uint8
+    raw = data.detach().cpu().numpy().tobytes()
+    # enc = lz4.frame.compress(raw)
+    enc = zlib.compress(raw)
+    rate = len(raw) / len(enc)
+    # print(f'c-rate: {rate}x')
+    # if rate < 1.5:
+    #     print(raw[:1000])
+        # assert False
+    return enc
+
+def _lossless_decompress(enc):
+    # dec = lz4.frame.decompress(enc)
+    dec = zlib.decompress(enc)
+    data = torch.frombuffer(dec, dtype=torch.uint8)
+    return data
+
+class SlotSGDGlooDP:
     def __init__(self, args, device, module: torch.nn.Module, optimizer: torch.optim.Optimizer = None, flatten=False):
         assert not flatten
         self.dp_bits = args.dp_bits
@@ -157,24 +181,22 @@ class AFreezeCompressDP:
                     pass
                     
                 values, masks, indices = compress_topk(x, k, return_indices=True)
-                
-                # if k > 10 and self.dp_rank==0:
-                #     print('indices:', indices)
 
                 values_q, scales_q = compress_flexible_nbits_by_bucket(values, bits=quantization_bits, scale_method='max', bucket_size=quantization_bucket_size)
                 
-                # if k > 10 and self.dp_rank==0:
-                #     print('integers:', unpack_low_bit_tensor(values_q, quantization_bits, values.shape))
+                return (values_q, scales_q, masks), (dtype, shape, values.shape)
+    
+    def _decompress(self, x_hat, meta_data):
+        
+        values_q, scales_q, masks = x_hat
+        x_dtype, x_shape, values_shape = meta_data
+        
+        values = decompress_flexible_nbits_by_bucket(values_q, scales_q, bits=quantization_bits, original_shape=values_shape, bucket_size=quantization_bucket_size)
                     
-                values = decompress_flexible_nbits_by_bucket(values_q, scales_q, bits=quantization_bits, original_shape=values.shape, bucket_size=quantization_bucket_size)
-                    
-                x = decompress_topk(values, masks, x.shape)
-                x = x.to(dtype)
+        x = decompress_topk(values, masks, x_shape)
+        x = x.to(x_dtype)
         
         return x
-    
-    def _decompress(self, x_hat):
-        return x_hat
             
     def _partial_sync(self):
         
@@ -206,12 +228,19 @@ class AFreezeCompressDP:
                 self.dp_comm_stream.record_event(self.sync_gradients_ready_event)
             
         else:
+            
+            original_bits = 0
+            send_bits = 0
+            recv_bits = 0
+            
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
             with torch.cuda.stream(self.dp_comm_stream), cupy_dp_stream:
                 
                 # for name, para in self.module.named_parameters():
                 for i_group, group in enumerate(self.optimizer.optimizer.param_groups):
                     for i_para, para in enumerate(group["params"]):
+                        
+                        # original_bits += para.numel() * 16 #torch.finfo(para.dtype).bits
                         
                         para = para.view(-1)
                         
@@ -243,7 +272,8 @@ class AFreezeCompressDP:
                                 comm_data = torch.zeros(
                                     comm_mask.sum().item(), dtype=torch.float16, device=para.device
                                 )
-                                print('comm_data:', comm_data.shape)
+                                # comp_data, _ = self._compress(comm_data)
+                                # print('comm_data:', [cd.numel() for cd in comp_data])
                                 comm_data_list.append(comm_data)
 
                             # global para
@@ -276,45 +306,77 @@ class AFreezeCompressDP:
                         for i in range(self.dp_group_size):
                             comm_mask = comm_mask_list[i]
                             comm_data_list[i].data[:] = (para[i*chunk_size:(i+1)*chunk_size][comm_mask] - global_para[i*chunk_size:(i+1)*chunk_size][comm_mask]).half()
-                            # if self.dp_rank == 0:
-                            #     print('real d', comm_data_list[i].data[0])
-                        comm_data_compressed_list = [
-                            self._decompress(self._compress(x)) for x in comm_data_list]
-                        comm_buffer_list = [torch.zeros_like(x) for x in comm_data_list]
+                            
+                        comm_data_compressed_list = []
+                        comm_data_meta_list = []
+                        for x in comm_data_list:
+                            data, meta_data = self._compress(x)
+                            z = self._decompress(data, meta_data)
+                            assert z.shape == x.shape
+                            comm_data_compressed_list.append(data)
+                            comm_data_meta_list.append(meta_data)
+                        comm_buffer_list = [[torch.zeros_like(x).cpu() for x in x_tuple] for x_tuple in comm_data_compressed_list]
                         
                         # revert
-                        for i, _data_compressed in enumerate(comm_data_compressed_list):
+                        for i in range(self.dp_group_size):
+                            # print('A', len(comm_data_compressed_list[i]))
+                            _data_compressed = self._decompress(comm_data_compressed_list[i], comm_data_meta_list[i])
                             para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] -= _data_compressed
 
-                        cupy.cuda.nccl.groupStart()
-                        for i in range(self.dp_group_size):
-                            to_send = comm_data_compressed_list[i]
-                            self.dp_comm.send(
-                                to_send, dst=i, stream=cupy_dp_stream)
-                            to_recv = comm_buffer_list[i]
-                            self.dp_comm.recv(
-                                to_recv, src=i, stream=cupy_dp_stream)
-                        cupy.cuda.nccl.groupEnd()
-
-                        server_data = sum(comm_buffer_list) / len(comm_buffer_list)
-                        server_data.add_(server_error[server_mask])
-                        server_data_compressed = self._decompress(self._compress(server_data))
-                        server_error.data[server_mask] = (server_data - server_data_compressed)
-
-                        cupy.cuda.nccl.groupStart()
-                        for i in range(self.dp_group_size):
-                            to_send = server_data_compressed
-                            self.dp_comm.send(
-                                to_send, dst=i, stream=cupy_dp_stream)
-                            to_recv = comm_buffer_list[i]
-                            self.dp_comm.recv(
-                                to_recv, src=i, stream=cupy_dp_stream)
-                        cupy.cuda.nccl.groupEnd()
-                        
-                        # print('done')
-
-                        for i, _data in enumerate(comm_buffer_list):
+                        # print('do first group')
                             
+                        _group_calls = []
+                        for i in range(self.dp_group_size):
+                            for j, to_send in enumerate(comm_data_compressed_list[i]):
+                                # print(f"send from {self.dp_rank} to {i}")
+                                if i != self.dp_rank:
+                                    call = self.dp_comm.isend(
+                                        to_send, dst=i, stream=cupy_dp_stream)
+                                    _group_calls.append(call)
+                                else:
+                                    comm_buffer_list[i][j][:] = to_send.cpu()
+                            for to_recv in comm_buffer_list[i]:
+                                # print(f"recv from {i} to {self.dp_rank}")
+                                if i != self.dp_rank:
+                                    call = self.dp_comm.irecv(
+                                        to_recv, src=i, stream=cupy_dp_stream)
+                                    _group_calls.append(call)
+                        for call in _group_calls:
+                            call.wait()
+                            
+                        # print('done first group')
+
+                        server_data = self._decompress([z.to(para.device) for z in comm_buffer_list[0]], comm_data_meta_list[0]) / len(comm_buffer_list)
+                        for i in range(1, self.dp_group_size):
+                            server_data.data += self._decompress([z.to(para.device) for z in comm_buffer_list[i]], comm_data_meta_list[i]) / len(comm_buffer_list)
+                        server_data.add_(server_error[server_mask])
+                        server_data_compressed, server_data_meta = self._compress(server_data)
+                        server_error.data[server_mask] = (server_data - self._decompress(server_data_compressed, server_data_meta))
+                        
+                        # print('do second group')
+
+                        _group_calls = []
+                        for i in range(self.dp_group_size):
+                            for j, to_send in enumerate(server_data_compressed):
+                                if i != self.dp_rank:
+                                    call = self.dp_comm.isend(
+                                        to_send, dst=i, stream=cupy_dp_stream)
+                                    _group_calls.append(call)
+                                else:
+                                    comm_buffer_list[i][j][:] = to_send.cpu()
+                            for to_recv in comm_buffer_list[i]:
+                                if i != self.dp_rank:
+                                    call = self.dp_comm.irecv(
+                                        to_recv, src=i, stream=cupy_dp_stream)
+                                    _group_calls.append(call)
+                        for call in _group_calls:
+                            call.wait()
+                        
+                        # print('done second group')
+
+                        for i in range(self.dp_group_size):
+                            
+                            _data = self._decompress([z.to(para.device) for z in comm_buffer_list[i]], comm_data_meta_list[i])
                             para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data * global_lr
                             global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data * global_lr
                             
@@ -323,7 +385,8 @@ class AFreezeCompressDP:
 
                 self.dp_comm_stream.record_event(self.sync_gradients_ready_event)
                 
-                print('done all')
+                print('done partial sync')
+                # print(f'param: {original_bits}, send: {send_bits}, recv: {recv_bits}')
                 
 #     def _copy_to_model(self):
         

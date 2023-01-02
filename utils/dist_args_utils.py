@@ -37,6 +37,8 @@ def add_task_arguments(parser):
                         help='-')
     parser.add_argument('--make-vocab-size-divisible-by', type=int, default=128, metavar='N',
                         help='-')
+    parser.add_argument('--optimizer', type=str, default='adamw', metavar='N',
+                        help='-')
 
 
 def add_model_arguments(parser):
