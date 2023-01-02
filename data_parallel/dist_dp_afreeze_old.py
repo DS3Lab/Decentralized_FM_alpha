@@ -6,9 +6,7 @@ import math
 from comm.comm_utils import *
 from .flatten_utils import flatten_params, flatten_tensors
 from compress.fixpoint import *
-from compress.sparsification import *
 from compress import flag
-import cupy
 
 import os
 
@@ -16,16 +14,119 @@ if 'SYNC_STEPS' not in os.environ:
     sync_steps = 25
     sync_prob = 1.0 / sync_steps
     global_sync_steps = 1
+    
 else:
     sync_steps = int(os.environ['SYNC_STEPS'])
     sync_prob = 1.0 / sync_steps
     global_sync_steps = 1
+
+@torch.no_grad()
+def step_update(self, dp_optimizer=None):
     
-global_lr = float(os.environ.get('GLOBAL_LR', 1.0))
-quantization_bits = int(os.environ.get('QUANT_BITS', 8))
-quantization_bucket_size = int(os.environ.get('QUANT_BUCKET_SIZE', 128))
-top_k_ratio = float(os.environ.get('TOPK_RATIO', 0.5))
+    fp16_wrapper = None
     
+    if not isinstance(self, torch.optim.AdamW):
+        fp16_wrapper, self = self, self.optimizer
+        assert isinstance(self, torch.optim.AdamW)
+        use_fp16 = (fp16_wrapper is not None)
+        
+    if fp16_wrapper is not None:
+        fp16_wrapper._copy_model_grads_to_optimizer_grads()
+
+        found_inf_flag = fp16_wrapper._unscale_optimizer_grads_and_check_for_nan()
+        fp16_wrapper.grad_scaler.update(found_inf_flag)
+
+        # If we found inf/nan, skip the update.
+        if found_inf_flag:
+            print("!!! Warning: find inf in fp16 optimizer-step() !!!")
+            # return False
+        
+        for params in fp16_wrapper.fp32_from_float16_groups:
+            for p in params:
+                p.grad = p.grad.nan_to_num()
+            torch.nn.utils.clip_grad_norm_(params, 1.0)
+
+    for group in self.param_groups:
+        for p in group["params"]:
+            if p.grad is None:
+                continue
+            grad = p.grad.data
+            if grad.is_sparse:
+                raise RuntimeError("Adam does not support sparse gradients, please consider SparseAdam instead")
+
+            state = self.state[p]
+
+            # assert len(state) != 0
+            if len(state) == 0:
+                state["step"] = 0
+                # Exponential moving average of gradient values
+                state["exp_avg"] = torch.zeros_like(p.data, dtype=(torch.float16 if use_fp16 else torch.float32))
+                # Exponential moving average of squared gradient values
+                state["exp_avg_sq"] = torch.zeros_like(p.data)
+                state["first"] = True
+                
+            if "train_mask" in state and state["train_mask"].dtype != torch.bool:
+                print(f"wrong train_mask.dtype: {state['train_mask'].dtype}")
+                print('reinit it...')
+                state["train_mask"] = torch.ones_like(p, dtype=torch.bool)
+                state["train_mask"].view(-1)[::sync_steps] = False
+
+            exp_avg, exp_avg_sq = state["exp_avg"], state["exp_avg_sq"]
+            beta1, beta2 = group["betas"]
+
+            state["step"] += 1
+
+            # Decay the first and second moment running average coefficient
+            # In-place operations to update the averages at the same time
+            exp_avg.mul_(beta1).add_(grad, alpha=1.0 - beta1)
+            exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1.0 - beta2)
+            denom = exp_avg_sq.sqrt().add_(group["eps"])
+
+            step_size = group["lr"]
+#             if group["correct_bias"]:  # No bias correction for Bert
+            bias_correction1 = 1.0 - beta1 ** state["step"]
+            bias_correction2 = 1.0 - beta2 ** state["step"]
+            step_size = step_size * math.sqrt(bias_correction2) / bias_correction1
+            
+            if 'train_mask' in state:
+                # reset comm part of params
+                p.data.addcdiv_(exp_avg * state["train_mask"].to(p.dtype), denom, value=-step_size)
+            else:
+                p.data.addcdiv_(exp_avg.to(p.dtype), denom, value=-step_size)
+
+            if state["step"] % global_sync_steps == 0:
+                if p.numel() >= sync_steps:
+                    if state["first"]:
+                        print('first sync...')
+                        state["first"] = False
+                        state["train_mask"] = torch.ones_like(p, dtype=torch.bool)
+                        state["train_mask"].view(-1)[::sync_steps] = False
+                    else:
+                        print(f'sync... at {state["step"]}')
+                        data = p.data[~state["train_mask"]]
+                        print(p.numel() / data.numel(), 'X')
+                        data /= dp_optimizer.dp_group_size
+                        dp_optimizer.dp_comm.all_reduce(data)
+                        p.data[~state["train_mask"]] = data
+                        state["train_mask"] = state["train_mask"].roll(1)
+                else:
+                    print('warn: small param block!')
+                    p.data /= dp_optimizer.dp_group_size
+                    dp_optimizer.dp_comm.all_reduce(p.data)
+            else:
+                print('skipping')
+            
+            if group["weight_decay"] > 0.0:
+                if 'train_mask' in state:
+                    p.data.add_(p.data * state["train_mask"].to(p.dtype), alpha=-group["lr"] * group["weight_decay"])
+                else:
+                    p.data.add_(p.data, alpha=-group["lr"] * group["weight_decay"])
+                
+    if fp16_wrapper is not None:
+        fp16_wrapper._copy_optimizer_params_to_model_params()
+        # Successful update.
+        return True
+            
 
 class AFreezeDP:
     def __init__(self, args, device, module: torch.nn.Module, optimizer: torch.optim.Optimizer = None, flatten=False):
@@ -54,6 +155,9 @@ class AFreezeDP:
         num_paras, element_size = self._compute_total_para_num()
         print("Total number of parameters: {}, element size: {}, total size {} MB."
               .format(num_paras, element_size, num_paras * element_size // 1024 // 1024))
+
+        self.th = torch.zeros(1, dtype=torch.uint8, device=device)
+        
         
         if self.enable_tidy_profiling:
             self.global_rank = args.rank
@@ -73,8 +177,6 @@ class AFreezeDP:
             self.server_compress_start_event = torch.cuda.Event(enable_timing=True, blocking=False)
             self.worker_compress_end_event = torch.cuda.Event(enable_timing=True, blocking=False)
             self.server_compress_end_event = torch.cuda.Event(enable_timing=True, blocking=False)
-            
-        self.dp_state_dict = {}
 
     def _compute_total_para_num(self):
         total_count = 0
@@ -123,149 +225,23 @@ class AFreezeDP:
             
         del self._local_parameters_backup
             
-    def _allreduce_gradients(self):
+    def _sync_gradients(self):
         with torch.cuda.stream(self.dp_comm_stream):
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
             self.dp_comm_stream.wait_event(self.backward_ready_event)
-            if self.flatten:
-                # self.profile_mark_allreduce_start()
-                self.dp_comm.all_reduce(self.flatten_para.grad, stream=cupy_dp_stream)
-                self.profile_mark_allreduce_end()
-            else:
-                for name, para in self.module.named_parameters():
-                    if para.grad is None:
-                        continue
-                    # self.profile_mark_allreduce_start(name)
-                    self.dp_comm.all_reduce(para.grad, stream=cupy_dp_stream)
-                    # self.profile_mark_allreduce_end(name)
+            self.profile_mark_sync_grad_start()
+            # step_update_exp_avg(self.optimizer)
+            for para in self.module.parameters():
+                para.grad /= self.dp_group_size
+                self.dp_comm.all_reduce(para.grad, stream=cupy_dp_stream)
+            self.profile_mark_allreduce_end()
             self.dp_comm_stream.record_event(self.sync_gradients_ready_event)
             
-    def _compress(self, x):
-        # return x
-        dtype = x.dtype
-        shape = x.shape
-        with torch.cuda.stream(self.dp_comm_stream):
-            cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
-            with cupy_dp_stream:
-                
-                k = max(int(top_k_ratio * x.numel()), 1)
-                if k >= quantization_bucket_size:
-                    # ensure dividable
-                    k = k // quantization_bucket_size * quantization_bucket_size
-                else:
-                    # bucket_size will be set to k internally
-                    pass
-                    
-                values, masks, indices = compress_topk(x, k, return_indices=True)
-                
-                # if k > 10 and self.dp_rank==0:
-                #     print('indices:', indices)
-
-                values_q, scales_q = compress_flexible_nbits_by_bucket(values, bits=quantization_bits, scale_method='max', bucket_size=quantization_bucket_size)
-                
-                # if k > 10 and self.dp_rank==0:
-                #     print('integers:', unpack_low_bit_tensor(values_q, quantization_bits, values.shape))
-                    
-                values = decompress_flexible_nbits_by_bucket(values_q, scales_q, bits=quantization_bits, original_shape=values.shape, bucket_size=quantization_bucket_size)
-                    
-                x = decompress_topk(values, masks, x.shape)
-                x = x.to(dtype)
-        
-        return x
-    
-    def _decompress(self, x_hat):
-        return x_hat
-            
-    def _partial_sync(self):
-        
-        if self.flatten:
-            
-            with torch.cuda.stream(self.dp_comm_stream):
-                cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
-                
-                name = 'model'
-                para = self.flatten_para
-
-                if name not in self.comm_mask_dict:
-                    self.comm_mask_dict[name] = torch.zeros_like(para, dtype=torch.bool)
-                    self.comm_mask_dict[name].view(-1)[::sync_steps] = True
-                    self.buffer_dict[name] = torch.zeros(
-                        self.comm_mask_dict[name].sum().item(), 
-                        dtype=torch.float16, device=para.device
-                    )
-                else:
-                    self.comm_mask_dict[name] = self.comm_mask_dict[name].roll(1)
-                    
-                comm_mask = self.comm_mask_dict[name]
-                buffer = self.buffer_dict[name]
-                buffer.data[:] = (para[comm_mask] / self.dp_group_size).half()
-                # print(buffer.data.numel() / para.data.numel())
-                print('not implemented yet, just do allreduce')
-                self.dp_comm.all_reduce(buffer)
-
-                self.dp_comm_stream.record_event(self.sync_gradients_ready_event)
-            
-        else:
-            cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
-            with torch.cuda.stream(self.dp_comm_stream), cupy_dp_stream:
-                
-                # for name, para in self.module.named_parameters():
-                for i_group, group in enumerate(self.optimizer.optimizer.param_groups):
-                    for i_para, para in enumerate(group["params"]):
-                        
-                        name = f"{i_group}-{i_para}"
-                    
-                        dp_state_dict = self.dp_state_dict
-
-                        if name not in dp_state_dict:
-                            
-                            comm_mask = torch.zeros_like(para, dtype=torch.bool)
-                            comm_mask.view(-1)[::sync_steps] = True
-                            if not comm_mask.any().item():
-                                comm_mask[:] = True
-                
-                            dp_state_dict[name] = {
-                                "comm_mask": comm_mask,
-                            }
-
-                        comm_mask = dp_state_dict[name]["comm_mask"]
-                        
-                        data = para.data[comm_mask]
-                        # print(data.numel() / para.numel())
-                        data /= self.dp_group_size
-                        self.dp_comm.all_reduce(data)
-                        para.data[comm_mask] = data
-                        dp_state_dict[name]["comm_mask"] = dp_state_dict[name]["comm_mask"].roll(1)
-
-                self.dp_comm_stream.record_event(self.sync_gradients_ready_event)
-                
-#     def _copy_to_model(self):
-        
-#         if self.flatten:
-#             name = 'model'
-#             para = self.flatten_para
-#             if name in self.comm_mask_dict:
-#                 comm_mask = self.comm_mask_dict[name]
-#                 buffer = self.buffer_dict[name]
-#                 para.data[comm_mask] = buffer.to(para.dtype)
-#         else:
-#             for name, para in self.module.named_parameters():
-#                 if name not in self.comm_mask_dict:
-#                     continue
-#                 comm_mask = self.comm_mask_dict[name]
-#                 buffer = self.buffer_dict[name]
-#                 para.data[comm_mask] = buffer.to(para.dtype)
-            
     def optimizer_step(self):
-        if flag.FLAG_DISABLE_COMPRESSION:
-            self._allreduce_gradients()
-        else:
-            self._partial_sync()
         with torch.cuda.stream(self.torch_optim_comp_stream):
             self.torch_optim_comp_stream.wait_event(self.sync_gradients_ready_event)
             self.profile_mark_optimizer_step_start()
-            # self._copy_to_model()
-            self.optimizer.step()
+            step_update(self.optimizer, dp_optimizer=self)
             self.torch_optim_comp_stream.record_event(self.optimizer_step_ready_event)
 
     def set_time_stamp(self, init_time_stamp, init_event):
