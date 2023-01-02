@@ -11,9 +11,9 @@ class TorchCommunicator:
         self.process_group = process_group
         self.to_global_rank = to_global_rank
 
-    @staticmethod
-    def barrier():
-        dist.barrier()
+    # @staticmethod
+    def barrier(self):
+        dist.barrier(group=self.process_group)
 
     def send(self,
              tensor: torch.Tensor,
@@ -54,7 +54,9 @@ class TorchCommunicator:
                   tensor: torch.Tensor,
                   src: int,
                   stream=None):
-        dist.broadcast(tensor, self.to_global_rank(src), group=self.process_group)
+        buffer = tensor.cpu()
+        dist.broadcast(buffer, self.to_global_rank(src), group=self.process_group)
+        tensor[:] = buffer.to(tensor.device)
 
     def reduce(self,
                tensor: torch.Tensor,

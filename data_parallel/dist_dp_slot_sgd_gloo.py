@@ -236,6 +236,8 @@ class SlotSGDGlooDP:
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
             with torch.cuda.stream(self.dp_comm_stream), cupy_dp_stream:
                 
+                self.pp_comm.barrier()
+                
                 # for name, para in self.module.named_parameters():
                 for i_group, group in enumerate(self.optimizer.optimizer.param_groups):
                     for i_para, para in enumerate(group["params"]):
@@ -265,7 +267,7 @@ class SlotSGDGlooDP:
                                     assert comm_mask.sum().item() == n_potisive
                                 else:
                                     comm_mask[:] = True
-                                print('comm_mask:', comm_mask.sum().item(), comm_mask.shape)
+                                # print('comm_mask:', comm_mask.sum().item(), comm_mask.shape)
                                 comm_mask_list.append(comm_mask)
 
                                 # data to send
@@ -285,7 +287,7 @@ class SlotSGDGlooDP:
                                 comm_mask_list[self.dp_rank].shape, dtype=torch.float16, device=global_para.device,
                             )
 
-                            print('server error shape:', server_error.shape)
+                            # print('server error shape:', server_error.shape)
                             dp_state_dict[name] = {
                                 "comm_mask_list": comm_mask_list,
                                 "comm_data_list": comm_data_list,
@@ -323,7 +325,8 @@ class SlotSGDGlooDP:
                             _data_compressed = self._decompress(comm_data_compressed_list[i], comm_data_meta_list[i])
                             para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] -= _data_compressed
 
-                        # print('do first group')
+                        # print(f'do first group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])}  - {para.shape}')
+                        # self.dp_comm.barrier()
                             
                         _group_calls = []
                         for i in range(self.dp_group_size):
@@ -344,7 +347,8 @@ class SlotSGDGlooDP:
                         for call in _group_calls:
                             call.wait()
                             
-                        # print('done first group')
+                        print(f'done first group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])} - {para.shape}')
+                        self.dp_comm.barrier()
 
                         server_data = self._decompress([z.to(para.device) for z in comm_buffer_list[0]], comm_data_meta_list[0]) / len(comm_buffer_list)
                         for i in range(1, self.dp_group_size):
@@ -353,7 +357,8 @@ class SlotSGDGlooDP:
                         server_data_compressed, server_data_meta = self._compress(server_data)
                         server_error.data[server_mask] = (server_data - self._decompress(server_data_compressed, server_data_meta))
                         
-                        # print('do second group')
+                        # print(f'do second group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])} - {para.shape}')
+                        # self.dp_comm.barrier()
 
                         _group_calls = []
                         for i in range(self.dp_group_size):
@@ -372,7 +377,8 @@ class SlotSGDGlooDP:
                         for call in _group_calls:
                             call.wait()
                         
-                        # print('done second group')
+                        print(f'done second group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])} - {para.shape}')
+                        self.dp_comm.barrier()
 
                         for i in range(self.dp_group_size):
                             
@@ -385,7 +391,10 @@ class SlotSGDGlooDP:
 
                 self.dp_comm_stream.record_event(self.sync_gradients_ready_event)
                 
-                print('done partial sync')
+                # print('done partial sync')
+                print(f'done partial sync r{self.global_rank}')
+                self.pp_comm.barrier()
+                # print(f'done pp sync r{self.global_rank}')
                 # print(f'param: {original_bits}, send: {send_bits}, recv: {recv_bits}')
                 
 #     def _copy_to_model(self):
