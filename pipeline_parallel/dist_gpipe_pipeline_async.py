@@ -29,15 +29,17 @@ def get_parameter_names(model, forbidden_layer_types):
     return result
 
 
-def create_optimizer(model, weight_decay=0.01, learning_rate=2e-5,
+def create_optimizer(model, optimizer_type, weight_decay=0.01, learning_rate=2e-5,
                      adam_beta1=0.9, adam_beta2=0.999, adam_epsilon=1e-6):
     
-    try:
-        from bitsandbytes.optim import Adam8bit as AdamW
-        print('>>>>> using 8bit-AdamW')
-    except:
-        print('>>>>> using AdamW')
+    if optimizer_type == 'adamw' or optimizer_type == 'adam':
         from torch.optim import AdamW
+        print('>>>>> using Adam')
+    elif optimizer_type == '8bit-adam':
+        from bitsandbytes.optim import Adam8bit as AdamW
+        print('>>>>> using 8bit-Adam')
+    else:
+        assert False
     
     decay_parameters = get_parameter_names(model, [torch.nn.LayerNorm])
     decay_parameters = [
@@ -222,14 +224,14 @@ class GpipeAsync:
         if do_train:
             if self.use_fp16:
                 tmp_optimizer = create_optimizer(
-                    self.model, learning_rate=args.lr)
+                    self.model, optimizer_type=getattr(args, 'optimizer', 'adamw'), learning_rate=args.lr)
                 self.optimizer = get_fp16_optimizer(
                     args, tmp_optimizer, device)
                 self.scheduler = get_linear_schedule_with_warmup(
                     tmp_optimizer, args.warmup_steps, args.total_steps, )
             else:
                 self.optimizer = create_optimizer(
-                    self.model, learning_rate=args.lr)
+                    self.model, optimizer_type=getattr(args, 'optimizer', 'adamw'), learning_rate=args.lr)
                 self.scheduler = get_linear_schedule_with_warmup(
                     self.optimizer, args.warmup_steps, args.total_steps, )
 

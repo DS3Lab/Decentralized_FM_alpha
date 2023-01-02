@@ -12,6 +12,7 @@ from .dist_dp_proxskip_adam import ProxSkipAdamDP
 from .dist_dp_afreeze_compressed import AFreezeCompressDP
 from .dist_dp_afreeze_compressed_2 import AFreezeCompress2DP
 from .dist_dp_slot_sgd import SlotSGDDP
+from .dist_dp_slot_sgd_gloo import SlotSGDGlooDP
 
 
 def get_dp_module(args, device, module, optimizer):
@@ -44,6 +45,8 @@ def get_dp_module(args, device, module, optimizer):
         return ATopKDP(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'slot_sgd':
         return SlotSGDDP(args, device, module, optimizer, flatten=False)
+    elif args.dp_mode == 'slot_sgd_gloo':
+        return SlotSGDGlooDP(args, device, module, optimizer, flatten=False)
     else:
         print("Not recognize this data parallel mode.")
         assert False
