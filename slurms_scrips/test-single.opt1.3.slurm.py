@@ -33,7 +33,7 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
-export WANDB_NAME=gptj-lofi
+export WANDB_NAME=opt-test-single
 export WANDB_ENTITY=pipeline-activation-compression
 
 export SYNC_STEPS=200
@@ -42,19 +42,19 @@ root_path=/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm
 
 main_program=dist_lm_pretrain.py
 
-ARGS="--model-name ${root_path}/pretrained_models/gpt-j-6B \
---tokenizer-name ${root_path}/pretrained_models/gpt-j-6B \
+ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
+--tokenizer-name ${root_path}/pretrained_models/opt-1.3b-new \
 --project-name slot-sgd \
---model-type gptj \
+--model-type opt \
 --optimizer 8bit-adam \
 --seed 42 \
 --checkpoint-path ${root_path}/pretrained_models/checkpoints/$WANDB_NAME \
 --load-pretrained-model true \
 --task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.5,ni:0.5 \
---num-layers ${n_layer_per_device} --num-heads 16 --embedding-dim 4096 \
+--num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
 --total-steps 100000 --warmup-steps 100 --train-warmup-steps 0 \
 --checkpoint-steps 100 \
---lr 5e-5 --seq-length 2048 --batch-size 16 --micro-batch-size 1 --gradient-accumulate-step 1 \
+--lr 5e-5 --seq-length 2048 --batch-size 32 --micro-batch-size 1 --gradient-accumulate-step 1 \
 --dist-url tcp://127.0.0.1:9011 \
 --world-size ${world_size} --pipeline-group-size ${pp_degree} --data-group-size ${dp_degree} \
 --job-id ${job_id} --net-interface ${netif} \
@@ -62,7 +62,7 @@ ARGS="--model-name ${root_path}/pretrained_models/gpt-j-6B \
 --dp-mode local \
 --pp-mode gpipe --profiling no-profiling"
 
-python -u ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0 # aprox
+python -u ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0
 '''
 
 if __name__ == '__main__':
@@ -71,9 +71,9 @@ if __name__ == '__main__':
     #     template = f.read()
 
     job_id = str(uuid.uuid4())
-    pp_degree=8
-    dp_degree=4
-    n_layer_per_device=4
+    pp_degree=3
+    dp_degree=1
+    n_layer_per_device=12
     world_size = pp_degree * dp_degree
 
     template = template.replace('{{JOB_ID}}', job_id)
