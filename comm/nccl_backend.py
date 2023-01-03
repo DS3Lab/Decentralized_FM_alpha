@@ -639,7 +639,8 @@ class NCCLCommunicator:
 
 
 def default_init(args):
-    dist.init_process_group(backend='gloo', init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
+    import datetime
+    dist.init_process_group(backend='gloo', timeout=datetime.timedelta(seconds=5*60), init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
 
 """
 def init_comm(args):

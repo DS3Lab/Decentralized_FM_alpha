@@ -46,7 +46,7 @@ def get_dp_module(args, device, module, optimizer):
     elif args.dp_mode == 'slot_sgd':
         return SlotSGDDP(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'slot_sgd_gloo':
-        return SlotSGDGlooDP(args, device, module, optimizer, flatten=False)
+        return SlotSGDGlooDP(args, device, module, optimizer, flatten=True)
     else:
         print("Not recognize this data parallel mode.")
         assert False
