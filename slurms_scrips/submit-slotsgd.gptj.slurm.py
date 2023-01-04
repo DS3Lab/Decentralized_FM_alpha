@@ -49,6 +49,7 @@ ARGS="--model-name ${root_path}/pretrained_models/gpt-j-6B \
 --tokenizer-name ${root_path}/pretrained_models/gpt-j-6B \
 --project-name slot-sgd \
 --model-type gptj \
+--optimizer 8bit-adam \
 --seed 42 \
 --checkpoint-path ${root_path}/pretrained_models/checkpoints/$WANDB_NAME \
 --load-pretrained-model true \
