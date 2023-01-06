@@ -48,7 +48,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --seed 42 \
 --checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-allreduce-baseline \
 --load-pretrained-model true \
---task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.55,ni:0.2,/cluster/home/juewang/scratch/p3.jsonl:0.2,cot:0.05 \
+--task-name /cluster/home/juewang/fm/datasets/pile_1280k.jsonl:0.55,ni:0.2,/cluster/home/juewang/fm/datasets/p3.jsonl:0.2,cot:0.05 \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
 --total-steps 100000 --warmup-steps 100 --train-warmup-steps 0 \
 --checkpoint-steps 100 \
