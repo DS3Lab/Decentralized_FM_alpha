@@ -9,7 +9,7 @@ template = '''#!/bin/bash
 #SBATCH --time=9:59:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem-per-cpu=8G
+#SBATCH --mem-per-cpu=6G
 #SBATCH --output=/cluster/home/juewang/fm/juewang/exe_log/opt_slurm_%j.log
 
 module load gcc/6.3.0 cuda/11.0.3 eth_proxy       # Load modules from Euler setup
@@ -33,6 +33,8 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
+export WANDB_NAME=opt-allreduce-euler
+export WANDB_ENTITY=pipeline-activation-compression
 
 root_path=/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm
 
@@ -40,12 +42,13 @@ main_program=dist_lm_pretrain.py
 
 ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --tokenizer-name ${root_path}/pretrained_models/opt-1.3b-new \
---project-name loooofi \
+--project-name slot-sgd \
 --model-type opt \
---seed 4242 \
+--optimizer 8bit-adam \
+--seed 42 \
 --checkpoint-path ${root_path}/pretrained_models/checkpoints/opt-allreduce-baseline \
 --load-pretrained-model true \
---task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.5,ni:0.5 \
+--task-name /cluster/home/juewang/scratch/pile_1280k.jsonl:0.55,ni:0.2,/cluster/home/juewang/scratch/p3.jsonl:0.2,cot:0.05 \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
 --total-steps 100000 --warmup-steps 100 --train-warmup-steps 0 \
 --checkpoint-steps 100 \

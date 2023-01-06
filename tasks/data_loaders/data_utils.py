@@ -215,7 +215,7 @@ def name_to_dataset(task, tokenizer, args):
             dataset = StreamDataset('./natural-instructions/', tokenizer, args.seq_length)
         elif task == 'p3':
             from .p3 import StreamDataset
-            data = load_dataset("Muennighoff/P3", split="train").shuffle(seed=args.seed)
+            data = load_dataset("Muennighoff/P3", split="train") #.shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'pile':
             from .pile import StreamDataset
@@ -233,9 +233,12 @@ def name_to_dataset(task, tokenizer, args):
             from .cot import StreamDataset
             dataset = StreamDataset('./data/mmlu-cot.json', tokenizer, args.seq_length)
         else:
-            from .pile import StreamDataset
+            if 'p3' in task:
+                from .p3 import StreamDataset
+            else:
+                from .pile import StreamDataset
             print('data_utils: before getting custom pile')
-            data = load_dataset("json", data_files=task, split="train", streaming=True).shuffle(seed=args.seed)
+            data = load_dataset("json", data_files=task, split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
             print('data_utils: after getting custom pile')
             dataset = StreamDataset(data, tokenizer, args.seq_length)
             # print('unknow task {task}, skip.')
