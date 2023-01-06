@@ -33,7 +33,7 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
-export WANDB_NAME=gptj-allreduce-euler
+export WANDB_NAME=gptj-allreduce-jt
 export WANDB_ENTITY=pipeline-activation-compression
 
 export SYNC_STEPS=10
