@@ -217,6 +217,10 @@ def name_to_dataset(task, tokenizer, args):
             from .p3 import StreamDataset
             data = load_dataset("Muennighoff/P3", split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
+        elif task == 'flan':
+            from .p3 import StreamDataset
+            data = load_dataset("Muennighoff/flan", split="train").shuffle(seed=args.seed)
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'pile':
             from .pile import StreamDataset
             print('data_utils: before getting pile')
