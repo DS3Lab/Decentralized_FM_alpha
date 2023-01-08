@@ -12,6 +12,8 @@ def add_device_arguments(parser):
 def add_torch_distributed_arguments(parser):
     parser.add_argument('--dist-backend', type=str, default='cupy_nccl', metavar='S',
                         help='backend type for distributed PyTorch (default: cupy_nccl)')
+    parser.add_argument('--dp-backend', type=str, default='gloo', metavar='S',
+                        help='backend type for data parallel')
     parser.add_argument('--dist-url', type=str, default='tcp://127.0.0.1:9000', metavar='S',
                         help='master ip for distributed PyTorch')
     parser.add_argument('--world-size', type=int, default=4, metavar='D',
