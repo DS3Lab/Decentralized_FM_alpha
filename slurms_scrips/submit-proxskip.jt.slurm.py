@@ -3,10 +3,10 @@ import os
 import uuid
 
 template = '''#!/bin/bash
-#SBATCH --job-name=opt_allreduce
+#SBATCH --job-name=opt_proxskip
 #SBATCH --gpus=1 
 #SBATCH --gres=gpumem:20g
-#SBATCH --time=9:59:00
+#SBATCH --time=23:59:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=6G
@@ -33,8 +33,10 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
-export WANDB_NAME=opt-allreduce-jt
+export WANDB_NAME=opt-proxskip-jt-200x
 export WANDB_ENTITY=pipeline-activation-compression
+
+export SYNC_STEPS=200
 
 root_path=/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm
 
@@ -44,7 +46,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --tokenizer-name ${root_path}/pretrained_models/opt-1.3b-new \
 --project-name slot-sgd \
 --model-type opt \
---optimizer 8bit-adam \
+--optimizer adam \
 --seed 42 \
 --checkpoint-path ${root_path}/pretrained_models/checkpoints/$WANDB_NAME \
 --load-pretrained-model true \
@@ -57,10 +59,10 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --world-size ${world_size} --pipeline-group-size ${pp_degree} --data-group-size ${dp_degree} \
 --job-id ${job_id} --net-interface ${netif} \
 --fp16 \
---dp-mode allreduce \
+--dp-mode proxskip \
 --pp-mode gpipe --profiling no-profiling"
 
-python -u ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0 # topk
+python -u ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0
 '''
 
 if __name__ == '__main__':
