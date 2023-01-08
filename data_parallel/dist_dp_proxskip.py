@@ -43,6 +43,8 @@ def step_update(self, freeze=False, dp_optimizer=None):
             for p in params:
                 p.grad = p.grad.nan_to_num()
             torch.nn.utils.clip_grad_norm_(params, 1.0)
+            
+    dp_optimizer.pp_comm.barrier()
 
     for group in self.param_groups:
         for p in group["params"]:
@@ -92,17 +94,25 @@ def step_update(self, freeze=False, dp_optimizer=None):
             p.data.addcdiv_(exp_avg, denom, value=-step_size)
 
             if dp_optimizer is not None and dp_optimizer.th.item() == 1:
+                
+                
                 local_p = p.data.clone()
                 p.data -= step_size * h / denom / sync_prob 
                 p.data /= dp_optimizer.dp_group_size
+                
+                dp_optimizer.dp_comm.barrier()
                 dp_optimizer.dp_comm.all_reduce(p.data)
+                dp_optimizer.dp_comm.barrier()
+                
                 print('sync...')
                 h.data += denom * sync_prob * (p - local_p) / step_size
-            
+                
             if group["weight_decay"] > 0.0:
                 p.data.add_(p.data, alpha=-group["lr"] * group["weight_decay"])
                 # h.data.add_(h.data, alpha=-group["lr"] * group["weight_decay"])
                 
+    dp_optimizer.pp_comm.barrier()
+    
     if fp16_wrapper is not None:
         fp16_wrapper._copy_optimizer_params_to_model_params()
         # Successful update.
