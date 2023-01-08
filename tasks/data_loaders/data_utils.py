@@ -215,7 +215,7 @@ def name_to_dataset(task, tokenizer, args):
             dataset = StreamDataset('./natural-instructions/', tokenizer, args.seq_length)
         elif task == 'p3':
             from .p3 import StreamDataset
-            data = load_dataset("Muennighoff/P3", split="train") #.shuffle(seed=args.seed)
+            data = load_dataset("Muennighoff/P3", split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'flan':
             from .p3 import StreamDataset
