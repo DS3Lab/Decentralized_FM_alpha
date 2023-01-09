@@ -3,14 +3,14 @@ import os
 import uuid
 
 template = '''#!/bin/bash
-#SBATCH --job-name=opt_topk
+#SBATCH --job-name=gptj
 #SBATCH --gpus=1 
 #SBATCH --gres=gpumem:20g
 #SBATCH --time=23:59:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=6G
-#SBATCH --output=/cluster/home/juewang/fm/juewang/exe_log/opt_slurm_%j.log
+#SBATCH --output=/cluster/home/juewang/fm/juewang/exe_log/gptj_%j.log
 
 module load gcc/6.3.0 cuda/11.0.3 eth_proxy       # Load modules from Euler setup
 source activate pipeline                          # Activate my conda python environment
@@ -33,8 +33,9 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
-export WANDB_NAME=opt-topk-jt-200x
+export WANDB_NAME=gptj-topk-200x-jt
 export WANDB_ENTITY=pipeline-activation-compression
+
 
 export TOPK_RATIO=0.005
 export DP_TOP_K=0.005
@@ -43,19 +44,20 @@ root_path=/nfs/iiscratch-zhang.inf.ethz.ch/export/zhang/export/fm
 
 main_program=dist_lm_pretrain.py
 
-ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
---tokenizer-name ${root_path}/pretrained_models/opt-1.3b-new \
+ARGS="--model-name ${root_path}/pretrained_models/gpt-j-6B \
+--tokenizer-name ${root_path}/pretrained_models/gpt-j-6B \
 --project-name slot-sgd \
---model-type opt \
+--model-type gptj \
 --optimizer 8bit-adam \
 --seed 42 \
 --checkpoint-path ${root_path}/pretrained_models/checkpoints/$WANDB_NAME \
 --load-pretrained-model true \
 --task-name /cluster/home/juewang/fm/datasets/pile_1280k.jsonl:0.55,ni:0.2,/cluster/home/juewang/fm/datasets/p3.jsonl:0.2,cot:0.05 \
 --num-layers ${n_layer_per_device} --num-heads 32 --embedding-dim 2048 \
+--num-layers ${n_layer_per_device} --num-heads 16 --embedding-dim 4096 \
 --total-steps 100000 --warmup-steps 100 --train-warmup-steps 0 \
 --checkpoint-steps 100 \
---lr 1e-4 --seq-length 2048 --batch-size 16 --micro-batch-size 1 --gradient-accumulate-step 1 \
+--lr 5e-5 --seq-length 2048 --batch-size 16 --micro-batch-size 1 --gradient-accumulate-step 1 \
 --dist-url tcp://127.0.0.1:9011 \
 --world-size ${world_size} --pipeline-group-size ${pp_degree} --data-group-size ${dp_degree} \
 --job-id ${job_id} --net-interface ${netif} \
@@ -64,7 +66,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --dp-mode sharded_ps_topk \
 --pp-mode gpipe --profiling no-profiling"
 
-python -u ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0
+python -u ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0 # aprox
 '''
 
 if __name__ == '__main__':
@@ -73,9 +75,9 @@ if __name__ == '__main__':
     #     template = f.read()
 
     job_id = str(uuid.uuid4())
-    pp_degree=3
+    pp_degree=8
     dp_degree=4
-    n_layer_per_device=12
+    n_layer_per_device=4
     world_size = pp_degree * dp_degree
 
     template = template.replace('{{JOB_ID}}', job_id)
