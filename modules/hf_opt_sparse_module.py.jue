@@ -1,7 +1,6 @@
 from typing import List, Optional, Tuple, Union
 
 import os
-import numpy as np
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -10,6 +9,49 @@ from transformers.models.opt.modeling_opt import OPTDecoderLayer
 from transformers.models.opt.modeling_opt import OPTAttention as _OPTAttention
 from transformers.models.opt.modeling_opt import OPTLearnedPositionalEmbedding
 from transformers.models.opt.configuration_opt import OPTConfig as GPTConfig
+
+# from gather_gemv import gather_gemv
+
+class SparseMLP(torch.nn.Module):
+    def __init__(self, fc1, fc2):
+        super().__init__()
+        self.expand_fn1 = fc1
+        self.shrink_fn2 = fc2
+
+    def _dense_forward(self, x : torch.Tensor, sparse_mask : torch.Tensor):
+        assert(x.shape == sparse_mask.shape)
+        x_hat = torch.mul(x, sparse_mask)
+        y = torch.addmm(self.expand_fn1.bias, x_hat, self.expand_fn1.weight.t())
+        act_y = torch.nn.functional.gelu(y, approximate='tanh')
+        z = torch.addmm(self.shrink_fn2.bias, act_y, self.shrink_fn2.weight.t())
+        act_z = torch.nn.functional.gelu(z, approximate='tanh')
+        return act_z
+
+    # extract values from tensor (x) using F.embedding given non-zero values (nnz)
+    def _extract_embedding_tensor(self, x: torch.Tensor, nnz: torch.Tensor):
+        sparse_x = torch.nn.functional.embedding(torch.squeeze(nnz), x)
+        return torch.sparse_coo_tensor(nnz.t(), sparse_x, x.shape)
+
+    # extract values from tensor (x) using F.embedding given non-zero values (nnz)
+    def _extract_sparse_tensor(self, x: torch.Tensor, nnz: torch.Tensor, N: int, D: int):
+        batch_index = torch.zeros_like(nnz.t())
+        indices = torch.cat((batch_index, nnz.t()), dim=0)
+        return torch.sparse_coo_tensor(indices, x.view(-1), (N, D))
+
+    def forward(self, x : torch.Tensor, nnz : torch.Tensor): #sparse_mask : torch.Tensor):
+        #assert(self.expand_fn1.weight.shape[0] == sparse_mask.shape[0])
+        #assert(self.expand_fn1.bias.shape == sparse_mask.shape)
+
+        #nnz = torch.nonzero(sparse_mask)
+        nnz = nnz[:, None]
+        sparse_expand_weight = torch.nn.functional.embedding(torch.squeeze(nnz), self.expand_fn1.weight)
+        sparse_expand_bias = torch.nn.functional.embedding(torch.squeeze(nnz), torch.unsqueeze(self.expand_fn1.bias, -1))
+        y = torch.addmm(sparse_expand_bias.t(), x, sparse_expand_weight.t())  # y (batch_size, nnz)
+        #act_y = torch.nn.functional.gelu(y, approximate='tanh')
+        act_y = torch.nn.functional.relu(y)
+        sparse_act_y = self._extract_sparse_tensor(act_y, nnz, N=1, D=self.expand_fn1.weight.shape[0])
+        z = torch.addmm(self.shrink_fn2.bias, sparse_act_y, self.shrink_fn2.weight.t())
+        return z
 
 
 def _make_causal_mask(
@@ -168,7 +210,7 @@ class OPTAttention(_OPTAttention):
         self.v_proj = nn.Linear(embed_dim, embed_dim, bias=bias, device=device)
         self.q_proj = nn.Linear(embed_dim, embed_dim, bias=bias, device=device)
         self.out_proj = nn.Linear(embed_dim, embed_dim, bias=bias, device=device)
-
+        
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
         return tensor.view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2).contiguous()
 
@@ -317,7 +359,11 @@ class GPTBlock(OPTDecoderLayer):
         
         self.config = config
         self.use_checkpoint = use_checkpoint
-        
+
+        self.default_comp_stream = torch.cuda.default_stream()
+        self.sparse_comp_stream = torch.cuda.Stream(device=torch.device("cuda"), priority=-1)
+        self.event_done = torch.cuda.Event(enable_timing=False, blocking=False)
+
     @classmethod
     def from_pretrained(cls, model_path, config=None, layer_index=None):
         assert layer_index is not None
@@ -333,19 +379,41 @@ class GPTBlock(OPTDecoderLayer):
         except:
             print('Cannot load from <model_name>. The model is randomly initialized.')
 
-        ######
-        module.layer_index = layer_index
-        # module.fp_att_residual = np.memmap(f"/mnt/workspace/observation/175b/att_residual_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
-        # module.fp_att_in = np.memmap(f"/mnt/workspace/observation/175b/att_in_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
-        # module.fp_mlp_residual = np.memmap(f"/mnt/workspace/observation/175b/mlp_residual_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
-        # module.fp_mlp_in = np.memmap(f"/mnt/workspace/observation/175b/mlp_in_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
-        # module.fp_out = np.memmap(f"/mnt/workspace/observation/175b/out_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
-        # module.fp_query = np.memmap(f"/mnt/workspace/data/175b_c4/query_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(2000 * 2048, config.hidden_size,))
-        # module.fp_label = np.memmap(f"/mnt/workspace/data/175b_c4/label_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(2000 * 2048, config.hidden_size * 4,))
-        # module.fp_i = 0
-        ######
+        module.predictor = nn.Sequential(
+            nn.Linear(module.embed_dim, 1000),
+            nn.Linear(1000, config.ffn_dim)
+        )
+        #module.sparse_mlp = SparseMLP(module.fc1, module.fc2)
+
+        # module.fcw = torch.cat([module.fc1.weight.data, module.fc2.weight.data.T], 1)
+        module.register_buffer("fcw", torch.cat([module.fc1.weight.data, module.fc2.weight.data.T], 1))
+        module.fc1b = module.fc1.bias
+        module.fc2b = module.fc2.bias
+        del module.fc1
+        del module.fc2
 
         return module
+
+    def prepare_fc_weights(self, hidden_states: torch.Tensor):
+        with torch.cuda.stream(self.sparse_comp_stream):
+            _logit = self.predictor(hidden_states)
+            _logit = torch.rand_like(_logit)
+            #_indices = _logit.topk(k=int(_logit.size(-1)*0.05), dim=-1).indices.unique()
+            _indices = (_logit > 0.95).squeeze()
+            _indices = torch.nonzero(_indices).squeeze()
+            #fc1_w = torch.nn.functional.embedding(_indices, self.fc1.weight)
+            #fc1_b = torch.nn.functional.embedding(_indices, self.fc1.bias.unsqueeze(-1)).squeeze(-1)
+            #fc2_w = torch.nn.functional.embedding(_indices, self.fc2.weight.t()).t()
+            #fc1_w = self.fc1.weight[_indices]
+            #fc1_b = self.fc1.bias[_indices]
+            #fc2_w = self.fc2.weight[:, _indices]
+            fc_w = self.fcw[_indices]
+            fc1_w, fc2_w = fc_w.chunk(2, dim=-1)
+            fc2_w = fc2_w.T
+            fc1_b = self.fc1b[_indices]
+            # fc2_w = self.fc2.weight[:, _indices]
+            self.sparse_comp_stream.record_event(self.event_done)
+            self._weights = [fc1_w, fc1_b, fc2_w]
 
     def forward(self, x: torch.Tensor, layer_past=None, mask=None) -> torch.Tensor:
         
@@ -362,30 +430,12 @@ class GPTBlock(OPTDecoderLayer):
         
         hidden_states = x # alias
         residual = hidden_states
-        ##
-        # if self.fp_i < self.fp_query.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_query.shape[0])
-        #     self.fp_query[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        ##
 
-        # ###
-        # if self.fp_i < self.fp_att_residual.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_att_residual.shape[0])
-        #     self.fp_att_residual[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        # ###
+        is_token_generation = (x.size(1) == 1)
         
         # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
         if self.do_layer_norm_before:
             hidden_states = self.self_attn_layer_norm(hidden_states)
-
-        # ###
-        # if self.fp_i < self.fp_att_in.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_att_in.shape[0])
-        #     self.fp_att_in[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        # ###
 
         # Self Attention
         hidden_states, _, present = self.self_attn(
@@ -399,52 +449,36 @@ class GPTBlock(OPTDecoderLayer):
         if not self.do_layer_norm_before:
             hidden_states = self.self_attn_layer_norm(hidden_states)
 
+        if is_token_generation:
+            self.prepare_fc_weights(residual)
+
         # Fully Connected
         hidden_states_shape = hidden_states.shape
         hidden_states = hidden_states.reshape(-1, hidden_states.size(-1))
         residual = hidden_states
-        # ###
-        # if self.fp_i < self.fp_mlp_residual.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_mlp_residual.shape[0])
-        #     self.fp_mlp_residual[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        # ###
-
 
         # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
         if self.do_layer_norm_before:
             hidden_states = self.final_layer_norm(hidden_states)
 
-        # ###
-        # if self.fp_i < self.fp_mlp_in.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_mlp_in.shape[0])
-        #     self.fp_mlp_in[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        # ###
+        if is_token_generation:
+            self.default_comp_stream.wait_event(self.event_done)
+            #fc1_w = self.fc1.weight
+            #fc1_b = self.fc1.bias
+            #fc2_w = self.fc2.weight
+            fc1_w, fc1_b, fc2_w = self._weights
+            hidden_states = torch.nn.functional.linear(hidden_states, fc1_w, bias=fc1_b)
+            hidden_states = self.activation_fn(hidden_states)
+            hidden_states = torch.nn.functional.linear(hidden_states, fc2_w, bias=self.fc2b)
+            #hidden_states = self.sparse_mlp(hidden_states, _indices)
+        else:
+            fc1_w, fc2_w = self.fcw.chunk(2, dim=-1)
+            fc2_w = fc2_w.T
+            hidden_states = torch.nn.functional.linear(hidden_states, fc1_w, bias=self.fc1b)
+            hidden_states = self.activation_fn(hidden_states)
+            hidden_states = torch.nn.functional.linear(hidden_states, fc2_w, bias=self.fc2b)
 
-        hidden_states = self.fc1(hidden_states)
-        hidden_states = self.activation_fn(hidden_states)
-
-        ##
-        # if self.fp_i < self.fp_label.shape[0]:
-        #     label = ( hidden_states > 0 ).view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + label.size(0), self.fp_label.shape[0])
-        #     self.fp_label[begin: end] = label[:end-begin].detach().cpu().numpy()
-        #     self.fp_i += label.size(0)
-        ##
-
-
-        hidden_states = self.fc2(hidden_states)
-
-        hidden_states = (residual + hidden_states)
-        # ###
-        # if self.fp_i < self.fp_out.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_out.shape[0])
-        #     self.fp_out[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        #     self.fp_i += _hidden_states.size(0)
-        # ###
-        hidden_states = hidden_states.view(hidden_states_shape)
+        hidden_states = (residual + hidden_states).view(hidden_states_shape)
         
         return hidden_states, present
 

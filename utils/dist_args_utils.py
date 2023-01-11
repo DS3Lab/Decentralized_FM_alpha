@@ -304,6 +304,8 @@ def add_inference_details_arguments(parser):
                         help='trained model path')
     parser.add_argument('--infer-data', type=str, default='', metavar='S',
                         help='data path')
+    parser.add_argument('--output-path', type=str, default=None, metavar='S',
+                        help='output data path')
     parser.add_argument('--top-k', type=int, default=None, metavar='S',
                         help='sample from top k')
     parser.add_argument('--top-p', type=float, default=None, metavar='S',

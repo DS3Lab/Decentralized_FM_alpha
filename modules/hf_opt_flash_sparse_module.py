@@ -1,7 +1,6 @@
 from typing import List, Optional, Tuple, Union
 
 import os
-import numpy as np
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -10,6 +9,15 @@ from transformers.models.opt.modeling_opt import OPTDecoderLayer
 from transformers.models.opt.modeling_opt import OPTAttention as _OPTAttention
 from transformers.models.opt.modeling_opt import OPTLearnedPositionalEmbedding
 from transformers.models.opt.configuration_opt import OPTConfig as GPTConfig
+
+from .gather_gemv import gather_gemv, gather_transposed_gemv
+
+
+try:
+    from flash_attn.flash_attention import FlashAttention
+    flash_attn_installed = True
+except ImportError:
+    flash_attn_installed = False
 
 
 def _make_causal_mask(
@@ -169,6 +177,9 @@ class OPTAttention(_OPTAttention):
         self.q_proj = nn.Linear(embed_dim, embed_dim, bias=bias, device=device)
         self.out_proj = nn.Linear(embed_dim, embed_dim, bias=bias, device=device)
 
+        if flash_attn_installed:
+            self.flash_attn = FlashAttention(attention_dropout = dropout)
+
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
         return tensor.view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2).contiguous()
 
@@ -189,8 +200,10 @@ class OPTAttention(_OPTAttention):
 
         bsz, tgt_len, _ = hidden_states.size()
 
+        use_flash_attn = not is_cross_attention and flash_attn_installed
+
         # get query proj
-        query_states = self.q_proj(hidden_states) * self.scaling
+        query_states = self.q_proj(hidden_states) * self.scaling # B S H
         # get key, value proj
         if is_cross_attention and past_key_value is not None:
             # reuse k,v, cross_attentions
@@ -206,10 +219,14 @@ class OPTAttention(_OPTAttention):
             value_states = self._shape(self.v_proj(hidden_states), -1, bsz)
             key_states = torch.cat([past_key_value[0], key_states], dim=2)
             value_states = torch.cat([past_key_value[1], value_states], dim=2)
-        else:
+        elif not use_flash_attn:
             # self_attention
             key_states = self._shape(self.k_proj(hidden_states), -1, bsz)
             value_states = self._shape(self.v_proj(hidden_states), -1, bsz)
+        else:
+            # self attention with flash attention
+            key_states = self.k_proj(hidden_states) # B S H
+            value_states = self.v_proj(hidden_states) # B S H
 
         if self.is_decoder:
             # if cross_attention save Tuple(torch.Tensor, torch.Tensor) of all cross attention key/value_states.
@@ -221,75 +238,92 @@ class OPTAttention(_OPTAttention):
             # if encoder bi-directional self-attention `past_key_value` is always `None`
             past_key_value = (key_states, value_states)
 
-        proj_shape = (bsz * self.num_heads, -1, self.head_dim)
-        query_states = self._shape(query_states, tgt_len, bsz).view(*proj_shape)
-        key_states = key_states.view(*proj_shape)
-        value_states = value_states.view(*proj_shape)
-
-        src_len = key_states.size(1)
-        attn_weights = torch.bmm(query_states, key_states.transpose(1, 2))
-
-        if attn_weights.size() != (bsz * self.num_heads, tgt_len, src_len):
-            raise ValueError(
-                f"Attention weights should be of size {(bsz * self.num_heads, tgt_len, src_len)}, but is"
-                f" {attn_weights.size()}"
+        if not is_cross_attention and not self.is_decoder and flash_attn_installed:
+            qkv = torch.stack(
+                [
+                    torch.view(query_states, (bsz, tgt_len, self.num_heads, self.head_dim)),
+                    torch.view(key_states, (bsz, tgt_len, self.num_heads, self.head_dim)),
+                    torch.view(value_states, (bsz, tgt_len, self.num_heads, self.head_dim)),
+                ],
+                dim=2
             )
 
-        if attention_mask is not None:
-            if attention_mask.size() != (bsz, 1, tgt_len, src_len):
-                raise ValueError(
-                    f"Attention mask should be of size {(bsz, 1, tgt_len, src_len)}, but is {attention_mask.size()}"
-                )
-            attn_weights = attn_weights.view(bsz, self.num_heads, tgt_len, src_len) + attention_mask
-            attn_weights = torch.max(attn_weights, torch.tensor(torch.finfo(attn_weights.dtype).min))
-            attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
-            dtype_attn_weights = attn_weights.dtype
+            out, _ = self.flash_attn(qkv, causal=True) # assuming that these are autoregressive!!
 
-        # upcast to fp32 if the weights are in fp16. Please see https://github.com/huggingface/transformers/pull/17437
-        if dtype_attn_weights == torch.float16:
-            attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(dtype_attn_weights)
+            out = torch.reshape(out, (bsz, tgt_len, self.embed_dim))
+
+            return attn_output, None, None
         else:
-            attn_weights = nn.functional.softmax(attn_weights, dim=-1)
+            proj_shape = (bsz * self.num_heads, -1, self.head_dim)
+            query_states = self._shape(query_states, tgt_len, bsz).view(*proj_shape)
+            key_states = key_states.view(*proj_shape)
+            value_states = value_states.view(*proj_shape)
 
-        if layer_head_mask is not None:
-            if layer_head_mask.size() != (self.num_heads,):
+            src_len = key_states.size(1)
+            attn_weights = torch.bmm(query_states, key_states.transpose(1, 2))
+
+            if attn_weights.size() != (bsz * self.num_heads, tgt_len, src_len):
                 raise ValueError(
-                    f"Head mask for a single layer should be of size {(self.num_heads,)}, but is"
-                    f" {layer_head_mask.size()}"
+                    f"Attention weights should be of size {(bsz * self.num_heads, tgt_len, src_len)}, but is"
+                    f" {attn_weights.size()}"
                 )
-            attn_weights = layer_head_mask.view(1, -1, 1, 1) * attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
-            attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
 
-        if output_attentions:
-            # this operation is a bit awkward, but it's required to
-            # make sure that attn_weights keeps its gradient.
-            # In order to do so, attn_weights have to be reshaped
-            # twice and have to be reused in the following
-            attn_weights_reshaped = attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
-            attn_weights = attn_weights_reshaped.view(bsz * self.num_heads, tgt_len, src_len)
-        else:
-            attn_weights_reshaped = None
+            if attention_mask is not None:
+                if attention_mask.size() != (bsz, 1, tgt_len, src_len):
+                    raise ValueError(
+                        f"Attention mask should be of size {(bsz, 1, tgt_len, src_len)}, but is {attention_mask.size()}"
+                    )
+                attn_weights = attn_weights.view(bsz, self.num_heads, tgt_len, src_len) + attention_mask
+                attn_weights = torch.max(attn_weights, torch.tensor(torch.finfo(attn_weights.dtype).min))
+                attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
+                dtype_attn_weights = attn_weights.dtype
 
-        attn_probs = nn.functional.dropout(attn_weights, p=self.dropout, training=self.training)
+            # upcast to fp32 if the weights are in fp16. Please see https://github.com/huggingface/transformers/pull/17437
+            if dtype_attn_weights == torch.float16:
+                attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(dtype_attn_weights)
+            else:
+                attn_weights = nn.functional.softmax(attn_weights, dim=-1)
 
-        attn_output = torch.bmm(attn_probs, value_states)
+            if layer_head_mask is not None:
+                if layer_head_mask.size() != (self.num_heads,):
+                    raise ValueError(
+                        f"Head mask for a single layer should be of size {(self.num_heads,)}, but is"
+                        f" {layer_head_mask.size()}"
+                    )
+                attn_weights = layer_head_mask.view(1, -1, 1, 1) * attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
+                attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
 
-        if attn_output.size() != (bsz * self.num_heads, tgt_len, self.head_dim):
-            raise ValueError(
-                f"`attn_output` should be of size {(bsz, self.num_heads, tgt_len, self.head_dim)}, but is"
-                f" {attn_output.size()}"
-            )
+            if output_attentions:
+                # this operation is a bit awkward, but it's required to
+                # make sure that attn_weights keeps its gradient.
+                # In order to do so, attn_weights have to be reshaped
+                # twice and have to be reused in the following
+                attn_weights_reshaped = attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
+                attn_weights = attn_weights_reshaped.view(bsz * self.num_heads, tgt_len, src_len)
+            else:
+                attn_weights_reshaped = None
 
-        attn_output = attn_output.view(bsz, self.num_heads, tgt_len, self.head_dim)
-        attn_output = attn_output.transpose(1, 2)
+            attn_probs = nn.functional.dropout(attn_weights, p=self.dropout, training=self.training)
 
-        # Use the `embed_dim` from the config (stored in the class) rather than `hidden_state` because `attn_output` can be
-        # partitioned aross GPUs when using tensor-parallelism.
-        attn_output = attn_output.reshape(bsz, tgt_len, self.embed_dim)
+            attn_output = torch.bmm(attn_probs, value_states)
 
-        attn_output = self.out_proj(attn_output)
+            if attn_output.size() != (bsz * self.num_heads, tgt_len, self.head_dim):
+                raise ValueError(
+                    f"`attn_output` should be of size {(bsz, self.num_heads, tgt_len, self.head_dim)}, but is"
+                    f" {attn_output.size()}"
+                )
 
-        return attn_output, attn_weights_reshaped, past_key_value
+            attn_output = attn_output.view(bsz, self.num_heads, tgt_len, self.head_dim)
+            attn_output = attn_output.transpose(1, 2)
+
+            # Use the `embed_dim` from the config (stored in the class) rather than `hidden_state` because `attn_output` can be
+            # partitioned aross GPUs when using tensor-parallelism.
+            attn_output = attn_output.reshape(bsz, tgt_len, self.embed_dim)
+
+            attn_output = self.out_proj(attn_output)
+
+            return attn_output, attn_weights_reshaped, past_key_value
+
 
 
 class GPTBlock(OPTDecoderLayer):
@@ -317,7 +351,11 @@ class GPTBlock(OPTDecoderLayer):
         
         self.config = config
         self.use_checkpoint = use_checkpoint
-        
+
+        self.default_comp_stream = torch.cuda.default_stream()
+        self.sparse_comp_stream = torch.cuda.Stream(device=torch.device("cuda"), priority=-1)
+        self.event_done = torch.cuda.Event(enable_timing=False, blocking=False)
+
     @classmethod
     def from_pretrained(cls, model_path, config=None, layer_index=None):
         assert layer_index is not None
@@ -333,19 +371,25 @@ class GPTBlock(OPTDecoderLayer):
         except:
             print('Cannot load from <model_name>. The model is randomly initialized.')
 
-        ######
-        module.layer_index = layer_index
-        # module.fp_att_residual = np.memmap(f"/mnt/workspace/observation/175b/att_residual_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
-        # module.fp_att_in = np.memmap(f"/mnt/workspace/observation/175b/att_in_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
-        # module.fp_mlp_residual = np.memmap(f"/mnt/workspace/observation/175b/mlp_residual_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
-        # module.fp_mlp_in = np.memmap(f"/mnt/workspace/observation/175b/mlp_in_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
-        # module.fp_out = np.memmap(f"/mnt/workspace/observation/175b/out_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
-        # module.fp_query = np.memmap(f"/mnt/workspace/data/175b_c4/query_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(2000 * 2048, config.hidden_size,))
-        # module.fp_label = np.memmap(f"/mnt/workspace/data/175b_c4/label_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(2000 * 2048, config.hidden_size * 4,))
-        # module.fp_i = 0
-        ######
-
+        module.predictor = nn.Sequential(
+            nn.Linear(module.embed_dim, 1000),
+            nn.Linear(1000, config.ffn_dim)
+        )
+        module.fc2.weight.data = module.fc2.weight.data.t().contiguous()
+       
         return module
+
+    def prepare_fc_weights(self, hidden_states: torch.Tensor):
+        with torch.cuda.stream(self.sparse_comp_stream):
+            _logit = self.predictor(hidden_states)
+            _logit = torch.rand_like(_logit[0])
+            #_indices = _logit.topk(k=int(_logit.size(-1)*0.05), dim=-1).indices.unique()
+            _indices = (_logit > 0.8).squeeze()
+            _indices = torch.nonzero(_indices).squeeze()
+
+            # fc1_b = self.fc1.bias[_indices]
+            # self._weights = [fc1_b, _indices]
+            self._weights = _indices
 
     def forward(self, x: torch.Tensor, layer_past=None, mask=None) -> torch.Tensor:
         
@@ -362,30 +406,12 @@ class GPTBlock(OPTDecoderLayer):
         
         hidden_states = x # alias
         residual = hidden_states
-        ##
-        # if self.fp_i < self.fp_query.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_query.shape[0])
-        #     self.fp_query[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        ##
 
-        # ###
-        # if self.fp_i < self.fp_att_residual.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_att_residual.shape[0])
-        #     self.fp_att_residual[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        # ###
+        is_token_generation = (x.size(1) == 1)
         
         # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
         if self.do_layer_norm_before:
             hidden_states = self.self_attn_layer_norm(hidden_states)
-
-        # ###
-        # if self.fp_i < self.fp_att_in.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_att_in.shape[0])
-        #     self.fp_att_in[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        # ###
 
         # Self Attention
         hidden_states, _, present = self.self_attn(
@@ -399,52 +425,30 @@ class GPTBlock(OPTDecoderLayer):
         if not self.do_layer_norm_before:
             hidden_states = self.self_attn_layer_norm(hidden_states)
 
+        if is_token_generation:
+            self.prepare_fc_weights(residual)
+
         # Fully Connected
         hidden_states_shape = hidden_states.shape
         hidden_states = hidden_states.reshape(-1, hidden_states.size(-1))
         residual = hidden_states
-        # ###
-        # if self.fp_i < self.fp_mlp_residual.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_mlp_residual.shape[0])
-        #     self.fp_mlp_residual[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        # ###
-
 
         # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
         if self.do_layer_norm_before:
             hidden_states = self.final_layer_norm(hidden_states)
 
-        # ###
-        # if self.fp_i < self.fp_mlp_in.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_mlp_in.shape[0])
-        #     self.fp_mlp_in[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        # ###
+        if is_token_generation:
+            self.default_comp_stream.wait_event(self.event_done)
+            idx = self._weights
+            hidden_states = gather_gemv(hidden_states, self.fc1.weight, idx, self.fc1.bias.data, activation='relu')
+            # hidden_states = self.activation_fn(hidden_states)     
+            hidden_states = gather_transposed_gemv(hidden_states, self.fc2.weight.data, idx, self.fc2.bias.data)
+        else:
+            hidden_states = self.fc1(hidden_states)
+            hidden_states = self.activation_fn(hidden_states)
+            hidden_states = torch.nn.functional.linear(hidden_states, self.fc2.weight.data.T, bias=self.fc2.bias.data)
 
-        hidden_states = self.fc1(hidden_states)
-        hidden_states = self.activation_fn(hidden_states)
-
-        ##
-        # if self.fp_i < self.fp_label.shape[0]:
-        #     label = ( hidden_states > 0 ).view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + label.size(0), self.fp_label.shape[0])
-        #     self.fp_label[begin: end] = label[:end-begin].detach().cpu().numpy()
-        #     self.fp_i += label.size(0)
-        ##
-
-
-        hidden_states = self.fc2(hidden_states)
-
-        hidden_states = (residual + hidden_states)
-        # ###
-        # if self.fp_i < self.fp_out.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_out.shape[0])
-        #     self.fp_out[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        #     self.fp_i += _hidden_states.size(0)
-        # ###
-        hidden_states = hidden_states.view(hidden_states_shape)
+        hidden_states = (residual + hidden_states).view(hidden_states_shape)
         
         return hidden_states, present
 
@@ -485,4 +489,3 @@ class GPTLMHead(nn.Module):
         if self.project_out is not None:
             x = self.project_out(x)
         x = self.lm_head(x)
-        return x

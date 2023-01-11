@@ -105,9 +105,10 @@ class GPTBlock(_BloomBlock):
         try:
             module.load_state_dict(torch.load(os.path.join(
                 model_path, f'pytorch_{layer_index}.pt',
-            )))
+            ), map_location='cpu'))
         except Exception as e:
             print('Cannot load from <model_name>. The model is randomly initialized.')
+
         module.layer_index = layer_index
         return module
     
@@ -156,7 +157,6 @@ class GPTBlock(_BloomBlock):
 
     def forward(self, hidden_states: torch.Tensor, layer_past=None, mask=None) -> torch.Tensor:
             
-        original_input = hidden_states.clone()
         current_sequence_length = hidden_states.shape[1]
         past_key_values_length = 0
         if layer_past is not None:
@@ -201,14 +201,7 @@ class GPTBlock(_BloomBlock):
         # (bs, seq, nhead, size) => (bs, nhead, seq, size)
         present = (present[0].permute(0, 2, 1, 3), present[1].permute(0, 2, 1, 3))
         
-        if int(os.environ.get("PARALLEL_SUBBLOCKS", "0")) == 1:
-            if self.layer_index >= int(os.environ.get("PARALLEL_BEGIN_LAYER", "10")):
-                print(f"parallel subblocks at {self.layer_index}")
-                layernorm_output = self.post_attention_layernorm(original_input)
-            else:
-                layernorm_output = self.post_attention_layernorm(attention_output)
-        else:
-            layernorm_output = self.post_attention_layernorm(attention_output)
+        layernorm_output = self.post_attention_layernorm(attention_output)
 
         # Get residual
         if self.apply_residual_connection_post_layernorm:
@@ -217,7 +210,32 @@ class GPTBlock(_BloomBlock):
             residual = attention_output
 
         # MLP.
-        output = self.mlp(layernorm_output, residual)
+        #output = self.mlp(layernorm_output, residual)
+        hidden_states = layernorm_output.view(-1, layernorm_output.size(-1))
+        hidden_states = self.mlp.dense_h_to_4h(hidden_states)
+
+        # p_topk = 0.1
+        # _, indices = hidden_states.topk(k=int(p_topk*hidden_states.size(-1)), dim=-1)
+        # zeros = torch.zeros_like(hidden_states, dtype=torch.bool)
+        # mask_top = zeros.scatter(-1, indices, True)
+        # mask_pos = (hidden_states > 0)
+
+        hidden_states = torch.nn.functional.gelu(hidden_states)
+        #hidden_states = self.mlp.gelu_impl(hidden_states)
+
+        # original_sum = torch.mean(torch.abs(hidden_states), dim=-1, keepdim=True)
+
+        p_bottom = 1.0
+        _, indices = torch.abs(hidden_states).topk(k=int(p_bottom*hidden_states.size(-1)), dim=-1)
+        zeros = torch.zeros_like(hidden_states, dtype=torch.bool)
+        mask_bottom = zeros.scatter(-1, indices, True)
+
+        hidden_states[~mask_bottom] = 0
+        # current_sum = torch.mean(torch.abs(hidden_states), dim=-1, keepdim=True)
+        # scale = original_sum / (current_sum + 1e-6)
+        # hidden_states *= scale
+        
+        output = self.mlp.dense_4h_to_h(hidden_states).view(residual.shape) + residual
         
         return output, present
     

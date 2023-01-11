@@ -340,9 +340,9 @@ class GPTBlock(OPTDecoderLayer):
         # module.fp_mlp_residual = np.memmap(f"/mnt/workspace/observation/175b/mlp_residual_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
         # module.fp_mlp_in = np.memmap(f"/mnt/workspace/observation/175b/mlp_in_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
         # module.fp_out = np.memmap(f"/mnt/workspace/observation/175b/out_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
-        # module.fp_query = np.memmap(f"/mnt/workspace/data/175b_c4/query_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(2000 * 2048, config.hidden_size,))
-        # module.fp_label = np.memmap(f"/mnt/workspace/data/175b_c4/label_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(2000 * 2048, config.hidden_size * 4,))
-        # module.fp_i = 0
+        module.fp_query = np.memmap(f"/mnt/workspace/data/175b_c4/query_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(2000 * 2048, config.hidden_size,))
+        module.fp_label = np.memmap(f"/mnt/workspace/data/175b_c4/label_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(2000 * 2048, config.hidden_size * 4,))
+        module.fp_i = 0
         ######
 
         return module
@@ -362,12 +362,12 @@ class GPTBlock(OPTDecoderLayer):
         
         hidden_states = x # alias
         residual = hidden_states
-        ##
-        # if self.fp_i < self.fp_query.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_query.shape[0])
-        #     self.fp_query[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        ##
+        #
+        if self.fp_i < self.fp_query.shape[0]:
+            _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
+            begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_query.shape[0])
+            self.fp_query[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
+        #
 
         # ###
         # if self.fp_i < self.fp_att_residual.shape[0]:
@@ -425,13 +425,13 @@ class GPTBlock(OPTDecoderLayer):
         hidden_states = self.fc1(hidden_states)
         hidden_states = self.activation_fn(hidden_states)
 
-        ##
-        # if self.fp_i < self.fp_label.shape[0]:
-        #     label = ( hidden_states > 0 ).view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + label.size(0), self.fp_label.shape[0])
-        #     self.fp_label[begin: end] = label[:end-begin].detach().cpu().numpy()
-        #     self.fp_i += label.size(0)
-        ##
+        #
+        if self.fp_i < self.fp_label.shape[0]:
+            label = ( hidden_states > 0 ).view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
+            begin, end = self.fp_i, min(self.fp_i + label.size(0), self.fp_label.shape[0])
+            self.fp_label[begin: end] = label[:end-begin].detach().cpu().numpy()
+            self.fp_i += label.size(0)
+        #
 
 
         hidden_states = self.fc2(hidden_states)

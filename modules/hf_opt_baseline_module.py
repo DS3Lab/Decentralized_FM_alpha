@@ -1,7 +1,6 @@
 from typing import List, Optional, Tuple, Union
 
 import os
-import numpy as np
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -168,7 +167,7 @@ class OPTAttention(_OPTAttention):
         self.v_proj = nn.Linear(embed_dim, embed_dim, bias=bias, device=device)
         self.q_proj = nn.Linear(embed_dim, embed_dim, bias=bias, device=device)
         self.out_proj = nn.Linear(embed_dim, embed_dim, bias=bias, device=device)
-
+        
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
         return tensor.view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2).contiguous()
 
@@ -333,22 +332,12 @@ class GPTBlock(OPTDecoderLayer):
         except:
             print('Cannot load from <model_name>. The model is randomly initialized.')
 
-        ######
         module.layer_index = layer_index
-        # module.fp_att_residual = np.memmap(f"/mnt/workspace/observation/175b/att_residual_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
-        # module.fp_att_in = np.memmap(f"/mnt/workspace/observation/175b/att_in_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
-        # module.fp_mlp_residual = np.memmap(f"/mnt/workspace/observation/175b/mlp_residual_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
-        # module.fp_mlp_in = np.memmap(f"/mnt/workspace/observation/175b/mlp_in_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
-        # module.fp_out = np.memmap(f"/mnt/workspace/observation/175b/out_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(20 * 2048, config.hidden_size,))
-        # module.fp_query = np.memmap(f"/mnt/workspace/data/175b_c4/query_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(2000 * 2048, config.hidden_size,))
-        # module.fp_label = np.memmap(f"/mnt/workspace/data/175b_c4/label_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(2000 * 2048, config.hidden_size * 4,))
-        # module.fp_i = 0
-        ######
-
         return module
 
     def forward(self, x: torch.Tensor, layer_past=None, mask=None) -> torch.Tensor:
         
+        original_input = x.clone()
         if layer_past is not None:
             past_length = layer_past[0].size(2)
         else:
@@ -362,30 +351,10 @@ class GPTBlock(OPTDecoderLayer):
         
         hidden_states = x # alias
         residual = hidden_states
-        ##
-        # if self.fp_i < self.fp_query.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_query.shape[0])
-        #     self.fp_query[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        ##
-
-        # ###
-        # if self.fp_i < self.fp_att_residual.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_att_residual.shape[0])
-        #     self.fp_att_residual[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        # ###
         
         # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
         if self.do_layer_norm_before:
             hidden_states = self.self_attn_layer_norm(hidden_states)
-
-        # ###
-        # if self.fp_i < self.fp_att_in.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_att_in.shape[0])
-        #     self.fp_att_in[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        # ###
 
         # Self Attention
         hidden_states, _, present = self.self_attn(
@@ -403,48 +372,22 @@ class GPTBlock(OPTDecoderLayer):
         hidden_states_shape = hidden_states.shape
         hidden_states = hidden_states.reshape(-1, hidden_states.size(-1))
         residual = hidden_states
-        # ###
-        # if self.fp_i < self.fp_mlp_residual.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_mlp_residual.shape[0])
-        #     self.fp_mlp_residual[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        # ###
 
+        if int(os.environ.get("PARALLEL_SUBBLOCKS", "0")) == 1:
+            if self.layer_index >= int(os.environ.get("PARALLEL_BEGIN_LAYER", "10")):
+                print('!')
+                hidden_states = original_input.reshape(-1, hidden_states.size(-1))
 
         # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
         if self.do_layer_norm_before:
             hidden_states = self.final_layer_norm(hidden_states)
 
-        # ###
-        # if self.fp_i < self.fp_mlp_in.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_mlp_in.shape[0])
-        #     self.fp_mlp_in[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        # ###
-
         hidden_states = self.fc1(hidden_states)
         hidden_states = self.activation_fn(hidden_states)
 
-        ##
-        # if self.fp_i < self.fp_label.shape[0]:
-        #     label = ( hidden_states > 0 ).view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + label.size(0), self.fp_label.shape[0])
-        #     self.fp_label[begin: end] = label[:end-begin].detach().cpu().numpy()
-        #     self.fp_i += label.size(0)
-        ##
-
-
         hidden_states = self.fc2(hidden_states)
 
-        hidden_states = (residual + hidden_states)
-        # ###
-        # if self.fp_i < self.fp_out.shape[0]:
-        #     _hidden_states = hidden_states.view(-1, hidden_states.size(-1))[mask.bool().view(-1)]
-        #     begin, end = self.fp_i, min(self.fp_i + _hidden_states.size(0), self.fp_out.shape[0])
-        #     self.fp_out[begin: end] = _hidden_states[:end-begin].detach().cpu().numpy()
-        #     self.fp_i += _hidden_states.size(0)
-        # ###
-        hidden_states = hidden_states.view(hidden_states_shape)
+        hidden_states = (residual + hidden_states).view(hidden_states_shape)
         
         return hidden_states, present
 

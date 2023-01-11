@@ -6,6 +6,7 @@ from comm.comm_utils import *
 from task_datasets.inference_data import get_request_processor
 from pipeline_parallel.dist_pp_utils import *
 from transformers import AutoTokenizer
+import numpy as np
 
 
 def main():
@@ -82,7 +83,9 @@ def main():
         else:
             print("No recognized profiler?")
             assert False
-
+    if args.model_type == "opt-classifier-sparse" or args.model_type == "opt-classifier-sparse-bylayer" or args.model_type == "opt-classifier-sparse-topk":
+        for layer_index in range(16):
+            print(f"layer {pipe.layers['block'+str(layer_index)].layer_index}: {np.array(pipe.layers['block'+str(layer_index)].sparsity).mean():.4f}")
 
 if __name__ == '__main__':
     main()

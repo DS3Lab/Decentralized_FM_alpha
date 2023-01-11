@@ -8,6 +8,20 @@ from .dist_pipeline_inference_greedy_token_pipe_sync import DistGreedyInferenceT
 from .share_prefix import SharePrefix
 from coordinator.http_coordinate_client import get_coordinator_client
 
+import os
+
+if "PARALLEL_BLOCKS" in os.environ:
+    PARALLEL_BLOCKS = int(os.environ['PARALLEL_BLOCKS'])
+else:
+    PARALLEL_BLOCKS = 1
+    
+PARALLEL_BEGIN_LAYER = int(os.environ.get("PARALLEL_BEGIN_LAYER", "10"))
+
+if "SKIP_BLOCKS" in os.environ:
+    SKIP_BLOCKS = int(os.environ['SKIP_BLOCKS'])
+else:
+    SKIP_BLOCKS = 0
+
 
 class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
     r"""
@@ -158,11 +172,11 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             from modules.hf_gptneox_module import GPTConfig
             config = GPTConfig.from_pretrained(self.model_name)
             return config.hidden_size
-        elif self.model_type == 'opt':
+        elif self.model_type in ['opt', 'opt-save', 'opt-flash', 'opt-flash-sparse', 'opt-baseline', 'opt-sparse', 'opt-classifier-sparse','opt-classifier-sparse-topk','opt-classifier-sparse-bylayer']:
             from modules.hf_opt_module import GPTConfig
             config = GPTConfig.from_pretrained(self.model_name)
             return config.hidden_size
-        elif self.model_type == 'bloom':
+        elif self.model_type in ['bloom', 'bloom-sparse', 'bloom-relu']:
             from modules.hf_bloom_module import GPTConfig
             config = GPTConfig.from_pretrained(self.model_name)
             return config.hidden_size
@@ -186,8 +200,28 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
             from modules.hf_gptneox_module import GPTEmbeddings, GPTBlock, GPTLMHead
         elif self.model_type == 'opt':
             from modules.hf_opt_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'opt-save':
+            from modules.hf_opt_module_save import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'opt-flash':
+            from modules.hf_opt_flash_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'opt-flash-sparse':
+            from modules.hf_opt_flash_sparse_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'opt-baseline':
+            from modules.hf_opt_baseline_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'opt-sparse':
+            from modules.hf_opt_sparse_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'opt-classifier-sparse':
+            from modules.hf_opt_sparse_classifier import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'opt-classifier-sparse-topk':
+            from modules.hf_opt_sparse_classifier_topk import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'opt-classifier-sparse-bylayer':
+            from modules.hf_opt_sparse_classifier_topk_bylayer import GPTEmbeddings, GPTBlock, GPTLMHead
         elif self.model_type == 'bloom':
             from modules.hf_bloom_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'bloom-sparse':
+            from modules.hf_bloom_sparse_module import GPTEmbeddings, GPTBlock, GPTLMHead
+        elif self.model_type == 'bloom-relu':
+            from modules.hf_bloom_relu_module import GPTEmbeddings, GPTBlock, GPTLMHead
         elif self.model_type == 'yalm':
             from modules.yalm_module import GPTEmbeddings, GPTBlock, GPTLMHead
         elif self.model_type == 'glm':
@@ -282,11 +316,52 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         mask, current_emb, caches = self.share_prefix.process_inputs(
             seq, mask, current_emb, caches)
         
-        for layer_index in range(self.num_layers):
-            current_emb, caches[layer_index] = \
-                self.layers['block' + str(layer_index)](current_emb, caches[layer_index], mask=mask)
-            self.cached_attention[layer_index][index] = caches[layer_index]
+        if PARALLEL_BLOCKS <= 1 and SKIP_BLOCKS <= 1:
+            for layer_index in range(self.num_layers):
+                current_emb, caches[layer_index] = \
+                    self.layers['block' + str(layer_index)](current_emb, caches[layer_index], mask=mask)
+                self.cached_attention[layer_index][index] = caches[layer_index]
+
+        elif PARALLEL_BLOCKS > 1:
+            
+            print("do layer parallel")
+
+            for layer_index in range(self.num_layers):
+                global_layer_index = self.layers['block' + str(layer_index)].layer_index
+                if global_layer_index < PARALLEL_BEGIN_LAYER:
+                    input_emb = current_emb.clone()
+
+                if layer_index % PARALLEL_BLOCKS == 0:
+                    input_emb = current_emb.clone()
+                else:
+                    pass
+                output_emb, caches[layer_index] = \
+                    self.layers['block' + str(layer_index)](input_emb, caches[layer_index], mask=mask)
+                current_emb = current_emb + output_emb - input_emb
+                self.cached_attention[layer_index][index] = caches[layer_index]
+                
+#                 print(global_layer_index, current_emb.norm(dim=-1).mean())
         
+        elif SKIP_BLOCKS > 1:
+            
+            print("do layer skipping")
+            
+            for layer_index in range(self.num_layers):
+                
+                global_layer_index = self.layers['block' + str(layer_index)].layer_index
+                
+                if global_layer_index % SKIP_BLOCKS == SKIP_BLOCKS -1:
+                    continue
+                
+                current_emb, caches[layer_index] = \
+                    self.layers['block' + str(layer_index)](current_emb, caches[layer_index], mask=mask)
+                self.cached_attention[layer_index][index] = caches[layer_index]
+                
+        else:
+            assert False
+            
+
+        #'''
         # when disabled, this will do nothing
         current_emb = self.share_prefix.process_outputs(
             seq, mask, current_emb, caches)
@@ -302,11 +377,11 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
     def _generate_echo_token_logprobs(self, index, indices):
         assert self.pp_rank == self.pipeline_group_size - 1
         assert self.num_completions == 1
-        
         if self.generate_seq_length == 0:
             z = self.layers['lm'](self.output_seq_emb[index])
         else:
             z = self.layers['lm'](self.output_seq_emb[index][:, :-1])
+        
         z = F.log_softmax(z, -1)
         original_indices = indices
         indices = indices[:, 1:] # skip first

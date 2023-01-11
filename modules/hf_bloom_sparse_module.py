@@ -108,7 +108,11 @@ class GPTBlock(_BloomBlock):
             )))
         except Exception as e:
             print('Cannot load from <model_name>. The model is randomly initialized.')
+
         module.layer_index = layer_index
+#         module.fp_h = np.memmap(f"/mnt/workspace/data/bloom/h_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(800 * 2048, config.hidden_size,))
+#         module.fp_4h = np.memmap(f"/mnt/workspace/data/bloom/4h_{module.layer_index}.mmap", dtype='float16', mode='w+', shape=(800 * 2048, config.hidden_size * 4,))
+#         module.fp_i = 0
         return module
     
     def _make_causal_mask(
@@ -156,7 +160,6 @@ class GPTBlock(_BloomBlock):
 
     def forward(self, hidden_states: torch.Tensor, layer_past=None, mask=None) -> torch.Tensor:
             
-        original_input = hidden_states.clone()
         current_sequence_length = hidden_states.shape[1]
         past_key_values_length = 0
         if layer_past is not None:
@@ -201,14 +204,7 @@ class GPTBlock(_BloomBlock):
         # (bs, seq, nhead, size) => (bs, nhead, seq, size)
         present = (present[0].permute(0, 2, 1, 3), present[1].permute(0, 2, 1, 3))
         
-        if int(os.environ.get("PARALLEL_SUBBLOCKS", "0")) == 1:
-            if self.layer_index >= int(os.environ.get("PARALLEL_BEGIN_LAYER", "10")):
-                print(f"parallel subblocks at {self.layer_index}")
-                layernorm_output = self.post_attention_layernorm(original_input)
-            else:
-                layernorm_output = self.post_attention_layernorm(attention_output)
-        else:
-            layernorm_output = self.post_attention_layernorm(attention_output)
+        layernorm_output = self.post_attention_layernorm(attention_output)
 
         # Get residual
         if self.apply_residual_connection_post_layernorm:
@@ -217,7 +213,45 @@ class GPTBlock(_BloomBlock):
             residual = attention_output
 
         # MLP.
-        output = self.mlp(layernorm_output, residual)
+        #output = self.mlp(layernorm_output, residual)
+        hidden_states = layernorm_output.view(-1, layernorm_output.size(-1))
+#         h = hidden_states
+        hidden_states = self.mlp.dense_h_to_4h(hidden_states)
+#         h4 =  hidden_states
+
+#         if self.fp_i < self.fp_h.shape[0]:
+#             h = h.view(-1, h.size(-1))[mask.bool().view(-1)]
+#             h4 = h4.view(-1, h4.size(-1))[mask.bool().view(-1)]
+#             begin, end = self.fp_i, min(self.fp_i + h.size(0), self.fp_h.shape[0])
+#             self.fp_h[begin: end] = h[:end-begin].detach().cpu().numpy()
+#             self.fp_4h[begin: end] = h4[:end-begin].detach().cpu().numpy()
+#             self.fp_i += h.size(0)
+
+        p_topk = 0.3
+#         p_random  = 0.1
+        _, indices = hidden_states.topk(k=int(p_topk*hidden_states.size(-1)), dim=-1)
+        
+        mask = torch.zeros(
+            hidden_states.shape[0], hidden_states.shape[1], dtype=int, device=hidden_states.device).scatter_(1, indices, 1).bool()
+
+        #mask = torch.zeros_like(hidden_states, dtype=torch.bool)
+        #for i in range(len(indices)):
+        #    mask[i, indices[i]] = 1
+#         mask = (hidden_states > 0)
+#         print(mask.sum() / mask.numel())
+#         mask2 = (torch.rand_like(hidden_states) > 1 - p_random)
+
+        hidden_states = self.mlp.gelu_impl(hidden_states)
+        
+        hidden_states[~(mask)] = 0
+        
+        #hidden_states[~(mask)] = 0
+#         hidden_states[~(mask | mask2)] = 0
+#         #hidden_states[mask2 & (~mask) & (hidden_states < 0)] /= p_random
+#         hidden_states[mask2 & (~mask)] /= p_random
+
+        output = self.mlp.dense_4h_to_h(hidden_states).view(residual.shape) + residual
+
         
         return output, present
     

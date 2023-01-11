@@ -62,7 +62,7 @@ class DummyRequestProcessor:
     def get_dataloader(self, batch_size, num_workers=0):
         
         dataset = JsonDataset(
-            ['you are', 'hello world', '1 2 3 4', 'a b c d']*1000, 
+            ['you are', 'I love ', 'hello world', '1 2 3 4', 'a b c d']*1000, 
             self.tokenizer, batch_size=batch_size,
         )
         
@@ -91,6 +91,7 @@ class DummyRequestProcessor:
             else:
                 n_pads = 0
                 
+            print(f'>>>>>> batch_time: {batch_time:.4f}s, batch_size: {batch_size} <<<<<<')
             item = {
                 'choices': [], 
                 'request_time': {
@@ -155,7 +156,7 @@ class RequestProcessor:
         self.output_path = os.path.join(dirname, 'output_'+basename)
         print("<RequestProcessor> dir:", dirname)
         print("<RequestProcessor> file:", basename)
-        print("<RequestProcessor>, output file:", self.output_path)
+#         print("<RequestProcessor>, output file:", self.output_path)
         if basename.endswith('jsonl'):
             with open(self.request_path) as f:
                 self.data = []
@@ -196,6 +197,10 @@ class RequestProcessor:
         self.is_glm = False
         
     def set_arguments(self, args):
+        
+        if hasattr(args, 'output_path') and args.output_path is not None:
+            self.output_path = args.output_path
+        
         if hasattr(args, 'overwrite_request_args') and args.overwrite_request_args:
             self.top_k = args.top_k
             self.top_p = args.top_p
