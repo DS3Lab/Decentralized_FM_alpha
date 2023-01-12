@@ -230,6 +230,7 @@ def name_to_dataset(task, tokenizer, args):
             from .pile import StreamDataset
             data_files = {"train": "data/*"}
             data = load_dataset('lawinstruct/lawinstruct', split='train', data_files=data_files, use_auth_token=True, streaming=True).shuffle(buffer_size=10_000, seed=args.seed).with_format("torch")
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'multi_legal_pile_en':
             from .pile import StreamDataset
             data = load_dataset('joelito/Multi_Legal_Pile', 'en_all', split='train', streaming=True)
