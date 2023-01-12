@@ -223,10 +223,13 @@ def name_to_dataset(task, tokenizer, args):
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'pile':
             from .pile import StreamDataset
-            print('data_utils: before getting pile')
             data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed).with_format("torch")
-            print('data_utils: after getting pile')
             # data = load_dataset('the_pile', split="train").shuffle(seed=args.seed)
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
+        elif task == 'lawinstruct':
+            from .pile import StreamDataset
+            data_files = {"train": "data/*"}
+            data = load_dataset('lawinstruct/lawinstruct', split='train', data_files=data_files, use_auth_token=True, streaming=True).shuffle(buffer_size=10_000, seed=args.seed).with_format("torch")
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'c4':
             from .c4 import StreamDataset
