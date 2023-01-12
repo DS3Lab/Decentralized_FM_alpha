@@ -233,7 +233,7 @@ def name_to_dataset(task, tokenizer, args):
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'multi_legal_pile_en':
             from .pile import StreamDataset
-            data = load_dataset('joelito/Multi_Legal_Pile', 'en_all', split='train', streaming=True)
+            data = load_dataset('joelito/Multi_Legal_Pile', 'en_all', split='train', streaming=True).shuffle(buffer_size=10_000, seed=args.seed).with_format("torch")
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'multi_legal_pile_filtered_en':
             from .pile import StreamDataset
