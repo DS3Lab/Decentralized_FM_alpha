@@ -17,6 +17,7 @@ def topr(x, ratio):
     return values, masks
 
 def topk(x, k, return_values=True, return_indices=False):
+    k = max(k, 1)
     x_flat = x.view(-1)
     _, indexes = torch.topk(torch.abs(x_flat.data), k=k, sorted=False)
     masks = torch.zeros_like(x_flat, dtype=torch.uint8)
