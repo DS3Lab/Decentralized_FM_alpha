@@ -663,6 +663,7 @@ class GpipeAsync:
             optimizer_time = time.time()
             self.optimizer_step()
             torch.cuda.synchronize()
+            print('after cuda sync', self.global_rank)
             self.comm.barrier()
             end_time = time.time()
             print("Rank {} node optimizer step takes {:3.2f}s".format(

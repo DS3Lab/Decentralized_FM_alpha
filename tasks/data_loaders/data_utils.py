@@ -228,6 +228,14 @@ def name_to_dataset(task, tokenizer, args):
             print('data_utils: after getting pile')
             # data = load_dataset('the_pile', split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
+        elif task == 'multi_legal_pile_en':
+            from .pile import StreamDataset
+            data = load_dataset('joelito/Multi_Legal_Pile', 'en_all', split='train', streaming=True)
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
+        elif task == 'multi_legal_pile_filtered_en':
+            from .pile import StreamDataset
+            data = load_dataset('joelito/MultiLegalPile_Wikipedia_Filtered', 'en_all', split='train', streaming=True)
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'c4':
             from .c4 import StreamDataset
             # data = load_dataset('c4', 'en', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
