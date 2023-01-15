@@ -265,7 +265,7 @@ class FakeSlotSGDGlooDP:
                         "comm_mask_list": comm_mask_list,
                         "comm_data_list": comm_data_list,
                         "global_para": global_para,
-                        "worker_error": [torch.zeros_like(xx) for xx in comm_data_list],
+                        "worker_error": [torch.zeros_like(server_error) for xx in comm_data_list],
                         "server_error": server_error,
                     }
                 else:
@@ -287,10 +287,10 @@ class FakeSlotSGDGlooDP:
                 comm_data_compressed_list = []
                 comm_data_meta_list = []
                 for i, x in enumerate(comm_data_list):
-                    y = x + worker_error[i]
+                    y = x + worker_error[i][comm_mask_list[i]]
                     data, meta_data = self._compress(y)
                     z = self._decompress(data, meta_data)
-                    worker_error[i] = y - z
+                    worker_error[i][comm_mask_list[i]] = y - z
                     assert z.shape == x.shape
                     comm_data_compressed_list.append(data)
                     comm_data_meta_list.append(meta_data)
