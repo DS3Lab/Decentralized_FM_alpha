@@ -301,7 +301,7 @@ class FakeSlotSGDGlooDP:
                     # print('A', len(comm_data_compressed_list[i]))
                     _data_compressed = self._decompress(comm_data_compressed_list[i], comm_data_meta_list[i])
                     # para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] -= _data_compressed
-                    para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]][:] = global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]]
+                    para.data[i*chunk_size:(i+1)*chunk_size][:] = global_para.data[i*chunk_size:(i+1)*chunk_size]
 
                 # print(f'do first group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])}  - {para.shape}')
                 # self.dp_comm.barrier()
