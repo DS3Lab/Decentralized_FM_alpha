@@ -170,73 +170,108 @@ class DistSampleInferenceMaskTokenPipeSyncAttnMLP(DistGreedyInferenceMaskTokenPi
         mask, current_emb, caches = self.share_prefix.process_inputs(
             seq, mask, current_emb, caches)
         
-        assert self.num_layers % 2 == 0
+        assert self.num_layers % 4 == 0
 
-        for count in range(self.num_layers // 2):
+        for count in range(self.num_layers // 4):
             
-            layer_index = count * 2
-            layer_index_next = count * 2 + 1
+            layer_index = count * 4
+            layer_index_next = count * 4 + 1
+            layer_index_next2 = count * 4 + 2
+            layer_index_next3 = count * 4 + 3
             
             if self.layers['block' + str(layer_index)].layer_index > 0:
                 
                 print('parallel attn and mlp')
                 
                 input_emb = current_emb.clone()
-            
-                # attn runs
-                output_emb, caches[layer_index] = \
+                output_attn_0, caches[layer_index] = \
                     self.layers['block' + str(layer_index)](input_emb, caches[layer_index], mask=mask, subnet='attn')
                 self.cached_attention[layer_index][index] = caches[layer_index]
+                current_emb += output_attn_0
                 
-                # add
-                current_emb += output_emb - input_emb
-
-                output_emb, caches[layer_index_next] = \
+                input_emb = current_emb.clone()
+                output_attn_1, caches[layer_index_next] = \
                     self.layers['block' + str(layer_index_next)](input_emb, caches[layer_index_next], mask=mask, subnet='attn')
                 self.cached_attention[layer_index_next][index] = caches[layer_index_next]
-
-                # add
-                current_emb += output_emb - input_emb
-
-                # mlp runs
-                output_emb, _ = \
-                    self.layers['block' + str(layer_index)](input_emb, caches[layer_index], mask=mask, subnet='mlp')
+                current_emb += output_attn_1
                 
-                current_emb += output_emb - input_emb
-
-                output_emb, _ = \
+                input_emb = current_emb.clone()
+                output_attn_2, caches[layer_index_next2] = \
+                    self.layers['block' + str(layer_index_next2)](input_emb, caches[layer_index_next2], mask=mask, subnet='attn')
+                self.cached_attention[layer_index_next2][index] = caches[layer_index_next2]
+                current_emb += output_attn_2
+                
+                input_emb = current_emb.clone()
+                output_attn_3, caches[layer_index_next3] = \
+                    self.layers['block' + str(layer_index_next3)](input_emb, caches[layer_index_next3], mask=mask, subnet='attn')
+                self.cached_attention[layer_index_next3][index] = caches[layer_index_next3]
+                current_emb += output_attn_3
+                
+                
+                input_emb = current_emb.clone()
+                output_mlp_0, _ = \
+                    self.layers['block' + str(layer_index)](input_emb, caches[layer_index], mask=mask, subnet='mlp')
+                current_emb += output_mlp_0
+                
+                input_emb = current_emb.clone()
+                output_mlp_1, _ = \
                     self.layers['block' + str(layer_index_next)](input_emb, caches[layer_index_next], mask=mask, subnet='mlp')
+                current_emb += output_mlp_1
+                
+                input_emb = current_emb.clone()
+                output_mlp_2, _ = \
+                    self.layers['block' + str(layer_index_next2)](input_emb, caches[layer_index_next2], mask=mask, subnet='mlp')
+                current_emb += output_mlp_2
+                
+                input_emb = current_emb.clone()
+                output_mlp_3, _ = \
+                    self.layers['block' + str(layer_index_next3)](input_emb, caches[layer_index_next3], mask=mask, subnet='mlp')
+                current_emb += output_mlp_3
+                
+#                 # compensation
+                
+#                 output_attn_11, _ = \
+#                     self.layers['block' + str(layer_index_next)](output_attn_0, None, mask=mask, subnet='attn')
+                
+#                 output_mlp_11, _ = \
+#                     self.layers['block' + str(layer_index_next)](output_mlp_0, None, mask=mask, subnet='mlp')
 
                 # add
-                current_emb += output_emb - input_emb
-
+                # current_emb = current_emb + output_mlp_0 + output_mlp_1 #+ output_attn_11 * 0.001 + output_mlp_11 * 0.001
 
             else:
                 
                 input_emb = current_emb.clone()
                 
-                # attn runs
+                # first bloks
                 output_emb, caches[layer_index] = \
                     self.layers['block' + str(layer_index)](input_emb, caches[layer_index], mask=mask, subnet='attn')
                 self.cached_attention[layer_index][index] = caches[layer_index]
 
+                current_emb = current_emb + output_emb
+                input_emb = current_emb.clone()
+                
                 output_emb, _ = \
-                    self.layers['block' + str(layer_index)](output_emb, caches[layer_index], mask=mask, subnet='mlp')
+                    self.layers['block' + str(layer_index)](input_emb, caches[layer_index], mask=mask, subnet='mlp')
 
-                current_emb += output_emb - input_emb
+                # current_emb += output_emb - input_emb
+                current_emb = current_emb + output_emb
 
-                # mlp runs
-
+                # second blocks
                 input_emb = current_emb.clone()
 
                 output_emb, caches[layer_index_next] = \
                     self.layers['block' + str(layer_index_next)](input_emb, caches[layer_index_next], mask=mask, subnet='attn')
                 self.cached_attention[layer_index_next][index] = caches[layer_index_next]
+                
+                current_emb = current_emb + output_emb
+                input_emb = current_emb.clone()
 
                 output_emb, _ = \
-                    self.layers['block' + str(layer_index_next)](output_emb, caches[layer_index_next], mask=mask, subnet='mlp')
+                    self.layers['block' + str(layer_index_next)](input_emb, caches[layer_index_next], mask=mask, subnet='mlp')
 
-                current_emb += output_emb - input_emb
+                # current_emb += output_emb - input_emb
+                current_emb = current_emb + output_emb
             
 #             if self.layers['block' + str(layer_index)].layer_index > 0:
                 

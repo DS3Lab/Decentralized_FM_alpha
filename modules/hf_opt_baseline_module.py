@@ -174,6 +174,7 @@ class OPTAttention(_OPTAttention):
     def forward(
         self,
         hidden_states: torch.Tensor,
+        last_hidden_states: torch.Tensor = None,
         key_value_states: Optional[torch.Tensor] = None,
         past_key_value: Optional[Tuple[torch.Tensor]] = None,
         attention_mask: Optional[torch.Tensor] = None,
@@ -181,6 +182,11 @@ class OPTAttention(_OPTAttention):
         output_attentions: bool = False,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
         """Input shape: Batch x Time x Channel"""
+        
+        if last_hidden_states is None:
+            last_hidden_states = hidden_states
+        else:
+            print('last_hidden_states!!!')
 
         # if key_value_states are provided this layer is used as a cross-attention layer
         # for the decoder
@@ -189,7 +195,7 @@ class OPTAttention(_OPTAttention):
         bsz, tgt_len, _ = hidden_states.size()
 
         # get query proj
-        query_states = self.q_proj(hidden_states) * self.scaling
+        query_states = self.q_proj(last_hidden_states) * self.scaling
         # get key, value proj
         if is_cross_attention and past_key_value is not None:
             # reuse k,v, cross_attentions
@@ -201,13 +207,13 @@ class OPTAttention(_OPTAttention):
             value_states = self._shape(self.v_proj(key_value_states), -1, bsz)
         elif past_key_value is not None:
             # reuse k, v, self_attention
-            key_states = self._shape(self.k_proj(hidden_states), -1, bsz)
+            key_states = self._shape(self.k_proj(last_hidden_states), -1, bsz)
             value_states = self._shape(self.v_proj(hidden_states), -1, bsz)
             key_states = torch.cat([past_key_value[0], key_states], dim=2)
             value_states = torch.cat([past_key_value[1], value_states], dim=2)
         else:
             # self_attention
-            key_states = self._shape(self.k_proj(hidden_states), -1, bsz)
+            key_states = self._shape(self.k_proj(last_hidden_states), -1, bsz)
             value_states = self._shape(self.v_proj(hidden_states), -1, bsz)
 
         if self.is_decoder:
@@ -270,6 +276,7 @@ class OPTAttention(_OPTAttention):
             attn_weights_reshaped = None
 
         attn_probs = nn.functional.dropout(attn_weights, p=self.dropout, training=self.training)
+        # attn_probs = nn.functional.dropout(attn_weights, p=0.9, training=True)
 
         attn_output = torch.bmm(attn_probs, value_states)
 
@@ -335,7 +342,7 @@ class GPTBlock(OPTDecoderLayer):
         module.layer_index = layer_index
         return module
 
-    def forward(self, x: torch.Tensor, layer_past=None, mask=None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, last_x: torch.Tensor = None, layer_past=None, mask=None) -> torch.Tensor:
         
         original_input = x.clone()
         if layer_past is not None:
@@ -355,15 +362,19 @@ class GPTBlock(OPTDecoderLayer):
         # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
         if self.do_layer_norm_before:
             hidden_states = self.self_attn_layer_norm(hidden_states)
+            last_x = self.self_attn_layer_norm(last_x)
 
         # Self Attention
+        
         hidden_states, _, present = self.self_attn(
             hidden_states=hidden_states,
+            last_hidden_states=last_x,
             attention_mask=attention_mask,
             past_key_value=layer_past,
         )
+        
         hidden_states = residual + hidden_states
-
+        
         # 350m applies layer norm AFTER attention
         if not self.do_layer_norm_before:
             hidden_states = self.self_attn_layer_norm(hidden_states)
@@ -384,10 +395,10 @@ class GPTBlock(OPTDecoderLayer):
 
         hidden_states = self.fc1(hidden_states)
         hidden_states = self.activation_fn(hidden_states)
-
         hidden_states = self.fc2(hidden_states)
 
         hidden_states = (residual + hidden_states).view(hidden_states_shape)
+        
         
         return hidden_states, present
 

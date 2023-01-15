@@ -174,6 +174,7 @@ class OPTAttention(_OPTAttention):
     def forward(
         self,
         hidden_states: torch.Tensor,
+        # last_hidden_states: torch.Tensor = None,
         key_value_states: Optional[torch.Tensor] = None,
         past_key_value: Optional[Tuple[torch.Tensor]] = None,
         attention_mask: Optional[torch.Tensor] = None,
@@ -270,6 +271,7 @@ class OPTAttention(_OPTAttention):
             attn_weights_reshaped = None
 
         attn_probs = nn.functional.dropout(attn_weights, p=self.dropout, training=self.training)
+        # attn_probs = nn.functional.dropout(attn_weights, p=0.9, training=True)
 
         attn_output = torch.bmm(attn_probs, value_states)
 
@@ -335,66 +337,61 @@ class GPTBlock(OPTDecoderLayer):
         module.layer_index = layer_index
         return module
 
-    def forward(self, x: torch.Tensor, layer_past=None, mask=None, subnet='none') -> torch.Tensor:
+    def forward(self, x: torch.Tensor, layer_past=None, mask=None) -> torch.Tensor:
         
-        hidden_states = x
-        
-        if subnet == 'attn':
-        
-        
-            if layer_past is not None:
-                past_length = layer_past[0].size(2)
-            else:
-                past_length = 0
-            if mask is None:
-                mask = torch.ones((x.size(0), x.size(1)+past_length), 
-                    dtype=torch.bool, device=x.device)
-            attention_mask = _prepare_decoder_attention_mask(
-                mask, x.shape[:2], x, past_length
-            )
-
-            hidden_states = x # alias
-            residual = hidden_states
-
-            # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
-            if self.do_layer_norm_before:
-                hidden_states = self.self_attn_layer_norm(hidden_states)
-
-            # Self Attention
-            hidden_states, _, present = self.self_attn(
-                hidden_states=hidden_states,
-                attention_mask=attention_mask,
-                past_key_value=layer_past,
-            )
-            # hidden_states = residual + hidden_states
-
-            # 350m applies layer norm AFTER attention
-            if not self.do_layer_norm_before:
-                hidden_states = self.self_attn_layer_norm(hidden_states)
-                
-        elif subnet == 'mlp':
-
-            # Fully Connected
-            hidden_states_shape = hidden_states.shape
-            hidden_states = hidden_states.reshape(-1, hidden_states.size(-1))
-            residual = hidden_states
-
-            # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
-            if self.do_layer_norm_before:
-                hidden_states = self.final_layer_norm(hidden_states)
-
-            hidden_states = self.fc1(hidden_states)
-            hidden_states = self.activation_fn(hidden_states)
-
-            hidden_states = self.fc2(hidden_states)
-
-            # hidden_states = (residual + hidden_states).view(hidden_states_shape)
-            hidden_states = (hidden_states).view(hidden_states_shape)
-            
-            present = None
-            
+        original_input = x.clone()
+        if layer_past is not None:
+            past_length = layer_past[0].size(2)
         else:
-            assert False
+            past_length = 0
+        if mask is None:
+            mask = torch.ones((x.size(0), x.size(1)+past_length), 
+                dtype=torch.bool, device=x.device)
+        attention_mask = _prepare_decoder_attention_mask(
+            mask, x.shape[:2], x, past_length
+        )
+        
+        hidden_states = x # alias
+        residual = hidden_states
+        
+        # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
+        if self.do_layer_norm_before:
+            hidden_states = self.self_attn_layer_norm(hidden_states)
+
+        # Self Attention
+        
+        hidden_states, _, present = self.self_attn(
+            hidden_states=hidden_states,
+            attention_mask=attention_mask,
+            past_key_value=layer_past,
+        )
+        
+        hidden_states = residual + hidden_states
+        
+        # 350m applies layer norm AFTER attention
+        if not self.do_layer_norm_before:
+            hidden_states = self.self_attn_layer_norm(hidden_states)
+
+        # Fully Connected
+        hidden_states_shape = hidden_states.shape
+        hidden_states = hidden_states.reshape(-1, hidden_states.size(-1))
+        residual = hidden_states
+
+        if int(os.environ.get("PARALLEL_SUBBLOCKS", "0")) == 1:
+            if self.layer_index >= int(os.environ.get("PARALLEL_BEGIN_LAYER", "10")):
+                print('!')
+                hidden_states = original_input.reshape(-1, hidden_states.size(-1))
+
+        # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
+        if self.do_layer_norm_before:
+            hidden_states = self.final_layer_norm(hidden_states)
+
+        hidden_states = self.fc1(hidden_states)
+        hidden_states = self.activation_fn(hidden_states)
+        hidden_states = self.fc2(hidden_states)
+
+        hidden_states = (residual + hidden_states).view(hidden_states_shape)
+        
         
         return hidden_states, present
 

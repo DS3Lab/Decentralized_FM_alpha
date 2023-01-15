@@ -318,9 +318,20 @@ class DistGreedyInferenceMaskTokenPipeSync(DistGreedyInferenceTokePipeSync):
         
         if PARALLEL_BLOCKS <= 1 and SKIP_BLOCKS <= 1:
             for layer_index in range(self.num_layers):
+                
+                global_layer_index = self.layers['block' + str(layer_index)].layer_index
+                
+                if layer_index == 0 or global_layer_index in list(range(5)) + list(range(96-10, 100)):
+                    last_emb = current_emb.clone()
+                    
+                current_emb_keep = current_emb.clone()
+                
                 current_emb, caches[layer_index] = \
-                    self.layers['block' + str(layer_index)](current_emb, caches[layer_index], mask=mask)
+                    self.layers['block' + str(layer_index)](current_emb, last_emb, caches[layer_index], mask=mask)
                 self.cached_attention[layer_index][index] = caches[layer_index]
+                
+                last_emb = current_emb_keep.clone()
+                
 
         elif PARALLEL_BLOCKS > 1:
             
