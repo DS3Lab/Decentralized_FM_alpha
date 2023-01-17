@@ -13,6 +13,7 @@ from .dist_dp_afreeze_compressed import AFreezeCompressDP
 from .dist_dp_afreeze_compressed_2 import AFreezeCompress2DP
 from .dist_dp_slot_sgd import SlotSGDDP
 from .dist_dp_slot_sgd_gloo import SlotSGDGlooDP
+from .dist_dp_slot_sgd_gloo_replacement import SlotSGDGlooRDP
 from .dist_dp_fake_slot_sgd_gloo import FakeSlotSGDGlooDP
 
 
@@ -48,6 +49,8 @@ def get_dp_module(args, device, module, optimizer):
         return SlotSGDDP(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'slot_sgd_gloo':
         return SlotSGDGlooDP(args, device, module, optimizer, flatten=True)
+    elif args.dp_mode == 'slot_sgd_gloo_replacement':
+        return SlotSGDGlooRDP(args, device, module, optimizer, flatten=True)
     elif args.dp_mode == 'fake_slot_sgd_gloo':
         return FakeSlotSGDGlooDP(args, device, module, optimizer, flatten=True)
     else:
