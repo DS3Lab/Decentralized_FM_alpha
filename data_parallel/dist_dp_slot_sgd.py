@@ -535,6 +535,7 @@ class SlotSGDDP:
             self._partial_sync()
         with torch.cuda.stream(self.torch_optim_comp_stream):
             self.torch_optim_comp_stream.wait_event(self.sync_gradients_ready_event)
+            self.torch_optim_comp_stream.wait_event(self.backward_ready_event)
             self.profile_mark_optimizer_step_start()
             # self._copy_to_model()
             self.optimizer.step()
