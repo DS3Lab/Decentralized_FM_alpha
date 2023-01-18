@@ -63,13 +63,14 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
         dtype=torch.int64
     ).to(device)
     
-    do_sync_before_save = (args.dp_mode in ['local', 'prox', 'proxskip', 'proxadam', 'aproxadam', 'afreeze_compressed', 'afreeze'] and use_dp)
+    # do_sync_before_save = (args.dp_mode in ['local'] and use_dp)
+    do_sync_before_save = (args.dp_mode in ['local'] and use_dp)
     
     if get_pipeline_parallel_rank() == 0 and dp_rank == 0:
         
-        for data in train_data_loader:
-            # if i < pipe.global_step:
-            #     continue
+        for i, data in enumerate(train_data_loader):
+            if i < pipe.global_step:
+                continue
                 
             if use_dp:
                 dp_comm.broadcast(stop_flag, 0)
