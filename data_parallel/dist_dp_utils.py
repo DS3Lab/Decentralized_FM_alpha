@@ -46,7 +46,7 @@ def get_dp_module(args, device, module, optimizer):
     elif args.dp_mode == 'atopk':
         return ATopKDP(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'slot_sgd':
-        return SlotSGDDP(args, device, module, optimizer, flatten=False)
+        return SlotSGDDP(args, device, module, optimizer, flatten=True)
     elif args.dp_mode == 'slot_sgd_gloo':
         return SlotSGDGlooDP(args, device, module, optimizer, flatten=True)
     elif args.dp_mode == 'slot_sgd_gloo_replacement':

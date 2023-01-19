@@ -44,7 +44,7 @@ def step_update(self, freeze=False, dp_optimizer=None):
                 p.grad = p.grad.nan_to_num()
             torch.nn.utils.clip_grad_norm_(params, 1.0)
             
-    dp_optimizer.pp_comm.barrier()
+    # dp_optimizer.pp_comm.barrier()
 
     for group in self.param_groups:
         for p in group["params"]:
@@ -95,28 +95,82 @@ def step_update(self, freeze=False, dp_optimizer=None):
 
             if dp_optimizer is not None and dp_optimizer.th.item() == 1:
                 
-                
                 local_p = p.data.clone()
                 p.data -= step_size * h / denom / sync_prob 
                 p.data /= dp_optimizer.dp_group_size
                 
-                dp_optimizer.dp_comm.barrier()
+                # print(dp_optimizer.pp_rank, dp_optimizer.dp_rank, '#', p.shape)
+                # dp_optimizer.dp_comm.barrier()
+                # print(dp_optimizer.pp_rank, dp_optimizer.dp_rank, '@', p.shape)
                 dp_optimizer.dp_comm.all_reduce(p.data)
-                dp_optimizer.dp_comm.barrier()
+                # print(dp_optimizer.pp_rank, dp_optimizer.dp_rank, '&', p.shape)
+                # dp_optimizer.dp_comm.barrier()
+                # print(dp_optimizer.pp_rank, dp_optimizer.dp_rank, '*', p.shape)
                 
-                print('sync...')
+                # print('sync...')
                 h.data += denom * sync_prob * (p - local_p) / step_size
                 
             if group["weight_decay"] > 0.0:
                 p.data.add_(p.data, alpha=-group["lr"] * group["weight_decay"])
                 # h.data.add_(h.data, alpha=-group["lr"] * group["weight_decay"])
                 
-    dp_optimizer.pp_comm.barrier()
+    # dp_optimizer.pp_comm.barrier()
     
     if fp16_wrapper is not None:
         fp16_wrapper._copy_optimizer_params_to_model_params()
         # Successful update.
         return True
+    
+    
+# @torch.no_grad()
+# def prox(self, freeze=False, dp_optimizer=None):
+    
+#     if not (dp_optimizer is not None and dp_optimizer.th.item() == 1):
+#         return
+    
+#     print('prox!')
+    
+#     fp16_wrapper = None
+    
+#     if not isinstance(self, torch.optim.AdamW):
+#         fp16_wrapper, self = self, self.optimizer
+#         assert isinstance(self, torch.optim.AdamW)
+            
+#     dp_optimizer.pp_comm.barrier()
+
+#     for group in self.param_groups:
+#         for p in group["params"]:
+#             if p.grad is None:
+#                 continue
+                
+#             state = self.state[p]
+                
+#             beta1, beta2 = group["betas"]
+                
+#             step_size = group["lr"]
+#             bias_correction1 = 1.0 - beta1 ** state["step"]
+#             bias_correction2 = 1.0 - beta2 ** state["step"]
+#             step_size = step_size * math.sqrt(bias_correction2) / bias_correction1
+                
+#             local_p = p.data.clone()
+#             p.data -= step_size * h / denom / sync_prob 
+#             p.data /= dp_optimizer.dp_group_size
+            
+#             dp_optimizer.dp_comm.barrier()
+#             dp_optimizer.dp_comm.all_reduce(p.data)
+#             dp_optimizer.dp_comm.barrier()
+            
+#             # print('sync...')
+#             h.data += denom * sync_prob * (p - local_p) / step_size
+                
+#     dp_optimizer.pp_comm.barrier()
+    
+#     print('done prox!')
+    
+#     if fp16_wrapper is not None:
+#         fp16_wrapper._copy_optimizer_params_to_model_params()
+#         # Successful update.
+#         return True
             
 
 class ProxSkipDP:
@@ -246,8 +300,9 @@ class ProxSkipDP:
             self.torch_optim_comp_stream.wait_event(self.sync_gradients_ready_event)
             self.profile_mark_optimizer_step_start()
             self.pre_optimization()
+            # self.optimizer.step()
+            # prox(self.optimizer, freeze=freeze, dp_optimizer=self)
             step_update(self.optimizer, freeze=freeze, dp_optimizer=self)
-            # step_update(self.optimizer, freeze=False, dp_optimizer=self)
             self.torch_optim_comp_stream.record_event(self.optimizer_step_ready_event)
 
     def set_time_stamp(self, init_time_stamp, init_event):
