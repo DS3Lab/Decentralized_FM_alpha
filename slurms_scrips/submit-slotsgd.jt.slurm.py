@@ -33,7 +33,7 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
-export WANDB_NAME=opt-slotsgd-jt-200x
+export WANDB_NAME=opt-slotsgd-adam-jt-200x
 export WANDB_ENTITY=pipeline-activation-compression
 
 export SYNC_STEPS=10
@@ -49,7 +49,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --tokenizer-name ${root_path}/pretrained_models/opt-1.3b-new \
 --project-name slot-sgd \
 --model-type opt \
---optimizer 8bit-adam \
+--optimizer adam \
 --seed 42 \
 --checkpoint-path ${root_path}/pretrained_models/checkpoints/$WANDB_NAME \
 --load-pretrained-model true \
@@ -62,6 +62,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --world-size ${world_size} --pipeline-group-size ${pp_degree} --data-group-size ${dp_degree} \
 --job-id ${job_id} --net-interface ${netif} \
 --fp16 \
+--dp-backend gloo \
 --dp-mode slot_sgd_gloo \
 --pp-mode gpipe --profiling no-profiling"
 

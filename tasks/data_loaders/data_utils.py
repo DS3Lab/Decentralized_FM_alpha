@@ -247,6 +247,10 @@ def name_to_dataset(task, tokenizer, args):
         elif task == 'cot':
             from .cot import StreamDataset
             dataset = StreamDataset('./data/mmlu-cot.json', tokenizer, args.seq_length)
+        elif task == 'hc3':
+            from .hc3 import StreamDataset
+            data = load_dataset('Hello-SimpleAI/HC3', 'all', split='train')
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
         else:
             if 'p3' in task:
                 from .p3 import StreamDataset

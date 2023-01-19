@@ -53,7 +53,7 @@ def _lossless_decompress(enc):
 
 class SlotSGDDP:
     def __init__(self, args, device, module: torch.nn.Module, optimizer: torch.optim.Optimizer = None, flatten=False):
-        assert not flatten
+        # assert not flatten
         self.dp_bits = args.dp_bits
         self.flatten = flatten
         self.global_rank = args.rank
@@ -66,15 +66,24 @@ class SlotSGDDP:
         self.dp_comm_stream = torch.cuda.Stream(device=device, priority=-1)
         self.torch_optim_comp_stream = torch.cuda.default_stream(device=device)
         self.backward_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
+        self.sync_gradients_start_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
         self.sync_gradients_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
         self.optimizer_step_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
-        
-        self.mmt_start_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
-        self.mmt_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
 
         self.module = module
         assert optimizer is not None
         self.optimizer = optimizer
+        
+        if self.flatten:
+            _params = []
+            for i_group, group in enumerate(self.optimizer.optimizer.param_groups):
+                for i_para, para in enumerate(group["params"]):
+                    _params.append(para)
+            self.flatten_para = flatten_tensors(_params)
+            print("Flattened parameter number: {}, element size: {}."
+                  .format(self.flatten_para.data.numel(), self.flatten_para.data.element_size()))
+            
+            
         num_paras, element_size = self._compute_total_para_num()
         print("Total number of parameters: {}, element size: {}, total size {} MB."
               .format(num_paras, element_size, num_paras * element_size // 1024 // 1024))
@@ -202,28 +211,146 @@ class SlotSGDDP:
         
         if self.flatten:
             
-            with torch.cuda.stream(self.dp_comm_stream):
-                cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
+            cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
+            with torch.cuda.stream(self.dp_comm_stream), cupy_dp_stream:
+                
+                self.dp_comm_stream.record_event(self.sync_gradients_start_event)
                 
                 name = 'model'
                 para = self.flatten_para
+                
+                dp_state_dict = self.dp_state_dict
 
-                if name not in self.comm_mask_dict:
-                    self.comm_mask_dict[name] = torch.zeros_like(para, dtype=torch.bool)
-                    self.comm_mask_dict[name].view(-1)[::sync_steps] = True
-                    self.buffer_dict[name] = torch.zeros(
-                        self.comm_mask_dict[name].sum().item(), 
-                        dtype=torch.float16, device=para.device
+                if name not in dp_state_dict:
+
+                    # comm mask
+                    comm_mask_list = []
+                    comm_data_list = []
+                    for i in range(self.dp_group_size):
+                        para_shape = list(para.shape)
+                        assert para_shape[0] == para_shape[0] // self.dp_group_size * self.dp_group_size
+                        para_shape[0] = para_shape[0] // self.dp_group_size
+                        comm_mask = torch.zeros(para_shape, dtype=torch.bool, device=para.device)
+                        comm_mask.view(-1)[::sync_steps] = True
+                        n_potisive = comm_mask.sum().item() // quantization_bucket_size * quantization_bucket_size
+                        if n_potisive != 0:
+                            comm_mask.view(-1)[comm_mask.view(-1).cumsum(-1) > n_potisive] = False
+                            assert comm_mask.sum().item() == n_potisive
+                        else:
+                            comm_mask[:] = True
+                        print('comm_mask:', comm_mask.sum().item(), comm_mask.shape)
+                        comm_mask_list.append(comm_mask)
+
+                    # global para
+                    global_para = para.data.half()
+
+                    # server error
+                    # server_error = torch.zeros_like(global_para.chunk(self.dp_group_size, 0)[self.dp_rank])
+                    server_error = torch.zeros(
+                        comm_mask_list[self.dp_rank].shape, dtype=torch.float16, device=para.device,
                     )
+
+                    # print('server error shape:', server_error.shape)
+                    dp_state_dict[name] = {
+                        "comm_mask_list": comm_mask_list,
+                        # "comm_data_list": comm_data_list,
+                        "global_para": global_para,
+                        "server_error": server_error,
+                    }
                 else:
-                    self.comm_mask_dict[name] = self.comm_mask_dict[name].roll(1)
+                    for i in range(self.dp_group_size):
+                        dp_state_dict[name]['comm_mask_list'][i] = dp_state_dict[name]['comm_mask_list'][i].roll(1)
+
+                comm_mask_list = dp_state_dict[name]["comm_mask_list"]
+                comm_data_list = comm_data_list = [None for _ in comm_mask_list]
+                global_para = dp_state_dict[name]["global_para"]
+                chunk_size = global_para.size(0) // self.dp_group_size
+                server_error = dp_state_dict[name]["server_error"]
+                server_mask = comm_mask_list[self.dp_rank]
+
+                for i in range(self.dp_group_size):
+                    comm_mask = comm_mask_list[i]
+                    # comm_data_list[i].data[:] = (para[i*chunk_size:(i+1)*chunk_size][comm_mask] - global_para[i*chunk_size:(i+1)*chunk_size][comm_mask]).half()
+                    comm_data_list[i] = (para[i*chunk_size:(i+1)*chunk_size][comm_mask] - global_para[i*chunk_size:(i+1)*chunk_size][comm_mask]).half()
                     
-                comm_mask = self.comm_mask_dict[name]
-                buffer = self.buffer_dict[name]
-                buffer.data[:] = (para[comm_mask] / self.dp_group_size).half()
-                # print(buffer.data.numel() / para.data.numel())
-                print('not implemented yet, just do allreduce')
-                self.dp_comm.all_reduce(buffer)
+                comm_data_compressed_list = []
+                comm_data_meta_list = []
+                for x in comm_data_list:
+                    data, meta_data = self._compress(x)
+                    # z = self._decompress(data, meta_data)
+                    # assert z.shape == x.shape
+                    comm_data_compressed_list.append(data)
+                    comm_data_meta_list.append(meta_data)
+                    del x
+                del comm_data_list
+                comm_buffer_list = [[torch.zeros_like(x) for x in x_tuple] for x_tuple in comm_data_compressed_list]
+                
+                # revert
+                for i in range(self.dp_group_size):
+                    # print('A', len(comm_data_compressed_list[i]))
+                    _data_compressed = self._decompress(comm_data_compressed_list[i], comm_data_meta_list[i])
+                    para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] -= _data_compressed
+                    del _data_compressed
+
+                # print(f'do first group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])}  - {para.shape}')
+                # self.dp_comm.barrier()
+                    
+                cupy.cuda.nccl.groupStart()
+                for i in range(self.dp_group_size):
+                    for j, to_send in enumerate(comm_data_compressed_list[i]):
+                        self.dp_comm.send(
+                            to_send, dst=i, stream=cupy_dp_stream)
+                        # if j==0:
+                        #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
+                        # if to_send.dtype == torch.uint8 and to_send.numel() > 1000:
+                        #     _enc = _lossless_compress(to_send)
+                        #     send_bits += len(_enc) * 8
+                        # else:
+                        #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
+                    for to_recv in comm_buffer_list[i]:
+                        self.dp_comm.recv(
+                            to_recv, src=i, stream=cupy_dp_stream)
+                        # recv_bits += to_recv.numel() * torch.finfo(to_recv.dtype).bits if to_recv.is_floating_point() else to_recv.numel() * torch.iinfo(to_recv.dtype).bits
+                cupy.cuda.nccl.groupEnd()
+
+                server_data = self._decompress([z for z in comm_buffer_list[0]], comm_data_meta_list[0]) / len(comm_buffer_list)
+                for i in range(1, self.dp_group_size):
+                    server_data.data += self._decompress([z for z in comm_buffer_list[i]], comm_data_meta_list[i]) / len(comm_buffer_list)
+                server_data.add_(server_error[server_mask])
+                server_data_compressed, server_data_meta = self._compress(server_data)
+                server_error.data[server_mask] = (server_data - self._decompress(server_data_compressed, server_data_meta))
+                
+                # print(f'do second group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])} - {para.shape}')
+                # self.dp_comm.barrier()
+
+                cupy.cuda.nccl.groupStart()
+                for i in range(self.dp_group_size):
+                    for j, to_send in enumerate(server_data_compressed):
+                        self.dp_comm.send(
+                            to_send, dst=i, stream=cupy_dp_stream)
+                        # if j==0:
+                        #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
+                        # if to_send.dtype == torch.uint8  and to_send.numel() > 1000:
+                        #     _enc = _lossless_compress(to_send)
+                        #     send_bits += len(_enc) * 8
+                        # else:
+                        #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
+                    for to_recv in comm_buffer_list[i]:
+                        self.dp_comm.recv(
+                            to_recv, src=i, stream=cupy_dp_stream)
+                        # recv_bits += to_recv.numel() * torch.finfo(to_recv.dtype).bits if to_recv.is_floating_point() else to_recv.numel() * torch.iinfo(to_recv.dtype).bits
+                cupy.cuda.nccl.groupEnd()
+
+                for i in range(self.dp_group_size):
+                    
+                    _data = self._decompress([z for z in comm_buffer_list[i]], comm_data_meta_list[i])
+                    para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data
+                    global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data
+                    
+                    del _data
+                    
+                    # para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] = \
+                    # global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]].float()
 
                 self.dp_comm_stream.record_event(self.sync_gradients_ready_event)
             
@@ -408,6 +535,7 @@ class SlotSGDDP:
             self._partial_sync()
         with torch.cuda.stream(self.torch_optim_comp_stream):
             self.torch_optim_comp_stream.wait_event(self.sync_gradients_ready_event)
+            self.torch_optim_comp_stream.wait_event(self.backward_ready_event)
             self.profile_mark_optimizer_step_start()
             # self._copy_to_model()
             self.optimizer.step()

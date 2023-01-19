@@ -442,24 +442,27 @@ class GpipeAsync:
 
         if self.use_fp16 and self.use_dynamic_scale:
 
-            if self.pp_rank != 0:
-                before = self.optimizer.grad_scaler._scale.item()
-                self.comm.recv(self.optimizer.grad_scaler._scale,
-                               src=self.pre_node_rank)
-                after = self.optimizer.grad_scaler._scale.item()
-                self.optimizer.grad_scaler._scale.data[:] = min(before, after)
-            if self.pp_rank != self.pipeline_group_size - 1:
-                self.comm.send(self.optimizer.grad_scaler._scale,
-                               dst=self.post_node_rank)
-            torch.cuda.synchronize()
+#             if self.pp_rank != 0:
+#                 before = self.optimizer.grad_scaler._scale.item()
+#                 self.comm.recv(self.optimizer.grad_scaler._scale,
+#                                src=self.pre_node_rank)
+#                 after = self.optimizer.grad_scaler._scale.item()
+#                 self.optimizer.grad_scaler._scale.data[:] = min(before, after)
+#             if self.pp_rank != self.pipeline_group_size - 1:
+#                 self.comm.send(self.optimizer.grad_scaler._scale,
+#                                dst=self.post_node_rank)
+#             torch.cuda.synchronize()
 
-            if self.pp_rank != 0:
-                self.comm.send(self.optimizer.grad_scaler._scale,
-                               dst=self.pre_node_rank)
-            if self.pp_rank != self.pipeline_group_size - 1:
-                self.comm.recv(self.optimizer.grad_scaler._scale,
-                               src=self.post_node_rank)
-            torch.cuda.synchronize()
+#             if self.pp_rank != 0:
+#                 self.comm.send(self.optimizer.grad_scaler._scale,
+#                                dst=self.pre_node_rank)
+#             if self.pp_rank != self.pipeline_group_size - 1:
+#                 self.comm.recv(self.optimizer.grad_scaler._scale,
+#                                src=self.post_node_rank)
+#             torch.cuda.synchronize()
+            scales_buffer = [torch.ones_like(self.optimizer.grad_scaler._scale) for _ in range(self.pipeline_group_size)]
+            self.comm.all_gather(self.optimizer.grad_scaler._scale, scales_buffer)
+            self.optimizer.grad_scaler._scale.data[:] = min([s.item() for s in scales_buffer])
 
         for i in range(self.micro_batch_num):
             if self.pp_rank == self.pipeline_group_size - 1:  # only send grad back to last node, do not receive
@@ -634,6 +637,10 @@ class GpipeAsync:
 
     def sgd_iter(self, input_=None, target=None,
                  aux_input_data=None, loss_func=torch.nn.functional.cross_entropy):
+        
+        # step = self.global_step % self.gradient_accumulate_step
+        # if step == self.gradient_accumulate_step - 1:
+        #     self.dp_optim.pre_optimizer_step()
 
         self.comm.barrier()
         start_time = time.time()
@@ -654,7 +661,7 @@ class GpipeAsync:
               .format(self.global_rank, step, self.gradient_accumulate_step, forward_slot))
 
         # This is an educated guess that such barrier would make it fair TC (probably required)
-        self.comm.barrier()
+        # self.comm.barrier()
         self.backward_stage(outputs, target, loss_func=loss_func)
         backward_time = time.time()
         print("Rank {} node backward pass {}/{} takes {:3.2f}s"
