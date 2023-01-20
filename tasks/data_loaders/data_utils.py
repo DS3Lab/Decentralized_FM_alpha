@@ -253,7 +253,7 @@ def name_to_dataset(task, tokenizer, args):
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'hh_rlhf':
             from .hh_rlhf import StreamDataset
-            data = load_dataset('Anthropic/hh-rlhf', split='train')
+            data = load_dataset('Anthropic/hh-rlhf', split='train').shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         else:
             if 'p3' in task:

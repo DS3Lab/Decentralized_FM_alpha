@@ -33,7 +33,7 @@ class StreamDataset(IterableDataset):
         buffer_tokens = self.buffer_tokens
         for x in self.data:
             self.iter_count += 1
-            curr_tokens = self.tokenizer(x['text'])['input_ids']
+            curr_tokens = self.tokenizer('\n\n\n'+x['text'])['input_ids']
             buffer_tokens += curr_tokens
             while len(buffer_tokens) >= self.seq_length:
                 tokens = buffer_tokens[:self.seq_length]

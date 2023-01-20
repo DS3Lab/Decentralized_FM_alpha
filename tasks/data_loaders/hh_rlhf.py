@@ -36,8 +36,8 @@ class StreamDataset(IterableDataset):
         for x in self.data:
             self.iter_count += 1
             # prompt = x['prompt'].replace(' Assistant:', '\n\nAssistant:').replace(' Human:', '\n\User:')
-            chosen = x['chosen'].replace(' Assistant:', '\n\nAssistant:').replace(' Human:', '\n\User:').lstrip()
-            rejected = x['rejected'].replace(' Assistant:', '\n\nAssistant:').replace(' Human:', '\n\User:')
+            chosen = x['chosen'].replace('Human:', 'User:')
+            rejected = x['rejected'].replace('Human:', 'User:')
             
             # curr_tokens = self.tokenizer(prompt)['input_ids']
             # buffer_tokens += curr_tokens
@@ -46,15 +46,16 @@ class StreamDataset(IterableDataset):
 #             if random.random() <= 1.0:
 #                 curr_tokens = self.tokenizer(chosen)['input_ids']
 #                 buffer_tokens += curr_tokens
-#                 rewards += [1.0] * curr_tokens
+#                 rewards += [1.0] * len(curr_tokens)
                 
 #             else:
 #                 curr_tokens = self.tokenizer(rejected)['input_ids']
 #                 buffer_tokens += curr_tokens
-#                 rewards += [-0.1] * curr_tokens
+#                 rewards += [-0.1] * len(curr_tokens)
+
             curr_tokens = self.tokenizer(chosen)['input_ids']
             buffer_tokens += curr_tokens
-            rewards += [1.0] * curr_tokens
+            rewards += [1.0] * len(curr_tokens)
                 
             while len(buffer_tokens) >= self.seq_length:
                 tokens = buffer_tokens[:self.seq_length]
