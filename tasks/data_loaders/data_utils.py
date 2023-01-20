@@ -223,17 +223,17 @@ def name_to_dataset(task, tokenizer, args):
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'pile':
             from .pile import StreamDataset
-            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed).with_format("torch")
+            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=100_000, seed=args.seed).with_format("torch")
             # data = load_dataset('the_pile', split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'lawinstruct':
             from .pile import StreamDataset
             data_files = {"train": "data/*"}
-            data = load_dataset('lawinstruct/lawinstruct', split='train', data_files=data_files, use_auth_token=True, streaming=True).shuffle(buffer_size=10_000, seed=args.seed).with_format("torch")
+            data = load_dataset('lawinstruct/lawinstruct', split='train', data_files=data_files, use_auth_token=True, streaming=True).shuffle(buffer_size=100_000, seed=args.seed).with_format("torch")
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'multi_legal_pile_en':
             from .pile import StreamDataset
-            data = load_dataset('joelito/Multi_Legal_Pile', 'en_all', split='train', streaming=True).shuffle(buffer_size=10_000, seed=args.seed).with_format("torch")
+            data = load_dataset('joelito/Multi_Legal_Pile', 'en_all', split='train', streaming=True).shuffle(buffer_size=100_000, seed=args.seed).with_format("torch")
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'multi_legal_pile_filtered_en':
             from .pile import StreamDataset
@@ -241,8 +241,8 @@ def name_to_dataset(task, tokenizer, args):
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'c4':
             from .c4 import StreamDataset
-            # data = load_dataset('c4', 'en', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
-            data = load_dataset('c4', 'en', split="train").shuffle(seed=args.seed)
+            data = load_dataset('c4', 'en', split="train", streaming=True).shuffle(buffer_size=100_000, seed=args.seed)
+            # data = load_dataset('c4', 'en', split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'cot':
             from .cot import StreamDataset
