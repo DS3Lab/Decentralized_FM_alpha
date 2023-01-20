@@ -68,7 +68,7 @@ class StreamDataset(IterableDataset):
                 self.rewards = rewards
                 yield {
                     'input_ids': input_ids,
-                    'weights': weights,
+                    # 'weights': weights,
                 }
                 
     def get_stream(self):
