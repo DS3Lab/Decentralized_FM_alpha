@@ -251,6 +251,10 @@ def name_to_dataset(task, tokenizer, args):
             from .hc3 import StreamDataset
             data = load_dataset('Hello-SimpleAI/HC3', 'all', split='train')
             dataset = StreamDataset(data, tokenizer, args.seq_length)
+        elif task == 'hh_rlhf':
+            from .hh_rlhf import StreamDataset
+            data = load_dataset('Anthropic/hh-rlhf', split='train')
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
         else:
             if 'p3' in task:
                 from .p3 import StreamDataset
