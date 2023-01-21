@@ -63,7 +63,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --world-size ${world_size} --pipeline-group-size ${pp_degree} --data-group-size ${dp_degree} \
 --job-id ${job_id} --net-interface ${netif} \
 --fp16 \
---dp-mode nccl \
+--dp-backend nccl \
 --dp-mode slot_sgd \
 --pp-mode gpipe --profiling no-profiling"
 
