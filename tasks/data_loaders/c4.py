@@ -16,7 +16,7 @@ class StreamDataset(IterableDataset):
         self.seq_length = seq_length
         self.it = None
         self.iter_count = 0
-        self.buffer_tokens = [self.tokenizer.bos_token_id]
+        self.buffer_tokens = []
         
     def state_dict(self):
         return {
@@ -37,7 +37,7 @@ class StreamDataset(IterableDataset):
             buffer_tokens += curr_tokens
             while len(buffer_tokens) >= self.seq_length:
                 tokens = buffer_tokens[:self.seq_length]
-                buffer_tokens = [self.tokenizer.bos_token_id] + buffer_tokens[self.seq_length:]
+                buffer_tokens = buffer_tokens[self.seq_length:]
                 # buffer_tokens = buffer_tokens[self.seq_length:]
                 input_ids = torch.tensor(tokens)
                 self.buffer_tokens = buffer_tokens # update for restore
