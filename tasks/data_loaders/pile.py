@@ -19,7 +19,6 @@ class StreamDataset(IterableDataset):
         self.it = None
         self.iter_count = 0
         self.buffer_tokens = []
-        self.splitter = splitter
         
     def state_dict(self):
         return {
