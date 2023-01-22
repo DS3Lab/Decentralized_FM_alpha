@@ -75,6 +75,7 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             if use_dp:
                 dp_comm.broadcast(stop_flag, 0)
             pp_comm.broadcast(stop_flag, 0)
+            
             if stop_flag.item() == 1:
                 break
             
@@ -158,7 +159,7 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
             compress.flag.FLAG_DISABLE_COMPRESSION = (pipe.global_step < args.train_warmup_steps)
             current_iter_time = pipe.sgd_iter(input_ids, labels, loss_func=gpt_loss_func) # lm loss func
             
-            if pipe.global_step % args.checkpoint_steps == 0 or pipe.global_step == args.total_steps:
+            if pipe.global_step % args.checkpoint_steps == 0:
                 if do_sync_before_save:
                     pipe.dp_optim.allreduce_parameters()
                 if dp_rank == 0:
@@ -346,6 +347,7 @@ def main():
             try:
                 train_loop(args, pipe, device, train_data_loader, test_data_loader)
             except Exception as e:
+                raise e
                 print(get_pipeline_parallel_rank(), e)
             pipe.export_profiling_result(filename=trace_file)
         elif args.profiling == 'pytorch_profiling':
