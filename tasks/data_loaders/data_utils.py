@@ -14,6 +14,8 @@ from comm.comm_utils import *
 from itertools import islice
 from random import randint
 
+SHOW_DATA = int(os.environ.get('SHOW_DATA', 1))
+
 def random_chunk(li, min_chunk=1, max_chunk=5):
     it = iter(li)
     while True:
@@ -188,9 +190,10 @@ class StreamDatasetList(IterableDataset):
                     if self.post_processor is not None:
                         inputs = self.post_processor(inputs)
                     
-                    if global_i % self.print_sample_every_n == 0:
-                        print(p, th)
-                        print(f"**{task_name}**:", self.tokenizer.decode(inputs['input_ids']))
+                    if SHOW_DATA:
+                        if global_i % self.print_sample_every_n == 0:
+                            print(p, th)
+                            print(f"**{task_name}**:", self.tokenizer.decode(inputs['input_ids']))
                         
                     yield inputs
                     global_i += 1
