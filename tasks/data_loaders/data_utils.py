@@ -226,17 +226,23 @@ def name_to_dataset(task, tokenizer, args):
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'pile':
             from .pile import StreamDataset
-            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=100_000, seed=args.seed).with_format("torch")
+            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=1000_000, seed=args.seed).with_format("torch")
             # data = load_dataset('the_pile', split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'lawinstruct':
             from .pile import StreamDataset
             data_files = {"train": "data/*"}
-            data = load_dataset('lawinstruct/lawinstruct', split='train', data_files=data_files, use_auth_token=True, streaming=True).shuffle(buffer_size=100_000, seed=args.seed).with_format("torch")
+            data = load_dataset('lawinstruct/lawinstruct', split='train', data_files=data_files, use_auth_token=True, streaming=True).shuffle(buffer_size=1000_000, seed=args.seed).with_format("torch")
             dataset = StreamDataset(data, tokenizer, args.seq_length)
+        elif task == 'lawinstruct_en':
+            from .pile import StreamDataset
+            data_files = {"train": "data/*"}
+            data = load_dataset('lawinstruct/lawinstruct', split='train', data_files=data_files, use_auth_token=True, streaming=True)
+            data = data.filter(lambda x: x['lang']=='en').shuffle(buffer_size=1000_000, seed=args.seed).with_format("torch")
+            dataset = StreamDataset(data, tokenizer, args.seq_length, splitter='\n\n\n')
         elif task == 'multi_legal_pile_en':
             from .pile import StreamDataset
-            data = load_dataset('joelito/Multi_Legal_Pile', 'en_all', split='train', streaming=True).shuffle(buffer_size=100_000, seed=args.seed).with_format("torch")
+            data = load_dataset('joelito/Multi_Legal_Pile', 'en_all', split='train', streaming=True).shuffle(buffer_size=1000_000, seed=args.seed).with_format("torch")
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'multi_legal_pile_filtered_en':
             from .pile import StreamDataset
@@ -253,17 +259,25 @@ def name_to_dataset(task, tokenizer, args):
         elif task == 'hc3':
             from .hc3 import StreamDataset
             data = load_dataset('Hello-SimpleAI/HC3', 'all', split='train')
-            dataset = StreamDataset(data, tokenizer, args.seq_length, doc_separator='\n')
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'hh_rlhf':
             from .hh_rlhf import StreamDataset
             data = load_dataset('Anthropic/hh-rlhf', split='train').shuffle(seed=args.seed)
-            dataset = StreamDataset(data, tokenizer, args.seq_length, doc_separator='\n')
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'unatural_instructions':
+            from .pile import StreamDataset
             data = load_dataset("json", data_files='./data/unatural_instructions.jsonl', split="train", streaming=True).shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length, doc_separator='\n')
+        elif task == 'c4_chat':
+            from .pile_chat import StreamDataset
+            data = load_dataset('c4', 'en', split="train", streaming=True).shuffle(buffer_size=100_000, seed=args.seed)
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
         else:
             if 'p3' in task:
                 from .p3 import StreamDataset
+            elif 'soda' in task:
+                from .pile import StreamDataset
+                StreamDataset.default_doc_separator = '\n'
             else:
                 from .pile import StreamDataset
             print('data_utils: before getting custom pile')

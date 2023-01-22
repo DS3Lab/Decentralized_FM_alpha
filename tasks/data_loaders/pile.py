@@ -10,11 +10,12 @@ from comm.comm_utils import *
 
 
 class StreamDataset(IterableDataset):
-    def __init__(self, data, tokenizer, seq_length=1024, doc_separator=''):
+    default_doc_separator = ''
+    def __init__(self, data, tokenizer, seq_length=1024, doc_separator=None):
         self.data = data
         self.tokenizer = tokenizer
         self.seq_length = seq_length
-        self.doc_separator = doc_separator
+        self.doc_separator = doc_separator or StreamDataset.default_doc_separator
         self.it = None
         self.iter_count = 0
         self.buffer_tokens = []
