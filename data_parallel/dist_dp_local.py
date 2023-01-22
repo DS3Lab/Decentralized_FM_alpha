@@ -6,7 +6,7 @@ from .flatten_utils import flatten_params
 
 class LocalDP:
     def __init__(self, args, device, module: torch.nn.Module, optimizer: torch.optim.Optimizer = None, flatten=True):
-        flatten = False
+        flatten = True
         self.flatten = flatten
         self.global_rank = args.rank
         self.dp_group_size = args.data_group_size
@@ -16,6 +16,7 @@ class LocalDP:
         self.dp_comm_stream = torch.cuda.Stream(device=device, priority=-1)
         self.torch_optim_comp_stream = torch.cuda.default_stream(device=device)
         self.backward_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
+        self.allreduce_gradients_start_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
         self.allreduce_grad_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
         self.optimizer_step_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
 
@@ -110,9 +111,11 @@ class LocalDP:
             
 
     def optimizer_step(self):
-        torch.cuda.synchronize()
+        # torch.cuda.synchronize()
         with torch.cuda.stream(self.torch_optim_comp_stream):
-            self.torch_optim_comp_stream.wait_event(self.allreduce_grad_ready_event)
+            self.torch_optim_comp_stream.record_event(self.allreduce_gradients_start_event)
+            self.torch_optim_comp_stream.record_event(self.allreduce_grad_ready_event)
+            self.torch_optim_comp_stream.wait_event(self.backward_ready_event)
             self.profile_mark_optimizer_step_start()
             self.optimizer.step()
             self.torch_optim_comp_stream.record_event(self.optimizer_step_ready_event)

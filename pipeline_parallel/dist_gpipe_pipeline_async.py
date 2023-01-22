@@ -13,6 +13,9 @@ from comet_ml import Experiment
 from transformers import get_linear_schedule_with_warmup
 
 
+flag_profile = int(os.environ.get('FLAG_BENCHMARK', '0'))
+
+
 def get_parameter_names(model, forbidden_layer_types):
     """
     Returns the names of the model parameters that are not inside a forbidden layer.
@@ -393,9 +396,6 @@ class GpipeAsync:
 
             output_micro_batches.append(current_micro_output)
 
-        if self.enable_tidy_profiling:
-            self.profiling_forward_stage()
-
         return output_micro_batches
 
     def profiling_forward_stage(self):
@@ -440,37 +440,14 @@ class GpipeAsync:
         if self.pp_rank == self.pipeline_group_size - 1:
             tr_loss = []
 
-        if self.use_fp16 and self.use_dynamic_scale:
-
-#             if self.pp_rank != 0:
-#                 before = self.optimizer.grad_scaler._scale.item()
-#                 self.comm.recv(self.optimizer.grad_scaler._scale,
-#                                src=self.pre_node_rank)
-#                 after = self.optimizer.grad_scaler._scale.item()
-#                 self.optimizer.grad_scaler._scale.data[:] = min(before, after)
-#             if self.pp_rank != self.pipeline_group_size - 1:
-#                 self.comm.send(self.optimizer.grad_scaler._scale,
-#                                dst=self.post_node_rank)
-#             torch.cuda.synchronize()
-
-#             if self.pp_rank != 0:
-#                 self.comm.send(self.optimizer.grad_scaler._scale,
-#                                dst=self.pre_node_rank)
-#             if self.pp_rank != self.pipeline_group_size - 1:
-#                 self.comm.recv(self.optimizer.grad_scaler._scale,
-#                                src=self.post_node_rank)
-#             torch.cuda.synchronize()
-            scales_buffer = [torch.ones_like(self.optimizer.grad_scaler._scale) for _ in range(self.pipeline_group_size)]
-            self.comm.all_gather(self.optimizer.grad_scaler._scale, scales_buffer)
-            self.optimizer.grad_scaler._scale.data[:] = min([s.item() for s in scales_buffer])
-
         for i in range(self.micro_batch_num):
             if self.pp_rank == self.pipeline_group_size - 1:  # only send grad back to last node, do not receive
                 with torch.cuda.stream(self.torch_comp_stream) as st:
                     self.profile_mark_backward_comp_start(i)
                     loss = loss_func(
                         input=cached_output_micro_batches[i], target=target_as_micro_batches[i])
-                    tr_loss.append(loss.item())
+                    if not flag_profile:
+                        tr_loss.append(loss.item())
                     if self.use_fp16:
                         self.optimizer.scale(loss).backward()
                     else:
@@ -546,23 +523,22 @@ class GpipeAsync:
                     self.comm.send(
                         self.input_micro_batches[i].grad, dst=self.pre_node_rank, stream=cupy_send_stream)
                     self.profile_mark_backward_send_end(i)
-        if self.enable_tidy_profiling:
-            self.profiling_backward_stage()
 
-        if self.pp_rank == self.pipeline_group_size - 1:
-            wandb.log(
-                {
-                    'loss': sum(tr_loss)/len(tr_loss),
-                    'lr': self.scheduler.get_last_lr()[0],
-                    #                     'scale': self.optimizer.get_loss_scale(), ##todo
-                }, step=self.global_step,
-            )
-            print("logging...")
-            if hasattr(self, 'experiment'):
-                self.experiment.log_metrics({
-                    'loss': sum(tr_loss)/len(tr_loss),
-                    'lr': self.scheduler.get_last_lr()[0],
-                }, step=self.global_step)
+        if not flag_profile:
+            if self.pp_rank == self.pipeline_group_size - 1:
+                wandb.log(
+                    {
+                        'loss': sum(tr_loss)/len(tr_loss),
+                        'lr': self.scheduler.get_last_lr()[0],
+                        #                     'scale': self.optimizer.get_loss_scale(), ##todo
+                    }, step=self.global_step,
+                )
+                print("logging...")
+                if hasattr(self, 'experiment'):
+                    self.experiment.log_metrics({
+                        'loss': sum(tr_loss)/len(tr_loss),
+                        'lr': self.scheduler.get_last_lr()[0],
+                    }, step=self.global_step)
 
     def profiling_backward_stage(self):
         torch.cuda.synchronize()
@@ -638,11 +614,14 @@ class GpipeAsync:
     def sgd_iter(self, input_=None, target=None,
                  aux_input_data=None, loss_func=torch.nn.functional.cross_entropy):
         
-        # step = self.global_step % self.gradient_accumulate_step
-        # if step == self.gradient_accumulate_step - 1:
-        #     self.dp_optim.pre_optimizer_step()
-
+        
+        if self.use_fp16 and self.use_dynamic_scale:
+            scales_buffer = [torch.ones_like(self.optimizer.grad_scaler._scale) for _ in range(self.pipeline_group_size)]
+            self.comm.all_gather(self.optimizer.grad_scaler._scale, scales_buffer)
+            self.optimizer.grad_scaler._scale.data[:] = min([s.item() for s in scales_buffer])
+        
         self.comm.barrier()
+            
         start_time = time.time()
         if self.enable_tidy_profiling:
             torch.cuda.synchronize()
@@ -653,13 +632,17 @@ class GpipeAsync:
         self.zero_input_grad()
         if step == 0:
             self.optimizer.zero_grad(set_to_none=False)
+            
+        if step == self.gradient_accumulate_step - 1 and self.use_dp:
+            if hasattr(self.dp_optim, 'pre_optimizer_step'):
+                self.dp_optim.pre_optimizer_step()
 
         outputs = self.forward_stage(input_, aux_input_data=aux_input_data)
         forward_time = time.time()
         forward_slot = forward_time-start_time
         print("Rank {} node forward pass {}/{} takes {:3.2f}s"
               .format(self.global_rank, step, self.gradient_accumulate_step, forward_slot))
-
+        
         # This is an educated guess that such barrier would make it fair TC (probably required)
         # self.comm.barrier()
         self.backward_stage(outputs, target, loss_func=loss_func)
@@ -670,6 +653,11 @@ class GpipeAsync:
             optimizer_time = time.time()
             self.optimizer_step()
             torch.cuda.synchronize()
+            
+            if self.enable_tidy_profiling:
+                self.profiling_forward_stage()
+                self.profiling_backward_stage()
+            
             print('after cuda sync', self.global_rank)
             self.comm.barrier()
             end_time = time.time()

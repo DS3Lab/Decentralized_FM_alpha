@@ -101,7 +101,10 @@ def init_communicators(args):
                             rank = _PIPELINE_PARALLEL_RANK + dp_rank * args.pipeline_group_size
                             # print(f"{dp_rank} --> {rank}")
                             return rank
-                        _DATA_PARALLEL_COMM = TorchCommunicator(data_group, to_global_rank=to_global_rank)
+                        _DATA_PARALLEL_COMM = TorchCommunicator(
+                            data_group, to_global_rank=to_global_rank, 
+                            dp_rank=_DATA_PARALLEL_RANK,
+                            comm_group_size=args.data_group_size,)
             
             else:
                 assert False
