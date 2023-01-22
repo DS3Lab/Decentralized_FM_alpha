@@ -247,8 +247,8 @@ def name_to_dataset(task, tokenizer, args):
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'c4':
             from .c4 import StreamDataset
-            # data = load_dataset('c4', 'en', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
-            data = load_dataset('c4', 'en', split="train").shuffle(seed=args.seed)
+            data = load_dataset('c4', 'en', split="train", streaming=True).shuffle(buffer_size=100_000, seed=args.seed)
+            # data = load_dataset('c4', 'en', split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'cot':
             from .cot import StreamDataset
@@ -256,7 +256,14 @@ def name_to_dataset(task, tokenizer, args):
         elif task == 'hc3':
             from .hc3 import StreamDataset
             data = load_dataset('Hello-SimpleAI/HC3', 'all', split='train')
-            dataset = StreamDataset(data, tokenizer, args.seq_length)
+            dataset = StreamDataset(data, tokenizer, args.seq_length, doc_separator='\n')
+        elif task == 'hh_rlhf':
+            from .hh_rlhf import StreamDataset
+            data = load_dataset('Anthropic/hh-rlhf', split='train').shuffle(seed=args.seed)
+            dataset = StreamDataset(data, tokenizer, args.seq_length, doc_separator='\n')
+        elif task == 'unatural_instructions':
+            data = load_dataset("json", data_files='./data/unatural_instructions.jsonl', split="train", streaming=True).shuffle(seed=args.seed)
+            dataset = StreamDataset(data, tokenizer, args.seq_length, doc_separator='\n')
         else:
             if 'p3' in task:
                 from .p3 import StreamDataset
