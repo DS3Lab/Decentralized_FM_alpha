@@ -44,11 +44,9 @@ def _lossless_compress(data):
     # if rate < 1.5:
     #     print(raw[:1000])
         # assert False
-    data = torch.frombuffer(dec, dtype=torch.uint8)
-    return data
+    return enc
 
-def _lossless_decompress(data):
-    enc = data.cpu().numpy().tobytes()
+def _lossless_decompress(enc):
     # dec = lz4.frame.decompress(enc)
     dec = zlib.decompress(enc)
     data = torch.frombuffer(dec, dtype=torch.uint8)
@@ -298,11 +296,6 @@ class SlotSGDBenchDP:
 
                 # print(f'do first group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])}  - {para.shape}')
                 # self.dp_comm.barrier()
-                
-                for i in range(self.dp_group_size):
-                    for j, to_send in enumerate(comm_data_compressed_list[i]):
-                        to_send_c = _lossless_compress(to_send)
-                        
                     
                 cupy.cuda.nccl.groupStart()
                 for i in range(self.dp_group_size):

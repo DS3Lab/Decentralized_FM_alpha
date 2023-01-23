@@ -176,7 +176,7 @@ def step_adamw(self, closure=None, freeze=False):
 
 class ShardedPSDPCompressed:
     def __init__(self, args, device, module: torch.nn.Module, optimizer: torch.optim.Optimizer = None, flatten=True):
-        self.dp_bits = args.dp_bits
+        self.dp_bits = int(os.get("DP_BITS", "8")) #args.dp_bits
         self.flatten = flatten
         self.global_rank = args.rank
         self.dp_group_size = args.data_group_size
