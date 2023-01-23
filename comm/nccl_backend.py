@@ -7,6 +7,9 @@ from typing import List
 from compress.fixpoint import *
 from compress.sparsification import *
 
+import zlib
+
+
 def _type_torch_to_cupy(torch_type: torch.dtype):
     # print(torch_type)
     mappings = {

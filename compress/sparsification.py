@@ -33,29 +33,21 @@ def topk(x, k, return_values=True, return_indices=False):
     
 def compress_topr(x, r):
     values, masks = topr(x, r)
-    masks = cupy_to_tensor(
-        cupy.packbits(tensor_to_cupy(masks))
-    )
+    masks = pack_uint8_tensor(masks)
     return values, masks
     
 def compress_topk(x, k, return_indices=False):
     if return_indices:
         values, masks, indices = topk(x, k, return_indices=return_indices)
-        masks = cupy_to_tensor(
-            cupy.packbits(tensor_to_cupy(masks))
-        )
+        masks = pack_uint8_tensor(masks)
         return values, masks, indices
     else:
         values, masks = topk(x, k, return_indices=return_indices)
-        masks = cupy_to_tensor(
-            cupy.packbits(tensor_to_cupy(masks))
-        )
+        masks = pack_uint8_tensor(masks)
         return values, masks
 
 def decompress_topk(values, masks, original_shape):
-    masks = cupy_to_tensor(
-        cupy.unpackbits(tensor_to_cupy(masks))
-    )
+    masks = unpack_uint8_tensor(masks)
     x = torch.zeros(masks.shape, dtype=values.dtype, device=values.device)
     x[masks.bool()] = values
     return x

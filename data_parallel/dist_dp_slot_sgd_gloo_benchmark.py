@@ -44,17 +44,15 @@ def _lossless_compress(data):
     # if rate < 1.5:
     #     print(raw[:1000])
         # assert False
-    data = torch.frombuffer(dec, dtype=torch.uint8)
-    return data
+    return enc
 
-def _lossless_decompress(data):
-    enc = data.cpu().numpy().tobytes()
+def _lossless_decompress(enc):
     # dec = lz4.frame.decompress(enc)
     dec = zlib.decompress(enc)
     data = torch.frombuffer(dec, dtype=torch.uint8)
     return data
 
-class SlotSGDBenchDP:
+class SlotSGDGlooBenchDP:
     def __init__(self, args, device, module: torch.nn.Module, optimizer: torch.optim.Optimizer = None, flatten=False):
         # assert not flatten
         self.dp_bits = args.dp_bits
@@ -66,18 +64,15 @@ class SlotSGDBenchDP:
         self.dp_rank = get_data_parallel_rank()
         self.pp_comm = get_pipeline_parallel_comm()
         self.pp_rank = get_pipeline_parallel_rank()
-        self.dp_comm_stream = torch.cuda.Stream(device=device, priority=0)
-        self.torch_optim_comp_stream = torch.cuda.Stream(device=device, priority=0) #torch.cuda.default_stream(device=device) 
+        self.dp_comm_stream = torch.cuda.Stream(device=device, priority=-1)
+        self.torch_optim_comp_stream = torch.cuda.default_stream(device=device)
         self.backward_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
         self.sync_gradients_start_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
         self.sync_gradients_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
         self.optimizer_step_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
         
-        self.comm_group0_start_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
-        self.comm_group0_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
-        
-        self.comm_group1_start_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
-        self.comm_group1_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
+        self.mmt_start_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
+        self.mmt_ready_event = torch.cuda.Event(enable_timing=self.enable_tidy_profiling, blocking=False)
 
         self.module = module
         assert optimizer is not None
@@ -91,8 +86,8 @@ class SlotSGDBenchDP:
             self.flatten_para = flatten_tensors(_params)
             print("Flattened parameter number: {}, element size: {}."
                   .format(self.flatten_para.data.numel(), self.flatten_para.data.element_size()))
-            
-            
+        
+        
         num_paras, element_size = self._compute_total_para_num()
         print("Total number of parameters: {}, element size: {}, total size {} MB."
               .format(num_paras, element_size, num_paras * element_size // 1024 // 1024))
@@ -200,8 +195,7 @@ class SlotSGDBenchDP:
                     
                 values, masks, indices = compress_topk(x, k, return_indices=True)
 
-                for _ in range(10):
-                    values_q, scales_q = compress_flexible_nbits_by_bucket(values, bits=quantization_bits, scale_method='max', bucket_size=quantization_bucket_size)
+                values_q, scales_q = compress_flexible_nbits_by_bucket(values, bits=quantization_bits, scale_method='max', bucket_size=quantization_bucket_size)
                 
                 return (values_q, scales_q, masks), (dtype, shape, values.shape)
     
@@ -220,11 +214,14 @@ class SlotSGDBenchDP:
     def _partial_sync(self):
         
         if self.flatten:
-            
+ 
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
             with torch.cuda.stream(self.dp_comm_stream), cupy_dp_stream:
-                
+            
                 self.dp_comm_stream.record_event(self.sync_gradients_start_event)
+                
+                # self.pp_comm.barrier()
+                self.dp_comm.barrier()
                 
                 name = 'model'
                 para = self.flatten_para
@@ -251,6 +248,14 @@ class SlotSGDBenchDP:
                         print('comm_mask:', comm_mask.sum().item(), comm_mask.shape)
                         comm_mask_list.append(comm_mask)
 
+                        # data to send
+                        # comm_data = torch.zeros(
+                        #     comm_mask.sum().item(), dtype=torch.float16, device=para.device
+                        # )
+                        # # comp_data, _ = self._compress(comm_data)
+                        # # print('comm_data:', [cd.numel() for cd in comp_data])
+                        # comm_data_list.append(comm_data)
+
                     # global para
                     global_para = para.data.half()
 
@@ -276,7 +281,7 @@ class SlotSGDBenchDP:
                 global_para = dp_state_dict[name]["global_para"]
                 chunk_size = global_para.size(0) // self.dp_group_size
                 server_error = dp_state_dict[name]["server_error"]
-                server_mask = comm_mask_list[self.dp_rank]
+                server_mask = comm_mask_list[self.dp_rank].to(server_error.device)
 
                 for i in range(self.dp_group_size):
                     comm_mask = comm_mask_list[i]
@@ -291,9 +296,9 @@ class SlotSGDBenchDP:
                     # assert z.shape == x.shape
                     comm_data_compressed_list.append(data)
                     comm_data_meta_list.append(meta_data)
-                    # del x
-                # del comm_data_list
-                comm_buffer_list = [[torch.zeros_like(x) for x in x_tuple] for x_tuple in comm_data_compressed_list]
+                    del x
+                del comm_data_list
+                comm_buffer_list = [[torch.zeros_like(x, device='cpu') for x in x_tuple] for x_tuple in comm_data_compressed_list]
                 
                 # revert
                 for i in range(self.dp_group_size):
@@ -304,81 +309,72 @@ class SlotSGDBenchDP:
 
                 # print(f'do first group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])}  - {para.shape}')
                 # self.dp_comm.barrier()
-                
-                # for i in range(self.dp_group_size):
-                #     for j, to_send in enumerate(comm_data_compressed_list[i]):
-                #         to_send_c = _lossless_compress(to_send)
                     
-                if self.enable_tidy_profiling:
-                    self.dp_comm_stream.record_event(self.comm_group0_start_event)
-                
-                cupy.cuda.nccl.groupStart()
+                _group_calls = []
                 for i in range(self.dp_group_size):
                     for j, to_send in enumerate(comm_data_compressed_list[i]):
-                        self.dp_comm.send(
-                            to_send, dst=i, stream=cupy_dp_stream)
-                        # if j==0:
-                        #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
-                        # if to_send.dtype == torch.uint8 and to_send.numel() > 1000:
-                        #     _enc = _lossless_compress(to_send)
-                        #     send_bits += len(_enc) * 8
-                        # else:
-                        #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
+                        # print(f"send from {self.dp_rank} to {i}")
+                        if i != self.dp_rank:
+                            call = self.dp_comm.isend(
+                                to_send, dst=i, stream=cupy_dp_stream)
+                            _group_calls.append(call)
+                        else:
+                            comm_buffer_list[i][j][:] = to_send.cpu()
                     for to_recv in comm_buffer_list[i]:
-                        self.dp_comm.recv(
-                            to_recv, src=i, stream=cupy_dp_stream)
-                        # recv_bits += to_recv.numel() * torch.finfo(to_recv.dtype).bits if to_recv.is_floating_point() else to_recv.numel() * torch.iinfo(to_recv.dtype).bits
-                cupy.cuda.nccl.groupEnd()
-                
-                if self.enable_tidy_profiling:
-                    self.dp_comm_stream.record_event(self.comm_group0_ready_event)
+                        # print(f"recv from {i} to {self.dp_rank}")
+                        if i != self.dp_rank:
+                            call = self.dp_comm.irecv(
+                                to_recv, src=i, stream=cupy_dp_stream)
+                            _group_calls.append(call)
+                for call in _group_calls:
+                    call.wait()
+                    
+                print(f'done first group r{self.global_rank} - {para.shape}')
+                # self.dp_comm.barrier()
 
-                server_data = self._decompress([z for z in comm_buffer_list[0]], comm_data_meta_list[0]) / len(comm_buffer_list)
+                server_data = self._decompress([z.to(para.device) for z in comm_buffer_list[0]], comm_data_meta_list[0]) / len(comm_buffer_list)
                 for i in range(1, self.dp_group_size):
-                    server_data.data += self._decompress([z for z in comm_buffer_list[i]], comm_data_meta_list[i]) / len(comm_buffer_list)
-                server_data.add_(server_error[server_mask])
+                    server_data.data += self._decompress([z.to(para.device) for z in comm_buffer_list[i]], comm_data_meta_list[i]) / len(comm_buffer_list)
+                server_data.add_(server_error[server_mask].to(server_data.device))
                 server_data_compressed, server_data_meta = self._compress(server_data)
-                server_error.data[server_mask] = (server_data - self._decompress(server_data_compressed, server_data_meta))
+                server_error.data[server_mask] = (server_data - self._decompress(server_data_compressed, server_data_meta)).to(server_error.device)
                 
                 # print(f'do second group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])} - {para.shape}')
                 # self.dp_comm.barrier()
-                
-                if self.enable_tidy_profiling:
-                    self.dp_comm_stream.record_event(self.comm_group1_start_event)
 
-                cupy.cuda.nccl.groupStart()
+                _group_calls = []
                 for i in range(self.dp_group_size):
                     for j, to_send in enumerate(server_data_compressed):
-                        self.dp_comm.send(
-                            to_send, dst=i, stream=cupy_dp_stream)
-                        # if j==0:
-                        #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
-                        # if to_send.dtype == torch.uint8  and to_send.numel() > 1000:
-                        #     _enc = _lossless_compress(to_send)
-                        #     send_bits += len(_enc) * 8
-                        # else:
-                        #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
+                        if i != self.dp_rank:
+                            call = self.dp_comm.isend(
+                                to_send, dst=i, stream=cupy_dp_stream)
+                            _group_calls.append(call)
+                        else:
+                            comm_buffer_list[i][j][:] = to_send.cpu()
                     for to_recv in comm_buffer_list[i]:
-                        self.dp_comm.recv(
-                            to_recv, src=i, stream=cupy_dp_stream)
-                        # recv_bits += to_recv.numel() * torch.finfo(to_recv.dtype).bits if to_recv.is_floating_point() else to_recv.numel() * torch.iinfo(to_recv.dtype).bits
-                cupy.cuda.nccl.groupEnd()
+                        if i != self.dp_rank:
+                            call = self.dp_comm.irecv(
+                                to_recv, src=i, stream=cupy_dp_stream)
+                            _group_calls.append(call)
+                for call in _group_calls:
+                    call.wait()
                 
-                if self.enable_tidy_profiling:
-                    self.dp_comm_stream.record_event(self.comm_group1_ready_event)
+                print(f'done second group r{self.global_rank} - {para.shape}')
+                # self.dp_comm.barrier()
 
                 for i in range(self.dp_group_size):
                     
-                    _data = self._decompress([z for z in comm_buffer_list[i]], comm_data_meta_list[i])
+                    _data = self._decompress([z.to(para.device) for z in comm_buffer_list[i]], comm_data_meta_list[i])
                     para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data
                     global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data
                     
-                    # del _data
+                    del _data
                     
                     # para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] = \
                     # global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]].float()
 
                 self.dp_comm_stream.record_event(self.sync_gradients_ready_event)
+                self.dp_comm.barrier()
             
         else:
             
@@ -388,6 +384,8 @@ class SlotSGDBenchDP:
             
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
             with torch.cuda.stream(self.dp_comm_stream), cupy_dp_stream:
+                
+                # self.pp_comm.barrier()
                 
                 # for name, para in self.module.named_parameters():
                 for i_group, group in enumerate(self.optimizer.optimizer.param_groups):
@@ -410,7 +408,7 @@ class SlotSGDBenchDP:
                                 para_shape = list(para.shape)
                                 assert para_shape[0] == para_shape[0] // self.dp_group_size * self.dp_group_size
                                 para_shape[0] = para_shape[0] // self.dp_group_size
-                                comm_mask = torch.zeros(para_shape, dtype=torch.bool, device=para.device)
+                                comm_mask = torch.zeros(para_shape, dtype=torch.bool, device='cpu')
                                 comm_mask.view(-1)[::sync_steps] = True
                                 n_potisive = comm_mask.sum().item() // quantization_bucket_size * quantization_bucket_size
                                 if n_potisive != 0:
@@ -418,16 +416,16 @@ class SlotSGDBenchDP:
                                     assert comm_mask.sum().item() == n_potisive
                                 else:
                                     comm_mask[:] = True
-                                print('comm_mask:', comm_mask.sum().item(), comm_mask.shape)
+                                # print('comm_mask:', comm_mask.sum().item(), comm_mask.shape)
                                 comm_mask_list.append(comm_mask)
 
                                 # data to send
-                                comm_data = torch.zeros(
-                                    comm_mask.sum().item(), dtype=torch.float16, device=para.device
-                                )
-                                # comp_data, _ = self._compress(comm_data)
-                                # print('comm_data:', [cd.numel() for cd in comp_data])
-                                comm_data_list.append(comm_data)
+                                # comm_data = torch.zeros(
+                                #     comm_mask.sum().item(), dtype=torch.float16, device=para.device
+                                # )
+                                # # comp_data, _ = self._compress(comm_data)
+                                # # print('comm_data:', [cd.numel() for cd in comp_data])
+                                # comm_data_list.append(comm_data)
 
                             # global para
                             global_para = para.data.half()
@@ -435,13 +433,13 @@ class SlotSGDBenchDP:
                             # server error
                             # server_error = torch.zeros_like(global_para.chunk(self.dp_group_size, 0)[self.dp_rank])
                             server_error = torch.zeros(
-                                comm_mask_list[self.dp_rank].shape, dtype=torch.float16, device=global_para.device,
+                                comm_mask_list[self.dp_rank].shape, dtype=torch.float16, device='cpu',
                             )
 
-                            print('server error shape:', server_error.shape)
+                            # print('server error shape:', server_error.shape)
                             dp_state_dict[name] = {
                                 "comm_mask_list": comm_mask_list,
-                                "comm_data_list": comm_data_list,
+                                # "comm_data_list": comm_data_list,
                                 "global_para": global_para,
                                 "server_error": server_error,
                             }
@@ -450,7 +448,7 @@ class SlotSGDBenchDP:
                                 dp_state_dict[name]['comm_mask_list'][i] = dp_state_dict[name]['comm_mask_list'][i].roll(1)
 
                         comm_mask_list = dp_state_dict[name]["comm_mask_list"]
-                        comm_data_list = dp_state_dict[name]["comm_data_list"]
+                        comm_data_list = [None for _ in comm_mask_list]
                         global_para = dp_state_dict[name]["global_para"]
                         chunk_size = global_para.size(0) // self.dp_group_size
                         server_error = dp_state_dict[name]["server_error"]
@@ -458,83 +456,98 @@ class SlotSGDBenchDP:
 
                         for i in range(self.dp_group_size):
                             comm_mask = comm_mask_list[i]
-                            comm_data_list[i].data[:] = (para[i*chunk_size:(i+1)*chunk_size][comm_mask] - global_para[i*chunk_size:(i+1)*chunk_size][comm_mask]).half()
+                            # comm_data_list[i].data[:] = (para[i*chunk_size:(i+1)*chunk_size][comm_mask] - global_para[i*chunk_size:(i+1)*chunk_size][comm_mask]).half()
+                            comm_data_list[i] = (para[i*chunk_size:(i+1)*chunk_size][comm_mask] - global_para[i*chunk_size:(i+1)*chunk_size][comm_mask]).half()
                             
                         comm_data_compressed_list = []
                         comm_data_meta_list = []
                         for x in comm_data_list:
                             data, meta_data = self._compress(x)
-                            z = self._decompress(data, meta_data)
-                            assert z.shape == x.shape
+                            # z = self._decompress(data, meta_data)
+                            # assert z.shape == x.shape
                             comm_data_compressed_list.append(data)
                             comm_data_meta_list.append(meta_data)
-                        comm_buffer_list = [[torch.zeros_like(x) for x in x_tuple] for x_tuple in comm_data_compressed_list]
+                        comm_buffer_list = [[torch.zeros_like(x, device='cpu') for x in x_tuple] for x_tuple in comm_data_compressed_list]
                         
                         # revert
                         for i in range(self.dp_group_size):
                             # print('A', len(comm_data_compressed_list[i]))
                             _data_compressed = self._decompress(comm_data_compressed_list[i], comm_data_meta_list[i])
                             para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] -= _data_compressed
+                            del _data_compressed
 
-                        cupy.cuda.nccl.groupStart()
+                        # print(f'do first group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])}  - {para.shape}')
+                        # self.dp_comm.barrier()
+                            
+                        _group_calls = []
                         for i in range(self.dp_group_size):
                             for j, to_send in enumerate(comm_data_compressed_list[i]):
-                                self.dp_comm.send(
-                                    to_send, dst=i, stream=cupy_dp_stream)
-                                # if j==0:
-                                #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
-                                # if to_send.dtype == torch.uint8 and to_send.numel() > 1000:
-                                #     _enc = _lossless_compress(to_send)
-                                #     send_bits += len(_enc) * 8
-                                # else:
-                                #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
+                                # print(f"send from {self.dp_rank} to {i}")
+                                if i != self.dp_rank:
+                                    call = self.dp_comm.isend(
+                                        to_send, dst=i, stream=cupy_dp_stream)
+                                    _group_calls.append(call)
+                                else:
+                                    comm_buffer_list[i][j][:] = to_send.cpu()
                             for to_recv in comm_buffer_list[i]:
-                                self.dp_comm.recv(
-                                    to_recv, src=i, stream=cupy_dp_stream)
-                                # recv_bits += to_recv.numel() * torch.finfo(to_recv.dtype).bits if to_recv.is_floating_point() else to_recv.numel() * torch.iinfo(to_recv.dtype).bits
-                        cupy.cuda.nccl.groupEnd()
+                                # print(f"recv from {i} to {self.dp_rank}")
+                                if i != self.dp_rank:
+                                    call = self.dp_comm.irecv(
+                                        to_recv, src=i, stream=cupy_dp_stream)
+                                    _group_calls.append(call)
+                        for call in _group_calls:
+                            call.wait()
+                            
+                        print(f'done first group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])} - {para.shape}')
+                        # self.dp_comm.barrier()
 
-                        # print('B', len(comm_buffer_list[0]))
-                        server_data = self._decompress(comm_buffer_list[0], comm_data_meta_list[0]) / len(comm_buffer_list)
+                        server_data = self._decompress([z.to(para.device) for z in comm_buffer_list[0]], comm_data_meta_list[0]) / len(comm_buffer_list)
                         for i in range(1, self.dp_group_size):
-                            # print('B', len(comm_buffer_list[i]))
-                            server_data.data += self._decompress(comm_buffer_list[i], comm_data_meta_list[i]) / len(comm_buffer_list)
-                        server_data.add_(server_error[server_mask])
+                            server_data.data += self._decompress([z.to(para.device) for z in comm_buffer_list[i]], comm_data_meta_list[i]) / len(comm_buffer_list)
+                        server_data.add_(server_error[server_mask].to(server_data.device))
                         server_data_compressed, server_data_meta = self._compress(server_data)
-                        server_error.data[server_mask] = (server_data - self._decompress(server_data_compressed, server_data_meta))
+                        server_error.data[server_mask] = (server_data - self._decompress(server_data_compressed, server_data_meta)).cpu()
+                        
+                        # print(f'do second group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])} - {para.shape}')
+                        # self.dp_comm.barrier()
 
-                        cupy.cuda.nccl.groupStart()
+                        _group_calls = []
                         for i in range(self.dp_group_size):
                             for j, to_send in enumerate(server_data_compressed):
-                                self.dp_comm.send(
-                                    to_send, dst=i, stream=cupy_dp_stream)
-                                # if j==0:
-                                #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
-                                # if to_send.dtype == torch.uint8  and to_send.numel() > 1000:
-                                #     _enc = _lossless_compress(to_send)
-                                #     send_bits += len(_enc) * 8
-                                # else:
-                                #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
+                                if i != self.dp_rank:
+                                    call = self.dp_comm.isend(
+                                        to_send, dst=i, stream=cupy_dp_stream)
+                                    _group_calls.append(call)
+                                else:
+                                    comm_buffer_list[i][j][:] = to_send.cpu()
                             for to_recv in comm_buffer_list[i]:
-                                self.dp_comm.recv(
-                                    to_recv, src=i, stream=cupy_dp_stream)
-                                # recv_bits += to_recv.numel() * torch.finfo(to_recv.dtype).bits if to_recv.is_floating_point() else to_recv.numel() * torch.iinfo(to_recv.dtype).bits
-                        cupy.cuda.nccl.groupEnd()
+                                if i != self.dp_rank:
+                                    call = self.dp_comm.irecv(
+                                        to_recv, src=i, stream=cupy_dp_stream)
+                                    _group_calls.append(call)
+                        for call in _group_calls:
+                            call.wait()
                         
-                        # print('done')
+                        print(f'done second group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])} - {para.shape}')
+                        self.dp_comm.barrier()
 
                         for i in range(self.dp_group_size):
                             
-                            _data = self._decompress(comm_buffer_list[i], comm_data_meta_list[i])
-                            para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data * global_lr
-                            global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data * global_lr
+                            _data = self._decompress([z.to(para.device) for z in comm_buffer_list[i]], comm_data_meta_list[i])
+                            para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data
+                            global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data
+                            
+                            del _data
                             
                             # para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] = \
                             # global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]].float()
 
                 self.dp_comm_stream.record_event(self.sync_gradients_ready_event)
                 
-                print('done partial sync')
+                # print('done partial sync')
+                print(f'done partial sync r{self.global_rank}')
+                # self.pp_comm.barrier()
+                # print(f'done pp sync r{self.global_rank}')
                 # print(f'param: {original_bits}, send: {send_bits}, recv: {recv_bits}')
                 
 #     def _copy_to_model(self):
@@ -563,8 +576,10 @@ class SlotSGDBenchDP:
             self.t.start()
             
     def optimizer_step(self):
-        # self.pre_optimizer_step()
+        
+        # self._partial_sync()
         self.t.join()
+            
         with torch.cuda.stream(self.torch_optim_comp_stream):
             self.torch_optim_comp_stream.wait_event(self.sync_gradients_ready_event)
             self.torch_optim_comp_stream.wait_event(self.backward_ready_event)
@@ -600,50 +615,37 @@ class SlotSGDBenchDP:
         # print(optimizer_log)
         profiling_log.append(optimizer_log)
         
-        # self.dp_comm_stream.record_event(self.comm_group0_start_event)
-        optimizer_slot = self.comm_group0_start_event.elapsed_time(self.comm_group0_ready_event) * 1e+3
-        optimizer_log = {"name": "comm0", "ph": "X", "pid": self.global_rank, "tid": "9. comm group0",
-                         "ts": self.get_ts(self.comm_group0_start_event), "dur": optimizer_slot, "cname": "cq_build_passed"}
-        # print(optimizer_log)
-        profiling_log.append(optimizer_log)
         
-        optimizer_slot = self.comm_group1_start_event.elapsed_time(self.comm_group1_ready_event) * 1e+3
-        optimizer_log = {"name": "comm1", "ph": "X", "pid": self.global_rank, "tid": "10. comm group1",
-                         "ts": self.get_ts(self.comm_group1_start_event), "dur": optimizer_slot, "cname": "cq_build_passed"}
-        # print(optimizer_log)
-        profiling_log.append(optimizer_log)
+#         allreduce_slot = self.gather_start_event.elapsed_time(self.gather_end_event)*1e+3
+#         allreduce_log = {"name": "gather grads", "ph": "X", "pid": self.global_rank, "tid": "9. optimizer-comm",
+#                          "ts": self.get_ts(self.gather_start_event),
+#                          "dur": allreduce_slot, "cname": "cq_build_passed",
+#                          "args": {'para': 'flattened_grad', 'size': self.flatten_para.grad.numel()}}
+#         # print(allreduce_log)
+#         profiling_log.append(allreduce_log)
         
+#         allreduce_slot = self.sync_start_event.elapsed_time(self.sync_end_event)*1e+3
+#         allreduce_log = {"name": "distribute grads", "ph": "X", "pid": self.global_rank, "tid": "10. optimizer-comm",
+#                          "ts": self.get_ts(self.sync_start_event),
+#                          "dur": allreduce_slot, "cname": "cq_build_passed",
+#                          "args": {'para': 'flattened_grad', 'size': self.flatten_para.grad.numel()}}
+#         # print(allreduce_log)
+#         profiling_log.append(allreduce_log)
         
-        # allreduce_slot = self.gather_start_event.elapsed_time(self.gather_end_event)*1e+3
-        # allreduce_log = {"name": "gather grads", "ph": "X", "pid": self.global_rank, "tid": "9. optimizer-comm",
-        #                  "ts": self.get_ts(self.gather_start_event),
-        #                  "dur": allreduce_slot, "cname": "cq_build_passed",
-        #                  "args": {'para': 'flattened_grad', 'size': self.flatten_para.numel()}}
-        # # print(allreduce_log)
-        # profiling_log.append(allreduce_log)
+#         allreduce_slot = self.worker_compress_start_event.elapsed_time(self.worker_compress_end_event)*1e+3
+#         allreduce_log = {"name": "worker compress", "ph": "X", "pid": self.global_rank, "tid": "11. optimizer-comm",
+#                          "ts": self.get_ts(self.worker_compress_start_event),
+#                          "dur": allreduce_slot, "cname": "cq_build_passed",
+#                          "args": {'para': 'flattened_grad', 'size': self.flatten_para.grad.numel()}}
+#         # print(allreduce_log)
+#         profiling_log.append(allreduce_log)
         
-        # allreduce_slot = self.sync_start_event.elapsed_time(self.sync_end_event)*1e+3
-        # allreduce_log = {"name": "distribute grads", "ph": "X", "pid": self.global_rank, "tid": "10. optimizer-comm",
-        #                  "ts": self.get_ts(self.sync_start_event),
-        #                  "dur": allreduce_slot, "cname": "cq_build_passed",
-        #                  "args": {'para': 'flattened_grad', 'size': self.flatten_para.numel()}}
-        # # print(allreduce_log)
-        # profiling_log.append(allreduce_log)
-        
-        # allreduce_slot = self.worker_compress_start_event.elapsed_time(self.worker_compress_end_event)*1e+3
-        # allreduce_log = {"name": "worker compress", "ph": "X", "pid": self.global_rank, "tid": "11. optimizer-comm",
-        #                  "ts": self.get_ts(self.worker_compress_start_event),
-        #                  "dur": allreduce_slot, "cname": "cq_build_passed",
-        #                  "args": {'para': 'flattened_grad', 'size': self.flatten_para.numel()}}
-        # # print(allreduce_log)
-        # profiling_log.append(allreduce_log)
-        
-        # allreduce_slot = self.server_compress_start_event.elapsed_time(self.server_compress_end_event)*1e+3
-        # allreduce_log = {"name": "server compress", "ph": "X", "pid": self.global_rank, "tid": "12. optimizer-comm",
-        #                  "ts": self.get_ts(self.server_compress_start_event),
-        #                  "dur": allreduce_slot, "cname": "cq_build_passed",
-        #                  "args": {'para': 'flattened_grad', 'size': self.flatten_para.numel()}}
-        # # print(allreduce_log)
-        # profiling_log.append(allreduce_log)
+#         allreduce_slot = self.server_compress_start_event.elapsed_time(self.server_compress_end_event)*1e+3
+#         allreduce_log = {"name": "server compress", "ph": "X", "pid": self.global_rank, "tid": "12. optimizer-comm",
+#                          "ts": self.get_ts(self.server_compress_start_event),
+#                          "dur": allreduce_slot, "cname": "cq_build_passed",
+#                          "args": {'para': 'flattened_grad', 'size': self.flatten_para.grad.numel()}}
+#         # print(allreduce_log)
+#         profiling_log.append(allreduce_log)
         
         return profiling_log

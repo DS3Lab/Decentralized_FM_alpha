@@ -13,6 +13,12 @@ _TENSOR_PARALLEL_COMM = None
 _TENSOR_PARALLEL_RANK = None
 _TENSOR_PARALLEL_WORLD_SIZE = None
 
+import threading 
+
+_LOCK = threading.RLock()
+
+def get_lock():
+    return _LOCK
 
 def get_data_parallel_comm() -> NCCLCommunicator:
     assert _DATA_PARALLEL_COMM is not None

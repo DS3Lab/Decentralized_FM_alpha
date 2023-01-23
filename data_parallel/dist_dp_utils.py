@@ -16,6 +16,7 @@ from .dist_dp_slot_sgd_gloo import SlotSGDGlooDP
 from .dist_dp_slot_sgd_gloo_replacement import SlotSGDGlooRDP
 from .dist_dp_fake_slot_sgd_gloo import FakeSlotSGDGlooDP
 from .dist_dp_slot_sgd_benchmark import SlotSGDBenchDP
+from .dist_dp_slot_sgd_gloo_benchmark import SlotSGDGlooBenchDP
 
 
 def get_dp_module(args, device, module, optimizer):
@@ -52,6 +53,8 @@ def get_dp_module(args, device, module, optimizer):
         return SlotSGDGlooDP(args, device, module, optimizer, flatten=True)
     elif args.dp_mode == 'slot_sgd_bench':
         return SlotSGDBenchDP(args, device, module, optimizer, flatten=True)
+    elif args.dp_mode == 'slot_sgd_gloo_bench':
+        return SlotSGDGlooBenchDP(args, device, module, optimizer, flatten=True)
     elif args.dp_mode == 'slot_sgd_gloo_replacement':
         return SlotSGDGlooRDP(args, device, module, optimizer, flatten=True)
     elif args.dp_mode == 'fake_slot_sgd_gloo':
