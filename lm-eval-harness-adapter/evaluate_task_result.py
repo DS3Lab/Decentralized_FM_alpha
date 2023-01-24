@@ -21,6 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--task-name', type=str, default='hellaswag')
     parser.add_argument('--model-type', type=str, default='opt')
     parser.add_argument('--debug', action='store_true', default=False)
+    parser.add_argument('--num-fewshot', type=int, default=0)
     args = parser.parse_args()
     
     if args.model_type == 'opt':
@@ -152,7 +153,7 @@ if __name__ == '__main__':
                                                                # "record",
                                                                # "wic",
                                                                # "wsc",
-                                                               ]), False, 0, None)
+                                                               ]), False, args.num_fewshot, None)
     
     dumped = json.dumps(results, indent=2)
     print(dumped)
