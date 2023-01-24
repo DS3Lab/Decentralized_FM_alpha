@@ -17,6 +17,7 @@ from .dist_dp_slot_sgd_gloo_replacement import SlotSGDGlooRDP
 from .dist_dp_fake_slot_sgd_gloo import FakeSlotSGDGlooDP
 from .dist_dp_slot_sgd_benchmark import SlotSGDBenchDP
 from .dist_dp_slot_sgd_gloo_benchmark import SlotSGDGlooBenchDP
+from .dist_dp_sharded_ps_quant import ShardedPSDPQuant
 
 
 def get_dp_module(args, device, module, optimizer):
@@ -29,6 +30,8 @@ def get_dp_module(args, device, module, optimizer):
         return ShardedPSDP(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'sharded_ps_topk':
         return ShardedPSDPTopK(args, device, module, optimizer, flatten=False)
+    elif args.dp_mode == 'sharded_ps_quant':
+        return ShardedPSDPQuant(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'sharded_ps_compressed':
         return ShardedPSDPCompressed(args, device, module, optimizer, flatten=False)
     elif args.dp_mode == 'local':
