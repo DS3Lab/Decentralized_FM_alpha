@@ -6,6 +6,20 @@ import math
 from .utils import *
 
 
+def _rounding(x, stochastic=False, minimum_stochastic_distance=0.2):
+    if stochastic:
+        x_floor = x.floor()
+        th = x - x_floor
+        if minimum_stochastic_distance > 0:
+            th[th<minimum_stochastic_distance] = 0.
+            th[th>1-minimum_stochastic_distance] = 1.
+        pr = torch.rand_like(x)
+        x_floor += (pr < th)
+        return x_floor
+    else:
+        return x.round()
+
+
 def _compress_nbits(x, bits, scale_method='max', scale_dims=(0,1)):
     
     fbits = bits - 1
@@ -26,7 +40,7 @@ def _compress_nbits(x, bits, scale_method='max', scale_dims=(0,1)):
     clip_min = -(1<<fbits)
     clip_max = (1<<fbits)-1
 
-    x = x.round()
+    x = _rounding(x)
     x = x.clip(clip_min, clip_max)
     
     x = x - clip_min
@@ -192,7 +206,7 @@ def _compress_nbits_by_bucket(x, bits, scale_method='max', bucket_size=512):
     clip_min = -(1<<fbits)
     clip_max = (1<<fbits)-1
 
-    x = x.round()
+    x = _rounding(x)
     x = x.clip(clip_min, clip_max)
     
     x = x - clip_min
