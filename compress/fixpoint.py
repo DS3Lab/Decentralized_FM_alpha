@@ -6,6 +6,20 @@ import math
 from .utils import *
 
 
+def _rounding(x, stochastic=False, minimum_stochastic_distance=0.2):
+    if stochastic:
+        x_floor = x.floor()
+        th = x - x_floor
+        if minimum_stochastic_distance > 0:
+            th[th<minimum_stochastic_distance] = 0.
+            th[th>1-minimum_stochastic_distance] = 1.
+        pr = torch.rand_like(x)
+        x_floor += (pr < th)
+        return x_floor
+    else:
+        return x.round()
+
+
 def _compress_nbits(x, bits, scale_method='max', scale_dims=(0,1)):
     
     fbits = bits - 1
@@ -26,7 +40,7 @@ def _compress_nbits(x, bits, scale_method='max', scale_dims=(0,1)):
     clip_min = -(1<<fbits)
     clip_max = (1<<fbits)-1
 
-    x = x.round()
+    x = _rounding(x)
     x = x.clip(clip_min, clip_max)
     
     x = x - clip_min
@@ -161,6 +175,17 @@ def decompress_nbits(x, scale, bits):
 
 def _compress_nbits_by_bucket(x, bits, scale_method='max', bucket_size=512):
     
+    if bits == 1:
+        
+        scale = x.norm() / (x.numel()**0.5)
+        
+        x = (x >= 0)
+        
+        x = x.type(torch.uint8)
+        
+        return x, scale
+        
+    
     fbits = bits - 1
     
     x = x.view(bucket_size, -1)
@@ -181,7 +206,7 @@ def _compress_nbits_by_bucket(x, bits, scale_method='max', bucket_size=512):
     clip_min = -(1<<fbits)
     clip_max = (1<<fbits)-1
 
-    x = x.round()
+    x = _rounding(x)
     x = x.clip(clip_min, clip_max)
     
     x = x - clip_min
@@ -207,6 +232,15 @@ def compress_flexible_nbits_by_bucket(x, bits, scale_method='max', bucket_size=5
 def decompress_flexible_nbits_by_bucket(x, scale, bits, original_shape, bucket_size=512):
     # support any bits, but need to know original_shape
     # CUDA only
+    
+    if bits == 1:
+        
+        x = unpack_low_bit_tensor(x, bits, original_shape)
+        x = (x.float() - 0.5)*2
+        x = x * scale
+        
+        return x
+        
     
     numel = math.prod(original_shape)
     if bucket_size > numel:

@@ -33,7 +33,7 @@ export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=1
 export WANDB_DISABLE_SERVICE=1
-export WANDB_NAME=opt-quant-2x
+export WANDB_NAME=opt-quant-new-2x
 
 export DP_BITS=8
 
@@ -57,7 +57,7 @@ ARGS="--model-name ${root_path}/pretrained_models/opt-1.3b-new \
 --world-size ${world_size} --pipeline-group-size ${pp_degree} --data-group-size ${dp_degree} \
 --job-id ${job_id} --net-interface ${netif} \
 --fp16 \
---dp-mode sharded_ps_compressed \
+--dp-mode sharded_ps_quant \
 --pp-mode gpipe --profiling no-profiling"
 
 python -u ${main_program} $(echo ${ARGS}) --cuda-id 0 --rank 0 # topk

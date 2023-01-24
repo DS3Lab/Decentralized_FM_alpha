@@ -238,6 +238,10 @@ class NCCLCommunicator:
             # all chunks have the same shape
             original_shape = tensor_chunks[0].shape
             
+            for i in range(self.comm_group_size):
+                worker_errors[i] = worker_errors[i].nan_to_num()
+            server_error = server_error.nan_to_num()
+            
 #             caller.dp_comm_stream.record_event(caller.worker_compress_start_event)
             # worker error compensation
             for i in range(self.comm_group_size):
