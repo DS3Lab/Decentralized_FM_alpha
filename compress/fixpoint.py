@@ -161,6 +161,17 @@ def decompress_nbits(x, scale, bits):
 
 def _compress_nbits_by_bucket(x, bits, scale_method='max', bucket_size=512):
     
+    if bits == 1:
+        
+        scale = x.norm() / (x.numel()**0.5)
+        
+        x = (x >= 0)
+        
+        x = x.type(torch.uint8)
+        
+        return x, scale
+        
+    
     fbits = bits - 1
     
     x = x.view(bucket_size, -1)
@@ -207,6 +218,15 @@ def compress_flexible_nbits_by_bucket(x, bits, scale_method='max', bucket_size=5
 def decompress_flexible_nbits_by_bucket(x, scale, bits, original_shape, bucket_size=512):
     # support any bits, but need to know original_shape
     # CUDA only
+    
+    if bits == 1:
+        
+        x = unpack_low_bit_tensor(x, bits, original_shape)
+        x = (x.float() - 0.5)*2
+        x = x * scale
+        
+        return x
+        
     
     numel = math.prod(original_shape)
     if bucket_size > numel:
