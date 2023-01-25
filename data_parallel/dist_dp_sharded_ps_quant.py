@@ -276,7 +276,7 @@ class ShardedPSDPQuant:
         _data = torch.zeros(chunk_size, device=self.flatten_exp_avgs.device, dtype=self.flatten_exp_avgs.dtype)
 #         _data_compressed = compress_flexible_nbits(_data, bits=bits, scale_dims=tuple())
         _data_compressed = compress_flexible_nbits_by_bucket(
-            _data, bits=bits, bucket_size=512)
+            _data, bits=bits, bucket_size=128)
         grad_buffer = [
             (torch.zeros_like(_data_compressed[0]),
              torch.zeros_like(_data_compressed[1])) for i in range(self.dp_group_size)
@@ -293,7 +293,7 @@ class ShardedPSDPQuant:
         _data = torch.zeros(chunk_size, device=data.device, dtype=data.dtype)
 #         _data_compressed = compress_flexible_nbits(_data, bits=bits, scale_dims=tuple())
         _data_compressed = compress_flexible_nbits_by_bucket(
-            _data, bits=self.quant_bits, bucket_size=512)
+            _data, bits=self.quant_bits, bucket_size=128)
         grad_buffer = [
             (torch.zeros_like(_data_compressed[0]),
              torch.zeros_like(_data_compressed[1])) for i in range(self.dp_group_size)
@@ -347,15 +347,20 @@ class ShardedPSDPQuant:
                     else:
                         grad_buffer, worker_errors, server_error = self.buffers[name]
                     
-                    para.grad /= self.dp_group_size
-                    
-                    self.dp_comm.all_reduce_opt_compressed(para.grad.view(-1), 
-                        buffer=grad_buffer,
-                        worker_errors=worker_errors,
-                        server_error=server_error,
-                        stream=cupy_dp_stream,
-                        bits=self.quant_bits, caller=self
-                    )
+                    if flag.FLAG_DISABLE_COMPRESSION:
+                        self.dp_comm.all_reduce(
+                            para.grad.view(-1), 
+                            stream=cupy_dp_stream
+                        )
+                    else:
+                        para.grad /= self.dp_group_size
+                        self.dp_comm.all_reduce_opt_compressed(para.grad.view(-1), 
+                            buffer=grad_buffer,
+                            worker_errors=worker_errors,
+                            server_error=server_error,
+                            stream=cupy_dp_stream,
+                            bits=self.quant_bits, caller=self
+                        )
                     # self.profile_mark_allreduce_end(name)
             
             self.profile_mark_allreduce_end()
