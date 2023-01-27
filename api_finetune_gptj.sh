@@ -18,14 +18,14 @@ ARGS="--model-name /mnt/ds3lab-scratch/fm/pretrained_models/gpt-j-6B \
 --tokenizer-name /mnt/cc/fm/pretrained_models/gpt-j-6B \
 --project-name ${project_id} \
 --model-type gptj \
---seed 42 \
+--seed ${seed} \
 --checkpoint-path ./model_checkpoints/${project_id} \
 --load-pretrained-model true \
 --task-name data/${project_id}.jsonl \
---num-layers 1 --num-heads 32 --embedding-dim 4096 \
---total-steps ${total_steps} --warmup-steps 100 --train-warmup-steps 0 \
+--num-layers 14 --num-heads 32 --embedding-dim 4096 \
+--total-steps ${total_steps} --warmup-steps ${warmup_steps} --train-warmup-steps ${train_warmup_steps} \
 --checkpoint-steps 100 \
---lr 1e-5 --seq-length 2048 --batch-size 5 --micro-batch-size 1 --gradient-accumulate-step 1 \
+--lr ${learning_rate} --seq-length ${seq_length} --batch-size 5 --micro-batch-size 1 --gradient-accumulate-step ${gradient_accumulate_step} \
 --dist-url tcp://127.0.0.1:9011 \
 --world-size 2 --pipeline-group-size 2 --data-group-size 1 \
 --job-id ${project_id} --net-interface enp13s0f0 \
