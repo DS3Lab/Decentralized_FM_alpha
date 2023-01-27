@@ -23,6 +23,13 @@ class FinetuneGPT(FastTrainingInterface):
             my_env = os.environ.copy()
             my_env['PROJECT_ID'] = project_id
             my_env['DATASET_URL'] = args[0]['dataset_url']
+            # set default arguments
+            my_env['TOTAL_STEPS'] = '100'
+            my_env['WARMUP_STEPS'] = '10'
+            my_env['TRAIN_WARMUP_STEPS'] = '0'
+            my_env['LEARNING_RATE'] = '1e-5'
+            my_env['SEQ_LENGTH'] = '2048'
+            my_env['GRADIENT_ACCUMULATE_STEP'] = '1'
             for k in args[0]['arguments']:
                 my_env[k.upper()] = str(args[0]['arguments'][k])
             if os.environ.get("CUDA_VISIBLE_DEVICES") is None:

@@ -13,11 +13,11 @@ wget ${dataset_url} -O data/${project_id}.jsonl
 main_program=dist_lm_pretrain.py
 
 total_steps=$TOTAL_STEPS
-warmup_steps=$warmup_steps
-train_warmup_steps=$train_warmup_steps
-learning_rate=$learning_rate
-seq_length=$seq_length
-gradient_accumulate_step=$
+warmup_steps=$WARMUP_STEPS
+train_warmup_steps=$TRAIN_WARMUP_STEPS
+learning_rate=$LEARNING_RATE
+seq_length=$SEQ_LENGTH
+gradient_accumulate_step=$GRADIENT_ACCUMULATE_STEP
 
 ARGS="--model-name /nlp/scr2/nlp/fmStore/cs324/pretrained_weights/gpt-j-6B \
 --tokenizer-name /nlp/scr2/nlp/fmStore/cs324/pretrained_weights/gpt-j-6B \
