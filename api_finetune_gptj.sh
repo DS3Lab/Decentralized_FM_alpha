@@ -13,9 +13,14 @@ wget ${dataset_url} -O data/${project_id}.jsonl
 main_program=dist_lm_pretrain.py
 
 total_steps=$TOTAL_STEPS
+warmup_steps=$warmup_steps
+train_warmup_steps=$train_warmup_steps
+learning_rate=$learning_rate
+seq_length=$seq_length
+gradient_accumulate_step=$
 
-ARGS="--model-name /mnt/ds3lab-scratch/fm/pretrained_models/gpt-j-6B \
---tokenizer-name /mnt/cc/fm/pretrained_models/gpt-j-6B \
+ARGS="--model-name /nlp/scr2/nlp/fmStore/cs324/pretrained_weights/gpt-j-6B \
+--tokenizer-name /nlp/scr2/nlp/fmStore/cs324/pretrained_weights/gpt-j-6B \
 --project-name ${project_id} \
 --model-type gptj \
 --seed ${seed} \
@@ -28,7 +33,7 @@ ARGS="--model-name /mnt/ds3lab-scratch/fm/pretrained_models/gpt-j-6B \
 --lr ${learning_rate} --seq-length ${seq_length} --batch-size 5 --micro-batch-size 1 --gradient-accumulate-step ${gradient_accumulate_step} \
 --dist-url tcp://127.0.0.1:9011 \
 --world-size 2 --pipeline-group-size 2 --data-group-size 1 \
---job-id ${project_id} --net-interface enp13s0f0 \
+--job-id ${project_id} --net-interface enp49s0f0 \
 --fp16 \
 --dp-mode allreduce \
 --pp-mode gpipe --profiling no-profiling"
@@ -42,7 +47,7 @@ python ${main_program} $(echo ${ARGS}) --cuda-id 1 --rank 1 \
     & \
 wait)
 
-cp /mnt/ds3lab-scratch/fm/pretrained_models/opt-1.3b-new/*.json ./model_checkpoints/${project_id}/
-cp /mnt/ds3lab-scratch/fm/pretrained_models/opt-1.3b-new/*.txt ./model_checkpoints/${project_id}/
-
-FINETUNE_ID=${project_id} python tohub.py
+cp /nlp/scr2/nlp/fmStore/cs324/pretrained_weights/gpt-j-6B/*.json ./model_checkpoints/${project_id}/
+cp /nlp/scr2/nlp/fmStore/cs324/pretrained_weights/gpt-j-6B/*.txt ./model_checkpoints/${project_id}/
+cp ./model_checkpoints/${project_id}/checkpoint_${total_steps}/* ./model_checkpoints/${project_id}/
+FINETUNE_ID=${project_id} TOTAL_STEPS=${total_steps} python tohub_gptj.py
