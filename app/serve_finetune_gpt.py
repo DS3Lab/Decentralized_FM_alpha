@@ -24,6 +24,7 @@ class FinetuneGPT(FastTrainingInterface):
             my_env['PROJECT_ID'] = project_id
             my_env['DATASET_URL'] = args[0]['dataset_url']
             # set default arguments
+            my_env['SEED'] = '42'
             my_env['TOTAL_STEPS'] = '100'
             my_env['WARMUP_STEPS'] = '10'
             my_env['TRAIN_WARMUP_STEPS'] = '0'
