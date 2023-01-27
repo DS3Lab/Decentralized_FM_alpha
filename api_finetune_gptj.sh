@@ -11,7 +11,7 @@ git clone https://huggingface.co/xzyao/${project_id} ./model_checkpoints/${proje
 wget ${dataset_url} -O data/${project_id}.jsonl
 
 main_program=dist_lm_pretrain.py
-
+seed=$SEED
 total_steps=$TOTAL_STEPS
 warmup_steps=$WARMUP_STEPS
 train_warmup_steps=$TRAIN_WARMUP_STEPS
