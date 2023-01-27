@@ -29,7 +29,7 @@ ARGS="--model-name /nlp/scr2/nlp/fmStore/cs324/pretrained_weights/gpt-j-6B \
 --task-name data/${project_id}.jsonl \
 --num-layers 14 --num-heads 32 --embedding-dim 4096 \
 --total-steps ${total_steps} --warmup-steps ${warmup_steps} --train-warmup-steps ${train_warmup_steps} \
---checkpoint-steps 100 \
+--checkpoint-steps ${total_steps} \
 --lr ${learning_rate} --seq-length ${seq_length} --batch-size 5 --micro-batch-size 1 --gradient-accumulate-step ${gradient_accumulate_step} \
 --dist-url tcp://127.0.0.1:9011 \
 --world-size 2 --pipeline-group-size 2 --data-group-size 1 \
