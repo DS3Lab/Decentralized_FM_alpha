@@ -160,13 +160,13 @@ class GPTAttention(_GPT2Attention):
     
 
 class GPTBlock(_GPT2Block):
-    def __init__(self, config, layer_idx=None, use_checkpoint=True):
+    def __init__(self, config, layer_id=None, use_checkpoint=True):
         super(_GPT2Block, self).__init__()
         hidden_size = config.hidden_size
         inner_dim = config.n_inner if config.n_inner is not None else 4 * hidden_size
 
         self.ln_1 = nn.LayerNorm(hidden_size, eps=config.layer_norm_epsilon)
-        self.attn = GPTAttention(config, layer_idx=layer_idx)
+        self.attn = GPTAttention(config, layer_idx=layer_id)
         self.ln_2 = nn.LayerNorm(hidden_size, eps=config.layer_norm_epsilon)
         self.mlp = _GPT2MLP(inner_dim, config)
         
@@ -186,6 +186,21 @@ class GPTBlock(_GPT2Block):
             x = self.mlp(x)
             return x + res
         self.mlp_res = mlp_res
+        
+    @classmethod
+    def from_pretrained(cls, model_path, config=None, layer_index=None):
+        assert layer_index is not None
+        if config is None:
+            config = GPTConfig.from_pretrained(model_path)
+
+        module = cls(config).eval()
+        try:
+            module.load_state_dict(torch.load(os.path.join(
+                model_path, f'pytorch_{layer_index}.pt',
+            )))
+        except Exception as e:
+            print('Cannot load from <model_name>. The model is randomly initialized.')
+        return module
         
 
     def forward(self, x: torch.Tensor, prefix_masks=None, **kargs) -> torch.Tensor:

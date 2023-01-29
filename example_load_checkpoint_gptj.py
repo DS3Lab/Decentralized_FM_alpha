@@ -55,12 +55,12 @@ def load_decentralized_checkpoint(model, checkpoint_path, n_stages=2, n_layer_pe
         elif i == n_stages - 1:
             for j in range(n_layer_per_stage):
                 _tmp = {k[len(f"{j}."):]:v for k,v in checkpoint.items() if k.startswith(f"{j}.")}
-                if len(_tmp) == 0:
+                if 'lm_head.weight' in _tmp:
                     break
                 # torch.save(_tmp, os.path.join(output_path, f'pytorch_{i*n_layer_per_stage + j}.pt'))
                 model.transformer.h[i*n_layer_per_stage + j].load_state_dict(_tmp)
-
-            _tmp = {k[len(f"{n_layer_per_stage}."):]:v for k,v in checkpoint.items() if k.startswith(f"{n_layer_per_stage}.")}
+            else:
+                _tmp = {k[len(f"{n_layer_per_stage}."):]:v for k,v in checkpoint.items() if k.startswith(f"{n_layer_per_stage}.")}
             if len(_tmp) == 0:
                 break
             # torch.save(_tmp, os.path.join(output_path, f'pytorch_lm_head.pt'))
