@@ -1,10 +1,11 @@
 import os
-from transformers import OPTForCausalLM, AutoTokenizer
+from transformers import OPTForCausalLM, AutoTokenizer, AutoModelForCausalLM
+
 print("Uploading model to hub")
 finetune_id = os.environ.get("FINETUNE_ID")
 finetune_path = os.path.join("model_checkpoints", finetune_id)
 
-model = OPTForCausalLM.from_pretrained(finetune_path)
+model = AutoModelForCausalLM.from_pretrained(finetune_path)
 
 tokenizer = AutoTokenizer.from_pretrained(finetune_path)
 
