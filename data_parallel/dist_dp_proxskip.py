@@ -71,7 +71,7 @@ def step_update(self, freeze=False, dp_optimizer=None):
             h = state["h"]
             h.data = h.data.nan_to_num()
             
-            grad = grad - h
+            # grad = grad - h
 
             exp_avg, exp_avg_sq = state["exp_avg"], state["exp_avg_sq"]
             beta1, beta2 = group["betas"]
@@ -96,7 +96,7 @@ def step_update(self, freeze=False, dp_optimizer=None):
             if dp_optimizer is not None and dp_optimizer.th.item() == 1:
                 
                 local_p = p.data.clone()
-                p.data -= step_size * h / denom / sync_prob 
+                # p.data -= group["lr"] * h / sync_prob 
                 p.data /= dp_optimizer.dp_group_size
                 
                 # print(dp_optimizer.pp_rank, dp_optimizer.dp_rank, '#', p.shape)
@@ -108,7 +108,7 @@ def step_update(self, freeze=False, dp_optimizer=None):
                 # print(dp_optimizer.pp_rank, dp_optimizer.dp_rank, '*', p.shape)
                 
                 # print('sync...')
-                h.data += denom * sync_prob * (p - local_p) / step_size
+                # h.data += sync_prob * (p - local_p) / group["lr"]
                 
             if group["weight_decay"] > 0.0:
                 p.data.add_(p.data, alpha=-group["lr"] * group["weight_decay"])

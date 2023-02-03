@@ -41,24 +41,24 @@ class StreamDataset(IterableDataset):
             "Please add to the above passage.",
             "Could you please provide the missing information in the above passage?",
             "Please finish writing the above paragraph.",
-            "Please continue the text above.",
+            "Please continue the text above",
             "Please complete the above section.",
-            "Please add the missing content to the passage above.",
+            "Please add the missing content to the passage above",
             "Complete the above passage.",
-            "Finish the text above.",
-            "Fill in the rest of the text above.",
+            "Finish the text above",
+            "Fill in the rest of the text above",
             "Add to the above passage.",
-            "Provide the missing information in the above passage.",
+            "Provide the missing information in the above passage",
             "Finish writing the above paragraph.",
             "Continue the text above.",
             "Complete the above section.",
-            "Add the missing content to the passage above.",
+            "Add the missing content to the passage above",
         ]
         
         self.cmds_continue = [
             "continue",
-            "Continue.",
-            "continue.",
+            "Continue",
+            "continue",
             "Go on",
             "Next",
             "next",
@@ -135,9 +135,9 @@ class StreamDataset(IterableDataset):
             
             token_chunks = list(random_chunk(curr_tokens, min_chunk=32, max_chunk=128))
             
-            if len(token_chunks) > 5:
+            if len(token_chunks) > 3:
                 truncated = True
-                token_chunks = token_chunks[:5]
+                token_chunks = token_chunks[:3]
             else:
                 truncated = False
             
@@ -153,10 +153,6 @@ class StreamDataset(IterableDataset):
             if truncated:
                 text += '\nUser: ' + random.choice(self.cmds_switch)
                 text += '\nAssistant: ' + random.choice(self.ans_switch)
-                
-#             print(text)
-            
-#             break
             
             curr_tokens = self.tokenizer(text)['input_ids']
             buffer_tokens += curr_tokens

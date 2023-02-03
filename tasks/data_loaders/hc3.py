@@ -50,10 +50,10 @@ class StreamDataset(IterableDataset):
                 x = next(it)
                 q = self.detokenizer.detokenize(x['question'].strip().split(' '))
                 a = self.detokenizer.detokenize(random.choice(x['human_answers']).strip().split(' '))
-                text = f"User: {q}\n\nAssistant: {a}"
+                text = f"User: {q}\nAssistant: {a}"
                 text_list.append(text)
                 
-                text = '\n\n'.join(text_list)
+                text = '\n'.join(text_list)
                 tokens = self.tokenizer(text)['input_ids']
                 
                 if len(tokens) >= self.seq_length:

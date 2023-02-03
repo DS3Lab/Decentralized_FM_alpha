@@ -26,6 +26,8 @@ quantization_bits = int(os.environ.get('QUANT_BITS', 8))
 quantization_bucket_size = int(os.environ.get('QUANT_BUCKET_SIZE', 128))
 top_k_ratio = float(os.environ.get('TOPK_RATIO', 0.5))
 
+save_vram = int(os.environ.get('SAVE_VRAM', 0))
+
 import zlib
 
 try:
@@ -51,7 +53,7 @@ def _lossless_decompress(enc):
     data = torch.frombuffer(dec, dtype=torch.uint8)
     return data
 
-class FakeSlotSGDGlooDP:
+class SlotSGDGlooDP:
     def __init__(self, args, device, module: torch.nn.Module, optimizer: torch.optim.Optimizer = None, flatten=False):
         # assert not flatten
         self.dp_bits = args.dp_bits
@@ -243,14 +245,6 @@ class FakeSlotSGDGlooDP:
                         print('comm_mask:', comm_mask.sum().item(), comm_mask.shape)
                         comm_mask_list.append(comm_mask)
 
-                        # data to send
-                        comm_data = torch.zeros(
-                            comm_mask.sum().item(), dtype=torch.float16, device=para.device
-                        )
-                        # comp_data, _ = self._compress(comm_data)
-                        # print('comm_data:', [cd.numel() for cd in comp_data])
-                        comm_data_list.append(comm_data)
-
                     # global para
                     global_para = para.data.half()
 
@@ -263,46 +257,42 @@ class FakeSlotSGDGlooDP:
                     # print('server error shape:', server_error.shape)
                     dp_state_dict[name] = {
                         "comm_mask_list": comm_mask_list,
-                        "comm_data_list": comm_data_list,
                         "global_para": global_para,
-                        "worker_error": [torch.zeros_like(server_error) for xx in comm_data_list],
                         "server_error": server_error,
                     }
-                else:
-                    for i in range(self.dp_group_size):
-                        dp_state_dict[name]['comm_mask_list'][i] = dp_state_dict[name]['comm_mask_list'][i].roll(1)
+                # else:
+                #     for i in range(self.dp_group_size):
+                #         dp_state_dict[name]['comm_mask_list'][i] = dp_state_dict[name]['comm_mask_list'][i].roll(1)
 
                 comm_mask_list = dp_state_dict[name]["comm_mask_list"]
-                comm_data_list = dp_state_dict[name]["comm_data_list"]
+                # comm_data_list = dp_state_dict[name]["comm_data_list"]
+                comm_data_list = [None for _ in dp_state_dict[name]["comm_mask_list"]]
                 global_para = dp_state_dict[name]["global_para"]
-                worker_error = dp_state_dict[name]["worker_error"]
                 chunk_size = global_para.size(0) // self.dp_group_size
                 server_error = dp_state_dict[name]["server_error"]
                 server_mask = comm_mask_list[self.dp_rank]
 
                 for i in range(self.dp_group_size):
                     comm_mask = comm_mask_list[i]
-                    # comm_data_list[i].data[:] = (para[i*chunk_size:(i+1)*chunk_size][comm_mask] - global_para[i*chunk_size:(i+1)*chunk_size][comm_mask]).half()
-                    worker_error[i] += para - global_para
+                    comm_data_list[i] = (para[i*chunk_size:(i+1)*chunk_size][comm_mask].half() - global_para[i*chunk_size:(i+1)*chunk_size][comm_mask])
                     
                 comm_data_compressed_list = []
                 comm_data_meta_list = []
-                for i, x in enumerate(comm_data_list):
-                    y = worker_error[i][comm_mask_list[i]]
-                    data, meta_data = self._compress(y)
-                    z = self._decompress(data, meta_data)
-                    worker_error[i][comm_mask_list[i]] -= z
-                    assert z.shape == x.shape
+                for x in comm_data_list:
+                    data, meta_data = self._compress(x)
+                    # z = self._decompress(data, meta_data)
+                    # assert z.shape == x.shape
                     comm_data_compressed_list.append(data)
                     comm_data_meta_list.append(meta_data)
-                comm_buffer_list = [[torch.zeros_like(x).cpu() for x in x_tuple] for x_tuple in comm_data_compressed_list]
+                    del x
+                comm_buffer_list = [[torch.zeros_like(x, device='cpu') for x in x_tuple] for x_tuple in comm_data_compressed_list]
                 
                 # revert
                 for i in range(self.dp_group_size):
                     # print('A', len(comm_data_compressed_list[i]))
                     _data_compressed = self._decompress(comm_data_compressed_list[i], comm_data_meta_list[i])
-                    # para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] -= _data_compressed
-                    para.data[i*chunk_size:(i+1)*chunk_size][:] = global_para.data[i*chunk_size:(i+1)*chunk_size]
+                    para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] -= _data_compressed
+                    del _data_compressed
 
                 # print(f'do first group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])}  - {para.shape}')
                 # self.dp_comm.barrier()
@@ -362,9 +352,10 @@ class FakeSlotSGDGlooDP:
                 for i in range(self.dp_group_size):
                     
                     _data = self._decompress([z.to(para.device) for z in comm_buffer_list[i]], comm_data_meta_list[i])
-                    # para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data * global_lr
+                    para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data
                     global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data
-                    para[:] = global_para
+                    
+                    del _data
                     
                     # para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] = \
                     # global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]].float()
@@ -405,7 +396,7 @@ class FakeSlotSGDGlooDP:
                                 para_shape = list(para.shape)
                                 assert para_shape[0] == para_shape[0] // self.dp_group_size * self.dp_group_size
                                 para_shape[0] = para_shape[0] // self.dp_group_size
-                                comm_mask = torch.zeros(para_shape, dtype=torch.bool, device=para.device)
+                                comm_mask = torch.zeros(para_shape, dtype=torch.bool, device='cpu')
                                 comm_mask.view(-1)[::sync_steps] = True
                                 n_potisive = comm_mask.sum().item() // quantization_bucket_size * quantization_bucket_size
                                 if n_potisive != 0:
@@ -417,12 +408,12 @@ class FakeSlotSGDGlooDP:
                                 comm_mask_list.append(comm_mask)
 
                                 # data to send
-                                comm_data = torch.zeros(
-                                    comm_mask.sum().item(), dtype=torch.float16, device=para.device
-                                )
-                                # comp_data, _ = self._compress(comm_data)
-                                # print('comm_data:', [cd.numel() for cd in comp_data])
-                                comm_data_list.append(comm_data)
+                                # comm_data = torch.zeros(
+                                #     comm_mask.sum().item(), dtype=torch.float16, device=para.device
+                                # )
+                                # # comp_data, _ = self._compress(comm_data)
+                                # # print('comm_data:', [cd.numel() for cd in comp_data])
+                                # comm_data_list.append(comm_data)
 
                             # global para
                             global_para = para.data.half()
@@ -430,13 +421,13 @@ class FakeSlotSGDGlooDP:
                             # server error
                             # server_error = torch.zeros_like(global_para.chunk(self.dp_group_size, 0)[self.dp_rank])
                             server_error = torch.zeros(
-                                comm_mask_list[self.dp_rank].shape, dtype=torch.float16, device=global_para.device,
+                                comm_mask_list[self.dp_rank].shape, dtype=torch.float16, device='cpu',
                             )
 
                             # print('server error shape:', server_error.shape)
                             dp_state_dict[name] = {
                                 "comm_mask_list": comm_mask_list,
-                                "comm_data_list": comm_data_list,
+                                # "comm_data_list": comm_data_list,
                                 "global_para": global_para,
                                 "server_error": server_error,
                             }
@@ -445,7 +436,7 @@ class FakeSlotSGDGlooDP:
                                 dp_state_dict[name]['comm_mask_list'][i] = dp_state_dict[name]['comm_mask_list'][i].roll(1)
 
                         comm_mask_list = dp_state_dict[name]["comm_mask_list"]
-                        comm_data_list = dp_state_dict[name]["comm_data_list"]
+                        comm_data_list = [None for _ in comm_mask_list]
                         global_para = dp_state_dict[name]["global_para"]
                         chunk_size = global_para.size(0) // self.dp_group_size
                         server_error = dp_state_dict[name]["server_error"]
@@ -453,23 +444,25 @@ class FakeSlotSGDGlooDP:
 
                         for i in range(self.dp_group_size):
                             comm_mask = comm_mask_list[i]
-                            comm_data_list[i].data[:] = (para[i*chunk_size:(i+1)*chunk_size][comm_mask] - global_para[i*chunk_size:(i+1)*chunk_size][comm_mask]).half()
+                            # comm_data_list[i].data[:] = (para[i*chunk_size:(i+1)*chunk_size][comm_mask] - global_para[i*chunk_size:(i+1)*chunk_size][comm_mask]).half()
+                            comm_data_list[i] = (para[i*chunk_size:(i+1)*chunk_size][comm_mask] - global_para[i*chunk_size:(i+1)*chunk_size][comm_mask]).half()
                             
                         comm_data_compressed_list = []
                         comm_data_meta_list = []
                         for x in comm_data_list:
                             data, meta_data = self._compress(x)
-                            z = self._decompress(data, meta_data)
-                            assert z.shape == x.shape
+                            # z = self._decompress(data, meta_data)
+                            # assert z.shape == x.shape
                             comm_data_compressed_list.append(data)
                             comm_data_meta_list.append(meta_data)
-                        comm_buffer_list = [[torch.zeros_like(x).cpu() for x in x_tuple] for x_tuple in comm_data_compressed_list]
+                        comm_buffer_list = [[torch.zeros_like(x, device='cpu') for x in x_tuple] for x_tuple in comm_data_compressed_list]
                         
                         # revert
                         for i in range(self.dp_group_size):
                             # print('A', len(comm_data_compressed_list[i]))
                             _data_compressed = self._decompress(comm_data_compressed_list[i], comm_data_meta_list[i])
                             para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] -= _data_compressed
+                            del _data_compressed
 
                         # print(f'do first group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])}  - {para.shape}')
                         # self.dp_comm.barrier()
@@ -499,9 +492,9 @@ class FakeSlotSGDGlooDP:
                         server_data = self._decompress([z.to(para.device) for z in comm_buffer_list[0]], comm_data_meta_list[0]) / len(comm_buffer_list)
                         for i in range(1, self.dp_group_size):
                             server_data.data += self._decompress([z.to(para.device) for z in comm_buffer_list[i]], comm_data_meta_list[i]) / len(comm_buffer_list)
-                        server_data.add_(server_error[server_mask])
+                        server_data.add_(server_error[server_mask].to(server_data.device))
                         server_data_compressed, server_data_meta = self._compress(server_data)
-                        server_error.data[server_mask] = (server_data - self._decompress(server_data_compressed, server_data_meta))
+                        server_error.data[server_mask] = (server_data - self._decompress(server_data_compressed, server_data_meta)).cpu()
                         
                         # print(f'do second group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])} - {para.shape}')
                         # self.dp_comm.barrier()
@@ -529,8 +522,10 @@ class FakeSlotSGDGlooDP:
                         for i in range(self.dp_group_size):
                             
                             _data = self._decompress([z.to(para.device) for z in comm_buffer_list[i]], comm_data_meta_list[i])
-                            para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data * global_lr
-                            global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data * global_lr
+                            para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data
+                            global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data
+                            
+                            del _data
                             
                             # para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] = \
                             # global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]].float()
@@ -570,6 +565,7 @@ class FakeSlotSGDGlooDP:
             else:
                 self._partial_sync()
         except Exception as e:
+            raise e
             if self.flatten:
                 print(e)
                 print('skipping communication due to exception.')

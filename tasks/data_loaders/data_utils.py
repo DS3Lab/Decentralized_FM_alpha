@@ -145,7 +145,54 @@ class UL2RProcessor:
             'input_ids': torch.tensor(tokens),
             'prefix_masks': prefix_masks,
         }
+    
+    
+class OIGAugmentProcessor:
+    
+    def __init__(self, tokenizer, seq_length=1024):
+        self.tokenizer = tokenizer
+        self.seq_length = seq_length
+    
+        import random
+        from augmentations.mild_mix_perturbation import MildMixPerturbation
+        self.p = MildMixPerturbation()
+        self.rng = random
+        
+    def __call__(self, inputs):
+        
+        tokens = inputs['input_ids']
+        text = self.tokenizer.decode(tokens)
+        
+        final_text = ''
 
+        if text.startswith('User:') or text.startswith('Assistant:'):
+            text = '\n' + text
+        for i, chunk in enumerate(text.split('\nUser:')):
+            if i == 0:
+                final_text += chunk
+                continue
+            if '\nAssistant:' in chunk:
+                user_chunk, assistant_chunk = chunk.split('\nAssistant:')[:2]
+                user_chunk = user_chunk.strip()
+                if user_chunk != '':
+                    final_text += '\nUser: ' + self.p.perturb(user_chunk, rng=self.rng)
+                assistant_chunk = assistant_chunk.strip()
+                if assistant_chunk != '':
+                    final_text += '\nAssistant: ' + assistant_chunk
+            else:
+                chunk = chunk.strip()
+                final_text += '\nUser:' + chunk
+                
+        text = final_text
+        
+        tokens = self.tokenizer.encode(text)
+        tokens = tokens[:self.seq_length]
+        tokens = tokens + (self.seq_length - len(tokens)) * [self.tokenizer.eos_token_id]
+        
+        return {
+            'input_ids': torch.tensor(tokens),
+        }
+    
 
 class StreamDatasetList(IterableDataset):
     def __init__(self, task_names, datasets, sample_probs, tokenizer, seq_length=1024, print_sample_every_n=64, post_processor=None):
@@ -226,7 +273,7 @@ def name_to_dataset(task, tokenizer, args):
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'pile':
             from .pile import StreamDataset
-            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=1000_000, seed=args.seed).with_format("torch")
+            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed).with_format("torch")
             # data = load_dataset('the_pile', split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'lawinstruct':
@@ -238,7 +285,7 @@ def name_to_dataset(task, tokenizer, args):
             from .pile import StreamDataset
             data_files = {"train": "data/*"}
             data = load_dataset('lawinstruct/lawinstruct', split='train', data_files=data_files, use_auth_token=True, streaming=True)
-            data = data.filter(lambda x: x['lang']=='en').shuffle(buffer_size=1000_000, seed=args.seed).with_format("torch")
+            data = data.filter(lambda x: x['lang']=='en').shuffle(buffer_size=100_000, seed=args.seed).with_format("torch")
             dataset = StreamDataset(data, tokenizer, args.seq_length, splitter='\n\n\n')
         elif task == 'multi_legal_pile_en':
             from .pile import StreamDataset
@@ -275,7 +322,7 @@ def name_to_dataset(task, tokenizer, args):
         else:
             if 'p3' in task:
                 from .p3 import StreamDataset
-            elif 'soda' in task:
+            elif ('soda' in task) or ('oa_v3_fixed_plus_safety') in task or ('cot_instructions' in task):
                 from .pile import StreamDataset
                 StreamDataset.default_doc_separator = '\n'
             else:
@@ -315,9 +362,13 @@ def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
         datasets.append(dataset)
         probs.append(prob)
     
+    post_processor = OIGAugmentProcessor(tokenizer, seq_length=args.seq_length)
+    
     stream_dataset = StreamDatasetList(
         task_names, datasets, probs,
-        tokenizer=tokenizer, seq_length=args.seq_length)
+        tokenizer=tokenizer, seq_length=args.seq_length,
+        post_processor=post_processor,
+    )
     
     if state_dict is not None:
         stream_dataset.load_state_dict(state_dict)
