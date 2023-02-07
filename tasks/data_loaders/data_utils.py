@@ -362,12 +362,12 @@ def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
         datasets.append(dataset)
         probs.append(prob)
     
-    post_processor = OIGAugmentProcessor(tokenizer, seq_length=args.seq_length)
+    # post_processor = OIGAugmentProcessor(tokenizer, seq_length=args.seq_length)
     
     stream_dataset = StreamDatasetList(
         task_names, datasets, probs,
         tokenizer=tokenizer, seq_length=args.seq_length,
-        post_processor=post_processor,
+        # post_processor=post_processor,
     )
     
     if state_dict is not None:
