@@ -273,7 +273,7 @@ def name_to_dataset(task, tokenizer, args):
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'pile':
             from .pile import StreamDataset
-            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed).with_format("torch")
+            data = load_dataset('the_pile', split="train", streaming=True).shuffle(buffer_size=100_000, seed=args.seed).with_format("torch")
             # data = load_dataset('the_pile', split="train").shuffle(seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         elif task == 'lawinstruct':
@@ -322,7 +322,7 @@ def name_to_dataset(task, tokenizer, args):
         else:
             if 'p3' in task:
                 from .p3 import StreamDataset
-            elif ('soda' in task) or ('oa_v3_fixed_plus_safety') in task or ('cot_instructions' in task):
+            elif ('soda' in task) or ('oa_v3_fixed_plus_safety') in task or ('cot_instructions' in task) or ('mix' in task):
                 from .pile import StreamDataset
                 StreamDataset.default_doc_separator = '\n'
             else:
