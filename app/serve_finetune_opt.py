@@ -28,7 +28,7 @@ class FinetuneOPT(FastTrainingInterface):
             if os.environ.get("CUDA_VISIBLE_DEVICES") is None:
                 my_env['CUDA_VISIBLE_DEVICES']="0,1"
             proc = subprocess.Popen(
-                "/bin/bash api_finetune.sh",
+                "/bin/bash api_finetune_opt.sh",
                 shell=True,
                 env=my_env
             )
@@ -45,10 +45,10 @@ if __name__ == "__main__":
     coord_url = os.environ.get("COORD_URL", "localhost")
     coordinator = TogetherWeb3(
         TogetherClientOptions(reconnect=True),
-        http_url=os.environ.get("COORD_HTTP_URL", f"http://{coord_url}:8094"),
+        http_url=os.environ.get("COORD_HTTP_URL", f"http://{coord_url}:8092"),
         websocket_url=os.environ.get("COORD_WS_URL", f"ws://{coord_url}:8093/websocket"),
     )
-    fip = FinetuneOPT(model_name=os.environ.get("MODEL", "FT_OPT1.3B"), args={
+    fip = FinetuneOPT(model_name=os.environ.get("MODEL", "FT_OPT-1.3B"), args={
         "auth_token": os.environ.get("AUTH_TOKEN"),
         "coordinator": coordinator,
         "device": os.environ.get("DEVICE", "cuda"),
