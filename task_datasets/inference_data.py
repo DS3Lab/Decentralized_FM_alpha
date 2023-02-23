@@ -325,7 +325,7 @@ class RequestProcessor:
                 }
             }
             
-            # print(tokenizer.decode(outputs[0]['token_ids'][0]))
+            print(tokenizer.decode(outputs[0]['token_ids'][0]))
             for i_ret, output_dict in enumerate(outputs):
                 choice = {
                     "text": (tokenizer.decode(output_dict['token_ids'][i][n_pads:]) if 'token_ids' in output_dict else ''),
