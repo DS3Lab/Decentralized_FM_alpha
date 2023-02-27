@@ -1,11 +1,11 @@
-PATH_TO_MODE="XXXX"
+PATH_TO_MODEL="XXXX"
 PATH_TO_INFER_DATA="YYYY"
-NUM_LAYERS=4
-MAX_LAYERS=32
+NUM_LAYERS=12
+MAX_LAYERS=96
 # budget == max(#batch_size * #seq_length)
 BUDGET=10000
 
-ARGS="--model-name $PATH_TO_MODE \
+ARGS="--model-name $PATH_TO_MODEL \
 --model-type opt \
 --seed 42 \
 --fp16 \
