@@ -263,6 +263,9 @@ def name_to_dataset(task, tokenizer, args):
         if task == 'natural_instructions' or task == 'ni':
             from .natural_instructions import StreamDataset
             dataset = StreamDataset('./natural-instructions/', tokenizer, args.seq_length)
+        elif task == 'ni_chat':
+            from .natural_instructions_chat import StreamDataset
+            dataset = StreamDataset('./natural-instructions/', tokenizer, args.seq_length)
         elif task == 'p3':
             from .p3 import StreamDataset
             data = load_dataset("Muennighoff/P3", split="train").shuffle(seed=args.seed)
@@ -320,9 +323,12 @@ def name_to_dataset(task, tokenizer, args):
             data = load_dataset('c4', 'en', split="train", streaming=True).shuffle(buffer_size=100_000, seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
         else:
-            if 'p3' in task:
-                from .p3 import StreamDataset
-            elif ('soda' in task) or ('oa_v3_fixed_plus_safety') in task or ('cot_instructions' in task) or ('mix' in task):
+            # if 'p3' in task:
+            #     from .p3 import StreamDataset
+            # if ('soda' in task) or ('oa_v3_fixed_plus_safety') in task or ('cot_instructions' in task) or ('mix' in task):
+            #     from .pile import StreamDataset
+            #     StreamDataset.default_doc_separator = '\n'
+            if 'jsonl' in task:
                 from .pile import StreamDataset
                 StreamDataset.default_doc_separator = '\n'
             else:
