@@ -11,8 +11,6 @@
 #SBATCH --output=/afs/cs.stanford.edu/u/biyuan/exe_log/finetune_gptj_%j.log
 #SBATCH --account=nlp
 
-
-
 source activate base
 cd /afs/cs.stanford.edu/u/biyuan/fm/cs324/finetune_src
 nvidia-smi
