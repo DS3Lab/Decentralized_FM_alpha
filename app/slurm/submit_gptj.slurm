@@ -8,10 +8,10 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=8G
-#SBATCH --output=/afs/cs.stanford.edu/u/biyuan/exe_log/
+#SBATCH --output=/afs/cs.stanford.edu/u/biyuan/exe_log/finetune_gptj_%j.log
 #SBATCH --account=nlp
 
-finetune_gptj_%j.log
+
 
 source activate base
 cd /afs/cs.stanford.edu/u/biyuan/fm/cs324/finetune_src
