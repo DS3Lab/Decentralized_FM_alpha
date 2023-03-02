@@ -6,7 +6,11 @@ echo $project_id
 export NCCL_DEBUG=INFO
 export WANDB_DISABLED=1
 huggingface-cli repo create ${project_id} -y
-git clone https://huggingface.co/xzyao/${project_id} ./model_checkpoints/${project_id}
+
+mkdir ./model_checkpoints/${project_id}
+mkdir ./model_checkpoints/${project_id}/config
+
+git clone https://huggingface.co/xzyao/${project_id} ./model_checkpoints/${project_id}/config
 
 wget ${dataset_url} -O data/${project_id}.jsonl
 
