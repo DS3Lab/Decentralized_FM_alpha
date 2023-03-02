@@ -96,12 +96,12 @@ if __name__ == '__main__':
     tokenizer = AutoTokenizer.from_pretrained(finetune_path)
 
     tokenizer.push_to_hub(
-        #repo_path_or_name=f"./model_checkpoints/{finetune_id}",
+        repo_path_or_name=f"./model_checkpoints/{finetune_id}/config",
         repo_url=f"https://huggingface.co/xzyao/{finetune_id}",
         use_auth_token=True,
     )
     model.push_to_hub(
-        #repo_path_or_name=f"./model_checkpoints/{finetune_id}",
+        repo_path_or_name=f"./model_checkpoints/{finetune_id}/config",
         repo_url=f"https://huggingface.co/xzyao/{finetune_id}",
         use_auth_token=True,
     )

@@ -50,4 +50,7 @@ wait)
 cp /nlp/scr2/nlp/fmStore/cs324/pretrained_weights/gpt-j-6B/*.json ./model_checkpoints/${project_id}/
 cp /nlp/scr2/nlp/fmStore/cs324/pretrained_weights/gpt-j-6B/*.txt ./model_checkpoints/${project_id}/
 cp ./model_checkpoints/${project_id}/checkpoint_${total_steps}/* ./model_checkpoints/${project_id}/
+cp /nlp/scr2/nlp/fmStore/cs324/pretrained_weights/gpt-j-6B/*.json ./model_checkpoints/${project_id}/config/
+cp /nlp/scr2/nlp/fmStore/cs324/pretrained_weights/gpt-j-6B/*.txt ./model_checkpoints/${project_id}/config/
+
 FINETUNE_ID=${project_id} TOTAL_STEPS=${total_steps} python tohub_gptj.py
