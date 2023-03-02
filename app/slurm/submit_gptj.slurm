@@ -17,4 +17,6 @@ source activate base
 cd /afs/cs.stanford.edu/u/biyuan/fm/cs324/finetune_src
 nvidia-smi
 set -o allexport && source .env
+
+/afs/cs.stanford.edu/u/biyuan/fm/cs324/together-bin/together-node start &
 python app/serve_finetune_gptj.py
