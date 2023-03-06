@@ -5,6 +5,7 @@ job_id=`python3 -c 'import uuid; print(uuid.uuid4())'`
 # job_id=0
 project_id=$PROJECT_ID
 dataset_url=$DATASET_URL
+learning_rate=$LEARNING_RATE
 
 echo $project_id
 
@@ -29,8 +30,8 @@ ARGS="--model-name /mnt/ds3lab-scratch/fm/pretrained_models/opt-1.3b-new \
 --task-name data/${project_id}.jsonl \
 --num-layers 2 --num-heads 32 --embedding-dim 2048 \
 --total-steps ${total_steps} --warmup-steps 100 --train-warmup-steps 0 \
---checkpoint-steps 100 \
---lr 1e-5 --seq-length 2048 --batch-size 5 --micro-batch-size 1 --gradient-accumulate-step 1 \
+--checkpoint-steps ${total_steps} \
+--lr ${learning_rate} --seq-length 2048 --batch-size 5 --micro-batch-size 1 --gradient-accumulate-step 1 \
 --dist-url tcp://127.0.0.1:9011 \
 --world-size 2 --pipeline-group-size 2 --data-group-size 1 \
 --job-id ${job_id} --net-interface enp13s0f0 \
@@ -49,5 +50,6 @@ wait)
 
 cp /mnt/ds3lab-scratch/fm/pretrained_models/opt-1.3b-new/*.json ./model_checkpoints/${project_id}/
 cp /mnt/ds3lab-scratch/fm/pretrained_models/opt-1.3b-new/*.txt ./model_checkpoints/${project_id}/
+cp ./model_checkpoints/${project_id}/checkpoint_${total_steps}/* ./model_checkpoints/${project_id}/
 
 FINETUNE_ID=${project_id} python tohub.py

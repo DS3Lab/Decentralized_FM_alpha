@@ -61,7 +61,7 @@ if __name__ == "__main__":
         "coordinator": coordinator,
         "device": os.environ.get("DEVICE", "cuda"),
         "gpu_num": 0,
-        "gpu_type": 'titanxp',
+        "gpu_type": 'A100-80GB',
         "stream_tokens_pipe": True,
         "gpu_mem": 12,
         "group_name": os.environ.get("GROUP", "group1"),

@@ -94,16 +94,20 @@ if __name__ == '__main__':
     checkpoints = os.environ.get("TOTAL_STEPS")
     finetune_path = os.path.join("model_checkpoints", finetune_id)
     load_decentralized_checkpoint(model, finetune_path, n_stages=2, n_layer_per_stage=12)
-    tokenizer = AutoTokenizer.from_pretrained(finetune_path)
-    tokenizer.push_to_hub(
-        repo_id=f"{finetune_id}",
-        repo_path_or_name=f"./model_checkpoints/{finetune_id}",
-        repo_url=f"https://huggingface.co/xzyao/{finetune_id}",
-        use_auth_token=True,
-    )
-    model.push_to_hub(
-        repo_id=f"{finetune_id}",
-        repo_path_or_name=f"./model_checkpoints/{finetune_id}",
-        repo_url=f"https://huggingface.co/xzyao/{finetune_id}",
-        use_auth_token=True,
-    )
+    ret = model.generate(**tokenizer('I am ', return_tensors='pt'), max_new_tokens=4)
+    print(ret)
+    print(tokenizer.batch_decode(ret))
+
+    # tokenizer = AutoTokenizer.from_pretrained(finetune_path)
+    # tokenizer.push_to_hub(
+    #     repo_id=f"{finetune_id}",
+    #     repo_path_or_name=f"./model_checkpoints/{finetune_id}",
+    #     repo_url=f"https://huggingface.co/xzyao/{finetune_id}",
+    #     use_auth_token=True,
+    # )
+    # model.push_to_hub(
+    #     repo_id=f"{finetune_id}",
+    #     repo_path_or_name=f"./model_checkpoints/{finetune_id}",
+    #     repo_url=f"https://huggingface.co/xzyao/{finetune_id}",
+    #     use_auth_token=True,
+    # )

@@ -94,6 +94,9 @@ if __name__ == '__main__':
     finetune_path = os.path.join("model_checkpoints", finetune_id)
     load_decentralized_checkpoint(model, finetune_path, n_stages=2, n_layer_per_stage=6)
     # test on cpu
+    ret = model.generate(**tokenizer('I am ', return_tensors='pt'), max_new_tokens=4)
+    print(ret)
+    print(tokenizer.batch_decode(ret))
     tokenizer = AutoTokenizer.from_pretrained(finetune_path)
 
     tokenizer.push_to_hub(

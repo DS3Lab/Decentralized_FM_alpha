@@ -6,7 +6,12 @@ echo $project_id
 export NCCL_DEBUG=INFO
 export WANDB_DISABLED=1
 huggingface-cli repo create ${project_id} -y
-git clone https://huggingface.co/xzyao/${project_id} ./model_checkpoints/${project_id}
+
+
+mkdir ./model_checkpoints/${project_id}
+mkdir ./model_checkpoints/${project_id}/config
+
+git clone https://huggingface.co/xzyao/${project_id} ./model_checkpoints/${project_id}/config
 
 wget ${dataset_url} -O data/${project_id}.jsonl
 
@@ -50,4 +55,8 @@ wait)
 cp /nlp/scr2/nlp/fmStore/cs324/pretrained_weights/gpt-j-6B/*.json ./model_checkpoints/${project_id}/
 cp /nlp/scr2/nlp/fmStore/cs324/pretrained_weights/gpt-j-6B/*.txt ./model_checkpoints/${project_id}/
 cp ./model_checkpoints/${project_id}/checkpoint_${total_steps}/* ./model_checkpoints/${project_id}/
+mkdir /nlp/scr2/nlp/fmStore/cs324/pretrained_weights/gpt-j-6B/*.json ./model_checkpoints/${project_id}/config/
+cp /nlp/scr2/nlp/fmStore/cs324/pretrained_weights/gpt-j-6B/*.json ./model_checkpoints/${project_id}/config/
+cp /nlp/scr2/nlp/fmStore/cs324/pretrained_weights/gpt-j-6B/*.txt ./model_checkpoints/${project_id}/config/
+
 FINETUNE_ID=${project_id} TOTAL_STEPS=${total_steps} python tohub_gptj.py
