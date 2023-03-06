@@ -7,6 +7,14 @@ import torch.nn.functional as F
 from transformers import AutoTokenizer
 
 
+def translate_chatml_to_openchat(prompt):
+    prompt = prompt.replace('<|im_start|>system\n', '<human>: ')
+    prompt = prompt.replace('<|im_start|>user\n', '<human>: ')
+    prompt = prompt.replace('<|im_start|>assistant\n', '<bot>: ')
+    prompt = prompt.replace('\n<|im_end|>', '')
+    prompt = prompt.replace('<|im_end|>', '')
+    return prompt
+
 class JsonDataset(torch.utils.data.Dataset):
     def __init__(self, data, tokenizer, batch_size=None):
         
@@ -286,7 +294,7 @@ class RequestProcessor:
     def get_dataloader(self, batch_size, num_workers=0):
         
         dataset = JsonDataset(
-            [x['request']['prompt'] for x in self.data], 
+            [translate_chatml_to_openchat(x['request']['prompt']) for x in self.data], 
             self.tokenizer, batch_size=batch_size,
         )
         
