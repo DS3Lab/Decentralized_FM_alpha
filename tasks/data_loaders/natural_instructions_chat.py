@@ -50,10 +50,14 @@ class StreamDataset(IterableDataset):
         
         self.it = None
         
-        self.input_prefixs = ['<human>: ']
-        self.output_prefixs = ['<bot>: ']
-        self.sample_splitters = ['\n',]
-        self.answer_splitters = ['\n',]
+        self.greetings = [
+            "<|im_start|>user\nHi<im_end>\n<|im_start|>assistant\nHi! How can I help you today?<im_end>\n",
+            "<|im_start|>user\nHi!<im_end>\n<|im_start|>assistant\nHi! How can I help you today?<im_end>\n",
+            "<|im_start|>user\nHi.<im_end>\n<|im_start|>assistant\nHi! How can I help you today?<im_end>\n",
+            "<|im_start|>user\nHello<im_end>\n<|im_start|>assistant\nHello! How can I help you today?<im_end>\n",
+            "<|im_start|>user\nHello!<im_end>\n<|im_start|>assistant\nHello! How can I help you today?<im_end>\n",
+            "<|im_start|>user\nHello.<im_end>\n<|im_start|>assistant\nHello! How can I help you today?<im_end>\n",
+        ]
         
         self.iter_count = 0
         
@@ -86,8 +90,6 @@ class StreamDataset(IterableDataset):
         is_classification = task['IsClassification']
         output_space = task['OutputSpace']
         
-        sample_splitter = random.choice(self.sample_splitters)
-        answer_splitter = random.choice(self.answer_splitters)
         text_def = random.choice(task['Definition']).strip()
         if is_classification and random.random() < 0.5:
             text_def += '\nPossible labels:'
@@ -95,16 +97,21 @@ class StreamDataset(IterableDataset):
                 text_def += f'\n{i+1}. {possible_output}'
             text_def += '\n'
             
-        text_def = f"<human>: {text_def}\n<bot>: Sure, I understand."
+        text_def = f"<|im_start|>user\n{text_def}<|im_end|>\n"
         
-        text_input = random.choice(self.input_prefixs)
-        text_output = random.choice(self.output_prefixs)
+        text_input_begin = '<|im_start|>user\n'
+        text_input_end = '<|im_end|>\n'
+        text_output_begin = '<|im_start|>assistant\n'
+        text_output_end = '<|im_end|>\n'
 
-        text_context = text_def
+        if random.random() < 0.8:
+            text_context = text_def
+        else:
+            text_context = random.choice(self.greetings) + text_def
         
         while True:
             instance = random.choice(task['Instances'])
-            text_context += sample_splitter + text_input + instance['input'] + answer_splitter + text_output + random.choice(instance['output'])
+            text_context += text_input_begin + instance['input'] + text_input_end + text_output_begin + random.choice(instance['output']) + text_output_end
             input_ids = self.tokenizer(text_context.strip())['input_ids']
             if len(input_ids) > self.seq_length:
                 break
