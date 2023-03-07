@@ -11,8 +11,12 @@ def translate_chatml_to_openchat(prompt):
     prompt = prompt.replace('<|im_start|>system\n', '<human>: ')
     prompt = prompt.replace('<|im_start|>user\n', '<human>: ')
     prompt = prompt.replace('<|im_start|>assistant\n', '<bot>: ')
+    prompt = prompt.replace('<|im_start|>user', '<human>:')
+    prompt = prompt.replace('<|im_start|>assistant', '<bot>:')
     prompt = prompt.replace('\n<|im_end|>', '')
     prompt = prompt.replace('<|im_end|>', '')
+    prompt = prompt.rstrip()
+    # print(prompt)
     return prompt
 
 class JsonDataset(torch.utils.data.Dataset):
@@ -201,6 +205,8 @@ class RequestProcessor:
         self.max_tokens = first_request.get('max_tokens', 1)
         self.best_of = first_request.get('best_of', 1)
         self.stop = first_request.get('stop', None)
+        if self.stop is not None:
+            self.stop.append("<user>")
         self.is_glm = False
         
     def set_arguments(self, args):
@@ -333,7 +339,7 @@ class RequestProcessor:
                 }
             }
             
-            print(tokenizer.decode(outputs[0]['token_ids'][0]))
+            print(tokenizer.decode(outputs[i]['token_ids'][0]))
             for i_ret, output_dict in enumerate(outputs):
                 choice = {
                     "text": (tokenizer.decode(output_dict['token_ids'][i][n_pads:]) if 'token_ids' in output_dict else ''),
