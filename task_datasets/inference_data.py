@@ -206,7 +206,7 @@ class RequestProcessor:
         self.best_of = first_request.get('best_of', 1)
         self.stop = first_request.get('stop', None)
         if self.stop is not None:
-            self.stop = self.stop + ["<user>"]
+            self.stop = self.stop + ["<human>"]
         self.is_glm = False
         
     def set_arguments(self, args):
