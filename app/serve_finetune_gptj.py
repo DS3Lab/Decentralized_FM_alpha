@@ -22,7 +22,7 @@ class FinetuneGPT(FastTrainingInterface):
             # call the finetune script
             my_env = os.environ.copy()
             my_env['PROJECT_ID'] = project_id
-            if 'dataset_url' not in args[0]:
+            if 'dataset_url' in args[0]:
                 my_env['DATASET_URL'] = args[0]['dataset_url']
                 # set default arguments
                 my_env['SEED'] = '42'
