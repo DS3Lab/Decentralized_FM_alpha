@@ -22,7 +22,7 @@ class FinetuneGPT(FastTrainingInterface):
             # call the finetune script
             my_env = os.environ.copy()
             my_env['PROJECT_ID'] = project_id
-            if 'dataset_url':
+            if 'dataset_url' not in args[0]:
                 my_env['DATASET_URL'] = args[0]['dataset_url']
                 # set default arguments
                 my_env['SEED'] = '42'
@@ -48,7 +48,7 @@ class FinetuneGPT(FastTrainingInterface):
                 proc.wait()
                 return {"finetune_id": project_id}
             else:
-                return {"finetune_id": "null"}
+                return {"finetune_id": "No dataset_url provided"}
         except Exception as e:
             traceback.print_exc()
 
