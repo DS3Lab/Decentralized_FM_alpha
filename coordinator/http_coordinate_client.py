@@ -22,7 +22,7 @@ class CoordinatorInferenceHTTPClient:
 
     def notify_inference_join(self, netname='access'):
         ip = ni.ifaddresses(netname)[ni.AF_INET][0]['addr']
-        return requests.post("http://173.82.206.98/rank/"+str(self.job_id),
+        return requests.post("http://173.82.206.98:5000/rank/"+str(self.job_id),
                              json={"ip": ip}).json()
 
 
