@@ -322,6 +322,9 @@ def name_to_dataset(task, tokenizer, args):
             from .pile_chat import StreamDataset
             data = load_dataset('c4', 'en', split="train", streaming=True).shuffle(buffer_size=100_000, seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
+        elif 'alpaca_data.json' in task:
+            from .alpaca import StreamDataset
+            dataset = StreamDataset(task, tokenizer, args.seq_length)
         else:
             # if 'p3' in task:
             #     from .p3 import StreamDataset
