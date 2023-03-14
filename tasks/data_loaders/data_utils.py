@@ -322,6 +322,10 @@ def name_to_dataset(task, tokenizer, args):
             from .pile_chat import StreamDataset
             data = load_dataset('c4', 'en', split="train", streaming=True).shuffle(buffer_size=100_000, seed=args.seed)
             dataset = StreamDataset(data, tokenizer, args.seq_length)
+        elif 'safety' in task:
+            from .safety import StreamDataset
+            data = load_dataset("json", data_files=task, split="train", streaming=True).shuffle(buffer_size=100_000, seed=args.seed)
+            dataset = StreamDataset(data, tokenizer, args.seq_length)
         else:
             # if 'p3' in task:
             #     from .p3 import StreamDataset
@@ -334,7 +338,7 @@ def name_to_dataset(task, tokenizer, args):
             else:
                 from .pile import StreamDataset
             print('data_utils: before getting custom pile')
-            data = load_dataset("json", data_files=task, split="train", streaming=True).shuffle(buffer_size=10_000, seed=args.seed)
+            data = load_dataset("json", data_files=task, split="train", streaming=True).shuffle(buffer_size=100_000, seed=args.seed)
             print('data_utils: after getting custom pile')
             dataset = StreamDataset(data, tokenizer, args.seq_length)
             # print('unknow task {task}, skip.')
