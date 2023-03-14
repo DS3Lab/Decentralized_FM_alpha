@@ -1,8 +1,14 @@
 
 from transformers import AutoTokenizer, GPT2TokenizerFast, DebertaV2Tokenizer
+from .llama_modules import LLaMATokenizer
 
 def build_tokenizer(args):
-    tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_name)
+    
+    if args.model_type == 'llama':
+        tokenizer = LLaMATokenizer.from_pretrained(args.tokenizer_name)
+    else:
+        tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_name)
+        
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     return tokenizer

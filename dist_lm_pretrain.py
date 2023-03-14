@@ -69,9 +69,9 @@ def train_loop(args, pipe, device, train_data_loader, test_data_loader):
     if get_pipeline_parallel_rank() == 0 and dp_rank == 0:
         
         for i, data in enumerate(train_data_loader):
-            if i < pipe.global_step:
-                print(f'skip {i}')
-                continue
+            # if i < pipe.global_step:
+            #     print(f'skip {i}')
+            #     continue
                 
             if use_dp:
                 dp_comm.broadcast(stop_flag, 0)
@@ -270,7 +270,11 @@ def main():
         dp_rank = 0
         dp_size = 1
     
-    config = AutoConfig.from_pretrained(args.model_name)
+    if args.model_type == 'llama':
+        from modules.llama_modules import LLaMAConfig
+        config = LLaMAConfig.from_pretrained(args.model_name)
+    else:
+        config = AutoConfig.from_pretrained(args.model_name)
     
     # num layer globally
     if hasattr(config, 'num_hidden_layers'):

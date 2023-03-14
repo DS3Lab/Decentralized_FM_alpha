@@ -1169,7 +1169,7 @@ class GPTLMHead(nn.Module):
     
     
 class GPTBlock(nn.Module):
-    def __init__(self, config: LLaMAConfig):
+    def __init__(self, config: LLaMAConfig, *args, **kargs):
         super().__init__()
         self.hidden_size = config.hidden_size
         self.self_attn = LLaMAAttention(
@@ -1239,3 +1239,4 @@ class GPTBlock(nn.Module):
             x = self.mlp_res(x)
         
         return x
+    
