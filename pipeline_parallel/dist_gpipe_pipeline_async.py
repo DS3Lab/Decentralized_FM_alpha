@@ -99,6 +99,7 @@ class GpipeAsync:
             self.dp_rank = get_data_parallel_rank()
         else:
             self.dp_rank = 0
+        self.dp_mode = args.dp_mode
         self.pre_node_rank = self.pp_rank - 1
         self.post_node_rank = self.pp_rank + \
             1 if self.pp_rank != self.pipeline_group_size - 1 else -1
@@ -631,7 +632,10 @@ class GpipeAsync:
         step = self.global_step % self.gradient_accumulate_step
         self.zero_input_grad()
         if step == 0:
-            self.optimizer.zero_grad(set_to_none=False)
+            if self.dp_mode == 'powersgd':
+                pass
+            else:
+                self.optimizer.zero_grad(set_to_none=False)
             
         if step == self.gradient_accumulate_step - 1 and self.use_dp:
             if hasattr(self.dp_optim, 'pre_optimizer_step'):

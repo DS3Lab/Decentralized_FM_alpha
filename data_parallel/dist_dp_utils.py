@@ -18,6 +18,7 @@ from .dist_dp_fake_slot_sgd_gloo import FakeSlotSGDGlooDP
 from .dist_dp_slot_sgd_benchmark import SlotSGDBenchDP
 from .dist_dp_slot_sgd_gloo_benchmark import SlotSGDGlooBenchDP
 from .dist_dp_sharded_ps_quant import ShardedPSDPQuant
+from .dist_dp_powersgd import PowerSGDDP
 
 
 def get_dp_module(args, device, module, optimizer):
@@ -62,6 +63,8 @@ def get_dp_module(args, device, module, optimizer):
         return SlotSGDGlooRDP(args, device, module, optimizer, flatten=True)
     elif args.dp_mode == 'fake_slot_sgd_gloo':
         return FakeSlotSGDGlooDP(args, device, module, optimizer, flatten=True)
+    elif args.dp_mode == 'powersgd':
+        return PowerSGDDP(args, device, module, optimizer, flatten=False)
     else:
         print("Not recognize this data parallel mode.")
         assert False
