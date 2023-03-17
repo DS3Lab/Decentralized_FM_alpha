@@ -260,6 +260,7 @@ class StreamDatasetList(IterableDataset):
 def name_to_dataset(task, tokenizer, args):
     
     if task != '':
+        print(task)
         if task == 'natural_instructions' or task == 'ni':
             from .natural_instructions import StreamDataset
             dataset = StreamDataset('./natural-instructions/', tokenizer, args.seq_length)
@@ -330,14 +331,14 @@ def name_to_dataset(task, tokenizer, args):
             from .alpaca import StreamDataset
             dataset = StreamDataset(task, tokenizer, args.seq_length)
         else:
-            # if 'p3' in task:
-            #     from .p3 import StreamDataset
-            # if ('soda' in task) or ('oa_v3_fixed_plus_safety') in task or ('cot_instructions' in task) or ('mix' in task):
-            #     from .pile import StreamDataset
-            #     StreamDataset.default_doc_separator = '\n'
-            if 'jsonl' in task:
+            if 'p3' in task:
+                from .p3 import StreamDataset
+            elif ('soda' in task) or ('oa_v3_fixed_plus_safety') in task or ('cot_instructions' in task) or ('mix' in task):
                 from .pile import StreamDataset
                 StreamDataset.default_doc_separator = '\n'
+            # if 'jsonl' in task:
+            #     from .pile import StreamDataset
+            #     StreamDataset.default_doc_separator = '\n'
             else:
                 from .pile import StreamDataset
             print('data_utils: before getting custom pile')
@@ -397,6 +398,47 @@ def get_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):
     
     return train_data_loader
 
+
+def get_imagenet_train_data_loader(args, tokenizer, num_workers=16, state_dict=None):
+    
+    def process_example(example):
+        inputs = tokenizer((example['image'] if example['image'].mode == 'RGB' else example['image'].convert('RGB')), return_tensors='pt')
+        inputs['label'] = example['label']
+        return inputs
+    def transform(example_batch):
+        # Take a list of PIL images and turn them to pixel values
+        inputs = tokenizer([(x if x.mode == 'RGB' else x.convert('RGB')) for x in example_batch['image']], return_tensors='pt')
+        # Don't forget to include the label!
+        inputs['label'] = example_batch['label']
+        return inputs
+    def collate_fn(batch):
+        return {
+            'pixel_values': torch.stack([x['pixel_values'] for x in batch]),
+            'label': torch.tensor([x['label'] for x in batch])
+        }
+    
+    # ds = load_dataset('beans', split='train')
+    ds = load_dataset(args.task_name, split='train', use_auth_token=True)
+    
+    ds = ds.select(
+        (
+            i for i in range(len(ds)) 
+            if i not in (25,) # grey image
+        )
+    )
+    
+    prepared_ds = ds.with_transform(transform)
+    
+    train_data_loader = torch.utils.data.DataLoader(prepared_ds,
+                                                    batch_size=args.batch_size * args.data_group_size,
+                                                    shuffle=True,
+                                                    num_workers=num_workers,
+                                                    pin_memory=True,
+                                                    collate_fn=collate_fn)
+    
+    print('data_utils: get train_data_loader')
+    
+    return train_data_loader
 
 
 def get_ul2r_train_data_loader(args, tokenizer, num_workers=1, state_dict=None):

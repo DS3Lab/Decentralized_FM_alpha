@@ -3,12 +3,15 @@ from .dist_gpipe_pipeline_sync import GpipeSync
 from .dist_1f1b_pipeline_async import Pipe1F1BAsync
 from .dist_gpipe_pipeline_async_act_comp import GpipeAsyncActivationCompression
 from .dist_gpipe_pipeline_async_distill import GpipeAsyncDistill
+from .dist_no_pipeline_async import NopipeAsync
 
 
 def get_pp_module(args, config, device, use_dp):
     
     if args.pp_mode == 'gpipe':
         return GpipeAsync(args, config, device, use_dp)
+    elif args.pp_mode == 'nopipe':
+        return NopipeAsync(args, config, device, use_dp)
     elif args.pp_mode == 'gpipe_sync':
         return GpipeSync(args, config, device, use_dp)
     elif args.pp_mode == '1f1b':

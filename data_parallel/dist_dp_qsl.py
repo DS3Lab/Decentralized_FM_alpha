@@ -257,9 +257,9 @@ class QSLDP:
 
                         # server error
                         # server_error = torch.zeros_like(global_para.chunk(self.dp_group_size, 0)[self.dp_rank])
-                        server_error = torch.zeros(
-                            comm_mask_list[self.dp_rank].shape, dtype=torch.float16, device=para.device,
-                        )
+                        # server_error = torch.zeros(
+                        #     comm_mask_list[self.dp_rank].shape, dtype=torch.float16, device=para.device,
+                        # )
                         
                         worker_error = torch.zeros_like(para.data).half()
 
@@ -269,7 +269,7 @@ class QSLDP:
                             # "comm_data_list": comm_data_list,
                             "global_para": global_para,
                             "worker_error": worker_error,
-                            "server_error": server_error,
+                            # "server_error": server_error,
                         }
                     else:
                         for i in range(self.dp_group_size):
@@ -279,7 +279,7 @@ class QSLDP:
                     comm_data_list = comm_data_list = [None for _ in comm_mask_list]
                     global_para = dp_state_dict[name]["global_para"]
                     chunk_size = global_para.size(0) // self.dp_group_size
-                    server_error = dp_state_dict[name]["server_error"]
+                    # server_error = dp_state_dict[name]["server_error"]
                     worker_error = dp_state_dict[name]["worker_error"]
                     server_mask = comm_mask_list[self.dp_rank]
 
@@ -332,16 +332,18 @@ class QSLDP:
                     server_data = self._decompress([z for z in comm_buffer_list[0]], comm_data_meta_list[0]) / len(comm_buffer_list)
                     for i in range(1, self.dp_group_size):
                         server_data.data += self._decompress([z for z in comm_buffer_list[i]], comm_data_meta_list[i]) / len(comm_buffer_list)
-                    server_data.add_(server_error[server_mask])
-                    server_data_compressed, server_data_meta = self._compress(server_data)
-                    server_error.data[server_mask] = (server_data - self._decompress(server_data_compressed, server_data_meta))
+                    # server_data.add_(server_error[server_mask])
+                    # server_data_compressed, server_data_meta = self._compress(server_data)
+                    # server_error.data[server_mask] = (server_data - self._decompress(server_data_compressed, server_data_meta))
 
                     # print(f'do second group r{self.global_rank} - {i_group}/{len(self.optimizer.optimizer.param_groups)} - {i_para}/{len(group["params"])} - {para.shape}')
                     # self.dp_comm.barrier()
+                    
+                    recv_buffers = [torch.zeros_like(server_data) for i in range(self.dp_group_size)]
 
                     cupy.cuda.nccl.groupStart()
                     for i in range(self.dp_group_size):
-                        for j, to_send in enumerate(server_data_compressed):
+                        for j, to_send in enumerate([server_data]):
                             self.dp_comm.send(
                                 to_send, dst=i, stream=cupy_dp_stream)
                             # if j==0:
@@ -351,7 +353,7 @@ class QSLDP:
                             #     send_bits += len(_enc) * 8
                             # else:
                             #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
-                        for to_recv in comm_buffer_list[i]:
+                        for to_recv in [recv_buffers[i]]:
                             self.dp_comm.recv(
                                 to_recv, src=i, stream=cupy_dp_stream)
                             # recv_bits += to_recv.numel() * torch.finfo(to_recv.dtype).bits if to_recv.is_floating_point() else to_recv.numel() * torch.iinfo(to_recv.dtype).bits
@@ -359,7 +361,8 @@ class QSLDP:
 
                     for i in range(self.dp_group_size):
 
-                        _data = self._decompress([z for z in comm_buffer_list[i]], comm_data_meta_list[i])
+                        # _data = self._decompress([z for z in comm_buffer_list[i]], comm_data_meta_list[i])
+                        _data = recv_buffers[i]
                         global_para.data[i*chunk_size:(i+1)*chunk_size][comm_mask_list[i]] += _data
 
                         del _data
