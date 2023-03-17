@@ -45,7 +45,7 @@ def flatten(tensors: List[List[torch.Tensor]]) -> List[torch.Tensor]:
 def allreduce_average(data, *args, **kwargs):
     """All-reduce average if torch.distributed is available, otherwise do nothing"""
     if is_distributed():
-        comm = get_pipeline_parallel_comm()
+        comm = get_data_parallel_comm()
         dp_group_size = get_data_parallel_world_size()
         data.div_(dp_group_size)  # type: ignore
         comm.all_reduce(data)

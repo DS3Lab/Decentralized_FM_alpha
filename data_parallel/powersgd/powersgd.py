@@ -201,9 +201,9 @@ class BasicPowerSGD(Aggregator):
             for group, in_batch, out_batch in zip(
                 shape_groups, in_batches, out_batches
             ):
-                tmp = in_batch.float()
-                orthogonalize(tmp)
-                in_batch.data[:] = tmp.half()
+                # tmp = in_batch.float()
+                orthogonalize(in_batch)
+                # in_batch.data[:] = tmp.half()
                 # print(batch_transpose(maybe_transpose(group["grad_batch"])).dtype, in_batch.dtype, out_batch.dtype)
                 torch.bmm(
                     batch_transpose(maybe_transpose(group["grad_batch"])), 
@@ -226,10 +226,12 @@ class BasicPowerSGD(Aggregator):
             #     torch.distributed.all_reduce(out_buffer)
             # else:
             #     num_workers = 1
-            comm = get_pipeline_parallel_comm()
+            comm = get_data_parallel_comm()
             dp_group_size = get_data_parallel_world_size()
             num_workers = dp_group_size
-            comm.all_reduce(out_buffer)
+            out_buffer_fp16 = out_buffer.half()
+            comm.all_reduce(out_buffer_fp16)
+            out_buffer.data[:] = out_buffer_fp16.float()
 
             # Construct low-rank reconstruction and update the approximation and error buffer
             for group, in_batch, out_batch in zip(
@@ -263,7 +265,7 @@ class BasicPowerSGD(Aggregator):
         rank = min(self.config.rank, min(shape))
         return torch.randn(
             [len(params), shape[0], rank], generator=self.generator, device=self.device
-        ).half()
+        )
 
     def _init_q_batch(
         self, shape: torch.Size, params: List[torch.Tensor]
@@ -271,7 +273,7 @@ class BasicPowerSGD(Aggregator):
         rank = min(self.config.rank, min(shape))
         return torch.randn(
             [len(params), shape[1], rank], generator=self.generator, device=self.device
-        ).half()
+        )
 
     @classmethod
     def _matrices_per_shape(

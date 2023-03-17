@@ -133,7 +133,7 @@ class Fp16Optimizer:
                 # Safe to deallocate model's grad/optimizer_grad after copying.
                 # (If using contiguous buffers, optimizer_grad's memory should
                 # persist and therefore should not be deallocated.)
-                model_param.grad = None
+                # model_param.grad = None
 
     def _unscale_optimizer_grads_and_check_for_nan(self):
         optimizer_grads = []

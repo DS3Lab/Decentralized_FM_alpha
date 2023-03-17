@@ -60,15 +60,20 @@ class PowerSGDDP:
             self.server_compress_end_event = torch.cuda.Event(enable_timing=True, blocking=False)
             
     
-        params = list(self.module.parameters())
+        # params = list(self.module.parameters())
         # print('$$$$', len(params))
         # print(params[0])
-        self.params = params
+        
+        params = []
+        for optimizer_group in optimizer.fp32_from_float16_groups:
+            for optimizer_param in optimizer_group:
+                params.append(optimizer_param)
+        
         self.powersgd = PowerSGD(params, config=Config(
             rank=16,  # lower rank => more aggressive compression
             min_compression_rate=2,  # don't compress gradients with less compression
             num_iters_per_step=2,  #   # lower number => more aggressive compression
-            start_compressing_after_num_steps=10,
+            start_compressing_after_num_steps=0,
         ))
 
     def _compute_total_para_num(self):
@@ -137,7 +142,7 @@ class PowerSGDDP:
             self.profile_mark_optimizer_step_start()
             torch.cuda.synchronize()
             
-            optimizer_step(self.params, self.optimizer, self.powersgd)
+            optimizer_step(self.optimizer, self.powersgd)
             
             torch.cuda.synchronize()
             self.torch_optim_comp_stream.record_event(self.optimizer_step_ready_event)
