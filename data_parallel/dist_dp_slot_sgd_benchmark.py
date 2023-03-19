@@ -44,11 +44,9 @@ def _lossless_compress(data):
     # if rate < 1.5:
     #     print(raw[:1000])
         # assert False
-    data = torch.frombuffer(dec, dtype=torch.uint8)
-    return data
+    return enc
 
-def _lossless_decompress(data):
-    enc = data.cpu().numpy().tobytes()
+def _lossless_decompress(enc):
     # dec = lz4.frame.decompress(enc)
     dec = zlib.decompress(enc)
     data = torch.frombuffer(dec, dtype=torch.uint8)
@@ -219,6 +217,10 @@ class SlotSGDBenchDP:
             
     def _partial_sync(self):
         
+        original_bits = 0
+        send_bits = 0
+        recv_bits = 0
+        
         if self.flatten:
             
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
@@ -228,6 +230,8 @@ class SlotSGDBenchDP:
                 
                 name = 'model'
                 para = self.flatten_para
+                
+                original_bits += para.numel() * 16
                 
                 dp_state_dict = self.dp_state_dict
 
@@ -319,15 +323,15 @@ class SlotSGDBenchDP:
                             to_send, dst=i, stream=cupy_dp_stream)
                         # if j==0:
                         #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
-                        # if to_send.dtype == torch.uint8 and to_send.numel() > 1000:
-                        #     _enc = _lossless_compress(to_send)
-                        #     send_bits += len(_enc) * 8
-                        # else:
-                        #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
+                        if to_send.dtype == torch.uint8 and to_send.numel() > 1000:
+                            _enc = _lossless_compress(to_send)
+                            send_bits += len(_enc) * 8
+                        else:
+                            send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
                     for to_recv in comm_buffer_list[i]:
                         self.dp_comm.recv(
                             to_recv, src=i, stream=cupy_dp_stream)
-                        # recv_bits += to_recv.numel() * torch.finfo(to_recv.dtype).bits if to_recv.is_floating_point() else to_recv.numel() * torch.iinfo(to_recv.dtype).bits
+                        recv_bits += to_recv.numel() * torch.finfo(to_recv.dtype).bits if to_recv.is_floating_point() else to_recv.numel() * torch.iinfo(to_recv.dtype).bits
                 cupy.cuda.nccl.groupEnd()
                 
                 if self.enable_tidy_profiling:
@@ -353,15 +357,15 @@ class SlotSGDBenchDP:
                             to_send, dst=i, stream=cupy_dp_stream)
                         # if j==0:
                         #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
-                        # if to_send.dtype == torch.uint8  and to_send.numel() > 1000:
-                        #     _enc = _lossless_compress(to_send)
-                        #     send_bits += len(_enc) * 8
-                        # else:
-                        #     send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
+                        if to_send.dtype == torch.uint8  and to_send.numel() > 1000:
+                            _enc = _lossless_compress(to_send)
+                            send_bits += len(_enc) * 8
+                        else:
+                            send_bits += to_send.numel() * torch.finfo(to_send.dtype).bits if to_send.is_floating_point() else to_send.numel() * torch.iinfo(to_send.dtype).bits
                     for to_recv in comm_buffer_list[i]:
                         self.dp_comm.recv(
                             to_recv, src=i, stream=cupy_dp_stream)
-                        # recv_bits += to_recv.numel() * torch.finfo(to_recv.dtype).bits if to_recv.is_floating_point() else to_recv.numel() * torch.iinfo(to_recv.dtype).bits
+                        recv_bits += to_recv.numel() * torch.finfo(to_recv.dtype).bits if to_recv.is_floating_point() else to_recv.numel() * torch.iinfo(to_recv.dtype).bits
                 cupy.cuda.nccl.groupEnd()
                 
                 if self.enable_tidy_profiling:
@@ -535,7 +539,8 @@ class SlotSGDBenchDP:
                 self.dp_comm_stream.record_event(self.sync_gradients_ready_event)
                 
                 print('done partial sync')
-                # print(f'param: {original_bits}, send: {send_bits}, recv: {recv_bits}')
+        
+        print(f'param: {original_bits}, send: {send_bits}, recv: {recv_bits}')
                 
 #     def _copy_to_model(self):
         
@@ -554,17 +559,18 @@ class SlotSGDBenchDP:
 #                 buffer = self.buffer_dict[name]
 #                 para.data[comm_mask] = buffer.to(para.dtype)
 
-    def pre_optimizer_step(self):
-        if flag.FLAG_DISABLE_COMPRESSION:
-            self._allreduce_gradients()
-        else:
-            # self._partial_sync()
-            self.t = threading.Thread(target=self._partial_sync)
-            self.t.start()
+    # def pre_optimizer_step(self):
+    #     if flag.FLAG_DISABLE_COMPRESSION:
+    #         self._allreduce_gradients()
+    #     else:
+    #         # self._partial_sync()
+    #         self.t = threading.Thread(target=self._partial_sync)
+    #         self.t.start()
             
     def optimizer_step(self):
         # self.pre_optimizer_step()
-        self.t.join()
+        # self.t.join()
+        self._partial_sync()
         with torch.cuda.stream(self.torch_optim_comp_stream):
             self.torch_optim_comp_stream.wait_event(self.sync_gradients_ready_event)
             self.torch_optim_comp_stream.wait_event(self.backward_ready_event)

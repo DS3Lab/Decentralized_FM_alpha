@@ -213,6 +213,10 @@ class QSLDP:
             
     def _partial_sync(self):
         
+        original_bits = 0
+        send_bits = 0
+        recv_bits = 0
+        
         if self.flatten:
             
             cupy_dp_stream = cupy.cuda.ExternalStream(self.dp_comm_stream.cuda_stream)
@@ -229,6 +233,8 @@ class QSLDP:
                 
                     name = 'model'
                     para = self.flatten_para
+                    
+                    original_bits += para.numel() * 16 #torch.finfo(para.dtype).bits
 
                     dp_state_dict = self.dp_state_dict
 
@@ -533,7 +539,9 @@ class QSLDP:
                 self.dp_comm_stream.record_event(self.sync_gradients_ready_event)
                 
                 print('done partial sync')
-                # print(f'param: {original_bits}, send: {send_bits}, recv: {recv_bits}')
+        # print(f'{global_steps}: param: {original_bits}, send: {send_bits}, recv: {recv_bits}')
+        # if original_bits != 0:
+        #     assert False
                 
 #     def _copy_to_model(self):
         
