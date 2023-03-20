@@ -331,14 +331,14 @@ def name_to_dataset(task, tokenizer, args):
             from .alpaca import StreamDataset
             dataset = StreamDataset(task, tokenizer, args.seq_length)
         else:
-            if 'p3' in task:
-                from .p3 import StreamDataset
-            elif ('soda' in task) or ('oa_v3_fixed_plus_safety') in task or ('cot_instructions' in task) or ('mix' in task):
-                from .pile import StreamDataset
-                StreamDataset.default_doc_separator = '\n'
-            # if 'jsonl' in task:
+            # if 'p3' in task:
+            #     from .p3 import StreamDataset
+            # elif ('soda' in task) or ('oa_v3_fixed_plus_safety') in task or ('cot_instructions' in task) or ('mix' in task):
             #     from .pile import StreamDataset
             #     StreamDataset.default_doc_separator = '\n'
+            if 'jsonl' in task:
+                from .pile import StreamDataset
+                StreamDataset.default_doc_separator = '\n'
             else:
                 from .pile import StreamDataset
             print('data_utils: before getting custom pile')

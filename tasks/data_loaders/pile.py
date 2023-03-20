@@ -20,6 +20,72 @@ class StreamDataset(IterableDataset):
         self.iter_count = 0
         self.buffer_tokens = []
         
+        self.greetings = [
+         "<human>: Hello\n<bot>: Hello! How may I help you today?",
+         "<human>: Good morning\n<bot>: Good morning! How may I help you today?",
+         "<human>: Good afternoon\n<bot>: Good afternoon! How may I help you today?",
+         "<human>: Good evening\n<bot>: Good evening! How may I help you today?",
+         "<human>: How are you?\n<bot>: Great, thank you! How may I help you today?",
+         "<human>: How are you doing?\n<bot>: I'm doing well, thank you! How may I help you today?",
+         "<human>: Nice to meet you\n<bot>: Nice to meet you too! How may I help you today?",
+         "<human>: It's nice to meet you\n<bot>: Nice to meet you too! How may I help you today?",
+         "<human>: I'm pleased to meet you.\n<bot>: Me too! How may I help you today?",
+         "<human>: It's a pleasure to meet you.\n<bot>: Me too! How may I help you today?",
+         "<human>: I'm glad to see you.\n<bot>: Glad to meet you too! How may I help you today?",
+         "<human>: How do you do?\n<bot>: Hi! How may I help you today?",
+         "<human>: Hi\n<bot>: Hi! How may I help you today?",
+         "<human>: Hey\n<bot>: Hi! How may I help you today?",
+         "<human>: What's up?\n<bot>: Hi! How may I help you today?",
+         "<human>: How's it going?\n<bot>: Great, thank you! How may I help you today?",
+         "<human>: How have you been?\n<bot>: Great, thank you! How may I help you today?",
+         "<human>: What's new?\n<bot>: Hi! How may I help you today?",
+         "<human>: What's going on?\n<bot>: Hi! How may I help you today?",
+         "<human>: How are things?\n<bot>: Hi! How may I help you today?",
+         "<human>: How's your day?\n<bot>: Great, thank you! How may I help you today?",
+         "<human>: How's your day going?\n<bot>: Great, thank you! How may I help you today?",
+         "<human>: Good to see you.\n<bot>: Hi! How may I help you today?",
+         "<human>: Long time no see.\n<bot>: Hi! How may I help you today?",
+         "<human>: It's been a while.\n<bot>: Yes, it has! How may I help you today?",
+         "<human>: It's been a long time.\n<bot>: Yes, it has! How may I help you today?",
+         "<human>: It's been such a long time.\n<bot>: Yes, it has! How may I help you today?",
+         "<human>: It's been too long.\n<bot>: Yes, it has! How may I help you today?",
+         "<human>: I'm so happy to see you again.\n<bot>: Me too! How may I help you today?",
+         "<human>: Wow, it's so good to see you again!\n<bot>: Me too! How may I help you today?",
+         "<human>: What have you been up to?\n<bot>: Hi! How may I help you today?",
+
+         "<human>: hello\n<bot>: Hello! How may I help you today?",
+         "<human>: good morning\n<bot>: Good morning! How may I help you today?",
+         "<human>: good afternoon\n<bot>: Good afternoon! How may I help you today?",
+         "<human>: good evening\n<bot>: Good evening! How may I help you today?",
+         "<human>: how are you?\n<bot>: Great, thank you! How may I help you today?",
+         "<human>: how are you doing?\n<bot>: I'm doing well, thank you! How may I help you today?",
+         "<human>: nice to meet you\n<bot>: Nice to meet you too! How may I help you today?",
+         "<human>: it's nice to meet you\n<bot>: Nice to meet you too! How may I help you today?",
+         "<human>: i'm pleased to meet you.\n<bot>: Me too! How may I help you today?",
+         "<human>: it's a pleasure to meet you.\n<bot>: Me too! How may I help you today?",
+         "<human>: i'm glad to see you.\n<bot>: Glad to meet you too! How may I help you today?",
+         "<human>: how do you do?\n<bot>: Hi! How may I help you today?",
+         "<human>: hi\n<bot>: Hi! How may I help you today?",
+         "<human>: hey\n<bot>: Hi! How may I help you today?",
+         "<human>: what's up?\n<bot>: Hi! How may I help you today?",
+         "<human>: how's it going?\n<bot>: Great, thank you! How may I help you today?",
+         "<human>: how have you been?\n<bot>: Great, thank you! How may I help you today?",
+         "<human>: what's new?\n<bot>: Hi! How may I help you today?",
+         "<human>: what's going on?\n<bot>: Hi! How may I help you today?",
+         "<human>: how are things?\n<bot>: Hi! How may I help you today?",
+         "<human>: how's your day?\n<bot>: Great, thank you! How may I help you today?",
+         "<human>: how's your day going?\n<bot>: Great, thank you! How may I help you today?",
+         "<human>: good to see you.\n<bot>: Hi! How may I help you today?",
+         "<human>: long time no see.\n<bot>: Hi! How may I help you today?",
+         "<human>: it's been a while.\n<bot>: Yes, it has! How may I help you today?",
+         "<human>: it's been a long time.\n<bot>: Yes, it has! How may I help you today?",
+         "<human>: it's been such a long time.\n<bot>: Yes, it has! How may I help you today?",
+         "<human>: it's been too long.\n<bot>: Yes, it has! How may I help you today?",
+         "<human>: i'm so happy to see you again.\n<bot>: Me too! How may I help you today?",
+         "<human>: wow, it's so good to see you again!\n<bot>: Me too! How may I help you today?",
+         "<human>: what have you been up to?\n<bot>: Hi! How may I help you today?",
+        ]
+        
     def state_dict(self):
         return {
             'iter_count': self.iter_count,
@@ -33,18 +99,23 @@ class StreamDataset(IterableDataset):
         
     def get_sequence(self):
         buffer_tokens = self.buffer_tokens
-        for x in self.data:
-            self.iter_count += 1
-            curr_tokens = self.tokenizer(self.doc_separator + x['text'])['input_ids']
-            buffer_tokens += curr_tokens
-            while len(buffer_tokens) >= self.seq_length:
-                tokens = buffer_tokens[:self.seq_length]
-                buffer_tokens = buffer_tokens[self.seq_length:]
-                input_ids = torch.tensor(tokens)
-                self.buffer_tokens = buffer_tokens # update for restore
-                yield {
-                    'input_ids': input_ids,
-                }
+        while True:
+            try:
+                for x in self.data.shuffle():
+                    self.iter_count += 1
+                    curr_tokens = self.tokenizer(self.doc_separator + x['text'])['input_ids']
+                    buffer_tokens += curr_tokens
+                    while len(buffer_tokens) >= self.seq_length:
+                        tokens = buffer_tokens[:self.seq_length]
+                        buffer_tokens = buffer_tokens[self.seq_length:]
+                        input_ids = torch.tensor(tokens)
+                        self.buffer_tokens = buffer_tokens # update for restore
+                        yield {
+                            'input_ids': input_ids,
+                        }
+            except:
+                print('next epoch')
+            # break
                 
     def get_stream(self):
         return cycle(self.get_sequence())
