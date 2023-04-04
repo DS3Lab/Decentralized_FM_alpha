@@ -35,8 +35,8 @@ def process_request(x, seq):
     cont_text = ftfy.fix_text(cont, normalization="NFKC")
     all_text = ctx_text + cont_text
 
-    ctx_tokens = tokenizer(ctx_text)['input_ids']
-    cont_tokens = tokenizer(cont_text)['input_ids']
+    ctx_tokens = tokenizer(ctx_text, add_special_tokens=False)['input_ids']
+    cont_tokens = tokenizer(cont_text, add_special_tokens=False)['input_ids']
 
     all_tokens = ctx_tokens + cont_tokens
     all_tokens = np.array(all_tokens)[-seq:]  # truncate sequence at seq length
