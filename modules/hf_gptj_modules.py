@@ -97,10 +97,13 @@ class GPTJAttention(_GPTJAttention):
         # compute causal mask from causal mask buffer
         query_length, key_length = query.size(-2), key.size(-2)
         causal_mask = self.bias[:, :, key_length - query_length : key_length, :key_length].to(torch.bool)
-        
-        if prefix_masks is not None:
-            for _prefix_masks in prefix_masks.bool():
-                causal_mask[:, :, :, _prefix_masks] = 1
+                
+        if prefix_mask is not None:
+            bsz = query.size(0)
+            causal_mask = causal_mask.repeat(bsz, 1, 1, 1) # (bsz, 1, src_len, tgt_len)
+            causal_mask = causal_mask.permute(0, 3, 1, 2) # (bsz, tgt_len, 1, src_len)
+            causal_mask[prefix_mask.bool()] = 1
+            causal_mask = causal_mask.permute(0, 2, 3, 1) # (bsz, 1, src_len, tgt_len)
 
         # Keep the attention weights computation in fp32 to avoid overflow issues
         query = query.to(torch.float32)
