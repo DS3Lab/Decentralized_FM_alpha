@@ -342,7 +342,7 @@ def name_to_dataset(task, tokenizer, args):
             else:
                 from .pile import StreamDataset
             print('data_utils: before getting custom pile')
-            data = load_dataset("json", data_files=task, split="train", streaming=True).shuffle(buffer_size=100_000, seed=args.seed)
+            data = load_dataset("json", data_files=task, split="train").shuffle(seed=args.seed)
             print('data_utils: after getting custom pile')
             dataset = StreamDataset(data, tokenizer, args.seq_length)
             # print('unknow task {task}, skip.')

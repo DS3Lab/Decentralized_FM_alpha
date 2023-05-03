@@ -101,7 +101,7 @@ class StreamDataset(IterableDataset):
         buffer_tokens = self.buffer_tokens
         while True:
             try:
-                for x in self.data.shuffle():
+                for x in self.data:
                     self.iter_count += 1
                     curr_tokens = self.tokenizer(self.doc_separator + x['text'])['input_ids']
                     buffer_tokens += curr_tokens
