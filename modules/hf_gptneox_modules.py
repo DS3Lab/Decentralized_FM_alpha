@@ -13,6 +13,17 @@ from transformers.models.gpt_neox.modeling_gpt_neox import GPTNeoXMLP
 from transformers.models.gpt_neox.modeling_gpt_neox import GPTNeoXLayer as _GPTNeoXBlock
 from transformers.models.gpt_neox.modeling_gpt_neox import GPTNeoXModel as _GPTNeoXModel
 from transformers.models.gpt_neox.configuration_gpt_neox import GPTNeoXConfig as GPTConfig
+from transformers.models.gpt_neox.modeling_gpt_neox import RotaryEmbedding
+
+
+try:
+    from flash_attn.flash_attention import FlashAttention
+    flash_attn_installed = True
+    print('>>>>> flash attention')
+except ImportError:
+    flash_attn_installed = False
+    
+    
 
 def rotate_half(x):
     """Rotates half the hidden dims of the input."""
@@ -40,6 +51,34 @@ def apply_rotary_pos_emb(q, k, cos, sin, offset=0):
 
 
 class GPTNeoXAttention(_GPTNeoXAttention):
+    
+    def __init__(self, config):
+        super(_GPTNeoXAttention, self).__init__()
+        self.num_attention_heads = config.num_attention_heads
+        self.hidden_size = config.hidden_size
+        self.head_size = self.hidden_size // self.num_attention_heads
+        self.rotary_ndims = int(self.head_size * config.rotary_pct)
+        max_positions = config.max_position_embeddings
+        self.register_buffer(
+            "bias",
+            torch.tril(torch.ones((max_positions, max_positions), dtype=torch.bool)).view(
+                1, 1, max_positions, max_positions
+            ),
+        )
+        self.register_buffer("masked_bias", torch.tensor(-1e9))
+        self.rotary_emb = RotaryEmbedding(
+            self.rotary_ndims, config.max_position_embeddings, base=config.rotary_emb_base
+        )
+        self.register_buffer(
+            "norm_factor",
+            torch.sqrt(torch.tensor(self.head_size, dtype=torch.float32)).to(torch.get_default_dtype()),
+            persistent=False,
+        )
+        self.query_key_value = nn.Linear(config.hidden_size, 3 * config.hidden_size)
+        self.dense = nn.Linear(config.hidden_size, config.hidden_size)
+        
+        if flash_attn_installed:
+            self.flash_attn = FlashAttention(softmax_scale=1.0/self.norm_factor, attention_dropout = 0)
 
     def forward(
         self,
@@ -51,6 +90,9 @@ class GPTNeoXAttention(_GPTNeoXAttention):
         offset=None,
         output_attentions=False,
     ):
+        
+        bsz, tgt_len, _ = hidden_states.shape
+        
         has_layer_past = layer_past is not None
 
         # Compute QKV
@@ -104,12 +146,29 @@ class GPTNeoXAttention(_GPTNeoXAttention):
         present = None if use_cache else (key, value)
 
         # Compute attention
-        attn_output, attn_weights = self._attn(query, key, value,
-                                               attention_mask, head_mask)
+        if flash_attn_installed:
+            
+            query = query.permute(0, 2, 1, 3).half()
+            key = key.permute(0, 2, 1, 3).half()
+            value = value.permute(0, 2, 1, 3).half()
+            qkv = torch.stack(
+                [
+                    query.reshape((bsz, tgt_len, self.num_attention_heads, self.head_size)),
+                    key.reshape((bsz, tgt_len, self.num_attention_heads, self.head_size)),
+                    value.reshape((bsz, tgt_len, self.num_attention_heads, self.head_size)),
+                ],
+                dim=2
+            )
 
-        # Reshape outputs
-        attn_output = self._merge_heads(attn_output, self.num_attention_heads,
-                                        self.head_size)
+            attn_weights = None
+            attn_output, _ = self.flash_attn(qkv, causal=True)
+            attn_output = attn_output.view(bsz, tgt_len, self.num_attention_heads * self.head_size)
+        else:
+            attn_output, attn_weights = self._attn(query, key, value,
+                                                   attention_mask, head_mask)
+            # Reshape outputs
+            attn_output = self._merge_heads(attn_output, self.num_attention_heads,
+                                            self.head_size)
         attn_output = self.dense(attn_output)
 
         outputs = (attn_output, present)
